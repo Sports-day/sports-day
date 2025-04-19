@@ -8,13 +8,32 @@ input LoginInput {
   redirectURL: String!
 }
 
+input CreateGroupInput {
+  name: String!
+}
+
+input UpdateGroupInput {
+  name: String
+}
+
+input UpdateGroupUsersInput {
+  userIds: [ID!]!
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
   me: User!
+  groups: [Group!]!
+  group(id: ID!): Group!
 }
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
   login(input: LoginInput!): AuthResponse!
+  createGroup(input: CreateGroupInput!): Group!
+  deleteGroup(id: ID!): Group!
+  updateGroup(id: ID!, input: UpdateGroupInput!): Group!
+  addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
+  removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
 }

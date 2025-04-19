@@ -11,3 +11,10 @@ func FormatUserResponse(user *db_model.User) *User {
 		Email: user.Email,
 	}
 }
+
+func FormatGroupResponse(group *db_model.Group) *Group {
+	return &Group{
+		ID:   group.ID,
+		Name: group.Name,
+	}
+}

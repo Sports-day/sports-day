@@ -60,7 +60,7 @@ func (s *AuthService) Login(ctx context.Context, code string, redirectURL string
 			Name:  tokenData.Name,
 			Email: tokenData.Email,
 		}
-		user, err = s.userRepo.Create(ctx, s.db, user)
+		user, err = s.userRepo.Save(ctx, s.db, user)
 		if err != nil {
 			//	TODO replace error
 			return nil, fmt.Errorf("failed to create user")
@@ -69,7 +69,7 @@ func (s *AuthService) Login(ctx context.Context, code string, redirectURL string
 		// if user exists, update name (if necessary)
 		if user.Name != tokenData.Name {
 			user.Name = tokenData.Name
-			user, err = s.userRepo.Update(ctx, s.db, user)
+			user, err = s.userRepo.Save(ctx, s.db, user)
 			if err != nil {
 				//	TODO replace error
 				return nil, fmt.Errorf("failed to update user")

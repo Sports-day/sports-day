@@ -28,6 +28,51 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	return authResponse, nil
 }
 
+// CreateGroup is the resolver for the createGroup field.
+func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error) {
+	group, err := r.GroupService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatGroupResponse(group), nil
+}
+
+// DeleteGroup is the resolver for the deleteGroup field.
+func (r *mutationResolver) DeleteGroup(ctx context.Context, id string) (*model.Group, error) {
+	group, err := r.GroupService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatGroupResponse(group), nil
+}
+
+// UpdateGroup is the resolver for the updateGroup field.
+func (r *mutationResolver) UpdateGroup(ctx context.Context, id string, input model.UpdateGroupInput) (*model.Group, error) {
+	group, err := r.GroupService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatGroupResponse(group), nil
+}
+
+// AddGroupUsers is the resolver for the addGroupUsers field.
+func (r *mutationResolver) AddGroupUsers(ctx context.Context, id string, input model.UpdateGroupUsersInput) (*model.Group, error) {
+	group, err := r.GroupService.AddUsers(ctx, id, input.UserIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatGroupResponse(group), nil
+}
+
+// RemoveGroupUsers is the resolver for the removeGroupUsers field.
+func (r *mutationResolver) RemoveGroupUsers(ctx context.Context, id string, input model.UpdateGroupUsersInput) (*model.Group, error) {
+	group, err := r.GroupService.DeleteUsers(ctx, id, input.UserIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatGroupResponse(group), nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -58,6 +103,29 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 		return nil, err
 	}
 	return model.FormatUserResponse(user), nil
+}
+
+// Groups is the resolver for the groups field.
+func (r *queryResolver) Groups(ctx context.Context) ([]*model.Group, error) {
+	groups, err := r.GroupService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Group, 0, len(groups))
+	for _, group := range groups {
+		res = append(res, model.FormatGroupResponse(group))
+	}
+	return res, nil
+}
+
+// Group is the resolver for the group field.
+func (r *queryResolver) Group(ctx context.Context, id string) (*model.Group, error) {
+	group, err := r.GroupService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatGroupResponse(group), nil
 }
 
 // Mutation returns MutationResolver implementation.
