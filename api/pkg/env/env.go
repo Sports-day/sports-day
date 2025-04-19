@@ -21,7 +21,7 @@ type Env struct {
 	}
 	Auth struct {
 		OIDC struct {
-			IssuerURL string `envconfig:"AUTH_ISSUER_URL" required:"true"`
+			IssuerURL   string `envconfig:"AUTH_ISSUER_URL" required:"true"`
 			ClientID    string `envconfig:"AUTH_CLIENT_ID" required:"true"`
 			SecretKey   string `envconfig:"AUTH_SECRET_KEY" required:"true"`
 			RedirectURL string `envconfig:"AUTH_REDIRECT_URL" required:"true"`

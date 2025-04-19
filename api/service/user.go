@@ -43,7 +43,7 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 		Name:  input.Name,
 		Email: input.Email,
 	}
-	row, err := s.userRepository.Create(ctx, s.db, user)
+	row, err := s.userRepository.Save(ctx, s.db, user)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
