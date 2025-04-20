@@ -9,7 +9,6 @@ import (
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
-	"sports-day/api/middleware"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
@@ -19,13 +18,13 @@ import (
 type AuthService struct {
 	db       *gorm.DB
 	userRepo repository.User
-	oidc     *auth.OIDC
-	jwt      *auth.JWT
+	oidc     auth.OIDC
+	jwt      auth.JWT
 }
 
 // NewAuthService 新しい認証サービスを作成
-func NewAuthService(db *gorm.DB, userRepo repository.User, oidc *auth.OIDC, jwt *auth.JWT) *AuthService {
-	return &AuthService{
+func NewAuthService(db *gorm.DB, userRepo repository.User, oidc auth.OIDC, jwt auth.JWT) AuthService {
+	return AuthService{
 		db:       db,
 		userRepo: userRepo,
 		oidc:     oidc,
@@ -100,7 +99,7 @@ func (s *AuthService) Login(ctx context.Context, code string, redirectURL string
 // GetCurrentUser 現在のユーザー情報を取得
 func (s *AuthService) GetCurrentUser(ctx context.Context) (*db_model.User, error) {
 	// get user id from middleware
-	user_id, ok := middleware.GetUserID(ctx)
+	user_id, ok := auth.GetUserID(ctx)
 	if !ok {
 		return nil, nil
 	}

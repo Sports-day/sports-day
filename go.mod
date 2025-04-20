@@ -17,6 +17,7 @@ require (
 	github.com/rs/cors v1.11.1
 	github.com/rs/zerolog v1.33.0
 	github.com/vektah/gqlparser/v2 v2.5.22
+	github.com/vikstrous/dataloadgen v0.0.6
 	github.com/xo/xo v1.0.2
 	golang.org/x/oauth2 v0.25.0
 	golang.org/x/tools v0.30.0

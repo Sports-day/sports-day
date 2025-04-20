@@ -33,8 +33,8 @@ type JWT struct {
 }
 
 // NewJWT 新しいJWTインスタンスを作成
-func NewJWT(secretKey []byte, expirySeconds int) *JWT {
-	return &JWT{
+func NewJWT(secretKey []byte, expirySeconds int) JWT {
+	return JWT{
 		config: JWTConfig{
 			SecretKey:     secretKey,
 			ExpirySeconds: expirySeconds,

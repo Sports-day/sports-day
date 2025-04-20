@@ -6,7 +6,6 @@ import (
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
-	"sports-day/api/pkg/slices"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
 
@@ -14,18 +13,16 @@ import (
 )
 
 type Group struct {
-	db                  *gorm.DB
-	groupRepository     repository.Group
-	groupUserRepository repository.GroupUser
-	userRepository      repository.User
+	db              *gorm.DB
+	groupRepository repository.Group
+	userRepository  repository.User
 }
 
-func NewGroup(db *gorm.DB, groupRepository repository.Group, groupUserRepository repository.GroupUser, userRepository repository.User) *Group {
-	return &Group{
-		db:                  db,
-		groupRepository:     groupRepository,
-		groupUserRepository: groupUserRepository,
-		userRepository:      userRepository,
+func NewGroup(db *gorm.DB, groupRepository repository.Group, userRepository repository.User) Group {
+	return Group{
+		db:              db,
+		groupRepository: groupRepository,
+		userRepository:  userRepository,
 	}
 }
 
@@ -91,7 +88,7 @@ func (s *Group) AddUsers(ctx context.Context, groupId string, userIds []string) 
 		}
 	}
 
-	_, err := s.groupUserRepository.AddUsers(ctx, s.db, entries)
+	_, err := s.groupRepository.AddGroupUsers(ctx, s.db, entries)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -109,56 +106,48 @@ func (s *Group) DeleteUsers(ctx context.Context, groupId string, userIds []strin
 		return nil, errors.Wrap(err)
 	}
 
-	_, err = s.groupUserRepository.DeleteUsers(ctx, s.db, groupId, userIds)
+	_, err = s.groupRepository.DeleteGroupUsers(ctx, s.db, groupId, userIds)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return group, nil
 }
 
-func (s *Group) GetUsers(ctx context.Context, groupId string) ([]*db_model.User, error) {
-	_, err := s.groupRepository.Get(ctx, s.db, groupId)
+func (s *Group) GetGroupUsersMapByGroupIDs(ctx context.Context, groupIds []string) (map[string][]*db_model.GroupUser, error) {
+	groupUsers, err := s.groupRepository.BatchGetGroupUsersByGroupIDs(ctx, s.db, groupIds)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	groupUsers, err := s.groupUserRepository.ListByGroupId(ctx, s.db, groupId)
-	if err != nil {
-		return nil, errors.Wrap(err)
+	groupUserMap := make(map[string][]*db_model.GroupUser)
+	for _, groupUser := range groupUsers {
+		groupUserMap[groupUser.GroupID] = append(groupUserMap[groupUser.GroupID], groupUser)
 	}
-
-	if len(groupUsers) == 0 {
-		return []*db_model.User{}, nil
-	}
-
-	userIds := slices.Map(groupUsers, func(groupUser *db_model.GroupUser) string {
-		return groupUser.UserID
-	})
-
-	users, err := s.userRepository.BulkGet(ctx, s.db, userIds)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return users, nil
+	return groupUserMap, nil
 }
 
-func (s *Group) GetUserGroups(ctx context.Context, userId string) ([]*db_model.Group, error) {
-	groupUsers, err := s.groupUserRepository.ListByUserId(ctx, s.db, userId)
+func (s *Group) GetGroupUsersMapByUserIDs(ctx context.Context, userIDs []string) (map[string][]*db_model.GroupUser, error) {
+	groupUsers, err := s.groupRepository.BatchGetGroupUsersByUserIDs(ctx, s.db, userIDs)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	if len(groupUsers) == 0 {
-		return []*db_model.Group{}, nil
+	groupUserMap := make(map[string][]*db_model.GroupUser)
+	for _, groupUser := range groupUsers {
+		groupUserMap[groupUser.UserID] = append(groupUserMap[groupUser.UserID], groupUser)
 	}
+	return groupUserMap, nil
+}
 
-	groupIds := slices.Map(groupUsers, func(groupUser *db_model.GroupUser) string {
-		return groupUser.GroupID
-	})
-
-	groups, err := s.groupRepository.BulkGet(ctx, s.db, groupIds)
+func (s *Group) GetGroupsMapByIDs(ctx context.Context, groupIDs []string) (map[string]*db_model.Group, error) {
+	groups, err := s.groupRepository.BulkGet(ctx, s.db, groupIDs)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	return groups, nil
+
+	groupMap := make(map[string]*db_model.Group)
+	for _, group := range groups {
+		groupMap[group.ID] = group
+	}
+	return groupMap, nil
 }

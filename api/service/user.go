@@ -17,8 +17,8 @@ type User struct {
 	userRepository repository.User
 }
 
-func NewUser(db *gorm.DB, userRepository repository.User) *User {
-	return &User{db: db, userRepository: userRepository}
+func NewUser(db *gorm.DB, userRepository repository.User) User {
+	return User{db: db, userRepository: userRepository}
 }
 
 func (s *User) Get(ctx context.Context, id string) (*db_model.User, error) {
@@ -48,4 +48,17 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 		return nil, errors.Wrap(err)
 	}
 	return row, nil
+}
+
+func (s *User) GetUsersMapByIDs(ctx context.Context, userIDs []string) (map[string]*db_model.User, error) {
+	users, err := s.userRepository.BulkGet(ctx, s.db, userIDs)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	userMap := make(map[string]*db_model.User)
+	for _, user := range users {
+		userMap[user.ID] = user
+	}
+	return userMap, nil
 }

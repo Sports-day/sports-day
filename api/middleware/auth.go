@@ -1,13 +1,10 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 
 	"sports-day/api/pkg/auth"
 )
-
-type userContextKey struct{}
 
 func Auth(jwt *auth.JWT) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -26,17 +23,8 @@ func Auth(jwt *auth.JWT) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), userContextKey{}, tokenData.UserID)
+			ctx := auth.AttachUserID(r.Context(), tokenData.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
-	}
-}
-
-func GetUserID(ctx context.Context) (string, bool) {
-	switch v := ctx.Value(userContextKey{}).(type) {
-	case string:
-		return v, true
-	default:
-		return "", false
 	}
 }

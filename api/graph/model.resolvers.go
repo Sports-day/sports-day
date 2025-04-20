@@ -7,35 +7,46 @@ package graph
 import (
 	"context"
 
+	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	"sports-day/api/loader"
+	"sports-day/api/pkg/slices"
 )
 
 // Users is the resolver for the users field.
 func (r *groupResolver) Users(ctx context.Context, obj *model.Group) ([]*model.User, error) {
-	users, err := r.GroupService.GetUsers(ctx, obj.ID)
+	groupUsers, err := loader.LoadGroupUsers(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
-
-	res := make([]*model.User, 0, len(users))
-	for _, user := range users {
-		res = append(res, model.FormatUserResponse(user))
+	userIds := slices.Map(groupUsers, func(groupUser *db_model.GroupUser) string {
+		return groupUser.UserID
+	})
+	users, err := loader.LoadUsers(ctx, userIds)
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+	return slices.Map(users, func(user *db_model.User) *model.User {
+		return model.FormatUserResponse(user)
+	}), nil
 }
 
 // Groups is the resolver for the groups field.
 func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Group, error) {
-	groups, err := r.GroupService.GetUserGroups(ctx, obj.ID)
+	groupUsers, err := loader.LoadUserGroups(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
-
-	res := make([]*model.Group, 0, len(groups))
-	for _, group := range groups {
-		res = append(res, model.FormatGroupResponse(group))
+	groupIds := slices.Map(groupUsers, func(groupUser *db_model.GroupUser) string {
+		return groupUser.GroupID
+	})
+	groups, err := loader.LoadGroups(ctx, groupIds)
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+	return slices.Map(groups, func(group *db_model.Group) *model.Group {
+		return model.FormatGroupResponse(group)
+	}), nil
 }
 
 // Group returns GroupResolver implementation.
