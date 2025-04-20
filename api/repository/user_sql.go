@@ -32,7 +32,7 @@ func (r user) List(ctx context.Context, db *gorm.DB) ([]*db_model.User, error) {
 	return users, nil
 }
 
-func (r user) BulkGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.User, error) {
+func (r user) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.User, error) {
 	var users []*db_model.User
 	if err := db.Where("id IN (?)", ids).Find(&users).Error; err != nil {
 		return nil, errors.Wrap(err)

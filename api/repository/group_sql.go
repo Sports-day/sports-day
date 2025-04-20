@@ -26,7 +26,7 @@ func (r group) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Group
 	return &group, nil
 }
 
-func (r group) BulkGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Group, error) {
+func (r group) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Group, error) {
 	var groups []*db_model.Group
 	if err := db.Where("id IN (?)", ids).Find(&groups).Error; err != nil {
 		return nil, errors.Wrap(err)

@@ -140,7 +140,7 @@ func (s *Group) GetGroupUsersMapByUserIDs(ctx context.Context, userIDs []string)
 }
 
 func (s *Group) GetGroupsMapByIDs(ctx context.Context, groupIDs []string) (map[string]*db_model.Group, error) {
-	groups, err := s.groupRepository.BulkGet(ctx, s.db, groupIDs)
+	groups, err := s.groupRepository.BatchGet(ctx, s.db, groupIDs)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}

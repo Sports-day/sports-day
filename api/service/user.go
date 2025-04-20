@@ -51,7 +51,7 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 }
 
 func (s *User) GetUsersMapByIDs(ctx context.Context, userIDs []string) (map[string]*db_model.User, error) {
-	users, err := s.userRepository.BulkGet(ctx, s.db, userIDs)
+	users, err := s.userRepository.BatchGet(ctx, s.db, userIDs)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
