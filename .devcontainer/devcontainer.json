@@ -70,8 +70,9 @@
         // sqltools
         "mtxr.sqltools",
         "mtxr.sqltools-driver-mysql",
-        //  github actions
+        //  github
         "github.vscode-github-actions",
+        "gitHub.vscode-pull-request-github",
         // vscode-icons
         "vscode-icons-team.vscode-icons"
       ]
