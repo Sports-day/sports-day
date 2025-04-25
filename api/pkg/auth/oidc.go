@@ -18,11 +18,11 @@ type OIDC struct {
 	configs  map[string]*oauth2.Config
 }
 
-func NewOIDC(ctx context.Context, issuerURL string, clientID string, clientSecret string, redirectURLs []string) (*OIDC, error) {
+func NewOIDC(ctx context.Context, issuerURL string, clientID string, clientSecret string, redirectURLs []string) (OIDC, error) {
 	provider, err := oidc.NewProvider(ctx, issuerURL)
 	if err != nil {
 		//	TODO replace error
-		return nil, err
+		return OIDC{}, err
 	}
 
 	configs := make(map[string]*oauth2.Config, len(redirectURLs))
@@ -36,7 +36,7 @@ func NewOIDC(ctx context.Context, issuerURL string, clientID string, clientSecre
 		}
 	}
 
-	return &OIDC{
+	return OIDC{
 		verifier: provider.Verifier(&oidc.Config{
 			ClientID: clientID,
 		}),

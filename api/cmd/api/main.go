@@ -71,13 +71,15 @@ func main() {
 
 	// repository
 	userRepository := repository.NewUser()
+	groupRepository := repository.NewGroup()
 
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
+	groupService := service.NewGroup(db, groupRepository, userRepository)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})
@@ -93,7 +95,7 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService))
 
 	address := fmt.Sprintf("%s:%d", env.Get().Server.Host, env.Get().Server.Port)
 
