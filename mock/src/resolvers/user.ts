@@ -1,4 +1,5 @@
 import { userStore } from "../models/User";
+import { groupStore } from "../models/Group";
 
 export const userResolvers = {
   Query: {
@@ -62,6 +63,13 @@ export const userResolvers = {
           }`
         );
       }
+    },
+  },
+
+  User: {
+    // Resolve groups field for User
+    groups: (parent: any) => {
+      return groupStore.getGroupsByUserId(parent.id);
     },
   },
 };

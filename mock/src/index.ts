@@ -1,19 +1,18 @@
-import express from "express";
 import { ApolloServer } from "@apollo/server";
-import { expressMiddleware } from "@apollo/server/express4";
+import { startStandaloneServer } from "@apollo/server/standalone";
 import { typeDefs } from "./schema";
 import { resolvers } from "./resolvers";
+import { userStore } from "./models/User";
+import { groupStore } from "./models/Group";
 
 const PORT = process.env.PORT || 4000;
 
 async function startServer() {
-  // Create Express app
-  const app = express();
-
   // Create Apollo Server
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention: false,
     formatError: (error) => {
       console.error("GraphQL Error:", error);
       return {
@@ -23,26 +22,50 @@ async function startServer() {
     },
   });
 
-  // Start Apollo Server
-  await server.start();
-
-  // Apply middleware
-  app.use(express.json());
-  app.use("/graphql", expressMiddleware(server));
-
-  // Health check endpoint
-  app.get("/health", (req, res) => {
-    res.json({ status: "OK", timestamp: new Date().toISOString() });
+  // Passing an ApolloServer instance to the `startStandaloneServer` function:
+  //  1. creates an Express app
+  //  2. installs your ApolloServer instance as middleware
+  //  3. prepares your app to handle incoming requests
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: Number(PORT) },
   });
 
-  // Start server
-  app.listen(PORT, () => {
-    console.log(`🚀 Mock GraphQL Server running at http://localhost:${PORT}`);
-    console.log(
-      `📊 GraphQL Playground available at http://localhost:${PORT}/graphql`
-    );
-    console.log(`💚 Health check available at http://localhost:${PORT}/health`);
-  });
+  console.log(`🚀 Mock GraphQL Server ready at: ${url}`);
+  console.log(`📊 GraphQL Playground available at: ${url}`);
+  console.log(
+    `💚 Health check available at: ${url.replace("/graphql", "/health")}`
+  );
+
+  // Auto-assign users to groups (5 users per group)
+  const assignUsersToGroups = () => {
+    const users = userStore.getAllUsers();
+    const groups = groupStore.getAllGroups();
+
+    if (users.length >= 10 && groups.length >= 2) {
+      // Assign first 5 users to サクラ group
+      const sakuraGroup = groups.find((g) => g.name === "サクラ");
+      if (sakuraGroup) {
+        for (let i = 0; i < 5; i++) {
+          groupStore.addUserToGroup(users[i].id, sakuraGroup.id);
+        }
+      }
+
+      // Assign next 5 users to アサヒ group
+      const asahiGroup = groups.find((g) => g.name === "アサヒ");
+      if (asahiGroup) {
+        for (let i = 5; i < 10; i++) {
+          groupStore.addUserToGroup(users[i].id, asahiGroup.id);
+        }
+      }
+
+      console.log(
+        "✅ Users assigned to groups: 5 users to サクラ, 5 users to アサヒ"
+      );
+    }
+  };
+
+  // Auto-assign users to groups after server starts
+  setTimeout(assignUsersToGroups, 100);
 }
 
 startServer().catch((error) => {

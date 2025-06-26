@@ -2,18 +2,36 @@ type User {
   id: ID!
   name: String!
   email: String!
+  groups: [Group!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Group {
+  id: ID!
+  name: String!
+  users: [User!]!
+  createdAt: String!
+  updatedAt: String!
 }
 
 type Query {
   users: [User!]!
   user(id: ID!): User
   userByEmail(email: String!): User
+  groups: [Group!]!
+  group(id: ID!): Group
 }
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   deleteUser(id: ID!): Boolean!
+  createGroup(input: CreateGroupInput!): Group!
+  updateGroup(id: ID!, input: UpdateGroupInput!): Group!
+  deleteGroup(id: ID!): Boolean!
+  addUserToGroup(userId: ID!, groupId: ID!): Group!
+  removeUserFromGroup(userId: ID!, groupId: ID!): Group!
 }
 
 input CreateUserInput {
@@ -24,4 +42,12 @@ input CreateUserInput {
 input UpdateUserInput {
   name: String
   email: String
+}
+
+input CreateGroupInput {
+  name: String!
+}
+
+input UpdateGroupInput {
+  name: String
 }
