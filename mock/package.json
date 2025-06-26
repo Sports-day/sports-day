@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@apollo/server": "^4.12.2",
+    "@types/better-sqlite3": "^7.6.13",
     "apollo-server-express": "^3.13.0",
+    "better-sqlite3": "^12.1.1",
     "dataloader": "^2.2.3",
     "express": "^5.1.0",
     "graphql": "^16.11.0",

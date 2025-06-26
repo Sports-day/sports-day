@@ -1,21 +1,30 @@
-import { userStore } from "../models/User";
-import { groupStore } from "../models/Group";
+import { UserService } from "../services/UserService";
+import { GroupService } from "../services/GroupService";
 
+// Services will be injected via context
 export const userResolvers = {
   Query: {
     // Get all users
-    users: () => {
-      return userStore.getAllUsers();
+    users: (_: any, __: any, context: { userService: UserService }) => {
+      return context.userService.getAllUsers();
     },
 
     // Get user by ID
-    user: (_: any, { id }: { id: string }) => {
-      return userStore.getUserById(id);
+    user: (
+      _: any,
+      { id }: { id: string },
+      context: { userService: UserService }
+    ) => {
+      return context.userService.getUserById(id);
     },
 
     // Get user by email
-    userByEmail: (_: any, { email }: { email: string }) => {
-      return userStore.getUserByEmail(email);
+    userByEmail: (
+      _: any,
+      { email }: { email: string },
+      context: { userService: UserService }
+    ) => {
+      return context.userService.getUserByEmail(email);
     },
   },
 
@@ -23,10 +32,11 @@ export const userResolvers = {
     // Create new user
     createUser: (
       _: any,
-      { input }: { input: { name: string; email: string } }
+      { input }: { input: { name: string; email: string } },
+      context: { userService: UserService }
     ) => {
       try {
-        return userStore.createUser(input);
+        return context.userService.createUser(input);
       } catch (error) {
         throw new Error(
           `Failed to create user: ${
@@ -39,10 +49,11 @@ export const userResolvers = {
     // Update user
     updateUser: (
       _: any,
-      { id, input }: { id: string; input: { name?: string; email?: string } }
+      { id, input }: { id: string; input: { name?: string; email?: string } },
+      context: { userService: UserService }
     ) => {
       try {
-        return userStore.updateUser(id, input);
+        return context.userService.updateUser(id, input);
       } catch (error) {
         throw new Error(
           `Failed to update user: ${
@@ -53,9 +64,13 @@ export const userResolvers = {
     },
 
     // Delete user
-    deleteUser: (_: any, { id }: { id: string }) => {
+    deleteUser: (
+      _: any,
+      { id }: { id: string },
+      context: { userService: UserService }
+    ) => {
       try {
-        return userStore.deleteUser(id);
+        return context.userService.deleteUser(id);
       } catch (error) {
         throw new Error(
           `Failed to delete user: ${
@@ -68,8 +83,8 @@ export const userResolvers = {
 
   User: {
     // Resolve groups field for User
-    groups: (parent: any) => {
-      return groupStore.getGroupsByUserId(parent.id);
+    groups: (parent: any, _: any, context: { groupService: GroupService }) => {
+      return context.groupService.getGroupsByUserId(parent.id);
     },
   },
 };

@@ -1,24 +1,33 @@
-import { groupStore } from "../models/Group";
-import { userStore } from "../models/User";
+import { GroupService } from "../services/GroupService";
+import { UserService } from "../services/UserService";
 
+// Services will be injected via context
 export const groupResolvers = {
   Query: {
     // Get all groups
-    groups: () => {
-      return groupStore.getAllGroups();
+    groups: (_: any, __: any, context: { groupService: GroupService }) => {
+      return context.groupService.getAllGroups();
     },
 
     // Get group by ID
-    group: (_: any, { id }: { id: string }) => {
-      return groupStore.getGroupById(id);
+    group: (
+      _: any,
+      { id }: { id: string },
+      context: { groupService: GroupService }
+    ) => {
+      return context.groupService.getGroupById(id);
     },
   },
 
   Mutation: {
     // Create new group
-    createGroup: (_: any, { input }: { input: { name: string } }) => {
+    createGroup: (
+      _: any,
+      { input }: { input: { name: string } },
+      context: { groupService: GroupService }
+    ) => {
       try {
-        return groupStore.createGroup(input);
+        return context.groupService.createGroup(input);
       } catch (error) {
         throw new Error(
           `Failed to create group: ${
@@ -31,10 +40,11 @@ export const groupResolvers = {
     // Update group
     updateGroup: (
       _: any,
-      { id, input }: { id: string; input: { name?: string } }
+      { id, input }: { id: string; input: { name?: string } },
+      context: { groupService: GroupService }
     ) => {
       try {
-        return groupStore.updateGroup(id, input);
+        return context.groupService.updateGroup(id, input);
       } catch (error) {
         throw new Error(
           `Failed to update group: ${
@@ -45,9 +55,13 @@ export const groupResolvers = {
     },
 
     // Delete group
-    deleteGroup: (_: any, { id }: { id: string }) => {
+    deleteGroup: (
+      _: any,
+      { id }: { id: string },
+      context: { groupService: GroupService }
+    ) => {
       try {
-        return groupStore.deleteGroup(id);
+        return context.groupService.deleteGroup(id);
       } catch (error) {
         throw new Error(
           `Failed to delete group: ${
@@ -60,16 +74,17 @@ export const groupResolvers = {
     // Add user to group
     addUserToGroup: (
       _: any,
-      { userId, groupId }: { userId: string; groupId: string }
+      { userId, groupId }: { userId: string; groupId: string },
+      context: { groupService: GroupService; userService: UserService }
     ) => {
       try {
         // Check if user exists
-        const user = userStore.getUserById(userId);
+        const user = context.userService.getUserById(userId);
         if (!user) {
           throw new Error(`User with id ${userId} not found`);
         }
 
-        return groupStore.addUserToGroup(userId, groupId);
+        return context.groupService.addUserToGroup(userId, groupId);
       } catch (error) {
         throw new Error(
           `Failed to add user to group: ${
@@ -82,10 +97,11 @@ export const groupResolvers = {
     // Remove user from group
     removeUserFromGroup: (
       _: any,
-      { userId, groupId }: { userId: string; groupId: string }
+      { userId, groupId }: { userId: string; groupId: string },
+      context: { groupService: GroupService }
     ) => {
       try {
-        return groupStore.removeUserFromGroup(userId, groupId);
+        return context.groupService.removeUserFromGroup(userId, groupId);
       } catch (error) {
         throw new Error(
           `Failed to remove user from group: ${
@@ -98,10 +114,14 @@ export const groupResolvers = {
 
   Group: {
     // Resolve users field for Group
-    users: (parent: any) => {
-      const userIds = groupStore.getUserIdsByGroupId(parent.id);
+    users: (
+      parent: any,
+      _: any,
+      context: { groupService: GroupService; userService: UserService }
+    ) => {
+      const userIds = context.groupService.getUserIdsByGroupId(parent.id);
       return userIds
-        .map((userId) => userStore.getUserById(userId))
+        .map((userId) => context.userService.getUserById(userId))
         .filter(Boolean);
     },
   },
