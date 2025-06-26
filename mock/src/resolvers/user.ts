@@ -1,5 +1,6 @@
 import { UserService } from "../services/UserService";
 import { GroupService } from "../services/GroupService";
+import { TeamService } from "../services/TeamService";
 
 // Services will be injected via context
 export const userResolvers = {
@@ -85,6 +86,10 @@ export const userResolvers = {
     // Resolve groups field for User
     groups: (parent: any, _: any, context: { groupService: GroupService }) => {
       return context.groupService.getGroupsByUserId(parent.id);
+    },
+    // Resolve teams field for User
+    teams: (parent: any, _: any, context: { teamService: TeamService }) => {
+      return context.teamService.getTeamsByUserId(parent.id);
     },
   },
 };

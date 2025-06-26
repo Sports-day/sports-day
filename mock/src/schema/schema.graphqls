@@ -3,6 +3,7 @@ type User {
   name: String!
   email: String!
   groups: [Group!]!
+  teams: [Team!]!
   createdAt: String!
   updatedAt: String!
 }
@@ -15,12 +16,23 @@ type Group {
   updatedAt: String!
 }
 
+type Team {
+  id: ID!
+  name: String!
+  users: [User!]!
+  group: Group
+  createdAt: String!
+  updatedAt: String!
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User
   userByEmail(email: String!): User
   groups: [Group!]!
   group(id: ID!): Group
+  teams: [Team!]!
+  team(id: ID!): Team
 }
 
 type Mutation {
@@ -32,6 +44,11 @@ type Mutation {
   deleteGroup(id: ID!): Boolean!
   addUserToGroup(userId: ID!, groupId: ID!): Group!
   removeUserFromGroup(userId: ID!, groupId: ID!): Group!
+  createTeam(input: CreateTeamInput!): Team!
+  updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+  deleteTeam(id: ID!): Boolean!
+  addUserToTeam(userId: ID!, teamId: ID!): Team!
+  removeUserFromTeam(userId: ID!, teamId: ID!): Team!
 }
 
 input CreateUserInput {
@@ -50,4 +67,14 @@ input CreateGroupInput {
 
 input UpdateGroupInput {
   name: String
+}
+
+input CreateTeamInput {
+  name: String!
+  groupId: ID
+}
+
+input UpdateTeamInput {
+  name: String
+  groupId: ID
 }

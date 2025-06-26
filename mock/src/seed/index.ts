@@ -19,9 +19,15 @@ interface SeedGroup extends SeedEntity {
   description: string;
 }
 
+// チーム定義
+interface SeedTeam extends SeedEntity {
+  groupId?: string;
+  description: string;
+}
+
 // リレーション定義
 interface SeedRelation {
-  type: "user_group";
+  type: "user_group" | "user_team";
   sourceId: string;
   targetId: string;
   metadata?: Record<string, any>;
@@ -31,6 +37,7 @@ interface SeedRelation {
 export interface SeedData {
   users: SeedUser[];
   groups: SeedGroup[];
+  teams: SeedTeam[];
   relations: SeedRelation[];
 }
 
@@ -73,12 +80,16 @@ export class SeedDataFactory {
       (e) => "email" in e
     ) as SeedUser[];
     const groups = Array.from(this.entities.values()).filter(
-      (e) => "type" in e && !("email" in e)
+      (e) => "type" in e && !("email" in e) && !("groupId" in e)
     ) as SeedGroup[];
+    const teams = Array.from(this.entities.values()).filter(
+      (e) => "groupId" in e
+    ) as SeedTeam[];
 
     return {
       users,
       groups,
+      teams,
       relations: this.relations,
     };
   }
@@ -106,6 +117,26 @@ const JAPANESE_NAMES: JapaneseName[] = [
 // Sample groups
 const SAMPLE_GROUPS = [{ name: "サクラ" }, { name: "アサヒ" }];
 
+// Sample teams
+const SAMPLE_TEAMS = [
+  {
+    name: "フロントエンドチーム",
+    groupName: "サクラ",
+    description: "React/TypeScript開発チーム",
+  },
+  {
+    name: "バックエンドチーム",
+    groupName: "サクラ",
+    description: "Go/GraphQL開発チーム",
+  },
+  {
+    name: "デザインチーム",
+    groupName: "アサヒ",
+    description: "UI/UXデザインチーム",
+  },
+  { name: "QAチーム", groupName: "アサヒ", description: "品質保証チーム" },
+];
+
 // User-Group assignments (first 5 users to サクラ, next 5 to アサヒ)
 const USER_GROUP_ASSIGNMENTS = [
   { userName: "田中太郎", groupName: "サクラ" },
@@ -120,6 +151,20 @@ const USER_GROUP_ASSIGNMENTS = [
   { userName: "加藤麻衣", groupName: "アサヒ" },
 ];
 
+// User-Team assignments
+const USER_TEAM_ASSIGNMENTS = [
+  { userName: "田中太郎", teamName: "フロントエンドチーム" },
+  { userName: "佐藤花子", teamName: "フロントエンドチーム" },
+  { userName: "鈴木一郎", teamName: "バックエンドチーム" },
+  { userName: "高橋美咲", teamName: "バックエンドチーム" },
+  { userName: "渡辺健太", teamName: "フロントエンドチーム" },
+  { userName: "伊藤愛", teamName: "デザインチーム" },
+  { userName: "山田次郎", teamName: "デザインチーム" },
+  { userName: "中村由美", teamName: "QAチーム" },
+  { userName: "小林翔太", teamName: "QAチーム" },
+  { userName: "加藤麻衣", teamName: "デザインチーム" },
+];
+
 // 後方互換性のためのインターフェース
 export interface LegacySeedUser {
   name: string;
@@ -130,9 +175,20 @@ export interface LegacySeedGroup {
   name: string;
 }
 
+export interface LegacySeedTeam {
+  name: string;
+  groupName: string;
+  description: string;
+}
+
 export interface LegacySeedUserGroupAssignment {
   userName: string;
   groupName: string;
+}
+
+export interface LegacySeedUserTeamAssignment {
+  userName: string;
+  teamName: string;
 }
 
 // 現在のシードデータ（後方互換性のため）
@@ -148,7 +204,15 @@ export const seedData = {
       name: group.name,
     })
   ),
+  teams: SAMPLE_TEAMS.map(
+    (team): LegacySeedTeam => ({
+      name: team.name,
+      groupName: team.groupName,
+      description: team.description,
+    })
+  ),
   userGroupAssignments: USER_GROUP_ASSIGNMENTS,
+  userTeamAssignments: USER_TEAM_ASSIGNMENTS,
 };
 
 // 複雑なシードデータ作成例（メタデータ付きリレーション）
@@ -195,6 +259,21 @@ export const createComplexSeedData = (): SeedData => {
     description: "開発チームB",
   } as SeedGroup);
 
+  // チームを登録
+  factory.registerEntity({
+    id: ulid(),
+    name: "フロントエンドチーム",
+    groupId: "サクラ", // グループ名で参照
+    description: "React/TypeScript開発チーム",
+  } as SeedTeam);
+
+  factory.registerEntity({
+    id: ulid(),
+    name: "バックエンドチーム",
+    groupId: "サクラ", // グループ名で参照
+    description: "Go/GraphQL開発チーム",
+  } as SeedTeam);
+
   // リレーションを追加（メタデータ付き）
   factory.addRelation("user_group", "田中太郎", "サクラ", {
     role: "leader",
@@ -205,6 +284,16 @@ export const createComplexSeedData = (): SeedData => {
     joinedAt: "2024-02-01",
   });
   factory.addRelation("user_group", "鈴木一郎", "サクラ", {
+    role: "member",
+    joinedAt: "2024-01-15",
+  });
+
+  // チームリレーションを追加
+  factory.addRelation("user_team", "田中太郎", "フロントエンドチーム", {
+    role: "leader",
+    joinedAt: "2024-01-01",
+  });
+  factory.addRelation("user_team", "鈴木一郎", "バックエンドチーム", {
     role: "member",
     joinedAt: "2024-01-15",
   });
@@ -255,6 +344,35 @@ export const createSimpleSeedData = (): SeedData => {
     } as SeedGroup);
   });
 
+  // チーム登録
+  const teams = [
+    {
+      name: "フロントエンドチーム",
+      groupName: "サクラ",
+      description: "React/TypeScript開発チーム",
+    },
+    {
+      name: "バックエンドチーム",
+      groupName: "サクラ",
+      description: "Go/GraphQL開発チーム",
+    },
+    {
+      name: "デザインチーム",
+      groupName: "アサヒ",
+      description: "UI/UXデザインチーム",
+    },
+    { name: "QAチーム", groupName: "アサヒ", description: "品質保証チーム" },
+  ];
+
+  teams.forEach((team) => {
+    factory.registerEntity({
+      id: ulid(),
+      name: team.name,
+      groupId: team.groupName, // グループ名で参照
+      description: team.description,
+    } as SeedTeam);
+  });
+
   // リレーション追加（最初の5人をサクラ、次の5人をアサヒに）
   const sakuraUsers = users.slice(0, 5);
   const asahiUsers = users.slice(5, 10);
@@ -265,6 +383,11 @@ export const createSimpleSeedData = (): SeedData => {
 
   asahiUsers.forEach((user) => {
     factory.addRelation("user_group", user.name, "アサヒ");
+  });
+
+  // チームリレーション追加
+  USER_TEAM_ASSIGNMENTS.forEach((assignment) => {
+    factory.addRelation("user_team", assignment.userName, assignment.teamName);
   });
 
   return factory.generate();
@@ -294,5 +417,15 @@ export const generateSeedData = () => {
     updatedAt: now,
   }));
 
-  return { users, groups };
+  const teams = seedData.teams.map((team) => ({
+    id: ulid(),
+    name: team.name,
+    groupId: undefined, // 後でグループIDに変換
+    description: team.description,
+    userIds: new Set<string>(),
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  return { users, groups, teams };
 };
