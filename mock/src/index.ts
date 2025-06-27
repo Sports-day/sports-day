@@ -7,9 +7,11 @@ import { DatabaseSeeder } from "./database/seeder";
 import { UserRepository } from "./repositories/UserRepository";
 import { GroupRepository } from "./repositories/GroupRepository";
 import { TeamRepository } from "./repositories/TeamRepository";
+import { SceneRepository } from "./repositories/SceneRepository";
 import { UserService } from "./services/UserService";
 import { GroupService } from "./services/GroupService";
 import { TeamService } from "./services/TeamService";
+import { SceneService } from "./services/SceneService";
 
 const PORT = process.env.PORT || 4000;
 
@@ -21,11 +23,13 @@ async function startServer() {
   const userRepo = new UserRepository(db);
   const groupRepo = new GroupRepository(db);
   const teamRepo = new TeamRepository(db);
+  const sceneRepo = new SceneRepository(db);
 
   // Initialize services
   const userService = new UserService(userRepo);
   const groupService = new GroupService(groupRepo);
   const teamService = new TeamService(teamRepo, groupRepo, userRepo);
+  const sceneService = new SceneService(sceneRepo);
 
   // Initialize seeder and seed data
   const seeder = new DatabaseSeeder(db);
@@ -55,6 +59,7 @@ async function startServer() {
       userService,
       groupService,
       teamService,
+      sceneService,
     }),
   });
 

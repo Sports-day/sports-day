@@ -25,6 +25,14 @@ type Team {
   updatedAt: String!
 }
 
+type Scene {
+  id: ID!
+  name: String!
+  description: String
+  createdAt: String!
+  updatedAt: String!
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User
@@ -33,6 +41,8 @@ type Query {
   group(id: ID!): Group
   teams: [Team!]!
   team(id: ID!): Team
+  scenes: [Scene!]!
+  scene(id: ID!): Scene
 }
 
 type Mutation {
@@ -49,6 +59,9 @@ type Mutation {
   deleteTeam(id: ID!): Boolean!
   addUserToTeam(userId: ID!, teamId: ID!): Team!
   removeUserFromTeam(userId: ID!, teamId: ID!): Team!
+  createScene(input: CreateSceneInput!): Scene!
+  updateScene(id: ID!, input: UpdateSceneInput!): Scene!
+  deleteScene(id: ID!): Boolean!
 }
 
 input CreateUserInput {
@@ -77,4 +90,14 @@ input CreateTeamInput {
 input UpdateTeamInput {
   name: String
   groupId: ID
+}
+
+input CreateSceneInput {
+  name: String!
+  description: String
+}
+
+input UpdateSceneInput {
+  name: String
+  description: String
 }

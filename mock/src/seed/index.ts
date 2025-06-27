@@ -25,6 +25,11 @@ interface SeedTeam extends SeedEntity {
   description: string;
 }
 
+// シーン定義
+interface SeedScene extends SeedEntity {
+  description?: string;
+}
+
 // リレーション定義
 interface SeedRelation {
   type: "user_group" | "user_team";
@@ -38,6 +43,7 @@ export interface SeedData {
   users: SeedUser[];
   groups: SeedGroup[];
   teams: SeedTeam[];
+  scenes: SeedScene[];
   relations: SeedRelation[];
 }
 
@@ -85,11 +91,15 @@ export class SeedDataFactory {
     const teams = Array.from(this.entities.values()).filter(
       (e) => "groupId" in e
     ) as SeedTeam[];
+    const scenes = Array.from(this.entities.values()).filter(
+      (e) => !("email" in e) && !("type" in e) && !("groupId" in e)
+    ) as SeedScene[];
 
     return {
       users,
       groups,
       teams,
+      scenes,
       relations: this.relations,
     };
   }
@@ -137,6 +147,26 @@ const SAMPLE_TEAMS = [
   { name: "QAチーム", groupName: "アサヒ", description: "品質保証チーム" },
 ];
 
+// Sample scenes
+const SAMPLE_SCENES = [
+  {
+    name: "晴天時",
+    description: "晴れた日の屋外スポーツイベント",
+  },
+  {
+    name: "雨天時",
+    description: "雨の日の屋内スポーツイベント",
+  },
+  {
+    name: "曇天時",
+    description: "曇りの日の屋外スポーツイベント",
+  },
+  {
+    name: "夜間",
+    description: "夜間のスポーツイベント",
+  },
+];
+
 // User-Group assignments (first 5 users to サクラ, next 5 to アサヒ)
 const USER_GROUP_ASSIGNMENTS = [
   { userName: "田中太郎", groupName: "サクラ" },
@@ -181,6 +211,11 @@ export interface LegacySeedTeam {
   description: string;
 }
 
+export interface LegacySeedScene {
+  name: string;
+  description?: string;
+}
+
 export interface LegacySeedUserGroupAssignment {
   userName: string;
   groupName: string;
@@ -209,6 +244,12 @@ export const seedData = {
       name: team.name,
       groupName: team.groupName,
       description: team.description,
+    })
+  ),
+  scenes: SAMPLE_SCENES.map(
+    (scene): LegacySeedScene => ({
+      name: scene.name,
+      description: scene.description,
     })
   ),
   userGroupAssignments: USER_GROUP_ASSIGNMENTS,
@@ -296,6 +337,15 @@ export const createComplexSeedData = (): SeedData => {
   factory.addRelation("user_team", "鈴木一郎", "バックエンドチーム", {
     role: "member",
     joinedAt: "2024-01-15",
+  });
+
+  // シーン登録
+  SAMPLE_SCENES.forEach((scene) => {
+    factory.registerEntity({
+      id: ulid(),
+      name: scene.name,
+      description: scene.description,
+    } as SeedScene);
   });
 
   return factory.generate();
@@ -388,6 +438,15 @@ export const createSimpleSeedData = (): SeedData => {
   // チームリレーション追加
   USER_TEAM_ASSIGNMENTS.forEach((assignment) => {
     factory.addRelation("user_team", assignment.userName, assignment.teamName);
+  });
+
+  // シーン登録
+  SAMPLE_SCENES.forEach((scene) => {
+    factory.registerEntity({
+      id: ulid(),
+      name: scene.name,
+      description: scene.description,
+    } as SeedScene);
   });
 
   return factory.generate();

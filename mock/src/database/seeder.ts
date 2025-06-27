@@ -3,16 +3,19 @@ import { seedData, createSeedData } from "../seed";
 import { UserRepository } from "../repositories/UserRepository";
 import { GroupRepository } from "../repositories/GroupRepository";
 import { TeamRepository } from "../repositories/TeamRepository";
+import { SceneRepository } from "../repositories/SceneRepository";
 
 export class DatabaseSeeder {
   private userRepo: UserRepository;
   private groupRepo: GroupRepository;
   private teamRepo: TeamRepository;
+  private sceneRepo: SceneRepository;
 
   constructor(db: Database.Database) {
     this.userRepo = new UserRepository(db);
     this.groupRepo = new GroupRepository(db);
     this.teamRepo = new TeamRepository(db);
+    this.sceneRepo = new SceneRepository(db);
   }
 
   async seed(): Promise<void> {
@@ -55,6 +58,19 @@ export class DatabaseSeeder {
       teams[teamData.name] = team.id;
       console.log(
         `  ✅ Created team: ${team.name} (group: ${teamData.groupId || "none"})`
+      );
+    }
+
+    // シーンをシード
+    for (const sceneData of seedData.scenes) {
+      const scene = this.sceneRepo.createScene({
+        name: sceneData.name,
+        description: sceneData.description,
+      });
+      console.log(
+        `  ✅ Created scene: ${scene.name} (${
+          scene.description || "no description"
+        })`
       );
     }
 
@@ -155,6 +171,19 @@ export class DatabaseSeeder {
       }
     }
 
+    // シーンをシード
+    for (const sceneData of seedData.scenes) {
+      const scene = this.sceneRepo.createScene({
+        name: sceneData.name,
+        description: sceneData.description,
+      });
+      console.log(
+        `  ✅ Created scene: ${scene.name} (${
+          scene.description || "no description"
+        })`
+      );
+    }
+
     console.log("✅ Database seeding completed (legacy mode)");
   }
 
@@ -172,6 +201,7 @@ export class DatabaseSeeder {
     db.prepare("DELETE FROM teams").run();
     db.prepare("DELETE FROM users").run();
     db.prepare("DELETE FROM groups").run();
+    db.prepare("DELETE FROM scenes").run();
 
     // Re-enable foreign key checks
     db.pragma("foreign_keys = ON");

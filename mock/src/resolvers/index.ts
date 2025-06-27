@@ -1,6 +1,7 @@
 import { userResolvers } from "./user";
 import { groupResolvers } from "./group";
 import { teamResolvers } from "./team";
+import { sceneResolvers } from "./scene";
 
 // Combine all resolvers
 export const resolvers = {
@@ -8,11 +9,13 @@ export const resolvers = {
     ...userResolvers.Query,
     ...groupResolvers.Query,
     ...teamResolvers.Query,
+    ...sceneResolvers.Query,
   },
   Mutation: {
     ...userResolvers.Mutation,
     ...groupResolvers.Mutation,
     ...teamResolvers.Mutation,
+    ...sceneResolvers.Mutation,
   },
   User: {
     ...userResolvers.User,
