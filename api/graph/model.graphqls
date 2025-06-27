@@ -15,3 +15,9 @@ type AuthResponse {
   token: String!
   user: User!
 }
+
+type Sports {
+  id: ID!
+  name: String!
+  weight: Int!
+}
