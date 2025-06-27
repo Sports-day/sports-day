@@ -181,20 +181,6 @@ const USER_GROUP_ASSIGNMENTS = [
   { userName: "加藤麻衣", groupName: "アサヒ" },
 ];
 
-// User-Team assignments
-const USER_TEAM_ASSIGNMENTS = [
-  { userName: "田中太郎", teamName: "フロントエンドチーム" },
-  { userName: "佐藤花子", teamName: "フロントエンドチーム" },
-  { userName: "鈴木一郎", teamName: "バックエンドチーム" },
-  { userName: "高橋美咲", teamName: "バックエンドチーム" },
-  { userName: "渡辺健太", teamName: "フロントエンドチーム" },
-  { userName: "伊藤愛", teamName: "デザインチーム" },
-  { userName: "山田次郎", teamName: "デザインチーム" },
-  { userName: "中村由美", teamName: "QAチーム" },
-  { userName: "小林翔太", teamName: "QAチーム" },
-  { userName: "加藤麻衣", teamName: "デザインチーム" },
-];
-
 // 後方互換性のためのインターフェース
 export interface LegacySeedUser {
   name: string;
@@ -253,7 +239,6 @@ export const seedData = {
     })
   ),
   userGroupAssignments: USER_GROUP_ASSIGNMENTS,
-  userTeamAssignments: USER_TEAM_ASSIGNMENTS,
 };
 
 // 複雑なシードデータ作成例（メタデータ付きリレーション）
@@ -394,35 +379,6 @@ export const createSimpleSeedData = (): SeedData => {
     } as SeedGroup);
   });
 
-  // チーム登録
-  const teams = [
-    {
-      name: "フロントエンドチーム",
-      groupName: "サクラ",
-      description: "React/TypeScript開発チーム",
-    },
-    {
-      name: "バックエンドチーム",
-      groupName: "サクラ",
-      description: "Go/GraphQL開発チーム",
-    },
-    {
-      name: "デザインチーム",
-      groupName: "アサヒ",
-      description: "UI/UXデザインチーム",
-    },
-    { name: "QAチーム", groupName: "アサヒ", description: "品質保証チーム" },
-  ];
-
-  teams.forEach((team) => {
-    factory.registerEntity({
-      id: ulid(),
-      name: team.name,
-      groupId: team.groupName, // グループ名で参照
-      description: team.description,
-    } as SeedTeam);
-  });
-
   // リレーション追加（最初の5人をサクラ、次の5人をアサヒに）
   const sakuraUsers = users.slice(0, 5);
   const asahiUsers = users.slice(5, 10);
@@ -433,11 +389,6 @@ export const createSimpleSeedData = (): SeedData => {
 
   asahiUsers.forEach((user) => {
     factory.addRelation("user_group", user.name, "アサヒ");
-  });
-
-  // チームリレーション追加
-  USER_TEAM_ASSIGNMENTS.forEach((assignment) => {
-    factory.addRelation("user_team", assignment.userName, assignment.teamName);
   });
 
   // シーン登録

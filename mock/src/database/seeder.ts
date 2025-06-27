@@ -158,19 +158,6 @@ export class DatabaseSeeder {
       }
     }
 
-    // ユーザー・チーム割り当てをシード
-    for (const assignment of seedData.userTeamAssignments) {
-      const userId = users[assignment.userName];
-      const teamId = teams[assignment.teamName];
-
-      if (userId && teamId) {
-        this.teamRepo.addUserToTeam(userId, teamId);
-        console.log(
-          `  ✅ Assigned ${assignment.userName} to ${assignment.teamName}`
-        );
-      }
-    }
-
     // シーンをシード
     for (const sceneData of seedData.scenes) {
       const scene = this.sceneRepo.createScene({
