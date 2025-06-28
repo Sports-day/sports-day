@@ -29,6 +29,15 @@ type Scene {
   id: ID!
   name: String!
   description: String
+  sports: [Sport!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Sport {
+  id: ID!
+  name: String!
+  scene: Scene!
   createdAt: String!
   updatedAt: String!
 }
@@ -43,6 +52,8 @@ type Query {
   team(id: ID!): Team
   scenes: [Scene!]!
   scene(id: ID!): Scene
+  sports: [Sport!]!
+  sport(id: ID!): Sport
 }
 
 type Mutation {
@@ -62,6 +73,9 @@ type Mutation {
   createScene(input: CreateSceneInput!): Scene!
   updateScene(id: ID!, input: UpdateSceneInput!): Scene!
   deleteScene(id: ID!): Boolean!
+  createSport(input: CreateSportInput!): Sport!
+  updateSport(id: ID!, input: UpdateSportInput!): Sport!
+  deleteSport(id: ID!): Boolean!
 }
 
 input CreateUserInput {
@@ -100,4 +114,14 @@ input CreateSceneInput {
 input UpdateSceneInput {
   name: String
   description: String
+}
+
+input CreateSportInput {
+  name: String!
+  sceneId: ID!
+}
+
+input UpdateSportInput {
+  name: String
+  sceneId: ID
 }

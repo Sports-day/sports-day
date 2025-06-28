@@ -4,18 +4,21 @@ import { UserRepository } from "../repositories/UserRepository";
 import { GroupRepository } from "../repositories/GroupRepository";
 import { TeamRepository } from "../repositories/TeamRepository";
 import { SceneRepository } from "../repositories/SceneRepository";
+import { SportRepository } from "../repositories/SportRepository";
 
 export class DatabaseSeeder {
   private userRepo: UserRepository;
   private groupRepo: GroupRepository;
   private teamRepo: TeamRepository;
   private sceneRepo: SceneRepository;
+  private sportRepo: SportRepository;
 
   constructor(db: Database.Database) {
     this.userRepo = new UserRepository(db);
     this.groupRepo = new GroupRepository(db);
     this.teamRepo = new TeamRepository(db);
     this.sceneRepo = new SceneRepository(db);
+    this.sportRepo = new SportRepository(db);
   }
 
   async seed(): Promise<void> {
@@ -62,16 +65,38 @@ export class DatabaseSeeder {
     }
 
     // シーンをシード
+    const scenes: { [name: string]: string } = {};
     for (const sceneData of seedData.scenes) {
       const scene = this.sceneRepo.createScene({
         name: sceneData.name,
         description: sceneData.description,
       });
+      scenes[sceneData.name] = scene.id;
       console.log(
         `  ✅ Created scene: ${scene.name} (${
           scene.description || "no description"
         })`
       );
+    }
+
+    // スポーツをシード
+    for (const sportData of seedData.sports) {
+      // シーン名からシーンIDを取得
+      const sceneId = sportData.sceneId ? scenes[sportData.sceneId] : undefined;
+
+      if (sceneId) {
+        const sport = this.sportRepo.createSport({
+          name: sportData.name,
+          sceneId: sceneId,
+        });
+        console.log(
+          `  ✅ Created sport: ${sport.name} (scene: ${sportData.sceneId})`
+        );
+      } else {
+        console.warn(
+          `  ⚠️  Skipped sport: ${sportData.name} (scene not found: ${sportData.sceneId})`
+        );
+      }
     }
 
     // リレーションをシード
@@ -159,16 +184,37 @@ export class DatabaseSeeder {
     }
 
     // シーンをシード
+    const scenes: { [name: string]: string } = {};
     for (const sceneData of seedData.scenes) {
       const scene = this.sceneRepo.createScene({
         name: sceneData.name,
         description: sceneData.description,
       });
+      scenes[sceneData.name] = scene.id;
       console.log(
         `  ✅ Created scene: ${scene.name} (${
           scene.description || "no description"
         })`
       );
+    }
+
+    // スポーツをシード
+    for (const sportData of seedData.sports) {
+      const sceneId = scenes[sportData.sceneName];
+
+      if (sceneId) {
+        const sport = this.sportRepo.createSport({
+          name: sportData.name,
+          sceneId: sceneId,
+        });
+        console.log(
+          `  ✅ Created sport: ${sport.name} (scene: ${sportData.sceneName})`
+        );
+      } else {
+        console.warn(
+          `  ⚠️  Skipped sport: ${sportData.name} (scene not found: ${sportData.sceneName})`
+        );
+      }
     }
 
     console.log("✅ Database seeding completed (legacy mode)");
@@ -188,6 +234,7 @@ export class DatabaseSeeder {
     db.prepare("DELETE FROM teams").run();
     db.prepare("DELETE FROM users").run();
     db.prepare("DELETE FROM groups").run();
+    db.prepare("DELETE FROM sports").run();
     db.prepare("DELETE FROM scenes").run();
 
     // Re-enable foreign key checks

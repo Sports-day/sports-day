@@ -1,6 +1,8 @@
 import DataLoader from "dataloader";
 import { UserService } from "../services/UserService";
 import { GroupService } from "../services/GroupService";
+import { SportService } from "../services/SportService";
+import { SceneService } from "../services/SceneService";
 
 // User data loader
 export const createUserLoader = (userService: UserService) => {
@@ -35,5 +37,26 @@ export const createGroupUsersLoader = (
         .map((userId) => userService.getUserById(userId))
         .filter(Boolean);
     });
+  });
+};
+
+// Sport data loader
+export const createSportLoader = (sportService: SportService) => {
+  return new DataLoader(async (sportIds: readonly string[]) => {
+    return sportIds.map((id) => sportService.getSportById(id));
+  });
+};
+
+// Scene data loader
+export const createSceneLoader = (sceneService: SceneService) => {
+  return new DataLoader(async (sceneIds: readonly string[]) => {
+    return sceneIds.map((id) => sceneService.getSceneById(id));
+  });
+};
+
+// Sports by scene ID loader
+export const createSceneSportsLoader = (sportService: SportService) => {
+  return new DataLoader(async (sceneIds: readonly string[]) => {
+    return sceneIds.map((sceneId) => sportService.getSportsBySceneId(sceneId));
   });
 };

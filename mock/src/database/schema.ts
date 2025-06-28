@@ -35,6 +35,16 @@ CREATE TABLE IF NOT EXISTS scenes (
   updated_at TEXT NOT NULL
 );
 
+-- Sports table
+CREATE TABLE IF NOT EXISTS sports (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  scene_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (scene_id) REFERENCES scenes(id) ON DELETE CASCADE
+);
+
 -- User-Group relationships table
 CREATE TABLE IF NOT EXISTS user_groups (
   user_id TEXT NOT NULL,
@@ -63,4 +73,6 @@ CREATE INDEX IF NOT EXISTS idx_teams_group_id ON teams(group_id);
 CREATE INDEX IF NOT EXISTS idx_user_teams_user_id ON user_teams(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_teams_team_id ON user_teams(team_id);
 CREATE INDEX IF NOT EXISTS idx_scenes_name ON scenes(name);
+CREATE INDEX IF NOT EXISTS idx_sports_scene_id ON sports(scene_id);
+CREATE INDEX IF NOT EXISTS idx_sports_name ON sports(name);
 `;

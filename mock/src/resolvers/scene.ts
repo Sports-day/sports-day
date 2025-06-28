@@ -39,4 +39,13 @@ export const sceneResolvers = {
       return context.sceneService.deleteScene(id);
     },
   },
+  Scene: {
+    sports: (
+      parent: { id: string },
+      _: any,
+      context: { sceneSportsLoader: any }
+    ) => {
+      return context.sceneSportsLoader.load(parent.id);
+    },
+  },
 };

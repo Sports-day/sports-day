@@ -30,9 +30,14 @@ interface SeedScene extends SeedEntity {
   description?: string;
 }
 
+// スポーツ定義
+interface SeedSport extends SeedEntity {
+  sceneId?: string;
+}
+
 // リレーション定義
 interface SeedRelation {
-  type: "user_group" | "user_team";
+  type: "user_group" | "user_team" | "sport_scene";
   sourceId: string;
   targetId: string;
   metadata?: Record<string, any>;
@@ -44,6 +49,7 @@ export interface SeedData {
   groups: SeedGroup[];
   teams: SeedTeam[];
   scenes: SeedScene[];
+  sports: SeedSport[];
   relations: SeedRelation[];
 }
 
@@ -86,20 +92,29 @@ export class SeedDataFactory {
       (e) => "email" in e
     ) as SeedUser[];
     const groups = Array.from(this.entities.values()).filter(
-      (e) => "type" in e && !("email" in e) && !("groupId" in e)
+      (e) =>
+        "type" in e && !("email" in e) && !("groupId" in e) && !("sceneId" in e)
     ) as SeedGroup[];
     const teams = Array.from(this.entities.values()).filter(
       (e) => "groupId" in e
     ) as SeedTeam[];
     const scenes = Array.from(this.entities.values()).filter(
-      (e) => !("email" in e) && !("type" in e) && !("groupId" in e)
+      (e) =>
+        !("email" in e) &&
+        !("type" in e) &&
+        !("groupId" in e) &&
+        !("sceneId" in e)
     ) as SeedScene[];
+    const sports = Array.from(this.entities.values()).filter(
+      (e) => "sceneId" in e
+    ) as SeedSport[];
 
     return {
       users,
       groups,
       teams,
       scenes,
+      sports,
       relations: this.relations,
     };
   }
@@ -147,7 +162,7 @@ const SAMPLE_TEAMS = [
   { name: "QAチーム", groupName: "アサヒ", description: "品質保証チーム" },
 ];
 
-// Sample scenes
+// Sample scenes (晴天時と雨天時のみ)
 const SAMPLE_SCENES = [
   {
     name: "晴天時",
@@ -157,13 +172,33 @@ const SAMPLE_SCENES = [
     name: "雨天時",
     description: "雨の日の屋内スポーツイベント",
   },
+];
+
+// Sample sports
+const SAMPLE_SPORTS = [
   {
-    name: "曇天時",
-    description: "曇りの日の屋外スポーツイベント",
+    name: "バスケットボール",
+    sceneName: "晴天時",
   },
   {
-    name: "夜間",
-    description: "夜間のスポーツイベント",
+    name: "バスケットボール",
+    sceneName: "雨天時",
+  },
+  {
+    name: "サッカー",
+    sceneName: "晴天時",
+  },
+  {
+    name: "バレー",
+    sceneName: "雨天時",
+  },
+  {
+    name: "バドミントン",
+    sceneName: "晴天時",
+  },
+  {
+    name: "バドミントン",
+    sceneName: "雨天時",
   },
 ];
 
@@ -202,6 +237,11 @@ export interface LegacySeedScene {
   description?: string;
 }
 
+export interface LegacySeedSport {
+  name: string;
+  sceneName: string;
+}
+
 export interface LegacySeedUserGroupAssignment {
   userName: string;
   groupName: string;
@@ -236,6 +276,12 @@ export const seedData = {
     (scene): LegacySeedScene => ({
       name: scene.name,
       description: scene.description,
+    })
+  ),
+  sports: SAMPLE_SPORTS.map(
+    (sport): LegacySeedSport => ({
+      name: sport.name,
+      sceneName: sport.sceneName,
     })
   ),
   userGroupAssignments: USER_GROUP_ASSIGNMENTS,
@@ -333,6 +379,15 @@ export const createComplexSeedData = (): SeedData => {
     } as SeedScene);
   });
 
+  // スポーツ登録
+  SAMPLE_SPORTS.forEach((sport) => {
+    factory.registerEntity({
+      id: ulid(),
+      name: sport.name,
+      sceneId: sport.sceneName, // シーン名で参照
+    } as SeedSport);
+  });
+
   return factory.generate();
 };
 
@@ -398,6 +453,15 @@ export const createSimpleSeedData = (): SeedData => {
       name: scene.name,
       description: scene.description,
     } as SeedScene);
+  });
+
+  // スポーツ登録
+  SAMPLE_SPORTS.forEach((sport) => {
+    factory.registerEntity({
+      id: ulid(),
+      name: sport.name,
+      sceneId: sport.sceneName, // シーン名で参照
+    } as SeedSport);
   });
 
   return factory.generate();
