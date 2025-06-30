@@ -9,8 +9,6 @@ interface SeedEntity {
 // ユーザー定義
 interface SeedUser extends SeedEntity {
   email: string;
-  role: "admin" | "user";
-  department: string;
 }
 
 // グループ定義
@@ -32,7 +30,7 @@ interface SeedScene extends SeedEntity {
 
 // スポーツ定義
 interface SeedSport extends SeedEntity {
-  sceneId?: string;
+  // sceneIdは削除（SportSceneで管理）
 }
 
 // リレーション定義
@@ -92,21 +90,28 @@ export class SeedDataFactory {
       (e) => "email" in e
     ) as SeedUser[];
     const groups = Array.from(this.entities.values()).filter(
-      (e) =>
-        "type" in e && !("email" in e) && !("groupId" in e) && !("sceneId" in e)
+      (e) => "type" in e && !("email" in e) && !("groupId" in e)
     ) as SeedGroup[];
     const teams = Array.from(this.entities.values()).filter(
       (e) => "groupId" in e
     ) as SeedTeam[];
+
+    // シーンは description を持つもののみ
     const scenes = Array.from(this.entities.values()).filter(
       (e) =>
         !("email" in e) &&
         !("type" in e) &&
         !("groupId" in e) &&
-        !("sceneId" in e)
+        "description" in e
     ) as SeedScene[];
+
+    // スポーツは description を持たないもののみ
     const sports = Array.from(this.entities.values()).filter(
-      (e) => "sceneId" in e
+      (e) =>
+        !("email" in e) &&
+        !("type" in e) &&
+        !("groupId" in e) &&
+        !("description" in e)
     ) as SeedSport[];
 
     return {
@@ -120,24 +125,138 @@ export class SeedDataFactory {
   }
 }
 
+// CSVファイルから取得した100人のユーザーデータ
+const CSV_USERS = [
+  { name: "近藤 陸", email: "riku.kondo@fake.sports-day.net" },
+  { name: "渡辺 蓮司", email: "renji.watanabe@fake.sports-day.net" },
+  { name: "小野 七海", email: "nanami.ono@fake.sports-day.net" },
+  { name: "中村 武", email: "takeru.nakamura@fake.sports-day.net" },
+  { name: "山口 葵", email: "aoi.yamaguchi@fake.sports-day.net" },
+  { name: "森 葵", email: "aoi.mori@fake.sports-day.net" },
+  { name: "森 健", email: "ken.mori@fake.sports-day.net" },
+  { name: "山口 雪", email: "yuki.yamaguchi@fake.sports-day.net" },
+  { name: "金子 陸", email: "riku.kaneko@fake.sports-day.net" },
+  { name: "伊藤 紗耶香", email: "sayaka.ito@fake.sports-day.net" },
+  { name: "村上 智", email: "tomo.murakami@fake.sports-day.net" },
+  { name: "井上 夢", email: "yume.inoue@fake.sports-day.net" },
+  { name: "佐藤 紗耶香", email: "sayaka.sato@fake.sports-day.net" },
+  { name: "井上 次郎", email: "jiro.inoue@fake.sports-day.net" },
+  { name: "小川 恵美", email: "emi.ogawa@fake.sports-day.net" },
+  { name: "武田 桜", email: "sakura.takeda@fake.sports-day.net" },
+  { name: "清水 未来", email: "miku.shimizu@fake.sports-day.net" },
+  { name: "野口 怜", email: "rei.noguchi@fake.sports-day.net" },
+  { name: "武田 壮太", email: "souta.takeda@fake.sports-day.net" },
+  { name: "林 莉子", email: "riko.hayashi@fake.sports-day.net" },
+  { name: "村上 壮太", email: "souta.murakami@fake.sports-day.net" },
+  { name: "太田 蓮", email: "ren.ota@fake.sports-day.net" },
+  { name: "菊池 太郎", email: "taro.kikuchi@fake.sports-day.net" },
+  { name: "田村 美優", email: "miyu.tamura@fake.sports-day.net" },
+  { name: "村上 壮介", email: "sosuke.murakami@fake.sports-day.net" },
+  { name: "長谷川 直樹", email: "naoki.hasegawa@fake.sports-day.net" },
+  { name: "黒田 結愛", email: "yua.kuroda@fake.sports-day.net" },
+  { name: "長谷川 里奈", email: "rina.hasegawa@fake.sports-day.net" },
+  { name: "小野 翼", email: "tsubasa.ono@fake.sports-day.net" },
+  { name: "林 翔", email: "sho.hayashi@fake.sports-day.net" },
+  { name: "平野 智", email: "tomo.hirano@fake.sports-day.net" },
+  { name: "金子 涼太", email: "ryota.kaneko@fake.sports-day.net" },
+  { name: "松田 匠", email: "takumi.matsuda@fake.sports-day.net" },
+  { name: "伊藤 愛莉", email: "airi.ito@fake.sports-day.net" },
+  { name: "松本 陽翔", email: "haruto.matsumoto@fake.sports-day.net" },
+  { name: "黒田 蓮", email: "ren.kuroda@fake.sports-day.net" },
+  { name: "小川 直樹", email: "naoki.ogawa@fake.sports-day.net" },
+  { name: "石川 健太", email: "kenta.ishikawa@fake.sports-day.net" },
+  { name: "田村 大輝", email: "daiki.tamura@fake.sports-day.net" },
+  { name: "藤田 俊", email: "shun.fujita@fake.sports-day.net" },
+  { name: "佐々木 里奈", email: "rina.sasaki@fake.sports-day.net" },
+  { name: "佐藤 桜", email: "sakura.sato@fake.sports-day.net" },
+  { name: "菊池 小春", email: "koharu.kikuchi@fake.sports-day.net" },
+  { name: "黒田 塁", email: "rui.kuroda@fake.sports-day.net" },
+  { name: "安藤 壮太", email: "souta.ando@fake.sports-day.net" },
+  { name: "鈴木 美咲", email: "misaki.suzuki@fake.sports-day.net" },
+  { name: "安藤 紗耶香", email: "sayaka.ando@fake.sports-day.net" },
+  { name: "近藤 武", email: "takeru.kondo@fake.sports-day.net" },
+  { name: "森 蓮司", email: "renji.mori@fake.sports-day.net" },
+  { name: "加藤 怜", email: "rei.kato@fake.sports-day.net" },
+  { name: "藤田 翔太", email: "shota.fujita@fake.sports-day.net" },
+  { name: "高橋 恵美", email: "emi.takahashi@fake.sports-day.net" },
+  { name: "太田 七海", email: "nanami.ota@fake.sports-day.net" },
+  { name: "田村 陽子", email: "hinako.tamura@fake.sports-day.net" },
+  { name: "松田 里奈", email: "rina.matsuda@fake.sports-day.net" },
+  { name: "松本 頼", email: "yori.matsumoto@fake.sports-day.net" },
+  { name: "平野 里奈", email: "rina.hirano@fake.sports-day.net" },
+  { name: "新井 雪", email: "yuki.arai@fake.sports-day.net" },
+  { name: "平野 結愛", email: "yua.hirano@fake.sports-day.net" },
+  { name: "山口 次郎", email: "jiro.yamaguchi@fake.sports-day.net" },
+  { name: "小川 星奈", email: "sena.ogawa@fake.sports-day.net" },
+  { name: "佐々木 俊", email: "shun.sasaki@fake.sports-day.net" },
+  { name: "阿部 紗耶香", email: "sayaka.abe@fake.sports-day.net" },
+  { name: "福田 桜", email: "sakura.fukuda@fake.sports-day.net" },
+  { name: "村上 健太", email: "kenta.murakami@fake.sports-day.net" },
+  { name: "松田 結愛", email: "yua.matsuda@fake.sports-day.net" },
+  { name: "黒田 健", email: "ken.kuroda@fake.sports-day.net" },
+  { name: "福田 頼", email: "yori.fukuda@fake.sports-day.net" },
+  { name: "金子 結愛", email: "yua.kaneko@fake.sports-day.net" },
+  { name: "黒田 小春", email: "koharu.kuroda@fake.sports-day.net" },
+  { name: "井上 涼太", email: "ryota.inoue@fake.sports-day.net" },
+  { name: "高橋 塁", email: "rui.takahashi@fake.sports-day.net" },
+  { name: "藤本 結愛", email: "yua.fujimoto@fake.sports-day.net" },
+  { name: "佐々木 怜", email: "rei.sasaki@fake.sports-day.net" },
+  { name: "松本 俊", email: "shun.matsumoto@fake.sports-day.net" },
+  { name: "佐々木 健", email: "ken.sasaki@fake.sports-day.net" },
+  { name: "石川 彩", email: "aya.ishikawa@fake.sports-day.net" },
+  { name: "安藤 雪", email: "yuki.ando@fake.sports-day.net" },
+  { name: "村上 直樹", email: "naoki.murakami@fake.sports-day.net" },
+  { name: "鈴木 優翔", email: "yuto.suzuki@fake.sports-day.net" },
+  { name: "福田 海翔", email: "kaito.fukuda@fake.sports-day.net" },
+  { name: "井上 蓮司", email: "renji.inoue@fake.sports-day.net" },
+  { name: "石川 未来", email: "miku.ishikawa@fake.sports-day.net" },
+  { name: "太田 花子", email: "hanako.ota@fake.sports-day.net" },
+  { name: "福田 葵", email: "aoi.fukuda@fake.sports-day.net" },
+  { name: "山本 翔太", email: "shota.yamamoto@fake.sports-day.net" },
+  { name: "安藤 翔", email: "sho.ando@fake.sports-day.net" },
+  { name: "山田 匠", email: "takumi.yamada@fake.sports-day.net" },
+  { name: "宮崎 大輝", email: "daiki.miyazaki@fake.sports-day.net" },
+  { name: "石川 七海", email: "nanami.ishikawa@fake.sports-day.net" },
+  { name: "佐藤 翔", email: "sho.sato@fake.sports-day.net" },
+  { name: "渡辺 健", email: "ken.watanabe@fake.sports-day.net" },
+  { name: "藤本 慶太", email: "keita.fujimoto@fake.sports-day.net" },
+  { name: "後藤 愛莉", email: "airi.goto@fake.sports-day.net" },
+  { name: "小野 雪", email: "yuki.ono@fake.sports-day.net" },
+  { name: "安藤 彩", email: "aya.ando@fake.sports-day.net" },
+  { name: "村上 陽菜", email: "hina.murakami@fake.sports-day.net" },
+  { name: "高木 直樹", email: "naoki.takagi@fake.sports-day.net" },
+  { name: "新井 太郎", email: "taro.arai@fake.sports-day.net" },
+  { name: "森 美咲", email: "misaki.mori@fake.sports-day.net" },
+];
+
+// 100人を1グループ50人ずつに分ける関数
+const createUserGroupAssignments = () => {
+  const assignments = [];
+
+  // 最初の50人をサクラに割り当て
+  for (let i = 0; i < 50; i++) {
+    assignments.push({
+      userName: CSV_USERS[i].name,
+      groupName: "サクラ",
+    });
+  }
+
+  // 残りの50人をアサヒに割り当て
+  for (let i = 50; i < 100; i++) {
+    assignments.push({
+      userName: CSV_USERS[i].name,
+      groupName: "アサヒ",
+    });
+  }
+
+  return assignments;
+};
+
 // Japanese names mapping
 interface JapaneseName {
   japanese: string;
   roman: string;
 }
-
-const JAPANESE_NAMES: JapaneseName[] = [
-  { japanese: "田中太郎", roman: "tanaka_taro" },
-  { japanese: "佐藤花子", roman: "sato_hanako" },
-  { japanese: "鈴木一郎", roman: "suzuki_ichiro" },
-  { japanese: "高橋美咲", roman: "takahashi_misaki" },
-  { japanese: "渡辺健太", roman: "watanabe_kenta" },
-  { japanese: "伊藤愛", roman: "ito_ai" },
-  { japanese: "山田次郎", roman: "yamada_jiro" },
-  { japanese: "中村由美", roman: "nakamura_yumi" },
-  { japanese: "小林翔太", roman: "kobayashi_shota" },
-  { japanese: "加藤麻衣", roman: "kato_mai" },
-];
 
 // Sample groups
 const SAMPLE_GROUPS = [{ name: "サクラ" }, { name: "アサヒ" }];
@@ -174,47 +293,30 @@ const SAMPLE_SCENES = [
   },
 ];
 
-// Sample sports
+// Sample sports (新しい要件に合わせて更新)
 const SAMPLE_SPORTS = [
-  {
-    name: "バスケットボール",
-    sceneName: "晴天時",
-  },
-  {
-    name: "バスケットボール",
-    sceneName: "雨天時",
-  },
-  {
-    name: "サッカー",
-    sceneName: "晴天時",
-  },
-  {
-    name: "バレー",
-    sceneName: "雨天時",
-  },
-  {
-    name: "バドミントン",
-    sceneName: "晴天時",
-  },
-  {
-    name: "バドミントン",
-    sceneName: "雨天時",
-  },
+  { name: "バスケットボール" },
+  { name: "バレーボール" },
+  { name: "ビーチボール" },
+  { name: "バドミントン" },
+  { name: "フットサル" },
+  { name: "ストラックアウト" },
 ];
 
-// User-Group assignments (first 5 users to サクラ, next 5 to アサヒ)
-const USER_GROUP_ASSIGNMENTS = [
-  { userName: "田中太郎", groupName: "サクラ" },
-  { userName: "佐藤花子", groupName: "サクラ" },
-  { userName: "鈴木一郎", groupName: "サクラ" },
-  { userName: "高橋美咲", groupName: "サクラ" },
-  { userName: "渡辺健太", groupName: "サクラ" },
-  { userName: "伊藤愛", groupName: "アサヒ" },
-  { userName: "山田次郎", groupName: "アサヒ" },
-  { userName: "中村由美", groupName: "アサヒ" },
-  { userName: "小林翔太", groupName: "アサヒ" },
-  { userName: "加藤麻衣", groupName: "アサヒ" },
+// Sample sport-scene relationships (新しい要件に合わせて更新)
+const SAMPLE_SPORT_SCENE_RELATIONS = [
+  { sportName: "バスケットボール", sceneName: "晴天時" },
+  { sportName: "バスケットボール", sceneName: "雨天時" },
+  { sportName: "バレーボール", sceneName: "雨天時" },
+  { sportName: "ビーチボール", sceneName: "晴天時" },
+  { sportName: "ビーチボール", sceneName: "雨天時" },
+  { sportName: "バドミントン", sceneName: "雨天時" },
+  { sportName: "フットサル", sceneName: "晴天時" },
+  { sportName: "ストラックアウト", sceneName: "晴天時" },
 ];
+
+// User-Group assignments (100人を1グループ50人ずつに分ける)
+const USER_GROUP_ASSIGNMENTS = createUserGroupAssignments();
 
 // 後方互換性のためのインターフェース
 export interface LegacySeedUser {
@@ -254,10 +356,10 @@ export interface LegacySeedUserTeamAssignment {
 
 // 現在のシードデータ（後方互換性のため）
 export const seedData = {
-  users: JAPANESE_NAMES.map(
-    (name): LegacySeedUser => ({
-      name: name.japanese,
-      email: `${name.roman}@fake.sports-day.net`,
+  users: CSV_USERS.map(
+    (user): LegacySeedUser => ({
+      name: user.name,
+      email: user.email,
     })
   ),
   groups: SAMPLE_GROUPS.map(
@@ -281,7 +383,7 @@ export const seedData = {
   sports: SAMPLE_SPORTS.map(
     (sport): LegacySeedSport => ({
       name: sport.name,
-      sceneName: sport.sceneName,
+      sceneName: sport.name,
     })
   ),
   userGroupAssignments: USER_GROUP_ASSIGNMENTS,
@@ -291,30 +393,14 @@ export const seedData = {
 export const createComplexSeedData = (): SeedData => {
   const factory = new SeedDataFactory();
 
-  // ユーザーを登録
-  factory.registerEntity({
-    id: ulid(),
-    name: "田中太郎",
-    email: "tanaka_taro@fake.sports-day.net",
-    role: "admin",
-    department: "開発部",
-  } as SeedUser);
-
-  factory.registerEntity({
-    id: ulid(),
-    name: "佐藤花子",
-    email: "sato_hanako@fake.sports-day.net",
-    role: "user",
-    department: "営業部",
-  } as SeedUser);
-
-  factory.registerEntity({
-    id: ulid(),
-    name: "鈴木一郎",
-    email: "suzuki_ichiro@fake.sports-day.net",
-    role: "user",
-    department: "開発部",
-  } as SeedUser);
+  // CSVファイルの100人のユーザーを登録
+  CSV_USERS.forEach((user) => {
+    factory.registerEntity({
+      id: ulid(),
+      name: user.name,
+      email: user.email,
+    } as SeedUser);
+  });
 
   // グループを登録
   factory.registerEntity({
@@ -346,28 +432,36 @@ export const createComplexSeedData = (): SeedData => {
     description: "Go/GraphQL開発チーム",
   } as SeedTeam);
 
-  // リレーションを追加（メタデータ付き）
-  factory.addRelation("user_group", "田中太郎", "サクラ", {
-    role: "leader",
-    joinedAt: "2024-01-01",
-  });
-  factory.addRelation("user_group", "佐藤花子", "アサヒ", {
-    role: "member",
-    joinedAt: "2024-02-01",
-  });
-  factory.addRelation("user_group", "鈴木一郎", "サクラ", {
-    role: "member",
-    joinedAt: "2024-01-15",
+  // ユーザーグループ割り当て（CSVデータを使用）
+  const userGroupAssignments = createUserGroupAssignments();
+  userGroupAssignments.forEach((assignment) => {
+    factory.addRelation(
+      "user_group",
+      assignment.userName,
+      assignment.groupName,
+      {
+        role: "member",
+        joinedAt: "2024-01-01",
+      }
+    );
   });
 
-  // チームリレーションを追加
-  factory.addRelation("user_team", "田中太郎", "フロントエンドチーム", {
-    role: "leader",
-    joinedAt: "2024-01-01",
+  // チームリレーションを追加（最初の10人をフロントエンド、次の10人をバックエンドに）
+  const frontendUsers = CSV_USERS.slice(0, 10);
+  const backendUsers = CSV_USERS.slice(10, 20);
+
+  frontendUsers.forEach((user) => {
+    factory.addRelation("user_team", user.name, "フロントエンドチーム", {
+      role: "member",
+      joinedAt: "2024-01-01",
+    });
   });
-  factory.addRelation("user_team", "鈴木一郎", "バックエンドチーム", {
-    role: "member",
-    joinedAt: "2024-01-15",
+
+  backendUsers.forEach((user) => {
+    factory.addRelation("user_team", user.name, "バックエンドチーム", {
+      role: "member",
+      joinedAt: "2024-01-01",
+    });
   });
 
   // シーン登録
@@ -384,38 +478,27 @@ export const createComplexSeedData = (): SeedData => {
     factory.registerEntity({
       id: ulid(),
       name: sport.name,
-      sceneId: sport.sceneName, // シーン名で参照
     } as SeedSport);
+  });
+
+  // SportSceneリレーションを追加
+  SAMPLE_SPORT_SCENE_RELATIONS.forEach((relation) => {
+    factory.addRelation("sport_scene", relation.sportName, relation.sceneName);
   });
 
   return factory.generate();
 };
 
-// シンプルなシードデータ（現在の方式の改善版）
+// シンプルなシードデータ（CSVファイルの100人を使用）
 export const createSimpleSeedData = (): SeedData => {
   const factory = new SeedDataFactory();
 
-  // ユーザー登録
-  const users = [
-    { name: "田中太郎", email: "tanaka_taro@fake.sports-day.net" },
-    { name: "佐藤花子", email: "sato_hanako@fake.sports-day.net" },
-    { name: "鈴木一郎", email: "suzuki_ichiro@fake.sports-day.net" },
-    { name: "高橋美咲", email: "takahashi_misaki@fake.sports-day.net" },
-    { name: "渡辺健太", email: "watanabe_kenta@fake.sports-day.net" },
-    { name: "伊藤愛", email: "ito_ai@fake.sports-day.net" },
-    { name: "山田次郎", email: "yamada_jiro@fake.sports-day.net" },
-    { name: "中村由美", email: "nakamura_yumi@fake.sports-day.net" },
-    { name: "小林翔太", email: "kobayashi_shota@fake.sports-day.net" },
-    { name: "加藤麻衣", email: "kato_mai@fake.sports-day.net" },
-  ];
-
-  users.forEach((user) => {
+  // CSVファイルの100人のユーザーを登録
+  CSV_USERS.forEach((user) => {
     factory.registerEntity({
       id: ulid(),
       name: user.name,
       email: user.email,
-      role: "user",
-      department: "一般",
     } as SeedUser);
   });
 
@@ -434,9 +517,9 @@ export const createSimpleSeedData = (): SeedData => {
     } as SeedGroup);
   });
 
-  // リレーション追加（最初の5人をサクラ、次の5人をアサヒに）
-  const sakuraUsers = users.slice(0, 5);
-  const asahiUsers = users.slice(5, 10);
+  // リレーション追加（最初の50人をサクラ、次の50人をアサヒに）
+  const sakuraUsers = CSV_USERS.slice(0, 50);
+  const asahiUsers = CSV_USERS.slice(50, 100);
 
   sakuraUsers.forEach((user) => {
     factory.addRelation("user_group", user.name, "サクラ");
@@ -460,8 +543,12 @@ export const createSimpleSeedData = (): SeedData => {
     factory.registerEntity({
       id: ulid(),
       name: sport.name,
-      sceneId: sport.sceneName, // シーン名で参照
     } as SeedSport);
+  });
+
+  // SportSceneリレーションを追加
+  SAMPLE_SPORT_SCENE_RELATIONS.forEach((relation) => {
+    factory.addRelation("sport_scene", relation.sportName, relation.sceneName);
   });
 
   return factory.generate();

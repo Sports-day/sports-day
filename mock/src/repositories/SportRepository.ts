@@ -11,14 +11,14 @@ export class SportRepository {
 
   getAllSports(): Sport[] {
     const stmt = this.db.prepare(`
-      SELECT id, name, scene_id, created_at, updated_at
+      SELECT id, name, created_at, updated_at
       FROM sports
       ORDER BY created_at DESC
     `);
     return stmt.all().map((row: any) => ({
       id: row.id,
       name: row.name,
-      sceneId: row.scene_id,
+      scenes: [], // scenesは別途取得
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
@@ -26,7 +26,7 @@ export class SportRepository {
 
   getSportById(id: string): Sport | null {
     const stmt = this.db.prepare(`
-      SELECT id, name, scene_id, created_at, updated_at
+      SELECT id, name, created_at, updated_at
       FROM sports
       WHERE id = ?
     `);
@@ -36,26 +36,10 @@ export class SportRepository {
     return {
       id: row.id,
       name: row.name,
-      sceneId: row.scene_id,
+      scenes: [], // scenesは別途取得
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
-  }
-
-  getSportsBySceneId(sceneId: string): Sport[] {
-    const stmt = this.db.prepare(`
-      SELECT id, name, scene_id, created_at, updated_at
-      FROM sports
-      WHERE scene_id = ?
-      ORDER BY name
-    `);
-    return stmt.all(sceneId).map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      sceneId: row.scene_id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
   }
 
   createSport(input: CreateSportInput): Sport {
@@ -63,16 +47,16 @@ export class SportRepository {
     const id = ulid();
 
     const stmt = this.db.prepare(`
-      INSERT INTO sports (id, name, scene_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO sports (id, name, created_at, updated_at)
+      VALUES (?, ?, ?, ?)
     `);
 
-    stmt.run(id, input.name, input.sceneId, now, now);
+    stmt.run(id, input.name, now, now);
 
     return {
       id,
       name: input.name,
-      sceneId: input.sceneId,
+      scenes: [],
       createdAt: now,
       updatedAt: now,
     };
@@ -89,11 +73,6 @@ export class SportRepository {
     if (input.name !== undefined) {
       updates.push("name = ?");
       values.push(input.name);
-    }
-
-    if (input.sceneId !== undefined) {
-      updates.push("scene_id = ?");
-      values.push(input.sceneId);
     }
 
     if (updates.length === 0) return existing;
@@ -113,7 +92,6 @@ export class SportRepository {
     return {
       ...existing,
       name: input.name ?? existing.name,
-      sceneId: input.sceneId ?? existing.sceneId,
       updatedAt: now,
     };
   }

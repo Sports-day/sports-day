@@ -9,19 +9,25 @@ import { GroupRepository } from "./repositories/GroupRepository";
 import { TeamRepository } from "./repositories/TeamRepository";
 import { SceneRepository } from "./repositories/SceneRepository";
 import { SportRepository } from "./repositories/SportRepository";
+import { SportSceneRepository } from "./repositories/SportSceneRepository";
+import { SportEntryRepository } from "./repositories/SportEntryRepository";
 import { UserService } from "./services/UserService";
 import { GroupService } from "./services/GroupService";
 import { TeamService } from "./services/TeamService";
 import { SceneService } from "./services/SceneService";
 import { SportService } from "./services/SportService";
+import { SportSceneService } from "./services/SportSceneService";
+import { SportEntryService } from "./services/SportEntryService";
 import {
   createUserLoader,
   createGroupLoader,
+  createTeamLoader,
   createUserGroupsLoader,
   createGroupUsersLoader,
   createSportLoader,
   createSceneLoader,
-  createSceneSportsLoader,
+  createSportScenesBySportLoader,
+  createSportScenesBySceneLoader,
 } from "./dataloaders";
 
 const PORT = process.env.PORT || 4000;
@@ -36,13 +42,17 @@ async function startServer() {
   const teamRepo = new TeamRepository(db);
   const sceneRepo = new SceneRepository(db);
   const sportRepo = new SportRepository(db);
+  const sportSceneRepo = new SportSceneRepository(db);
+  const sportEntryRepo = new SportEntryRepository(db);
 
   // Initialize services
   const userService = new UserService(userRepo);
   const groupService = new GroupService(groupRepo);
   const teamService = new TeamService(teamRepo, groupRepo, userRepo);
   const sceneService = new SceneService(sceneRepo);
-  const sportService = new SportService(sportRepo, sceneRepo);
+  const sportService = new SportService(sportRepo);
+  const sportSceneService = new SportSceneService(sportSceneRepo);
+  const sportEntryService = new SportEntryService(sportEntryRepo);
 
   // Initialize seeder and seed data
   const seeder = new DatabaseSeeder(db);
@@ -74,13 +84,19 @@ async function startServer() {
       teamService,
       sceneService,
       sportService,
+      sportSceneService,
+      sportEntryService,
       userLoader: createUserLoader(userService),
       groupLoader: createGroupLoader(groupService),
+      teamLoader: createTeamLoader(teamService),
       userGroupsLoader: createUserGroupsLoader(groupService),
       groupUsersLoader: createGroupUsersLoader(groupService, userService),
       sportLoader: createSportLoader(sportService),
       sceneLoader: createSceneLoader(sceneService),
-      sceneSportsLoader: createSceneSportsLoader(sportService),
+      sportScenesBySportLoader:
+        createSportScenesBySportLoader(sportSceneService),
+      sportScenesBySceneLoader:
+        createSportScenesBySceneLoader(sportSceneService),
     }),
   });
 

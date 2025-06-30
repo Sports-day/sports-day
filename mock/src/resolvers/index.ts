@@ -3,6 +3,8 @@ import { groupResolvers } from "./group";
 import { teamResolvers } from "./team";
 import { sceneResolvers } from "./scene";
 import { sportResolvers } from "./sport";
+import { sportSceneResolvers } from "./sportScene";
+import { sportEntryResolvers } from "./sportEntry";
 
 // Combine all resolvers
 export const resolvers = {
@@ -12,6 +14,8 @@ export const resolvers = {
     ...teamResolvers.Query,
     ...sceneResolvers.Query,
     ...sportResolvers.Query,
+    ...sportSceneResolvers.Query,
+    ...sportEntryResolvers.Query,
   },
   Mutation: {
     ...userResolvers.Mutation,
@@ -19,6 +23,8 @@ export const resolvers = {
     ...teamResolvers.Mutation,
     ...sceneResolvers.Mutation,
     ...sportResolvers.Mutation,
+    ...sportSceneResolvers.Mutation,
+    ...sportEntryResolvers.Mutation,
   },
   User: {
     ...userResolvers.User,
@@ -34,5 +40,11 @@ export const resolvers = {
   },
   Sport: {
     ...sportResolvers.Sport,
+  },
+  SportScene: {
+    ...sportSceneResolvers.SportScene,
+  },
+  SportEntry: {
+    ...sportEntryResolvers.SportEntry,
   },
 };

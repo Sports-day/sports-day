@@ -5,6 +5,8 @@ import { GroupRepository } from "../repositories/GroupRepository";
 import { TeamRepository } from "../repositories/TeamRepository";
 import { SceneRepository } from "../repositories/SceneRepository";
 import { SportRepository } from "../repositories/SportRepository";
+import { SportSceneRepository } from "../repositories/SportSceneRepository";
+import { SportEntryRepository } from "../repositories/SportEntryRepository";
 
 export class DatabaseSeeder {
   private userRepo: UserRepository;
@@ -12,6 +14,8 @@ export class DatabaseSeeder {
   private teamRepo: TeamRepository;
   private sceneRepo: SceneRepository;
   private sportRepo: SportRepository;
+  private sportSceneRepo: SportSceneRepository;
+  private sportEntryRepo: SportEntryRepository;
 
   constructor(db: Database.Database) {
     this.userRepo = new UserRepository(db);
@@ -19,6 +23,8 @@ export class DatabaseSeeder {
     this.teamRepo = new TeamRepository(db);
     this.sceneRepo = new SceneRepository(db);
     this.sportRepo = new SportRepository(db);
+    this.sportSceneRepo = new SportSceneRepository(db);
+    this.sportEntryRepo = new SportEntryRepository(db);
   }
 
   async seed(): Promise<void> {
@@ -79,23 +85,36 @@ export class DatabaseSeeder {
       );
     }
 
-    // スポーツをシード
+    // スポーツをシード（sceneIdなし）
+    const sports: { [name: string]: string } = {};
     for (const sportData of seedData.sports) {
-      // シーン名からシーンIDを取得
-      const sceneId = sportData.sceneId ? scenes[sportData.sceneId] : undefined;
+      const sport = this.sportRepo.createSport({
+        name: sportData.name,
+      });
+      sports[sportData.name] = sport.id;
+      console.log(`  ✅ Created sport: ${sport.name}`);
+    }
 
-      if (sceneId) {
-        const sport = this.sportRepo.createSport({
-          name: sportData.name,
-          sceneId: sceneId,
-        });
-        console.log(
-          `  ✅ Created sport: ${sport.name} (scene: ${sportData.sceneId})`
-        );
-      } else {
-        console.warn(
-          `  ⚠️  Skipped sport: ${sportData.name} (scene not found: ${sportData.sceneId})`
-        );
+    // SportSceneリレーションをシード
+    for (const relation of seedData.relations) {
+      if (relation.type === "sport_scene") {
+        const sport = seedData.sports.find((s) => s.id === relation.sourceId);
+        const scene = seedData.scenes.find((sc) => sc.id === relation.targetId);
+
+        if (sport && scene) {
+          const dbSportId = sports[sport.name];
+          const dbSceneId = scenes[scene.name];
+
+          if (dbSportId && dbSceneId) {
+            const sportScene = this.sportSceneRepo.createSportScene({
+              sportId: dbSportId,
+              sceneId: dbSceneId,
+            });
+            console.log(
+              `  ✅ Created sport-scene: ${sport.name} - ${scene.name}`
+            );
+          }
+        }
       }
     }
 
@@ -198,23 +217,12 @@ export class DatabaseSeeder {
       );
     }
 
-    // スポーツをシード
+    // スポーツをシード（新しい構造に合わせて修正）
     for (const sportData of seedData.sports) {
-      const sceneId = scenes[sportData.sceneName];
-
-      if (sceneId) {
-        const sport = this.sportRepo.createSport({
-          name: sportData.name,
-          sceneId: sceneId,
-        });
-        console.log(
-          `  ✅ Created sport: ${sport.name} (scene: ${sportData.sceneName})`
-        );
-      } else {
-        console.warn(
-          `  ⚠️  Skipped sport: ${sportData.name} (scene not found: ${sportData.sceneName})`
-        );
-      }
+      const sport = this.sportRepo.createSport({
+        name: sportData.name,
+      });
+      console.log(`  ✅ Created sport: ${sport.name}`);
     }
 
     console.log("✅ Database seeding completed (legacy mode)");
@@ -229,6 +237,8 @@ export class DatabaseSeeder {
     db.pragma("foreign_keys = OFF");
 
     // Clear all tables
+    db.prepare("DELETE FROM sport_entries").run();
+    db.prepare("DELETE FROM sport_scenes").run();
     db.prepare("DELETE FROM user_teams").run();
     db.prepare("DELETE FROM user_groups").run();
     db.prepare("DELETE FROM teams").run();

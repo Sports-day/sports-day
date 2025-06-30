@@ -1,4 +1,5 @@
 import { SportService } from "../services/SportService";
+import { SportSceneService } from "../services/SportSceneService";
 
 export const sportResolvers = {
   Query: {
@@ -17,14 +18,14 @@ export const sportResolvers = {
   Mutation: {
     createSport: (
       _: any,
-      { input }: { input: { name: string; sceneId: string } },
+      { input }: { input: { name: string } },
       context: { sportService: SportService }
     ) => {
       return context.sportService.createSport(input);
     },
     updateSport: (
       _: any,
-      { id, input }: { id: string; input: { name?: string; sceneId?: string } },
+      { id, input }: { id: string; input: { name?: string } },
       context: { sportService: SportService }
     ) => {
       return context.sportService.updateSport(id, input);
@@ -39,12 +40,17 @@ export const sportResolvers = {
   },
 
   Sport: {
-    scene: (
-      parent: { sceneId: string },
+    scenes: (
+      parent: { id: string },
       _: any,
-      context: { sceneLoader: any }
+      context: { sportSceneService: SportSceneService; sceneLoader: any }
     ) => {
-      return context.sceneLoader.load(parent.sceneId);
+      const sportScenes = context.sportSceneService.getSportScenesBySportId(
+        parent.id
+      );
+      return sportScenes.map((sportScene) =>
+        context.sceneLoader.load(sportScene.sceneId)
+      );
     },
   },
 };

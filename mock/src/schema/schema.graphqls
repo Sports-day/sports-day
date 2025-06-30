@@ -37,7 +37,24 @@ type Scene {
 type Sport {
   id: ID!
   name: String!
+  scenes: [Scene!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type SportScene {
+  id: ID!
+  sport: Sport!
   scene: Scene!
+  entries: [SportEntry!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type SportEntry {
+  id: ID!
+  sportScene: SportScene!
+  team: Team!
   createdAt: String!
   updatedAt: String!
 }
@@ -54,6 +71,10 @@ type Query {
   scene(id: ID!): Scene
   sports: [Sport!]!
   sport(id: ID!): Sport
+  sportScenes: [SportScene!]!
+  sportScene(id: ID!): SportScene
+  sportEntries: [SportEntry!]!
+  sportEntry(id: ID!): SportEntry
 }
 
 type Mutation {
@@ -76,6 +97,12 @@ type Mutation {
   createSport(input: CreateSportInput!): Sport!
   updateSport(id: ID!, input: UpdateSportInput!): Sport!
   deleteSport(id: ID!): Boolean!
+  createSportScene(input: CreateSportSceneInput!): SportScene!
+  updateSportScene(id: ID!, input: UpdateSportSceneInput!): SportScene!
+  deleteSportScene(id: ID!): Boolean!
+  createSportEntry(input: CreateSportEntryInput!): SportEntry!
+  updateSportEntry(id: ID!, input: UpdateSportEntryInput!): SportEntry!
+  deleteSportEntry(id: ID!): Boolean!
 }
 
 input CreateUserInput {
@@ -118,10 +145,28 @@ input UpdateSceneInput {
 
 input CreateSportInput {
   name: String!
-  sceneId: ID!
 }
 
 input UpdateSportInput {
   name: String
+}
+
+input CreateSportSceneInput {
+  sportId: ID!
+  sceneId: ID!
+}
+
+input UpdateSportSceneInput {
+  sportId: ID
   sceneId: ID
+}
+
+input CreateSportEntryInput {
+  sportSceneId: ID!
+  teamId: ID!
+}
+
+input UpdateSportEntryInput {
+  sportSceneId: ID
+  teamId: ID
 }

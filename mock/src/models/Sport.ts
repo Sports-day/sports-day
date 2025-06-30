@@ -1,17 +1,17 @@
+import { Scene } from "./Scene";
+
 export interface Sport {
   id: string;
   name: string;
-  sceneId: string;
+  scenes: Scene[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateSportInput {
   name: string;
-  sceneId: string;
 }
 
 export interface UpdateSportInput {
   name?: string;
-  sceneId?: string;
 }

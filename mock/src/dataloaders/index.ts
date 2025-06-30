@@ -1,8 +1,10 @@
 import DataLoader from "dataloader";
 import { UserService } from "../services/UserService";
 import { GroupService } from "../services/GroupService";
+import { TeamService } from "../services/TeamService";
 import { SportService } from "../services/SportService";
 import { SceneService } from "../services/SceneService";
+import { SportSceneService } from "../services/SportSceneService";
 
 // User data loader
 export const createUserLoader = (userService: UserService) => {
@@ -15,6 +17,13 @@ export const createUserLoader = (userService: UserService) => {
 export const createGroupLoader = (groupService: GroupService) => {
   return new DataLoader(async (groupIds: readonly string[]) => {
     return groupIds.map((id) => groupService.getGroupById(id));
+  });
+};
+
+// Team data loader
+export const createTeamLoader = (teamService: TeamService) => {
+  return new DataLoader(async (teamIds: readonly string[]) => {
+    return teamIds.map((id) => teamService.getTeamById(id));
   });
 };
 
@@ -54,9 +63,24 @@ export const createSceneLoader = (sceneService: SceneService) => {
   });
 };
 
-// Sports by scene ID loader
-export const createSceneSportsLoader = (sportService: SportService) => {
+// SportScenes by sport ID loader
+export const createSportScenesBySportLoader = (
+  sportSceneService: SportSceneService
+) => {
+  return new DataLoader(async (sportIds: readonly string[]) => {
+    return sportIds.map((sportId) =>
+      sportSceneService.getSportScenesBySportId(sportId)
+    );
+  });
+};
+
+// SportScenes by scene ID loader
+export const createSportScenesBySceneLoader = (
+  sportSceneService: SportSceneService
+) => {
   return new DataLoader(async (sceneIds: readonly string[]) => {
-    return sceneIds.map((sceneId) => sportService.getSportsBySceneId(sceneId));
+    return sceneIds.map((sceneId) =>
+      sportSceneService.getSportScenesBySceneId(sceneId)
+    );
   });
 };
