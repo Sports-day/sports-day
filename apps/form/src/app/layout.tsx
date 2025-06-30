@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { CssBaseline, ThemeProvider } from "@mui/material";
+import { ApolloProvider } from "@/components/ApolloProvider";
 import { Noto_Sans_JP } from "next/font/google";
 import theme from "./theme";
 
@@ -24,8 +25,10 @@ export default function RootLayout({
       <body className={noto.className}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
+            <ApolloProvider>
+              <CssBaseline />
+              {children}
+            </ApolloProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>
