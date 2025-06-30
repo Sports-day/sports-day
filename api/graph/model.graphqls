@@ -3,11 +3,20 @@ type User {
   name: String!
   email: String!
   groups: [Group!]!
+  teams: [Team!]!
 }
 
 type Group {
   id: ID!
   name: String!
+  teams: [Team!]!
+  users: [User!]!
+}
+
+type Team {
+  id: ID!
+  name: String!
+  group: Group!
   users: [User!]!
 }
 

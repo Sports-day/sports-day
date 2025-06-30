@@ -20,12 +20,38 @@ input UpdateGroupUsersInput {
   userIds: [ID!]!
 }
 
+input CreateTeamInput {
+  name: String!
+  groupId: String!
+  userIds: [ID!]!
+}
+
+input UpdateTeamInput {
+  name: String
+  groupId: String 
+}
+
+input UpdateTeamUsersInput {
+  addUserIds: [ID!]
+  removeUserIds: [ID!]
+}
+
+
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
   me: User!
   groups: [Group!]!
   group(id: ID!): Group!
+  """
+  チームをまとめて取得する
+  """
+  teams: [Team!]!
+  """
+  ID指定でチームを取得する
+  """
+  team(id: ID!): Team!
 }
 
 type Mutation {
@@ -36,4 +62,20 @@ type Mutation {
   updateGroup(id: ID!, input: UpdateGroupInput!): Group!
   addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
   removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
+  """
+  チームを作成する
+  """
+  createTeam(input: CreateTeamInput!): Team!
+  """
+  チームを削除する
+  """
+  deleteTeam(id: ID!): Team!
+  """
+  チームの情報を更新する
+  """
+  updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+  """
+  チームメンバーを更新する
+  """
+  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team!
 }
