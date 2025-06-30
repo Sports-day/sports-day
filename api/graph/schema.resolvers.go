@@ -73,6 +73,51 @@ func (r *mutationResolver) RemoveGroupUsers(ctx context.Context, id string, inpu
 	return model.FormatGroupResponse(group), nil
 }
 
+// CreateTeam is the resolver for the createTeam field.
+func (r *mutationResolver) CreateTeam(ctx context.Context, input model.CreateTeamInput) (*model.Team, error) {
+	team, err := r.TeamService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
+}
+
+// DeleteTeam is the resolver for the deleteTeam field.
+func (r *mutationResolver) DeleteTeam(ctx context.Context, id string) (*model.Team, error) {
+	team, err := r.TeamService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
+}
+
+// UpdateTeam is the resolver for the updateTeam field.
+func (r *mutationResolver) UpdateTeam(ctx context.Context, id string, input model.UpdateTeamInput) (*model.Team, error) {
+	team, err := r.TeamService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
+}
+
+// UpdateTeamUsers is the resolver for the updateTeamUsers field.
+func (r *mutationResolver) UpdateTeamUsers(ctx context.Context, id string, input model.UpdateTeamUsersInput) (*model.Team, error) {
+	if _, err := r.TeamService.AddUsers(ctx, id, input.AddUserIds); err != nil {
+		return nil, err
+	}
+
+	if _, err := r.TeamService.DeleteUsers(ctx, id, input.RemoveUserIds); err != nil {
+		return nil, err
+	}
+
+	team, err := r.TeamService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return model.FormatTeamResponse(team), nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -126,6 +171,29 @@ func (r *queryResolver) Group(ctx context.Context, id string) (*model.Group, err
 		return nil, err
 	}
 	return model.FormatGroupResponse(group), nil
+}
+
+// Teams is the resolver for the teams field.
+func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
+	teams, err := r.TeamService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Team, 0, len(teams))
+	for _, team := range teams {
+		res = append(res, model.FormatTeamResponse(team))
+	}
+	return res, nil
+}
+
+// Team is the resolver for the team field.
+func (r *queryResolver) Team(ctx context.Context, id string) (*model.Team, error) {
+	team, err := r.TeamService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
 }
 
 // Mutation returns MutationResolver implementation.
