@@ -17,12 +17,6 @@ interface SeedGroup extends SeedEntity {
   description: string;
 }
 
-// チーム定義
-interface SeedTeam extends SeedEntity {
-  groupId?: string;
-  description: string;
-}
-
 // シーン定義
 interface SeedScene extends SeedEntity {
   description?: string;
@@ -35,7 +29,7 @@ interface SeedSport extends SeedEntity {
 
 // リレーション定義
 interface SeedRelation {
-  type: "user_group" | "user_team" | "sport_scene";
+  type: "user_group" | "sport_scene";
   sourceId: string;
   targetId: string;
   metadata?: Record<string, any>;
@@ -45,7 +39,6 @@ interface SeedRelation {
 export interface SeedData {
   users: SeedUser[];
   groups: SeedGroup[];
-  teams: SeedTeam[];
   scenes: SeedScene[];
   sports: SeedSport[];
   relations: SeedRelation[];
@@ -92,9 +85,6 @@ export class SeedDataFactory {
     const groups = Array.from(this.entities.values()).filter(
       (e) => "type" in e && !("email" in e) && !("groupId" in e)
     ) as SeedGroup[];
-    const teams = Array.from(this.entities.values()).filter(
-      (e) => "groupId" in e
-    ) as SeedTeam[];
 
     // シーンは description を持つもののみ
     const scenes = Array.from(this.entities.values()).filter(
@@ -117,7 +107,6 @@ export class SeedDataFactory {
     return {
       users,
       groups,
-      teams,
       scenes,
       sports,
       relations: this.relations,
@@ -261,26 +250,6 @@ interface JapaneseName {
 // Sample groups
 const SAMPLE_GROUPS = [{ name: "サクラ" }, { name: "アサヒ" }];
 
-// Sample teams
-const SAMPLE_TEAMS = [
-  {
-    name: "フロントエンドチーム",
-    groupName: "サクラ",
-    description: "React/TypeScript開発チーム",
-  },
-  {
-    name: "バックエンドチーム",
-    groupName: "サクラ",
-    description: "Go/GraphQL開発チーム",
-  },
-  {
-    name: "デザインチーム",
-    groupName: "アサヒ",
-    description: "UI/UXデザインチーム",
-  },
-  { name: "QAチーム", groupName: "アサヒ", description: "品質保証チーム" },
-];
-
 // Sample scenes (晴天時と雨天時のみ)
 const SAMPLE_SCENES = [
   {
@@ -328,12 +297,6 @@ export interface LegacySeedGroup {
   name: string;
 }
 
-export interface LegacySeedTeam {
-  name: string;
-  groupName: string;
-  description: string;
-}
-
 export interface LegacySeedScene {
   name: string;
   description?: string;
@@ -349,11 +312,6 @@ export interface LegacySeedUserGroupAssignment {
   groupName: string;
 }
 
-export interface LegacySeedUserTeamAssignment {
-  userName: string;
-  teamName: string;
-}
-
 // 現在のシードデータ（後方互換性のため）
 export const seedData = {
   users: CSV_USERS.map(
@@ -365,13 +323,6 @@ export const seedData = {
   groups: SAMPLE_GROUPS.map(
     (group): LegacySeedGroup => ({
       name: group.name,
-    })
-  ),
-  teams: SAMPLE_TEAMS.map(
-    (team): LegacySeedTeam => ({
-      name: team.name,
-      groupName: team.groupName,
-      description: team.description,
     })
   ),
   scenes: SAMPLE_SCENES.map(
@@ -417,21 +368,6 @@ export const createComplexSeedData = (): SeedData => {
     description: "開発チームB",
   } as SeedGroup);
 
-  // チームを登録
-  factory.registerEntity({
-    id: ulid(),
-    name: "フロントエンドチーム",
-    groupId: "サクラ", // グループ名で参照
-    description: "React/TypeScript開発チーム",
-  } as SeedTeam);
-
-  factory.registerEntity({
-    id: ulid(),
-    name: "バックエンドチーム",
-    groupId: "サクラ", // グループ名で参照
-    description: "Go/GraphQL開発チーム",
-  } as SeedTeam);
-
   // ユーザーグループ割り当て（CSVデータを使用）
   const userGroupAssignments = createUserGroupAssignments();
   userGroupAssignments.forEach((assignment) => {
@@ -444,24 +380,6 @@ export const createComplexSeedData = (): SeedData => {
         joinedAt: "2024-01-01",
       }
     );
-  });
-
-  // チームリレーションを追加（最初の10人をフロントエンド、次の10人をバックエンドに）
-  const frontendUsers = CSV_USERS.slice(0, 10);
-  const backendUsers = CSV_USERS.slice(10, 20);
-
-  frontendUsers.forEach((user) => {
-    factory.addRelation("user_team", user.name, "フロントエンドチーム", {
-      role: "member",
-      joinedAt: "2024-01-01",
-    });
-  });
-
-  backendUsers.forEach((user) => {
-    factory.addRelation("user_team", user.name, "バックエンドチーム", {
-      role: "member",
-      joinedAt: "2024-01-01",
-    });
   });
 
   // シーン登録
@@ -578,15 +496,19 @@ export const generateSeedData = () => {
     updatedAt: now,
   }));
 
-  const teams = seedData.teams.map((team) => ({
+  const scenes = seedData.scenes.map((scene) => ({
     id: ulid(),
-    name: team.name,
-    groupId: undefined, // 後でグループIDに変換
-    description: team.description,
-    userIds: new Set<string>(),
+    ...scene,
     createdAt: now,
     updatedAt: now,
   }));
 
-  return { users, groups, teams };
+  const sports = seedData.sports.map((sport) => ({
+    id: ulid(),
+    ...sport,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  return { users, groups, scenes, sports };
 };

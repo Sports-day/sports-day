@@ -35,19 +35,19 @@ export const teamResolvers = {
     ) => {
       return context.teamService.deleteTeam(id);
     },
-    addUserToTeam: (
+    addTeamMember: (
       _: any,
-      { userId, teamId }: { userId: string; teamId: string },
+      { userIds, teamId }: { userIds: string[]; teamId: string },
       context: { teamService: TeamService }
     ) => {
-      return context.teamService.addUserToTeam(userId, teamId);
+      return context.teamService.addTeamMember(userIds, teamId);
     },
-    removeUserFromTeam: (
+    removeTeamMember: (
       _: any,
-      { userId, teamId }: { userId: string; teamId: string },
+      { userIds, teamId }: { userIds: string[]; teamId: string },
       context: { teamService: TeamService }
     ) => {
-      return context.teamService.removeUserFromTeam(userId, teamId);
+      return context.teamService.removeTeamMember(userIds, teamId);
     },
   },
   Team: {

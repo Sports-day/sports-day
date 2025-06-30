@@ -28,6 +28,7 @@ import {
   createSceneLoader,
   createSportScenesBySportLoader,
   createSportScenesBySceneLoader,
+  createSceneSportsLoader,
 } from "./dataloaders";
 
 const PORT = process.env.PORT || 4000;
@@ -97,6 +98,10 @@ async function startServer() {
         createSportScenesBySportLoader(sportSceneService),
       sportScenesBySceneLoader:
         createSportScenesBySceneLoader(sportSceneService),
+      sceneSportsLoader: createSceneSportsLoader(
+        sportSceneService,
+        sportService
+      ),
     }),
   });
 

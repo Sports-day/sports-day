@@ -84,3 +84,23 @@ export const createSportScenesBySceneLoader = (
     );
   });
 };
+
+// Sports by scene ID loader
+export const createSceneSportsLoader = (
+  sportSceneService: SportSceneService,
+  sportService: SportService
+) => {
+  return new DataLoader(async (sceneIds: readonly string[]) => {
+    return sceneIds.map(async (sceneId) => {
+      const sportScenes = await sportSceneService.getSportScenesBySceneId(
+        sceneId
+      );
+      const sports = await Promise.all(
+        sportScenes.map((sportScene) =>
+          sportService.getSportById(sportScene.sportId)
+        )
+      );
+      return sports.filter(Boolean);
+    });
+  });
+};

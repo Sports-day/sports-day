@@ -89,8 +89,8 @@ type Mutation {
   createTeam(input: CreateTeamInput!): Team!
   updateTeam(id: ID!, input: UpdateTeamInput!): Team!
   deleteTeam(id: ID!): Boolean!
-  addUserToTeam(userId: ID!, teamId: ID!): Team!
-  removeUserFromTeam(userId: ID!, teamId: ID!): Team!
+  addTeamMember(userIds: [ID!]!, teamId: ID!): Team!
+  removeTeamMember(userIds: [ID!]!, teamId: ID!): Team!
   createScene(input: CreateSceneInput!): Scene!
   updateScene(id: ID!, input: UpdateSceneInput!): Scene!
   deleteScene(id: ID!): Boolean!

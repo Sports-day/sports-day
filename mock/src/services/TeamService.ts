@@ -66,43 +66,79 @@ export class TeamService {
     return this.teamRepo.deleteTeam(id);
   }
 
-  addUserToTeam(userId: string, teamId: string): Team | null {
-    // ユーザーが存在するかチェック
-    const user = this.userRepo.findById(userId);
-    if (!user) {
-      throw new Error(`User with id ${userId} not found`);
-    }
-
+  addTeamMember(userIds: string[], teamId: string): Team | null {
     // チームが存在するかチェック
     const team = this.teamRepo.getTeamById(teamId);
     if (!team) {
       throw new Error(`Team with id ${teamId} not found`);
     }
 
-    const success = this.teamRepo.addUserToTeam(userId, teamId);
-    if (!success) {
-      throw new Error(`User ${userId} is already a member of team ${teamId}`);
+    // 各ユーザーが存在するかチェック
+    for (const userId of userIds) {
+      const user = this.userRepo.findById(userId);
+      if (!user) {
+        throw new Error(`User with id ${userId} not found`);
+      }
+    }
+
+    // 各ユーザーをチームに追加
+    const addedUsers: string[] = [];
+    const failedUsers: string[] = [];
+
+    for (const userId of userIds) {
+      const success = this.teamRepo.addUserToTeam(userId, teamId);
+      if (success) {
+        addedUsers.push(userId);
+      } else {
+        failedUsers.push(userId);
+      }
+    }
+
+    // 結果をログ出力
+    if (addedUsers.length > 0) {
+      console.log(`✅ Added users to team: ${addedUsers.join(", ")}`);
+    }
+    if (failedUsers.length > 0) {
+      console.log(`⚠️ Users already in team: ${failedUsers.join(", ")}`);
     }
 
     return this.teamRepo.getTeamById(teamId);
   }
 
-  removeUserFromTeam(userId: string, teamId: string): Team | null {
-    // ユーザーが存在するかチェック
-    const user = this.userRepo.findById(userId);
-    if (!user) {
-      throw new Error(`User with id ${userId} not found`);
-    }
-
+  removeTeamMember(userIds: string[], teamId: string): Team | null {
     // チームが存在するかチェック
     const team = this.teamRepo.getTeamById(teamId);
     if (!team) {
       throw new Error(`Team with id ${teamId} not found`);
     }
 
-    const success = this.teamRepo.removeUserFromTeam(userId, teamId);
-    if (!success) {
-      throw new Error(`User ${userId} is not a member of team ${teamId}`);
+    // 各ユーザーが存在するかチェック
+    for (const userId of userIds) {
+      const user = this.userRepo.findById(userId);
+      if (!user) {
+        throw new Error(`User with id ${userId} not found`);
+      }
+    }
+
+    // 各ユーザーをチームから削除
+    const removedUsers: string[] = [];
+    const failedUsers: string[] = [];
+
+    for (const userId of userIds) {
+      const success = this.teamRepo.removeUserFromTeam(userId, teamId);
+      if (success) {
+        removedUsers.push(userId);
+      } else {
+        failedUsers.push(userId);
+      }
+    }
+
+    // 結果をログ出力
+    if (removedUsers.length > 0) {
+      console.log(`✅ Removed users from team: ${removedUsers.join(", ")}`);
+    }
+    if (failedUsers.length > 0) {
+      console.log(`⚠️ Users not in team: ${failedUsers.join(", ")}`);
     }
 
     return this.teamRepo.getTeamById(teamId);
