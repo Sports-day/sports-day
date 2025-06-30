@@ -10,16 +10,19 @@ type Resolver struct {
 	UserService  service.User
 	AuthService  service.AuthService
 	GroupService service.Group
+	TeamService  service.Team
 }
 
 func NewResolver(
 	userService service.User,
 	authService service.AuthService,
 	groupService service.Group,
+	teamService service.Team,
 ) *Resolver {
 	return &Resolver{
 		UserService:  userService,
 		AuthService:  authService,
 		GroupService: groupService,
+		TeamService:  teamService,
 	}
 }
