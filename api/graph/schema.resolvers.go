@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"sports-day/api/graph/model"
 )
@@ -73,6 +74,21 @@ func (r *mutationResolver) RemoveGroupUsers(ctx context.Context, id string, inpu
 	return model.FormatGroupResponse(group), nil
 }
 
+// CreateSports is the resolver for the createSports field.
+func (r *mutationResolver) CreateSports(ctx context.Context, input model.CreateSportsInput) (*model.Sports, error) {
+	panic(fmt.Errorf("not implemented: CreateSports - createSports"))
+}
+
+// DeleteSports is the resolver for the deleteSports field.
+func (r *mutationResolver) DeleteSports(ctx context.Context, id string) (*model.Sports, error) {
+	panic(fmt.Errorf("not implemented: DeleteSports - deleteSports"))
+}
+
+// UpdateSports is the resolver for the updateSports field.
+func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sports, error) {
+	panic(fmt.Errorf("not implemented: UpdateSports - updateSports"))
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -126,6 +142,16 @@ func (r *queryResolver) Group(ctx context.Context, id string) (*model.Group, err
 		return nil, err
 	}
 	return model.FormatGroupResponse(group), nil
+}
+
+// Sports is the resolver for the sports field.
+func (r *queryResolver) Sports(ctx context.Context) ([]*model.Sports, error) {
+	panic(fmt.Errorf("not implemented: Sports - sports"))
+}
+
+// Sport is the resolver for the sport field.
+func (r *queryResolver) Sport(ctx context.Context, id string) (*model.Sports, error) {
+	panic(fmt.Errorf("not implemented: Sport - sport"))
 }
 
 // Mutation returns MutationResolver implementation.

@@ -11,6 +11,10 @@ type CreateGroupInput struct {
 	Name string `json:"name"`
 }
 
+type CreateSportsInput struct {
+	Name string `json:"name"`
+}
+
 type CreateUserInput struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
@@ -27,10 +31,21 @@ type Mutation struct {
 type Query struct {
 }
 
+type Sports struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Weight int32  `json:"weight"`
+}
+
 type UpdateGroupInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
 type UpdateGroupUsersInput struct {
 	UserIds []string `json:"userIds"`
+}
+
+type UpdateSportsInput struct {
+	Name   *string `json:"name,omitempty"`
+	Weight *int32  `json:"weight,omitempty"`
 }
