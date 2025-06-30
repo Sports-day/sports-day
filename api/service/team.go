@@ -36,6 +36,13 @@ func (s *Team) Create(ctx context.Context, input *model.CreateTeamInput) (*db_mo
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	if len(input.UserIds) > 0 {
+        _, err := s.teamRepository.AddTeamUsers(ctx, s.db, team.ID, input.UserIds)
+        if err != nil {
+            return nil, err
+        }
+    }
 	return team, nil
 }
 
