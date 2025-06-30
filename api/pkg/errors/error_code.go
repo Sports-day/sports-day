@@ -8,6 +8,7 @@ var (
 	*/
 	ErrUserNotFound  = NewError("USER_NOT_FOUND", "ユーザーが見つかりません")
 	ErrGroupNotFound = NewError("GROUP_NOT_FOUND", "グループが見つかりません")
+	ErrTeamNotFound  = NewError("TEAM_NOT_FOUND", "チームが見つかりません")
 
 	/*
 		Authentication
