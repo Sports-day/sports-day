@@ -30,6 +30,7 @@ func (s *Team) Create(ctx context.Context, input *model.CreateTeamInput) (*db_mo
 	team := &db_model.Team{
 		ID:   ulid.Make(),
 		Name: input.Name,
+		GroupID: input.GroupID,
 	}
 	team, err := s.teamRepository.Save(ctx, s.db, team)
 	if err != nil {
