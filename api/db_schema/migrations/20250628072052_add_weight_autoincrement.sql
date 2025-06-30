@@ -1,0 +1,5 @@
+-- migrate:up
+ALTER TABLE sports MODIFY weight INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '表示順';
+
+-- migrate:down
+ALTER TABLE sports MODIFY weight INT UNSIGNED NOT NULL COMMENT '表示順';
