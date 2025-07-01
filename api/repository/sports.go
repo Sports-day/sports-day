@@ -10,7 +10,6 @@ import (
 
 type Sports interface {
 	Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Sport, error)
-	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Group, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Sport, error)
 	Save(ctx context.Context, db *gorm.DB, sport *db_model.Sport) (*db_model.Sport, error)
 	Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Sport, error)
