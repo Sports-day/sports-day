@@ -16,7 +16,7 @@ type AuthResponse {
   user: User!
 }
 
-type Sports {
+type Sport {
   id: ID!
   name: String!
   weight: Int!

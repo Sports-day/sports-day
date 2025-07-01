@@ -35,8 +35,8 @@ type Query {
   me: User!
   groups: [Group!]!
   group(id: ID!): Group!
-  sports: [Sports!]!
-  sport(id: ID!): Sports!
+  sports: [Sport!]!
+  sport(id: ID!): Sport!
 }
 
 type Mutation {
@@ -47,7 +47,7 @@ type Mutation {
   updateGroup(id: ID!, input: UpdateGroupInput!): Group!
   addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
   removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
-  createSports(input: CreateSportsInput!): Sports!
-  deleteSports(id: ID!): Sports!
-  updateSports(id: ID!, input: UpdateSportsInput!): Sports!
+  createSports(input: CreateSportsInput!): Sport!
+  deleteSports(id: ID!): Sport!
+  updateSports(id: ID!, input: UpdateSportsInput!): Sport!
 }
