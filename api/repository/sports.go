@@ -14,7 +14,3 @@ type Sports interface {
 	Save(ctx context.Context, db *gorm.DB, sport *db_model.Sport) (*db_model.Sport, error)
 	Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Sport, error)
 }
-
-type UpdateSportsInput struct {
-	Name *string
-}
