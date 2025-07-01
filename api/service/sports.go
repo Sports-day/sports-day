@@ -13,27 +13,27 @@ import (
 )
 
 type Sport struct {
-	db *gorm.DB
+	db               *gorm.DB
 	sportsRepository repository.Sports
 }
 
 func NewSports(db *gorm.DB, sportsRepository repository.Sports) Sport {
 	return Sport{
-		db: 			db,
+		db:               db,
 		sportsRepository: sportsRepository,
 	}
 }
 
 func (s *Sport) Get(ctx context.Context, id string) (*db_model.Sport, error) {
 	sport, err := s.sportsRepository.Get(ctx, s.db, id)
-	
-	if err !=  nil {
+
+	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return sport, nil
 }
 
-func (s *Sport) List(ctx context.Context)([]*db_model.Sport, error) {
+func (s *Sport) List(ctx context.Context) ([]*db_model.Sport, error) {
 	sports, err := s.sportsRepository.List(ctx, s.db)
 
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *Sport) List(ctx context.Context)([]*db_model.Sport, error) {
 
 func (s *Sport) Create(ctx context.Context, input *model.CreateSportsInput) (*db_model.Sport, error) {
 	sport := &db_model.Sport{
-		ID: ulid.Make(),
+		ID:   ulid.Make(),
 		Name: input.Name,
 	}
 
@@ -56,7 +56,7 @@ func (s *Sport) Create(ctx context.Context, input *model.CreateSportsInput) (*db
 	return sport, nil
 }
 
-func (s *Sport) Update(ctx context.Context, id string, input *model.UpdateSportsInput) (*db_model.Sport, error) {
+func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsInput) (*db_model.Sport, error) {
 	sport, err := s.sportsRepository.Get(ctx, s.db, id)
 	if err != nil {
 		return nil, errors.Wrap(err)
