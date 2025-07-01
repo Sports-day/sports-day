@@ -66,6 +66,10 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 		sport.Name = *input.Name
 	}
 
+	if input.Weight != nil {
+		sport.Weight = int(*input.Weight)
+	}
+
 	sport, err = s.sportsRepository.Save(ctx, s.db, sport)
 	if err != nil {
 		return nil, errors.Wrap(err)
