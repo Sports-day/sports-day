@@ -21,7 +21,7 @@ func newTeamLoader(svc service.Team) func(context.Context, []string) ([]*db_mode
 			if team, ok := rowMap[teamID]; ok {
 				teams[i] = team
 			} else {
-				errs[i] = errors.ErrGroupNotFound
+				errs[i] = errors.ErrTeamNotFound
 			}
 		}
 		return teams, errs
@@ -30,7 +30,7 @@ func newTeamLoader(svc service.Team) func(context.Context, []string) ([]*db_mode
 
 func LoadTeams(ctx context.Context, teamIDs []string) ([]*db_model.Team, error) {
 	rows, err := getLoaders(ctx).TeamLoader.LoadAll(ctx, teamIDs)
-	if err != nil && !errors.Is(err, errors.ErrGroupNotFound) {
+	if err != nil && !errors.Is(err, errors.ErrTeamNotFound) {
 		return nil, errors.Wrap(err)
 	}
 
