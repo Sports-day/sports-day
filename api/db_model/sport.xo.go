@@ -6,5 +6,5 @@ package db_model
 type Sport struct {
 	ID     string `json:"id"`     // ID
 	Name   string `json:"name"`   // スポーツ名
-	Weight uint   `json:"weight"` // 表示順
+	Weight int    `json:"weight"` // 表示順
 }

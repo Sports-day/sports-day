@@ -31,7 +31,7 @@ type Mutation struct {
 type Query struct {
 }
 
-type Sports struct {
+type Sport struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Weight int32  `json:"weight"`
