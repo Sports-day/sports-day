@@ -27,22 +27,32 @@ func NewTeam(db *gorm.DB, teamRepository repository.Team, userRepository reposit
 }
 
 func (s *Team) Create(ctx context.Context, input *model.CreateTeamInput) (*db_model.Team, error) {
-	team := &db_model.Team{
-		ID:   ulid.Make(),
-		Name: input.Name,
-		GroupID: input.GroupID,
-	}
-	team, err := s.teamRepository.Save(ctx, s.db, team)
+	var team *db_model.Team
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		t := &db_model.Team{
+			ID:   ulid.Make(),
+			Name: input.Name,
+			GroupID: input.GroupID,
+		}
+		created, err := s.teamRepository.Save(ctx, tx, t)
+		if err != nil {
+			return errors.ErrSaveTeam
+		}
+
+		if len(input.UserIds) > 0 {
+        	if _, err := s.teamRepository.AddTeamUsers(ctx, s.db, created.ID, input.UserIds); err != nil {
+				return errors.ErrAddTeamUser
+			}
+        }
+
+		team = created
+		return nil
+
+	})
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-
-	if len(input.UserIds) > 0 {
-        _, err := s.teamRepository.AddTeamUsers(ctx, s.db, team.ID, input.UserIds)
-        if err != nil {
-            return nil, err
-        }
-    }
 	return team, nil
 }
 
@@ -69,7 +79,7 @@ func (s *Team) Update(ctx context.Context, id string, input model.UpdateTeamInpu
 
 	team, err = s.teamRepository.Save(ctx, s.db, team)
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, errors.ErrSaveTeam
 	}
 	return team, nil
 }
@@ -91,9 +101,15 @@ func (s *Team) List(ctx context.Context) ([]*db_model.Team, error) {
 }
 
 func (s *Team) AddUsers(ctx context.Context, teamId string, userIds []string) (*db_model.Team, error) {
-	_, err := s.teamRepository.AddTeamUsers(ctx, s.db, teamId, userIds)
+	_, err := s.teamRepository.Get(ctx, s.db, teamId)
 	if err != nil {
-		return nil, errors.Wrap(err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrTeamNotFound
+		}
+	}
+
+	if _, err := s.teamRepository.AddTeamUsers(ctx, s.db, teamId, userIds); err != nil {
+		return nil, errors.ErrAddTeamUser
 	}
 
 	team, err := s.teamRepository.Get(ctx, s.db, teamId)
@@ -111,7 +127,7 @@ func (s *Team) DeleteUsers(ctx context.Context, teamId string, userIds []string)
 
 	_, err = s.teamRepository.DeleteTeamUsers(ctx, s.db, teamId, userIds)
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, errors.ErrDeleteTeamUser
 	}
 	return team, nil
 }
