@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"sports-day/api/graph/model"
 )
@@ -75,18 +74,30 @@ func (r *mutationResolver) RemoveGroupUsers(ctx context.Context, id string, inpu
 }
 
 // CreateSports is the resolver for the createSports field.
-func (r *mutationResolver) CreateSports(ctx context.Context, input model.CreateSportsInput) (*model.Sports, error) {
-	panic(fmt.Errorf("not implemented: CreateSports - createSports"))
+func (r *mutationResolver) CreateSports(ctx context.Context, input model.CreateSportsInput) (*model.Sport, error) {
+	sport, err := r.SportService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
 }
 
 // DeleteSports is the resolver for the deleteSports field.
-func (r *mutationResolver) DeleteSports(ctx context.Context, id string) (*model.Sports, error) {
-	panic(fmt.Errorf("not implemented: DeleteSports - deleteSports"))
+func (r *mutationResolver) DeleteSports(ctx context.Context, id string) (*model.Sport, error) {
+	sport, err := r.SportService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
 }
 
 // UpdateSports is the resolver for the updateSports field.
-func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sports, error) {
-	panic(fmt.Errorf("not implemented: UpdateSports - updateSports"))
+func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sport, error) {
+	sport, err := r.SportService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
 }
 
 // Users is the resolver for the users field.
@@ -145,13 +156,25 @@ func (r *queryResolver) Group(ctx context.Context, id string) (*model.Group, err
 }
 
 // Sports is the resolver for the sports field.
-func (r *queryResolver) Sports(ctx context.Context) ([]*model.Sports, error) {
-	panic(fmt.Errorf("not implemented: Sports - sports"))
+func (r *queryResolver) Sports(ctx context.Context) ([]*model.Sport, error) {
+	sports, err := r.SportService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*model.Sport, 0, len(sports))
+	for _, sport := range sports {
+		res = append(res, model.FormatSportResponse(sport))
+	}
+	return res, nil
 }
 
 // Sport is the resolver for the sport field.
-func (r *queryResolver) Sport(ctx context.Context, id string) (*model.Sports, error) {
-	panic(fmt.Errorf("not implemented: Sport - sport"))
+func (r *queryResolver) Sport(ctx context.Context, id string) (*model.Sport, error) {
+	sport, err := r.SportService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
 }
 
 // Mutation returns MutationResolver implementation.

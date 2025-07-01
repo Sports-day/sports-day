@@ -84,7 +84,7 @@ type ComplexityRoot struct {
 		Users  func(childComplexity int) int
 	}
 
-	Sports struct {
+	Sport struct {
 		ID     func(childComplexity int) int
 		Name   func(childComplexity int) int
 		Weight func(childComplexity int) int
@@ -109,9 +109,9 @@ type MutationResolver interface {
 	UpdateGroup(ctx context.Context, id string, input model.UpdateGroupInput) (*model.Group, error)
 	AddGroupUsers(ctx context.Context, id string, input model.UpdateGroupUsersInput) (*model.Group, error)
 	RemoveGroupUsers(ctx context.Context, id string, input model.UpdateGroupUsersInput) (*model.Group, error)
-	CreateSports(ctx context.Context, input model.CreateSportsInput) (*model.Sports, error)
-	DeleteSports(ctx context.Context, id string) (*model.Sports, error)
-	UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sports, error)
+	CreateSports(ctx context.Context, input model.CreateSportsInput) (*model.Sport, error)
+	DeleteSports(ctx context.Context, id string) (*model.Sport, error)
+	UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sport, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -119,8 +119,8 @@ type QueryResolver interface {
 	Me(ctx context.Context) (*model.User, error)
 	Groups(ctx context.Context) ([]*model.Group, error)
 	Group(ctx context.Context, id string) (*model.Group, error)
-	Sports(ctx context.Context) ([]*model.Sports, error)
-	Sport(ctx context.Context, id string) (*model.Sports, error)
+	Sports(ctx context.Context) ([]*model.Sport, error)
+	Sport(ctx context.Context, id string) (*model.Sport, error)
 }
 type UserResolver interface {
 	Groups(ctx context.Context, obj *model.User) ([]*model.Group, error)
@@ -364,26 +364,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Users(childComplexity), true
 
-	case "Sports.id":
-		if e.complexity.Sports.ID == nil {
+	case "Sport.id":
+		if e.complexity.Sport.ID == nil {
 			break
 		}
 
-		return e.complexity.Sports.ID(childComplexity), true
+		return e.complexity.Sport.ID(childComplexity), true
 
-	case "Sports.name":
-		if e.complexity.Sports.Name == nil {
+	case "Sport.name":
+		if e.complexity.Sport.Name == nil {
 			break
 		}
 
-		return e.complexity.Sports.Name(childComplexity), true
+		return e.complexity.Sport.Name(childComplexity), true
 
-	case "Sports.weight":
-		if e.complexity.Sports.Weight == nil {
+	case "Sport.weight":
+		if e.complexity.Sport.Weight == nil {
 			break
 		}
 
-		return e.complexity.Sports.Weight(childComplexity), true
+		return e.complexity.Sport.Weight(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -1746,9 +1746,9 @@ func (ec *executionContext) _Mutation_createSports(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Sports)
+	res := resTmp.(*model.Sport)
 	fc.Result = res
-	return ec.marshalNSports2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSports(ctx, field.Selections, res)
+	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSports(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1760,13 +1760,13 @@ func (ec *executionContext) fieldContext_Mutation_createSports(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Sports_id(ctx, field)
+				return ec.fieldContext_Sport_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Sports_name(ctx, field)
+				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
-				return ec.fieldContext_Sports_weight(ctx, field)
+				return ec.fieldContext_Sport_weight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Sports", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
 	}
 	defer func() {
@@ -1809,9 +1809,9 @@ func (ec *executionContext) _Mutation_deleteSports(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Sports)
+	res := resTmp.(*model.Sport)
 	fc.Result = res
-	return ec.marshalNSports2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSports(ctx, field.Selections, res)
+	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteSports(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1823,13 +1823,13 @@ func (ec *executionContext) fieldContext_Mutation_deleteSports(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Sports_id(ctx, field)
+				return ec.fieldContext_Sport_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Sports_name(ctx, field)
+				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
-				return ec.fieldContext_Sports_weight(ctx, field)
+				return ec.fieldContext_Sport_weight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Sports", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
 	}
 	defer func() {
@@ -1872,9 +1872,9 @@ func (ec *executionContext) _Mutation_updateSports(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Sports)
+	res := resTmp.(*model.Sport)
 	fc.Result = res
-	return ec.marshalNSports2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSports(ctx, field.Selections, res)
+	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSports(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1886,13 +1886,13 @@ func (ec *executionContext) fieldContext_Mutation_updateSports(ctx context.Conte
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Sports_id(ctx, field)
+				return ec.fieldContext_Sport_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Sports_name(ctx, field)
+				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
-				return ec.fieldContext_Sports_weight(ctx, field)
+				return ec.fieldContext_Sport_weight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Sports", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
 	}
 	defer func() {
@@ -2223,9 +2223,9 @@ func (ec *executionContext) _Query_sports(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Sports)
+	res := resTmp.([]*model.Sport)
 	fc.Result = res
-	return ec.marshalNSports2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportsᚄ(ctx, field.Selections, res)
+	return ec.marshalNSport2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2237,13 +2237,13 @@ func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field g
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Sports_id(ctx, field)
+				return ec.fieldContext_Sport_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Sports_name(ctx, field)
+				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
-				return ec.fieldContext_Sports_weight(ctx, field)
+				return ec.fieldContext_Sport_weight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Sports", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
 	}
 	return fc, nil
@@ -2275,9 +2275,9 @@ func (ec *executionContext) _Query_sport(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Sports)
+	res := resTmp.(*model.Sport)
 	fc.Result = res
-	return ec.marshalNSports2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSports(ctx, field.Selections, res)
+	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2289,13 +2289,13 @@ func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Sports_id(ctx, field)
+				return ec.fieldContext_Sport_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Sports_name(ctx, field)
+				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
-				return ec.fieldContext_Sports_weight(ctx, field)
+				return ec.fieldContext_Sport_weight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Sports", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
 	}
 	defer func() {
@@ -2443,8 +2443,8 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Sports_id(ctx context.Context, field graphql.CollectedField, obj *model.Sports) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Sports_id(ctx, field)
+func (ec *executionContext) _Sport_id(ctx context.Context, field graphql.CollectedField, obj *model.Sport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sport_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2474,9 +2474,9 @@ func (ec *executionContext) _Sports_id(ctx context.Context, field graphql.Collec
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Sports_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Sport_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Sports",
+		Object:     "Sport",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2487,8 +2487,8 @@ func (ec *executionContext) fieldContext_Sports_id(_ context.Context, field grap
 	return fc, nil
 }
 
-func (ec *executionContext) _Sports_name(ctx context.Context, field graphql.CollectedField, obj *model.Sports) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Sports_name(ctx, field)
+func (ec *executionContext) _Sport_name(ctx context.Context, field graphql.CollectedField, obj *model.Sport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sport_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2518,9 +2518,9 @@ func (ec *executionContext) _Sports_name(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Sports_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Sport_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Sports",
+		Object:     "Sport",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -2531,8 +2531,8 @@ func (ec *executionContext) fieldContext_Sports_name(_ context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Sports_weight(ctx context.Context, field graphql.CollectedField, obj *model.Sports) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Sports_weight(ctx, field)
+func (ec *executionContext) _Sport_weight(ctx context.Context, field graphql.CollectedField, obj *model.Sport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sport_weight(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2562,9 +2562,9 @@ func (ec *executionContext) _Sports_weight(ctx context.Context, field graphql.Co
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Sports_weight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Sport_weight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Sports",
+		Object:     "Sport",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -5368,29 +5368,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var sportsImplementors = []string{"Sports"}
+var sportImplementors = []string{"Sport"}
 
-func (ec *executionContext) _Sports(ctx context.Context, sel ast.SelectionSet, obj *model.Sports) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, sportsImplementors)
+func (ec *executionContext) _Sport(ctx context.Context, sel ast.SelectionSet, obj *model.Sport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sportImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Sports")
+			out.Values[i] = graphql.MarshalString("Sport")
 		case "id":
-			out.Values[i] = ec._Sports_id(ctx, field, obj)
+			out.Values[i] = ec._Sport_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "name":
-			out.Values[i] = ec._Sports_name(ctx, field, obj)
+			out.Values[i] = ec._Sport_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "weight":
-			out.Values[i] = ec._Sports_weight(ctx, field, obj)
+			out.Values[i] = ec._Sport_weight(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6006,11 +6006,11 @@ func (ec *executionContext) unmarshalNLoginInput2sportsᚑdayᚋapiᚋgraphᚋmo
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSports2sportsᚑdayᚋapiᚋgraphᚋmodelᚐSports(ctx context.Context, sel ast.SelectionSet, v model.Sports) graphql.Marshaler {
-	return ec._Sports(ctx, sel, &v)
+func (ec *executionContext) marshalNSport2sportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v model.Sport) graphql.Marshaler {
+	return ec._Sport(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSports2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Sports) graphql.Marshaler {
+func (ec *executionContext) marshalNSport2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Sport) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6034,7 +6034,7 @@ func (ec *executionContext) marshalNSports2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSports2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSports(ctx, sel, v[i])
+			ret[i] = ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6054,14 +6054,14 @@ func (ec *executionContext) marshalNSports2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmo
 	return ret
 }
 
-func (ec *executionContext) marshalNSports2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSports(ctx context.Context, sel ast.SelectionSet, v *model.Sports) graphql.Marshaler {
+func (ec *executionContext) marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v *model.Sport) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Sports(ctx, sel, v)
+	return ec._Sport(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
