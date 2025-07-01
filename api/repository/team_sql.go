@@ -25,6 +25,9 @@ func (r team) Save(ctx context.Context, db *gorm.DB, team *db_model.Team) (*db_m
 func (r team) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Team, error) {
 	var team db_model.Team
 	if err := db.First(&team, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrTeamNotFound
+		}
 		return nil, errors.Wrap(err)
 	}
 	if err := db.Delete(&team).Error; err != nil {
@@ -76,10 +79,15 @@ func (r team) AddTeamUsers(ctx context.Context, db *gorm.DB, teamId string, user
 }
 
 func (r team) DeleteTeamUsers(ctx context.Context, db *gorm.DB, teamId string, userIds []string) ([]*db_model.TeamUser, error) {
+	var teamUsers []*db_model.TeamUser
+	if err := db.Where("team_id = ? AND user_id IN (?)", teamId, userIds).Find(&teamUsers).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	
 	if err := db.Where("team_id = ? AND user_id IN (?)", teamId, userIds).Delete(&db_model.TeamUser{}).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
-	return nil, nil
+	return teamUsers, nil
 }
 
 func (r team) BatchGetTeamUsersByTeamIDs(ctx context.Context, db *gorm.DB, teamIds []string) ([]*db_model.TeamUser, error) {
