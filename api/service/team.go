@@ -31,8 +31,8 @@ func (s *Team) Create(ctx context.Context, input *model.CreateTeamInput) (*db_mo
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		t := &db_model.Team{
-			ID:   ulid.Make(),
-			Name: input.Name,
+			ID:      ulid.Make(),
+			Name:    input.Name,
 			GroupID: input.GroupID,
 		}
 		created, err := s.teamRepository.Save(ctx, tx, t)
@@ -41,15 +41,15 @@ func (s *Team) Create(ctx context.Context, input *model.CreateTeamInput) (*db_mo
 		}
 
 		if len(input.UserIds) > 0 {
-        	if _, err := s.teamRepository.AddTeamUsers(ctx, s.db, created.ID, input.UserIds); err != nil {
+			if _, err := s.teamRepository.AddTeamUsers(ctx, tx, created.ID, input.UserIds); err != nil {
 				return errors.ErrAddTeamUser
 			}
-        }
+		}
 
 		team = created
 		return nil
-
 	})
+
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
