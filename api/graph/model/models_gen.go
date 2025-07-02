@@ -11,6 +11,10 @@ type CreateGroupInput struct {
 	Name string `json:"name"`
 }
 
+type CreateSceneInput struct {
+	Name string `json:"name"`
+}
+
 type CreateUserInput struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
@@ -27,10 +31,19 @@ type Mutation struct {
 type Query struct {
 }
 
+type Scene struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type UpdateGroupInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
 type UpdateGroupUsersInput struct {
 	UserIds []string `json:"userIds"`
+}
+
+type UpdateSceneInput struct {
+	Name *string `json:"name,omitempty"`
 }

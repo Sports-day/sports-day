@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"sports-day/api/graph/model"
 )
@@ -73,6 +74,21 @@ func (r *mutationResolver) RemoveGroupUsers(ctx context.Context, id string, inpu
 	return model.FormatGroupResponse(group), nil
 }
 
+// CreateScene is the resolver for the createScene field.
+func (r *mutationResolver) CreateScene(ctx context.Context, input model.CreateSceneInput) (*model.Scene, error) {
+	panic(fmt.Errorf("not implemented: CreateScene - createScene"))
+}
+
+// UpdateScene is the resolver for the updateScene field.
+func (r *mutationResolver) UpdateScene(ctx context.Context, id string, input model.UpdateSceneInput) (*model.Scene, error) {
+	panic(fmt.Errorf("not implemented: UpdateScene - updateScene"))
+}
+
+// DeleteScene is the resolver for the deleteScene field.
+func (r *mutationResolver) DeleteScene(ctx context.Context, id string) (*model.Scene, error) {
+	panic(fmt.Errorf("not implemented: DeleteScene - deleteScene"))
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -126,6 +142,16 @@ func (r *queryResolver) Group(ctx context.Context, id string) (*model.Group, err
 		return nil, err
 	}
 	return model.FormatGroupResponse(group), nil
+}
+
+// Scenes is the resolver for the scenes field.
+func (r *queryResolver) Scenes(ctx context.Context) ([]*model.Scene, error) {
+	panic(fmt.Errorf("not implemented: Scenes - scenes"))
+}
+
+// Scene is the resolver for the scene field.
+func (r *queryResolver) Scene(ctx context.Context, id string) (*model.Scene, error) {
+	panic(fmt.Errorf("not implemented: Scene - scene"))
 }
 
 // Mutation returns MutationResolver implementation.

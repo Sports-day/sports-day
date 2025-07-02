@@ -20,12 +20,22 @@ input UpdateGroupUsersInput {
   userIds: [ID!]!
 }
 
+input CreateSceneInput {
+  name: String!
+}
+
+input UpdateSceneInput {
+  name: String
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
   me: User!
   groups: [Group!]!
   group(id: ID!): Group!
+  scenes: [Scene!]!
+  scene(id: ID!): Scene!
 }
 
 type Mutation {
@@ -36,4 +46,7 @@ type Mutation {
   updateGroup(id: ID!, input: UpdateGroupInput!): Group!
   addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
   removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
+  createScene(input: CreateSceneInput!): Scene!
+  updateScene(id: ID!, input: UpdateSceneInput!): Scene!
+  deleteScene(id: ID!): Scene!
 }

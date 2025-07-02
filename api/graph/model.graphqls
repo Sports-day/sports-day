@@ -15,3 +15,8 @@ type AuthResponse {
   token: String!
   user: User!
 }
+
+type Scene {
+  id: ID!
+  name: String!
+}
