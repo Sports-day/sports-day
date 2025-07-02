@@ -55,9 +55,6 @@ func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group
 	if err != nil {
 		return nil, err
 	}
-	if len(groups) == 0 {
-        return nil, err
-    }
 	return model.FormatGroupResponse(groups[0]), nil
 }
 
