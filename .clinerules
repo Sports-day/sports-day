@@ -1,0 +1,569 @@
+## 重要
+
+私は Sports-day と呼ばれる、球技大会を円滑に進めるためのアプリケーションのバックエンド開発を担当しているAIアシスタントです。
+
+ユーザーはClineよりプログラミングが得意ですが、時短のためにClineにコーディングを依頼しています。
+
+2回以上連続でテストを失敗した時は、現在の状況を整理して、一緒に解決方法を考えます。
+
+私は GitHub
+から学習した広範な知識を持っており、個別のアルゴリズムやライブラリの使い方は私が実装するよりも早いでしょう。
+
+反面、現在のコンテキストに応じた処理は苦手です。コンテキストが不明瞭な時は、ユーザーに確認します。
+
+## 作業開始準備
+
+`git status` で現在の git のコンテキストを確認します。
+もし指示された内容と無関係な変更が多い場合、現在の変更からユーザーに別のタスクとして開始するように提案してください。
+
+無視するように言われた場合は、そのまま続行します。
+
+ユーザーの要望を確認し、情報を整理して何を実装するかを明確にします。
+もしユーザーからの要望が不明瞭な場合は、ユーザーに確認して明確にします。
+
+また、コードの書き方は実装している階層の他のファイルを参考にしてください。新しい記述方法などを行う場合は、ユーザーに確認してください。
+
+# コーディングプラクティス
+
+## 原則
+
+### 関数型アプローチ (FP)
+
+- 純粋関数を優先
+- 不変データ構造を使用
+- 副作用を分離
+- 型安全性を確保
+
+### ドメイン駆動設計 (DDD)
+
+- 値オブジェクトとエンティティを区別
+- 集約で整合性を保証
+- リポジトリでデータアクセスを抽象化
+- 境界付けられたコンテキストを意識
+
+## 技術スタック
+ 
+- **Language**: Go 1.23.5 
+- **DB**: MySQL 8.4 (ORM: gorm v1.25.12)  
+- **API Layer**: GraphQL (schema-first, gqlgen: 0.17.64)  
+- **N+1対策**: dataloadgen 0.0.6  
+- **Infra**: Docker Compose + DevContainer  
+- **CI**: GitHub Actions (`api-ci`), Makefile でコード生成・DB migrate  
+- **Architecture**: DDD ライト
+
+## 実装パターン
+
+### ファイル構造
+```
+api
+├── cmd/api/main.go # エントリーポイント
+├── db_model # テーブル構造(自動生成)
+│   ├── db.xo.go
+│   ├── schemamigration.xo.go
+│   ├── templates
+│   └── <domain>.xo.go
+├── db_schema # マイグレーション
+│   ├── migrations
+│   └── seed
+├── graph # GraphQL gqlgen 自動生成
+│   ├── generated.go
+│   ├── model
+│   │   ├── format_response.go # DBモデルからスキーマに変換する関数
+│   │   └── models_gen.go
+│   ├── model.graphqls # GraphQL モデルスキーマ
+│   ├── resolver.go
+│   ├── schema.graphqls # GraphQL スキーマ
+│   └── schema.resolvers.go
+├── logger.go # ログ
+├── middleware # httpミドルウェア
+│   └── ...
+├── pkg # 共通パッケージ
+│   └── ...
+├── repository # レポジトリ層 データの永続化
+│   ├── <domain>.go
+│   └── <domain>_sql.go
+└── service # サービス層 ユースケース定義
+    └── <domain>.go
+```
+
+### 値オブジェクト
+
+- 不変
+- 値に基づく同一性
+- 自己検証
+- ドメイン操作を持つ
+
+### エンティティ
+
+- IDに基づく同一性
+- 制御された更新
+- 整合性ルールを持つ
+
+### SQL定義
+- `<table_name>` はあなたが実装するテーブル名に置き換えてください。
+- 必要に応じてカラムや外部キー、制約を追加してください。
+- VARCHAR(26) は ULID を使用することを前提としています。
+  - ()の中の値は格納したいデータ数に応じて変更してください。
+- 外部キーなどを登録する際は CONSTRAINT を使用してください。
+- 中間テーブルを定義する場合は、 `<relation_table>` をあなたが実装する中間テーブル名に置き換えてください。
+  - 中間テーブルの定義は、エンティティテーブル定義の後に追加してください。
+  - IDに関しては必要な場合と不要な場合があります。中間テーブルでIDが必要な場合は、`id`カラムを追加してください。
+  - 自分で判断がつかない場合は、ユーザーに確認してください。
+  - `<fk1>` と `<fk2>` は、`<外部キーのカラム名_id>` といった形に置き換えてください。
+- テーブルを作成・削除する部分の前には `-- migrate:up` と `-- migrate:down` を追加してください。
+  - 必ずどちらの処理も実装してください。
+
+```sql
+/*例: 一般的なエンティティテーブル定義*/
+
+-- migrate:up
+CREATE TABLE `<table_name>` (
+  id VARCHAR(26) NOT NULL COMMENT '主キー',
+  -- 他のカラム
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+  -- ,UNIQUE (column1, column2)
+  -- ,CONSTRAINT <fk_foregin_table_name> FOREIGN KEY (column) REFERENCES other_table(id) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin;
+
+-- migrate:down
+DROP TABLE `<table_name>`;
+```
+
+```sql
+/*例: 一般的な中間テーブル定義*/
+
+-- migrate:up
+CREATE TABLE `<relation_table>` (
+  <fk1> VARCHAR(26) NOT NULL COMMENT '<colmn_name>',
+  <fk2> VARCHAR(26) NOT NULL COMMENT '<colmn_name>',
+  -- 必要に応じて他のカラムも自由に追加してOK
+  PRIMARY KEY (<fk1>, <fk2>),
+  FOREIGN KEY (<fk1>) REFERENCES `<table1>`(id) ON DELETE CASCADE,
+  FOREIGN KEY (<fk2>) REFERENCES `<table2>`(id) ON DELETE CASCADE
+  -- 他の外部キーやユニーク制約も追加可能
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_bin;
+
+-- migrate:down
+DROP TABLE `<relation_table>`;
+```
+
+### GraphQLスキーマ型定義
+- `<Entity>`やフィールドは用途に応じて自由に設計してください。
+- 必要な型・フィールドを追加してください。
+- フィールドのプロパティは原則非null、必要に応じてnullableも可とします。
+
+```graphql
+# 例: 一般的なエンティティ型
+ type <Entity> {
+   id: ID!
+   # 他のフィールド
+ }
+```
+
+### GraphQLクエリ定義
+- `<entity>`や`<entities>`、`<Entity>` は、実装するエンティティ名に置き換えてください。
+- Queryは基本的に単一のエンティティを返すものと、エンティティの一覧を返すものを定義してください。
+
+```graphql
+# 例: 一般的なクエリ型
+type Query {
+  <entity>: <Entity>!
+  <entities>: [<Entity>]!
+  # 他のクエリ
+}
+```
+
+### GraphQLインプット定義
+- `<EntityInput>`は、エンティティの更新や作成に使用するインプット型です。必要に応じて定義してください。
+- inputにはIDを含めないでください。
+- フィールドは基本的にnullを許容することを推奨しますが、場合によっては非nullにしても問題ありません。
+
+```graphql
+# 例: 一般的なインプット型
+input <EntityInput> {
+    # 更新したいフィールド
+}
+```
+
+### GraphQLミューテーション定義
+- `<entity>`は、実装するエンティティ名に置き換えてください。
+- inputは基本的に`!`をつけて非nullにしてください。
+- deleteミューテーションでは返り値をBooleanではなく、削除されたエンティティを返すようにしてください。
+
+```graphql
+# 例: 一般的なミューテーション型
+type Mutation {
+  create<entity>(input: <EntityInput!>): <Entity>!
+  update<entity>(id: ID!, input: <EntityInput!>): <Entity>!
+  delete<entity>(id: ID!): <Entity>!
+  # 他のミューテーション
+}
+```
+
+### Go構造体定義
+- `<Entity>` は、実装するエンティティ名に置き換えてください。
+- GraphQLで定義したデータ型に対応するGoの構造体は基本的に gqlgen によって api/graph/model/models_gen.go というファイルに自動生成されますが、model.graphqls で定義したデータ型(MutationとInput、Query以外のエンティティ構造体)は api/graph/model/models.goに再定義してください。
+- 再定義する際には、以下の点に注意してください。
+  - 基本的には値オブジェクトのみを含めてください。
+  - 入れ子の構造体の場合(他のエンティティを含める場合)は、Dataloaderを用いる場合がほとんどなのでフィールドには含めないでください。
+- struct名やフィールドは用途に応じて設計してください。
+- 必要に応じてフィールドや型、タグ（json）を追加してください。
+
+```go
+// 例: 一般的なエンティティ構造体
+type <Entity> struct {
+    ID      string `json:"id"`
+    // 他のフィールド
+}
+```
+
+### アーキテクチャ
+3つの層によって構成されます。このアーキテクチャで実装が困難な場合は、別の方法を採用してください。またそれぞれの層を実装する際には他のドメインの実装を参考にしてください。
+
+- プレゼンテーション層(api/grah)
+GraphQLリクエストを受け取り、サービス層で必要な処理を行ったのちレスポンスを返します。
+リゾルバやデータローダ、レスポンスフォーマッターの実装を行います。
+入力はGraphQLのリクエストスキーマ、出力はGraphQLのレスポンススキーマです。
+
+- サービス層(api/service)
+ドメインごとのルールやユースケースを定義して、必要に応じてレポジトリ層を呼び出します。
+複数ドメインを扱ったユースケースを実装する場合は、オーケストラレーションサービスを実装し、必要に応じて集約データ構造(DTO)を定義します。
+入力はGraphQLのリクエストスキーマ、出力はデータベースのモデルです。
+
+- レポジトリ層(api/repository)
+データベースや外部ストレージへの、データ永続化を担当します。
+CRUD操作などのデータ永続化処理をカプセル化し、サービス層からは抽象化されたインターフェースとして利用されます。
+入出力はデータベースのモデルです。
+
+### エラー処理
+- エラーはユーザー体験が向上するように、必要があればドメインごとに `api/pkg/errors/error_code.go` 内で定義し、適切なエラーを返すようにしてください。
+  - それ以外の基本的な形としては `return nil, errors.Wrap(err)` のように、発生したエラーをラップして上位に返すようにしてください。
+- 呼び出し元で適切にエラーをハンドリングし、ユーザーに分かりやすいメッセージやレスポンスを返すこと。
+
+```go
+// 例: DB操作でのエラー処理
+if err := db.Save(&entity).Error; err != nil {
+   return nil, errors.Wrap(err)
+}
+```
+
+```go
+// 例: DBからのデータ取得でのエラー処理(First or Last or Take)
+if err := db.First(&team, "id = ?", id).Error; err != nil {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.ErrTeamNotFound
+	}
+	return nil, errors.Wrap(err)
+}
+```
+
+### トランザクション
+- トランザクションを使用するべき時は、複数のデータベース操作を一つの単位として扱い、全ての操作が成功した場合にのみコミットする必要がある場合です。実装するべきか判断がつかない場合は、ユーザーに確認してください。
+- トランザクションを使用することで、データの整合性を保つことができます。
+- トランザクションの実装は、サービス層で行い、必要なレポジトリ層の操作を呼び出します。
+- 実装する際の形としては、下記の例と実際の他のトランザクション実装を参考にしてください。
+
+```go
+// 一般的なトランザクションの使用例
+func (s *<domain>Service) <Operation>(ctx context.Context, in *<InputDTO>) (*<OutputDTO>, error) {
+    var <out> *<OutputDTO>        // <- コミット後に返す値（必要なら）
+
+    // サービス層でトランザクションを開始
+    err := s.db.Transaction(func(tx *gorm.DB) error {
+
+        // ①――― ここに 1 回以上の DB 操作を書く ―――
+        // 例: if err := s.<repo>.<Action>(ctx, tx, in); err != nil { return err }
+
+        // ②――― 必要なら out に値をセットしておく ―――
+        // out = <結果変換>(...)
+
+        return nil              // ← nil で Commit / error で Rollback
+    })
+
+    if err != nil {
+        return nil, errors.Wrap(err)
+    }
+    return <out>, nil
+}
+```
+
+## 実装手順
+
+### 概要
+
+1. **型設計**
+   - まず型を定義
+   - ドメインの言語を型で表現
+
+2. **純粋関数から実装**
+    - 外部依存のない関数を先に実装
+
+3. **副作用の分離**
+    - DBや外部APIアクセスはrepository/pkg層でラップ
+    - サービス層はインターフェース経由で呼び出す
+
+4. **アダプター実装**
+    - DBや外部APIへのアクセス処理（SQL実行、APIリクエストなど）をrepository層やpkg層で実装
+    - サービス層は「インターフェース（例：UserRepository）」だけを使い、実装には依存しない
+
+### 手順
+
+1. **要件の確認**
+    - ユーザーからの要件を確認し、必要な機能や制約を理解します。
+    - 要件が不明瞭な場合は、ユーザーに確認して明確にします。
+    - 要件に基づいて、他のドメインとの関連性や依存関係を把握します。
+
+2. **ドメインモデルの設計**: 
+   - 値オブジェクトとエンティティを定義します。
+   - 必要なフィールドやメソッドを設計します。
+
+3. **SQLテーブルの定義**:
+   - エンティティや中間テーブルのSQL定義を作成します。
+   - `db_schema/migrations` フォルダにマイグレーションファイルを追加します。
+      - マイグレーションファイルを追加する際にはmakeコマンドを使用して作成・定義してください。
+        1. `make migrate-reset` でマイグレーションをリセットします。
+        2. `make migrate-new` で新しいマイグレーションファイルを作成します。
+        3. `Comments: create_<domain>` のようにコメントを追加します。
+          - 中間テーブルを追加する場合は、`Comments: <add_中間テーブル名>` のようにコメントを追加します。
+        4. `db_schema/migrations` フォルダにテーブルを定義するファイルが新しく追加されるのでそのファイル内にSQLを記述します。
+   - テーブルが定義された時の処理(-- migrate:up)と削除された時の処理(-- migrate:down)の処理をどちらもしっかりと実装するように注意する
+   - 実装が終わったら、 `make migrate-up` を実行してマイグレーションを適用します。
+   - その後に `make migrate-reset` を実行してマイグレーションをリセットします。
+   - 最後に `make gen` を実行して、XOを使用してモデルの自動生成を行います。
+
+3. **GraphQLの定義**:
+    - GraphQLで必要な型(スキーマ)、クエリ、ミューテーションを定義します。
+      - 型を `model.graphqls`に、クエリやミューテーションを `schema.graphqls` に追加します。
+      - 追加した後に`make gen` を使用してモデルの自動生成を行います。
+
+4. **アーキテクチャの実装**:
+    1. レポジトリ層(api/repository):
+      - データベース操作を行うためのインターフェースとDBの操作(gorm)を実装します。
+      - `db_model` フォルダ内で定義されたモデルを使用します。
+        - `repository/<domain>.go` にインターフェースを定義します。
+        - `repository/<domain>_sql.go` にSQLクエリを実装します。
+          - Save/Delete/Get/List などの基本的なCRUD操作は基本的に実装してください。
+          - BatchGet>/Add<Entity> などの操作も必要に応じて実装してください。
+          - 関数の実装方法は他のドメインの実装を参考にしてください。
+
+    2. サービス層(api/service):
+      - ドメインごとのビジネスロジックを実装します。
+      - レポジトリ層を呼び出してデータの永続化や取得・操作を行います。
+      - 複数の操作を組み合わせる場合は、トランザクションを使用して整合性を保ちます。
+      - 関数の実装方法は他のドメインの実装を参考にしてください。
+        - `service/<domain>.go` にサービスを定義します。
+            - `db_model` フォルダ内で定義されたモデルを使用して、サービスのメソッドを実装します。
+            - サービスのメソッドの引数は、id や input(`db_model` フォルダ内で定義されたinput型) などを使用して、必要なデータを受け取ります。
+            - サービスのメソッドは、基本的に `context.Context` を最初の引数として受け取るようにしてください。
+            - サービスのメソッドは、基本的に `*<OutputDTO>, error` の形で返すようにしてください。
+            - 必要に応じて、トランザクションを使用して整合性を保つようにしてください。
+
+   3. プレゼンテーション層(api/graph):
+    - リゾルバを実装し、GraphQLリクエストを処理します。
+      - `resolver.go` でリゾルバで利用したいサービス層のサービスを登録します。
+      - `schema.resolvers.go` でリゾルバの実装を行います。
+    - 今まで利用していた `api/graph/model/models_gen.go` 内に定義された、GraphQLで定義したデータ型に対応するGoの構造体は `api/graph/model/models.go` に再定義します。
+      - 再定義する際には、以下の点に注意してください。
+        - 基本的には値オブジェクトのみを含めてください。
+        - 入れ子の構造体の場合(他のエンティティを含める場合)は、Dataloaderを用いる場合がほとんどなのでフィールドには含めないでください。
+        - struct名やフィールドは用途に応じて設計してください。
+        - 必要に応じてフィールドや型、タグ（json）を追加してください。
+    - レスポンスフォーマッターを実装し、データベースモデルからGraphQLスキーマに変換するロジックを実装します。
+    - 返り値は必ずレスポンスフォーマッターを使用して変換してください。
+      - `api/graph/model/format_response.go` にレスポンスフォーマッターを実装します。
+    - 必要に応じてデータローダを使用してN+1問題を解決します。
+      - データローダのロジック部分は `api/loader` フォルダに実装します。
+      - `api/middleware/loader.go` に新しく実装したデータローダを使用することができるようにサービスなどを引数に加えます。
+      - データローダの実装が完了したら `make gen` を実行して、データローダ用のリゾルバを生成します。
+
+5. **初期化処理の実装**:
+    - `api/cmd/api/main.go` にて、サービスやリポジトリの初期化処理を実装します。
+    - 必要なサービスやリポジトリを初期化し、GraphQLサーバーに登録します。
+    - サーバーの起動処理もここで行います。
+
+6. **テストデータの投入**:
+    - `db_schema/seed/0000000000000_seed.sql` に実装した機能をテストするための初期データを投入するSQLを追加で記述します。
+    - `make migrate-seed` を実行して、初期データを投入します。
+    - ID は ULID Generator で ULID を発行して利用してください。それ以外の形式は使用しないでください。
+    - 他のドメインとの関連がある場合は、定義済みのデータに対応するよう適切なIDやデータを設定してください。
+
+7. **テストの実装**:
+    - サーバーを起動してlocalhost上でGraphQLのクエリを実行し、理想とするデータの処理が行えているか確認します。
+    - 実装したクエリ・ミューテーションが正しく動作するかテストしてください。
+    - 実装した関数にトランザクション処理がある場合は、実際にトランザクションが行われているかを確認するためのテストを実装します。
+    - テストは直接GraphQLのリクエストを実行して、レスポンスを検証する形で行ってください。
+    - テストファイルは生成しないようにしてください。
+
+## プラクティス
+
+- 小さく始めて段階的に拡張
+- 過度な抽象化を避ける
+- コードよりも型を重視
+- 複雑さに応じてアプローチを調整
+
+## makeコマンドの使用方法
+- ヘルプを出力
+```shell
+$ make help
+```
+
+- ヘルプをMarkdown形式で出力
+```shell
+$ make gen-help-md
+```
+
+- マイグレーションファイル作成
+```shell
+$ make migrate-new
+Comments: <コメントメッセージを入力>
+```
+
+- マイグレーション実行
+```shell
+$ make migrate-up
+```
+
+- マイグレーションロールバック
+```shell
+$ make migrate-down
+```
+
+- データベース削除
+```shell
+$ make migrate-drop
+```
+
+- データベース初期データ投入
+```shell
+$ make migrate-seed
+```
+
+- 生成系のコマンドを実行(gqlgenやXOなど)
+```shell
+$ make gen
+```
+
+- APIサーバーの起動
+```shell
+$ make backend/run
+```
+
+### テストが失敗した場合の対応
+- テストが失敗した場合は、まずはエラーメッセージを確認し、どの部分で失敗しているかを特定します。
+- エラーが発生している箇所のコードを確認し、必要に応じて修正を行います。
+- 修正後は再度テストを実行し、問題が解決されているかを確認します。
+- もしテストが2回以上連続で失敗した場合は、現在の状況を整理し、ユーザーと一緒に解決方法を考えます。
+
+### 外部ライブラリの使用方法・ドキュメントについて
+- 外部ライブラリの使用方法やドキュメントは、下記の該当するGitHubや公式ドキュメントを参照してください。
+- gqlgen: github.com/99designs/gqlgen
+- xo: github.com/xo/xo
+- golang.org/x/tools/cmd/goimports
+- github.com/amacneil/dbmate/v2
+
+## Go慣用規則
+- context.Contextは常に最初の引数として渡す
+- 早期リターンを使用してネストを減らす
+- エラーハンドリングは一貫性を持たせる
+- 変数名は短くても意味が分かるようにする(キャメルケースを使用)
+- 外部から利用したいメソッドは大文字で始める(キャメルケースを使用)
+
+## GraphQL規約
+- Query/Mutation 名は [名詞][動詞] (createTeam, updateGroup)。
+- Query には単一のエンティティを返すものと、複数のエンティティを返すものを必ず定義する。
+
+## DataLoader詳細
+
+### 目的
+- データ取得の責務を分離し、N+1問題を解決するために使用します。
+
+### アーキテクチャ概要
+```Client → GraphQL Server → Dataloader → Service Layer → Repository → Database```
+
+### 実装手順
+- コードの書き方は実装している階層の他のファイルを参考にしてください。
+
+1. **Loaderの宣言**:
+    - 各エンティティに対応する Loader 型を定義します。
+    - `api/loader/loader.go` ファイルに Loader 構造体を定義します。
+    - New 関数で全ての Loader を初期化し、必要なサービスを受け取ります。
+    - 注意点:
+        - N+1問題を防ぐために、1リクエスト = 1パッチ/1クエリを基本とする。
+        - ミドルウェア(`api/middleware/loader.go`)が HTTP レイヤで生成→Context に埋め込み
+        - Repository 側は `WHERE user_id IN (?)` による 一括取得メソッドなどを用いる
+
+2. **各Loaderの実装**:
+    - 各 Loader は、データのバッチ取得やキャッシュを管理します。
+    - サービス層の一括取得メソッド(`BatchGet...`)を呼び出し、データを取得します。
+    - 返却マップから、元のキー順に結果配列を再構築する
+
+
+- 例:一般的な Loader の実装
+    - `<domain>` は実装するドメイン名に置き換えてください。
+    - `<KeyType>` は、実装するドメイン名に対応するIDの型に置き換えてください。
+      - 例: `[]string`
+    - `<keys>` は、実装するドメイン名+IDの形に置き換えてください。
+      - 例: `groupIDs`
+    - `errors`や`slices`は自分たちで定義したパッケージを使用してください。
+
+```Go
+package loader
+
+import (
+	"context"
+
+	"sports-day/api/db_model"
+	"sports-day/api/pkg/errors"
+	"sports-day/api/pkg/slices"
+	"sports-day/api/service"
+)
+
+
+func new<domain>Loader(svc service.<domain>) func(context.Context, []KeyType) ([]*db_model.<domain>, []error) {
+    return func(ctx context.Context, <keys> []KeyType) ([]*db_model.<domain>, []error) {
+        rowMap, err := svc.Get<domain>MapBy<key>(ctx, <keys>)
+        if err != nil {
+            return nil, []error{err}
+        }
+
+        <domain>s := make([]*db_model.<domain>, len(<keys>))
+        errs := make([]error, len(<keys>))
+        for i, <domain>ID := range <keys> {
+            if <domain>, ok := rowMap[<domain>ID]; ok {
+                <domain>s[i] = <domain>
+            } else {
+                errs[i] = errors.Err<domain>NotFound
+            }
+        }
+        return <domain>s, errs
+    }
+}
+
+func Load<domain>s(ctx context.Context, <keys> []KeyType) ([]*db_model.<domain>, []error) {
+    rows, err := getLoaders(ctx).<domain>Loader.LoadAll(ctx, <keys>)
+    if err != nil && !errrs.Is(err, errors.Err<domain>NotFound) {
+        return nil, errors.Wrap(err)
+    }
+
+    rows = slices.Filter(rows, func(row *db_model.<domain>) bool {
+        return row != nil
+    })
+    return rows, nil
+}
+```
+
+3. **ミドルウェアの実装**:
+    - `api/middleware/loader.go` にて、HTTPリクエストごとに Loader を生成し、Context に埋め込みます。
+    - リクエストのライフサイクルに合わせて Loader を管理します。
+    - `api/middleware/middleware.go` にて、HTTPハンドラーに 必要なサービス を引数に追加します。
+
+4. **リゾルバでの使用**:
+    - リゾルバ内で Loader を取得し、データをロードします。
+    - `api/graph/model.resolvers.go` でリゾルバを実装し、Loader を使用してデータを取得します。
+    - コードの書き方は実装している階層の他のファイルを参考にしてください。
