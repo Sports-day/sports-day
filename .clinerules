@@ -154,7 +154,7 @@ DROP TABLE `<relation_table>`;
 ```
 
 ### GraphQLスキーマ型定義
-- `type`名やフィールドは用途に応じて自由に設計してください。
+- `<Entity>`やフィールドは用途に応じて自由に設計してください。
 - 必要な型・フィールドを追加してください。
 - フィールドのプロパティは原則非null、必要に応じてnullableも可とします。
 
@@ -167,7 +167,7 @@ DROP TABLE `<relation_table>`;
 ```
 
 ### GraphQLクエリ定義
-- `<entity>`や`<entities>`は、実装するエンティティ名に置き換えてください。
+- `<entity>`や`<entities>`、`<Entity>` は、実装するエンティティ名に置き換えてください。
 - Queryは基本的に単一のエンティティを返すものと、エンティティの一覧を返すものを定義してください。
 
 ```graphql
@@ -192,6 +192,7 @@ input <EntityInput> {
 ```
 
 ### GraphQLミューテーション定義
+- `<entity>`は、実装するエンティティ名に置き換えてください。
 - inputは基本的に`!`をつけて非nullにしてください。
 - deleteミューテーションでは返り値をBooleanではなく、削除されたエンティティを返すようにしてください。
 
@@ -206,6 +207,7 @@ type Mutation {
 ```
 
 ### Go構造体定義
+- `<Entity>` は、実装するエンティティ名に置き換えてください。
 - GraphQLで定義したデータ型に対応するGoの構造体は基本的に gqlgen によって api/graph/model/models_gen.go というファイルに自動生成されますが、model.graphqls で定義したデータ型(MutationとInput、Query以外のエンティティ構造体)は api/graph/model/models.goに再定義してください。
 - 再定義する際には、以下の点に注意してください。
   - 基本的には値オブジェクトのみを含めてください。
@@ -265,7 +267,7 @@ if err := db.First(&team, "id = ?", id).Error; err != nil {
 - トランザクションを使用するべき時は、複数のデータベース操作を一つの単位として扱い、全ての操作が成功した場合にのみコミットする必要がある場合です。実装するべきか判断がつかない場合は、ユーザーに確認してください。
 - トランザクションを使用することで、データの整合性を保つことができます。
 - トランザクションの実装は、サービス層で行い、必要なレポジトリ層の操作を呼び出します。
-- 実装する際の形としては、下記の例を参考にしてください。
+- 実装する際の形としては、下記の例と実際の他のトランザクション実装を参考にしてください。
 
 ```go
 // 一般的なトランザクションの使用例
@@ -493,7 +495,7 @@ $ make backend/run
     - New 関数で全ての Loader を初期化し、必要なサービスを受け取ります。
     - 注意点:
         - N+1問題を防ぐために、1リクエスト = 1パッチ/1クエリを基本とする。
-        - ミドルウェア(`middleware/loader.go`)が HTTP レイヤで生成→Context に埋め込み
+        - ミドルウェア(`api/middleware/loader.go`)が HTTP レイヤで生成→Context に埋め込み
         - Repository 側は `WHERE user_id IN (?)` による 一括取得メソッドなどを用いる
 
 2. **各Loaderの実装**:
@@ -501,7 +503,15 @@ $ make backend/run
     - サービス層の一括取得メソッド(`BatchGet...`)を呼び出し、データを取得します。
     - 返却マップから、元のキー順に結果配列を再構築する
 
-例:一般的な Loader の実装
+
+- 例:一般的な Loader の実装
+    - `<domain>` は実装するドメイン名に置き換えてください。
+    - `<KeyType>` は、実装するドメイン名に対応するIDの型に置き換えてください。
+      - 例: `[]string`
+    - `<keys>` は、実装するドメイン名+IDの形に置き換えてください。
+      - 例: `groupIDs`
+    - `errors`や`slices`は自分たちで定義したパッケージを使用してください。
+
 ```Go
 package loader
 
@@ -516,15 +526,15 @@ import (
 
 
 func new<domain>Loader(svc service.<domain>) func(context.Context, []KeyType) ([]*db_model.<domain>, []error) {
-    return func(ctx context.Context, <domain_keys> []KeyType) ([]*db_model.<domain>, []error) {
-        rowMap, err := svc.Get<domain>MapBy<key>(ctx, keys)
+    return func(ctx context.Context, <keys> []KeyType) ([]*db_model.<domain>, []error) {
+        rowMap, err := svc.Get<domain>MapBy<key>(ctx, <keys>)
         if err != nil {
             return nil, []error{err}
         }
 
-        <domain>s := make([]*db_model.<domain>, len(keys))
-        errs := make([]error, len(keys))
-        for i, <domain>ID := range keys {
+        <domain>s := make([]*db_model.<domain>, len(<keys>))
+        errs := make([]error, len(<keys>))
+        for i, <domain>ID := range <keys> {
             if <domain>, ok := rowMap[<domain>ID]; ok {
                 <domain>s[i] = <domain>
             } else {
@@ -535,8 +545,8 @@ func new<domain>Loader(svc service.<domain>) func(context.Context, []KeyType) ([
     }
 }
 
-func Load<domain>s(ctx context.Context, keys []KeyType) ([]*db_model.<domain>, []error) {
-    rows, err := getLoaders(ctx).<domain>Loader.LoadAll(ctx, keys)
+func Load<domain>s(ctx context.Context, <keys> []KeyType) ([]*db_model.<domain>, []error) {
+    rows, err := getLoaders(ctx).<domain>Loader.LoadAll(ctx, <keys>)
     if err != nil && !errrs.Is(err, errors.Err<domain>NotFound) {
         return nil, errors.Wrap(err)
     }
