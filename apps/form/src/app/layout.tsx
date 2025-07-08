@@ -4,6 +4,7 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ApolloProvider } from "@/components/ApolloProvider";
 import { Noto_Sans_JP } from "next/font/google";
 import theme from "./theme";
+import Header from "@/components/other/header";
 
 const noto = Noto_Sans_JP({
   weight: ["400", "500", "600", "700"],
