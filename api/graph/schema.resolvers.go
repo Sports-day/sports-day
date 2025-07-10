@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"sports-day/api/graph/model"
 )
@@ -158,12 +157,25 @@ func (r *queryResolver) Group(ctx context.Context, id string) (*model.Group, err
 
 // Scenes is the resolver for the scenes field.
 func (r *queryResolver) Scenes(ctx context.Context) ([]*model.Scene, error) {
-	panic(fmt.Errorf("not implemented: Scenes - scenes"))
+	scenes, err := r.SceneService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Scene, 0, len(scenes))
+	for _, scene := range scenes {
+		res = append(res, model.FormatSceneResponse(scene))
+	}
+	return res, nil
 }
 
 // Scene is the resolver for the scene field.
 func (r *queryResolver) Scene(ctx context.Context, id string) (*model.Scene, error) {
-	panic(fmt.Errorf("not implemented: Scene - scene"))
+	scene, err := r.SceneService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
 }
 
 // Mutation returns MutationResolver implementation.
