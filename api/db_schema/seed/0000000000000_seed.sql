@@ -6,13 +6,13 @@ DELETE FROM `sports`;
 
 
 INSERT INTO `sports` (id, name, weight)
-VALUES  ('01JS96Z963A6RT2C563DCSSCQN', 'フットサル', 1),
-        ('01JS96Z9630FPVV0HFY7YR1BQ2', 'バスケットボール', 2),
-        ('01JS96Z963WPXJZG9X99N7VP44', '野球', 3),
-        ('01JS96Z963QYQ0APZ6Z3K246HM', 'ビーチバレー', 4),
-        ('01JS96Z96348RDDS4SRA5Y43JA', 'テニス', 5),
-        ('01JS96Z963KZND56RX30AHX6C0', '卓球', 6),
-        ('01JS96Z964EZHVVXQJ0T0ETKAW', 'バドミントン', 7);
+VALUES  ('01JS96Z963A6RT2C563DCSSCQN', 'フットサル', 0),
+        ('01JS96Z9630FPVV0HFY7YR1BQ2', 'バスケットボール', 0),
+        ('01JS96Z963WPXJZG9X99N7VP44', '野球', 0),
+        ('01JS96Z963QYQ0APZ6Z3K246HM', 'ビーチバレー', 0),
+        ('01JS96Z96348RDDS4SRA5Y43JA', 'テニス', 0),
+        ('01JS96Z963KZND56RX30AHX6C0', '卓球', 0),
+        ('01JS96Z964EZHVVXQJ0T0ETKAW', 'バドミントン', 0);
 
 INSERT INTO users (id, name, email)
 VALUES  ('01JS96Z96329JZHCYD45D72SYB', '山田 太郎', 'ta_yamada@dev.sports-day.net'),
