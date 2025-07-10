@@ -76,17 +76,29 @@ func (r *mutationResolver) RemoveGroupUsers(ctx context.Context, id string, inpu
 
 // CreateScene is the resolver for the createScene field.
 func (r *mutationResolver) CreateScene(ctx context.Context, input model.CreateSceneInput) (*model.Scene, error) {
-	panic(fmt.Errorf("not implemented: CreateScene - createScene"))
+	scene, err := r.SceneService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
 }
 
 // UpdateScene is the resolver for the updateScene field.
 func (r *mutationResolver) UpdateScene(ctx context.Context, id string, input model.UpdateSceneInput) (*model.Scene, error) {
-	panic(fmt.Errorf("not implemented: UpdateScene - updateScene"))
+	scene, err := r.SceneService.Update(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
 }
 
 // DeleteScene is the resolver for the deleteScene field.
 func (r *mutationResolver) DeleteScene(ctx context.Context, id string) (*model.Scene, error) {
-	panic(fmt.Errorf("not implemented: DeleteScene - deleteScene"))
+	scene, err := r.SceneService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
 }
 
 // Users is the resolver for the users field.

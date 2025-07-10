@@ -13,7 +13,7 @@ import (
 )
 
 type Scene struct {
-	db           *gorm.DB
+	db        *gorm.DB
 	sceneRepo repository.Scene
 }
 

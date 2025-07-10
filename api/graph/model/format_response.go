@@ -18,3 +18,10 @@ func FormatGroupResponse(group *db_model.Group) *Group {
 		Name: group.Name,
 	}
 }
+
+func FormatSceneResponse(scene *db_model.Scene) *Scene {
+	return &Scene{
+		ID:   scene.ID,
+		Name: scene.Name,
+	}
+}
