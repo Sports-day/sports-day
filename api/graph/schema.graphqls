@@ -72,6 +72,18 @@ input UpdateLocationInput {
 
 input CreateCompetitionInput {
   name: String!
+}
+
+input UpdateCompetitionInput {
+  name: String
+}
+
+input UpdateCompetitionEntriesInput {
+  teamIds: [ID!]!
+}
+
+input CreateCompetitionInput {
+  name: String!
   type: CompetitionType!
 }
 
