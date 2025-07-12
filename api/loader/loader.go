@@ -10,26 +10,32 @@ import (
 )
 
 type Loaders struct {
-	UserLoader       *dataloadgen.Loader[string, *db_model.User]
-	GroupLoader      *dataloadgen.Loader[string, *db_model.Group]
-	TeamLoader       *dataloadgen.Loader[string, *db_model.Team]
-	GroupUsersLoader *dataloadgen.Loader[string, []*db_model.GroupUser]
-	UserGroupsLoader *dataloadgen.Loader[string, []*db_model.GroupUser]
-	TeamUsersLoader  *dataloadgen.Loader[string, []*db_model.TeamUser]
-	UserTeamsLoader  *dataloadgen.Loader[string, []*db_model.TeamUser]
-	GroupTeamsLoader *dataloadgen.Loader[string, []*db_model.Team]
+	UserLoader             *dataloadgen.Loader[string, *db_model.User]
+	GroupLoader            *dataloadgen.Loader[string, *db_model.Group]
+	TeamLoader             *dataloadgen.Loader[string, *db_model.Team]
+	CompetitionLoader      *dataloadgen.Loader[string, *db_model.Competition]
+	GroupUsersLoader       *dataloadgen.Loader[string, []*db_model.GroupUser]
+	UserGroupsLoader       *dataloadgen.Loader[string, []*db_model.GroupUser]
+	TeamUsersLoader        *dataloadgen.Loader[string, []*db_model.TeamUser]
+	UserTeamsLoader        *dataloadgen.Loader[string, []*db_model.TeamUser]
+	GroupTeamsLoader       *dataloadgen.Loader[string, []*db_model.Team]
+	CompetitionEntriesLoader *dataloadgen.Loader[string, []*db_model.CompetitionEntry]
+	EntryCompetitionsLoader *dataloadgen.Loader[string, []*db_model.CompetitionEntry]
 }
 
-func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team) *Loaders {
+func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition) *Loaders {
 	return &Loaders{
-		UserLoader:       dataloadgen.NewLoader(newUserLoader(userSvc)),
-		GroupLoader:      dataloadgen.NewLoader(newGroupLoader(groupSvc)),
-		TeamLoader:       dataloadgen.NewLoader(newTeamLoader(teamSvc)),
-		GroupUsersLoader: dataloadgen.NewLoader(newGroupUsersLoader(groupSvc)),
-		UserGroupsLoader: dataloadgen.NewLoader(newUserGroupsLoader(groupSvc)),
-		TeamUsersLoader:  dataloadgen.NewLoader(newTeamUsersLoader(teamSvc)),
-		UserTeamsLoader:  dataloadgen.NewLoader(newUserTeamsLoader(teamSvc)),
-		GroupTeamsLoader: dataloadgen.NewLoader(newGroupTeamsLoader(teamSvc)),
+		UserLoader:             dataloadgen.NewLoader(newUserLoader(userSvc)),
+		GroupLoader:            dataloadgen.NewLoader(newGroupLoader(groupSvc)),
+		TeamLoader:             dataloadgen.NewLoader(newTeamLoader(teamSvc)),
+		CompetitionLoader:      dataloadgen.NewLoader(newCompetitionLoader(competitionSvc)),
+		GroupUsersLoader:       dataloadgen.NewLoader(newGroupUsersLoader(groupSvc)),
+		UserGroupsLoader:       dataloadgen.NewLoader(newUserGroupsLoader(groupSvc)),
+		TeamUsersLoader:        dataloadgen.NewLoader(newTeamUsersLoader(teamSvc)),
+		UserTeamsLoader:        dataloadgen.NewLoader(newUserTeamsLoader(teamSvc)),
+		GroupTeamsLoader:       dataloadgen.NewLoader(newGroupTeamsLoader(teamSvc)),
+		CompetitionEntriesLoader: dataloadgen.NewLoader(newCompetitionEntriesLoader(competitionSvc)),
+		EntryCompetitionsLoader: dataloadgen.NewLoader(newEntryCompetitionsLoader(competitionSvc)),
 	}
 }
 
