@@ -6,18 +6,22 @@ var (
 	/*
 		NotFound
 	*/
-	ErrUserNotFound     = NewError("USER_NOT_FOUND", "ユーザーが見つかりません")
-	ErrGroupNotFound    = NewError("GROUP_NOT_FOUND", "グループが見つかりません")
-	ErrTeamNotFound     = NewError("TEAM_NOT_FOUND", "チームが見つかりません")
-	ErrLocationNotFound = NewError("LOCATION_NOT_FOUND", "場所が見つかりません")
+	ErrUserNotFound        = NewError("USER_NOT_FOUND", "ユーザーが見つかりません")
+	ErrGroupNotFound       = NewError("GROUP_NOT_FOUND", "グループが見つかりません")
+	ErrTeamNotFound        = NewError("TEAM_NOT_FOUND", "チームが見つかりません")
+	ErrLocationNotFound    = NewError("LOCATION_NOT_FOUND", "場所が見つかりません")
+	ErrCompetitionNotFound = NewError("COMPETITION_NOT_FOUND", "大会が見つかりません")
 
 	/*
 		Validation
 	*/
-	ErrSaveTeam       = NewError("TEAM_SAVE_FAILED", "チームの更新に失敗しました")
-	ErrAddTeamUser    = NewError("TEAM_USER_ADD_FAILED", "チームユーザーの追加に失敗しました")
-	ErrDeleteTeamUser = NewError("TEAM_USER_REMOVE_FAILED", "チームユーザーの削除に失敗しました")
-	ErrSaveLocation   = NewError("LOCATION_SAVE_FAILED", "場所の更新に失敗しました")
+	ErrSaveTeam               = NewError("TEAM_SAVE_FAILED", "チームの更新に失敗しました")
+	ErrAddTeamUser            = NewError("TEAM_USER_ADD_FAILED", "チームユーザーの追加に失敗しました")
+	ErrDeleteTeamUser         = NewError("TEAM_USER_REMOVE_FAILED", "チームユーザーの削除に失敗しました")
+	ErrSaveLocation           = NewError("LOCATION_SAVE_FAILED", "場所の更新に失敗しました")
+	ErrSaveCompetition        = NewError("COMPETITION_SAVE_FAILED", "大会の更新に失敗しました")
+	ErrAddCompetitionEntry    = NewError("COMPETITION_ENTRY_ADD_FAILED", "大会エントリーの追加に失敗しました")
+	ErrDeleteCompetitionEntry = NewError("COMPETITION_ENTRY_REMOVE_FAILED", "大会エントリーの削除に失敗しました")
 	/*
 		Authentication
 	*/
