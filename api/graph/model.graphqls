@@ -18,6 +18,13 @@ type Team {
   name: String!
   group: Group!
   users: [User!]!
+  competitions: [Competition!]!
+}
+
+type Competition {
+  id: ID!
+  name: String!
+  teams: [Team!]!
 }
 
 type Location {
