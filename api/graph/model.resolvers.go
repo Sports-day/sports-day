@@ -14,6 +14,24 @@ import (
 )
 
 // Teams is the resolver for the teams field.
+func (r *competitionResolver) Teams(ctx context.Context, obj *model.Competition) ([]*model.Team, error) {
+	competitionEntries, err := loader.LoadCompetitionEntries(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	teamIds := slices.Map(competitionEntries, func(competitionEntry *db_model.CompetitionEntry) string {
+		return competitionEntry.TeamID
+	})
+	teams, err := loader.LoadTeams(ctx, teamIds)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(teams, func(team *db_model.Team) *model.Team {
+		return model.FormatTeamResponse(team)
+	}), nil
+}
+
+// Teams is the resolver for the teams field.
 func (r *groupResolver) Teams(ctx context.Context, obj *model.Group) ([]*model.Team, error) {
 	groupTeams, err := loader.LoadGroupTeams(ctx, obj.ID)
 	if err != nil {
@@ -76,6 +94,24 @@ func (r *teamResolver) Users(ctx context.Context, obj *model.Team) ([]*model.Use
 	}), nil
 }
 
+// Competitions is the resolver for the competitions field.
+func (r *teamResolver) Competitions(ctx context.Context, obj *model.Team) ([]*model.Competition, error) {
+	competitionEntries, err := loader.LoadEntryCompetitions(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	competitionIds := slices.Map(competitionEntries, func(competitionEntry *db_model.CompetitionEntry) string {
+		return competitionEntry.CompetitionID
+	})
+	competitions, err := loader.LoadCompetitions(ctx, competitionIds)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(competitions, func(competition *db_model.Competition) *model.Competition {
+		return model.FormatCompetitionResponse(competition)
+	}), nil
+}
+
 // Groups is the resolver for the groups field.
 func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Group, error) {
 	groupUsers, err := loader.LoadUserGroups(ctx, obj.ID)
@@ -112,6 +148,9 @@ func (r *userResolver) Teams(ctx context.Context, obj *model.User) ([]*model.Tea
 	}), nil
 }
 
+// Competition returns CompetitionResolver implementation.
+func (r *Resolver) Competition() CompetitionResolver { return &competitionResolver{r} }
+
 // Group returns GroupResolver implementation.
 func (r *Resolver) Group() GroupResolver { return &groupResolver{r} }
 
@@ -121,6 +160,7 @@ func (r *Resolver) Team() TeamResolver { return &teamResolver{r} }
 // User returns UserResolver implementation.
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
+type competitionResolver struct{ *Resolver }
 type groupResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
