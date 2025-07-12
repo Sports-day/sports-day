@@ -33,3 +33,10 @@ func FormatLocationResponse(location *db_model.Location) *Location {
 		Name: location.Name,
 	}
 }
+
+func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
+	return &Competition{
+		ID:   competition.ID,
+		Name: competition.Name,
+	}
+}
