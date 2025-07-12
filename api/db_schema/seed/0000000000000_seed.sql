@@ -2,6 +2,7 @@
 DELETE FROM group_users;
 DELETE FROM `groups`;
 DELETE FROM users;
+DELETE FROM scenes;
 
 INSERT INTO users (id, name, email)
 VALUES  ('01JS96Z96329JZHCYD45D72SYB', '山田 太郎', 'ta_yamada@dev.sports-day.net'),
@@ -100,7 +101,12 @@ VALUES
         ('01JS96Z964KX2GGT92CSMVEJ5X', '01JS96Z963QE7DYBQ6Q7BH95S8'),
         ('01JS96Z964EZHVVXQJ0T0ETKAW', '01JS96Z963QE7DYBQ6Q7BH95S8');
 
+INSERT INTO scenes (id, name)
+VALUES  ('01JZZZZZSCENE00000000000001', '晴天時'),
+        ('01JZZZZZSCENE00000000000002', '雨天時');
+
 -- migrate:down
 DELETE FROM group_users;
 DELETE FROM `groups`;
 DELETE FROM users;
+DELETE FROM scenes;
