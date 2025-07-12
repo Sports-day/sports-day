@@ -15,3 +15,9 @@ type AuthResponse {
   token: String!
   user: User!
 }
+
+type Information {
+  id: ID!
+  title: String!
+  content: String!
+}

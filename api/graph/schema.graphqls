@@ -20,12 +20,25 @@ input UpdateGroupUsersInput {
   userIds: [ID!]!
 }
 
+input CreateInformationInput {
+  title: String!
+  content: String!
+}
+
+input UpdateInformationInput {
+  title: String
+  content: String
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
   me: User!
   groups: [Group!]!
   group(id: ID!): Group!
+
+  Informations: [Information!]!
+  Information(id: ID!): Information!
 }
 
 type Mutation {
@@ -36,4 +49,8 @@ type Mutation {
   updateGroup(id: ID!, input: UpdateGroupInput!): Group!
   addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
   removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
+
+  createInformation(input: CreateInformationInput!): Information!
+  deleteInformation(id: ID!): Information!
+  updateInformation(id: ID!, input: UpdateInformationInput!): Information!
 }
