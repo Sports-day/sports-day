@@ -7,6 +7,10 @@ type AuthResponse struct {
 	User  *User  `json:"user"`
 }
 
+type CreateCompetitionInput struct {
+	Name string `json:"name"`
+}
+
 type CreateGroupInput struct {
 	Name string `json:"name"`
 }
@@ -70,6 +74,14 @@ type Sport struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Weight int32  `json:"weight"`
+}
+
+type UpdateCompetitionEntriesInput struct {
+	TeamIds []string `json:"teamIds"`
+}
+
+type UpdateCompetitionInput struct {
+	Name *string `json:"name,omitempty"`
 }
 
 type UpdateGroupInput struct {
