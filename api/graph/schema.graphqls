@@ -70,6 +70,18 @@ input UpdateLocationInput {
   name: String
 }
 
+input CreateCompetitionInput {
+  name: String!
+}
+
+input UpdateCompetitionInput {
+  name: String
+}
+
+input UpdateCompetitionEntriesInput {
+  teamIds: [ID!]!
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
@@ -98,6 +110,14 @@ type Query {
   scene(id: ID!): Scene!
   Informations: [Information!]!
   Information(id: ID!): Information!
+  """
+  大会をまとめて取得する
+  """
+  competitions: [Competition!]!
+  """
+  ID指定で大会を取得する
+  """
+  competition(id: ID!): Competition!
 }
 
 type Mutation {
@@ -145,4 +165,24 @@ type Mutation {
   createInformation(input: CreateInformationInput!): Information!
   deleteInformation(id: ID!): Information!
   updateInformation(id: ID!, input: UpdateInformationInput!): Information!
+  """
+  大会を作成する
+  """
+  createCompetition(input: CreateCompetitionInput!): Competition!
+  """
+  大会の情報を更新する
+  """
+  updateCompetition(id: ID!, input: UpdateCompetitionInput!): Competition!
+  """
+  大会を削除する
+  """
+  deleteCompetition(id: ID!): Competition!
+  """
+  大会にチームエントリーを追加する
+  """
+  addCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  """
+  大会からチームエントリーを削除する
+  """
+  deleteCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
 }
