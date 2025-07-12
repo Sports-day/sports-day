@@ -9,10 +9,10 @@ import (
 	"sports-day/api/service"
 )
 
-func SetupMiddleware(handler http.Handler, jwt auth.JWT, userSvc service.User, groupSvc service.Group, teamSvc service.Team) http.Handler {
+func SetupMiddleware(handler http.Handler, jwt auth.JWT, userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition) http.Handler {
 	chain := alice.New()
 	chain = chain.Append(CORS().Handler)
-	chain = chain.Append(LoaderMiddleware(userSvc, groupSvc, teamSvc))
+	chain = chain.Append(LoaderMiddleware(userSvc, groupSvc, teamSvc, competitionSvc))
 	// chain = chain.Append(Auth(jwt))
 
 	return chain.Then(handler)
