@@ -31,6 +31,17 @@ func (r *competitionResolver) Teams(ctx context.Context, obj *model.Competition)
 	}), nil
 }
 
+// Matches is the resolver for the matches field.
+func (r *competitionResolver) Matches(ctx context.Context, obj *model.Competition) ([]*model.Match, error) {
+	matches, err := loader.LoadCompetitionMatches(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(matches, func(match *db_model.Match) *model.Match {
+		return model.FormatMatchResponse(match)
+	}), nil
+}
+
 // Teams is the resolver for the teams field.
 func (r *groupResolver) Teams(ctx context.Context, obj *model.Group) ([]*model.Team, error) {
 	groupTeams, err := loader.LoadGroupTeams(ctx, obj.ID)
@@ -65,6 +76,73 @@ func (r *groupResolver) Users(ctx context.Context, obj *model.Group) ([]*model.U
 	return slices.Map(users, func(user *db_model.User) *model.User {
 		return model.FormatUserResponse(user)
 	}), nil
+}
+
+// Matches is the resolver for the matches field.
+func (r *locationResolver) Matches(ctx context.Context, obj *model.Location) ([]*model.Match, error) {
+	matches, err := loader.LoadLocationMatches(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(matches, func(match *db_model.Match) *model.Match {
+		return model.FormatMatchResponse(match)
+	}), nil
+}
+
+// Location is the resolver for the location field.
+func (r *matchResolver) Location(ctx context.Context, obj *model.Match) (*model.Location, error) {
+	locations, err := loader.LoadLocations(ctx, []string{obj.LocationId})
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLocationResponse(locations[0]), nil
+}
+
+// Competition is the resolver for the competition field.
+func (r *matchResolver) Competition(ctx context.Context, obj *model.Match) (*model.Competition, error) {
+	competitions, err := loader.LoadCompetitions(ctx, []string{obj.CompetitionId})
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatCompetitionResponse(competitions[0]), nil
+}
+
+// WinnerTeam is the resolver for the winner_team field.
+func (r *matchResolver) WinnerTeam(ctx context.Context, obj *model.Match) (*model.Team, error) {
+	if obj.WinnerTeamId == "" {
+		return nil, nil
+	}
+	teams, err := loader.LoadTeams(ctx, []string{obj.WinnerTeamId})
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(teams[0]), nil
+}
+
+// Entries is the resolver for the entries field.
+func (r *matchResolver) Entries(ctx context.Context, obj *model.Match) ([]*model.MatchEntry, error) {
+	entries, err := loader.LoadMatchEntries(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	teamIDs := slices.Map(entries, func(entry *db_model.MatchEntry) string {
+		return entry.TeamID
+	})
+
+	teams, err := loader.LoadTeams(ctx, teamIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []*model.MatchEntry
+	for i, team := range entries {
+		res = append(res, &model.MatchEntry{
+			Team:  model.FormatTeamResponse(teams[i]),
+			Score: int32(team.Score),
+		})
+	}
+	return res, nil
 }
 
 // Group is the resolver for the group field.
@@ -112,6 +190,24 @@ func (r *teamResolver) Competitions(ctx context.Context, obj *model.Team) ([]*mo
 	}), nil
 }
 
+// Matches is the resolver for the matches field.
+func (r *teamResolver) Matches(ctx context.Context, obj *model.Team) ([]*model.Match, error) {
+	matchEntries, err := loader.LoadEntryMatches(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	matchIds := slices.Map(matchEntries, func(matchEntry *db_model.MatchEntry) string {
+		return matchEntry.MatchID
+	})
+	matches, err := loader.LoadMatches(ctx, matchIds)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(matches, func(match *db_model.Match) *model.Match {
+		return model.FormatMatchResponse(match)
+	}), nil
+}
+
 // Groups is the resolver for the groups field.
 func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Group, error) {
 	groupUsers, err := loader.LoadUserGroups(ctx, obj.ID)
@@ -154,6 +250,12 @@ func (r *Resolver) Competition() CompetitionResolver { return &competitionResolv
 // Group returns GroupResolver implementation.
 func (r *Resolver) Group() GroupResolver { return &groupResolver{r} }
 
+// Location returns LocationResolver implementation.
+func (r *Resolver) Location() LocationResolver { return &locationResolver{r} }
+
+// Match returns MatchResolver implementation.
+func (r *Resolver) Match() MatchResolver { return &matchResolver{r} }
+
 // Team returns TeamResolver implementation.
 func (r *Resolver) Team() TeamResolver { return &teamResolver{r} }
 
@@ -162,5 +264,7 @@ func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
 type competitionResolver struct{ *Resolver }
 type groupResolver struct{ *Resolver }
+type locationResolver struct{ *Resolver }
+type matchResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

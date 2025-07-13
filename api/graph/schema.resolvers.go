@@ -271,6 +271,60 @@ func (r *mutationResolver) DeleteCompetitionEntries(ctx context.Context, id stri
 	return model.FormatCompetitionResponse(competition), nil
 }
 
+// CreateMatch is the resolver for the createMatch field.
+func (r *mutationResolver) CreateMatch(ctx context.Context, input model.CreateMatchInput) (*model.Match, error) {
+	match, err := r.MatchService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
+// UpdateMatchDetail is the resolver for the updateMatchDetail field.
+func (r *mutationResolver) UpdateMatchDetail(ctx context.Context, id string, input model.UpdateMatchDetailInput) (*model.Match, error) {
+	match, err := r.MatchService.UpdateDetail(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
+// UpdateMatchResult is the resolver for the updateMatchResult field.
+func (r *mutationResolver) UpdateMatchResult(ctx context.Context, id string, input model.UpdateMatchResultInput) (*model.Match, error) {
+	match, err := r.MatchService.UpdateResult(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
+// DeleteMatch is the resolver for the deleteMatch field.
+func (r *mutationResolver) DeleteMatch(ctx context.Context, id string) (*model.Match, error) {
+	match, err := r.MatchService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
+// AddMatchEntries is the resolver for the addMatchEntries field.
+func (r *mutationResolver) AddMatchEntries(ctx context.Context, id string, input model.UpdateMatchEntriesInput) (*model.Match, error) {
+	match, err := r.MatchService.AddEntries(ctx, id, input.TeamIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
+// DeleteMatchEntries is the resolver for the deleteMatchEntries field.
+func (r *mutationResolver) DeleteMatchEntries(ctx context.Context, id string, input model.UpdateMatchEntriesInput) (*model.Match, error) {
+	match, err := r.MatchService.DeleteEntries(ctx, id, input.TeamIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -461,6 +515,29 @@ func (r *queryResolver) Competition(ctx context.Context, id string) (*model.Comp
 		return nil, err
 	}
 	return model.FormatCompetitionResponse(competition), nil
+}
+
+// Matches is the resolver for the matches field.
+func (r *queryResolver) Matches(ctx context.Context) ([]*model.Match, error) {
+	matches, err := r.MatchService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Match, 0, len(matches))
+	for _, match := range matches {
+		res = append(res, model.FormatMatchResponse(match))
+	}
+	return res, nil
+}
+
+// Match is the resolver for the match field.
+func (r *queryResolver) Match(ctx context.Context, id string) (*model.Match, error) {
+	match, err := r.MatchService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
 }
 
 // Mutation returns MutationResolver implementation.
