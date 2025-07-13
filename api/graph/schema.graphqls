@@ -82,6 +82,39 @@ input UpdateCompetitionEntriesInput {
   teamIds: [ID!]!
 }
 
+input MatchResultInput {
+  teamId: String!
+  score: Int!
+}
+
+input CreateMatchInput {
+  time: String!
+  status: MatchStatus!
+  locationId: String!
+  competitionId: String!
+  teamIds: [ID!]!
+}
+
+input UpdateMatchDetailInput {
+  time: String
+  locationId: String
+}
+
+input UpdateMatchResultInput {
+  status: MatchStatus
+  winnerTeamId: String
+  results: [MatchResultInput!]
+}
+
+input UpdateMatchEntriesInput {
+  teamIds: [ID!]!
+}
+
+input UpdateMatchEntryScoreInput {
+  teamId: String!
+  score: Int!
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
@@ -118,6 +151,14 @@ type Query {
   ID指定で大会を取得する
   """
   competition(id: ID!): Competition!
+  """
+  試合をまとめて取得する
+  """
+  matches: [Match!]!
+  """
+  ID指定で試合を取得する
+  """
+  match(id: ID!): Match!
 }
 
 type Mutation {
@@ -185,4 +226,28 @@ type Mutation {
   大会からチームエントリーを削除する
   """
   deleteCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  """
+  試合を作成する
+  """
+  createMatch(input: CreateMatchInput!): Match!
+  """
+  試合の詳細情報を更新する
+  """
+  updateMatchDetail(id: ID!, input: UpdateMatchDetailInput!): Match!
+  """
+  試合結果を更新する
+  """
+  updateMatchResult(id: ID!, input: UpdateMatchResultInput!): Match!
+  """
+  試合を削除する
+  """
+  deleteMatch(id: ID!): Match!
+  """
+  試合にチームエントリーを追加する
+  """
+  addMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
+  """
+  試合からチームエントリーを削除する
+  """
+  deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
 }

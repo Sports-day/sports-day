@@ -19,17 +19,42 @@ type Team {
   group: Group!
   users: [User!]!
   competitions: [Competition!]!
+  matches: [Match!]!
 }
 
 type Competition {
   id: ID!
   name: String!
   teams: [Team!]!
+  matches: [Match!]!
 }
 
 type Location {
   id: ID!
   name: String!
+  matches: [Match!]!
+}
+
+enum MatchStatus {
+  CANCELED
+  STANDBY
+  ONGOING
+  FINISHED
+}
+
+type MatchEntry {
+  team: Team!
+  score: Int!
+}
+
+type Match {
+  id: ID!
+  time: String!
+  status: MatchStatus!
+  location: Location!
+  competition: Competition!
+  winnerTeam: Team
+  entries: [MatchEntry!]!
 }
 
 type AuthResponse {
