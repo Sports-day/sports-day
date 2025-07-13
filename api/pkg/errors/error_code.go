@@ -6,8 +6,9 @@ var (
 	/*
 		NotFound
 	*/
-	ErrUserNotFound  = NewError("USER_NOT_FOUND", "ユーザーが見つかりません")
-	ErrGroupNotFound = NewError("GROUP_NOT_FOUND", "グループが見つかりません")
+	ErrUserNotFound        = NewError("USER_NOT_FOUND", "ユーザーが見つかりません")
+	ErrGroupNotFound       = NewError("GROUP_NOT_FOUND", "グループが見つかりません")
+	ErrInformationNotFound = NewError("INFORMATION_NOT_FOUND", "お知らせが見つかりません")
 
 	/*
 		Authentication
