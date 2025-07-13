@@ -11,9 +11,20 @@ type CreateGroupInput struct {
 	Name string `json:"name"`
 }
 
+type CreateInformationInput struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
 type CreateUserInput struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type Information struct {
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 }
 
 type LoginInput struct {
@@ -33,4 +44,9 @@ type UpdateGroupInput struct {
 
 type UpdateGroupUsersInput struct {
 	UserIds []string `json:"userIds"`
+}
+
+type UpdateInformationInput struct {
+	Title   *string `json:"title,omitempty"`
+	Content *string `json:"content,omitempty"`
 }
