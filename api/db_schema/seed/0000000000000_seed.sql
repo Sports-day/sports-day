@@ -2,6 +2,7 @@
 DELETE FROM group_users;
 DELETE FROM `groups`;
 DELETE FROM users;
+DELETE FROM information;
 
 INSERT INTO users (id, name, email)
 VALUES  ('01JS96Z96329JZHCYD45D72SYB', '山田 太郎', 'ta_yamada@dev.sports-day.net'),
@@ -100,7 +101,14 @@ VALUES
         ('01JS96Z964KX2GGT92CSMVEJ5X', '01JS96Z963QE7DYBQ6Q7BH95S8'),
         ('01JS96Z964EZHVVXQJ0T0ETKAW', '01JS96Z963QE7DYBQ6Q7BH95S8');
 
+INSERT INTO information (id, title, content)
+VALUES
+        ('208438429u43bcu3ug4242y48c', '迷子のお知らせ', '池嵜太勇さんの親御さんは迷子センターまでお越しください'),
+        ('3425b4hb5k4u3u2524b525k252', 'サッカー会場の変更のお知らせ', '本日のサッカーの会場は雨により、グラウンドから体育館に変更されます'),
+        ('6354ghj225t2g52y2734y2374y', 'SPORTSDAYアプリのアンケートのお知らせ', '会場にあるポスターのQRコードからアンケートへのご協力よろしくお願いいたします');
+
 -- migrate:down
 DELETE FROM group_users;
 DELETE FROM `groups`;
 DELETE FROM users;
+DELETE FROM information;
