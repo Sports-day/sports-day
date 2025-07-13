@@ -230,6 +230,15 @@ type MatchResolver interface {
 	Entries(ctx context.Context, obj *model.Match) ([]*model.MatchEntry, error)
 	Judgment(ctx context.Context, obj *model.Match) (*model.Judgment, error)
 }
+type LocationResolver interface {
+	Matches(ctx context.Context, obj *model.Location) ([]*model.Match, error)
+}
+type MatchResolver interface {
+	Location(ctx context.Context, obj *model.Match) (*model.Location, error)
+	Competition(ctx context.Context, obj *model.Match) (*model.Competition, error)
+	WinnerTeam(ctx context.Context, obj *model.Match) (*model.Team, error)
+	Entries(ctx context.Context, obj *model.Match) ([]*model.MatchEntry, error)
+}
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
 	Login(ctx context.Context, input model.LoginInput) (*model.AuthResponse, error)
