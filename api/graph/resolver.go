@@ -7,19 +7,22 @@ import "sports-day/api/service"
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	UserService  service.User
-	AuthService  service.AuthService
-	GroupService service.Group
+	UserService        service.User
+	AuthService        service.AuthService
+	GroupService       service.Group
+	InformationService service.Information
 }
 
 func NewResolver(
 	userService service.User,
 	authService service.AuthService,
 	groupService service.Group,
+	informationService service.Information,
 ) *Resolver {
 	return &Resolver{
-		UserService:  userService,
-		AuthService:  authService,
-		GroupService: groupService,
+		UserService:        userService,
+		AuthService:        authService,
+		GroupService:       groupService,
+		InformationService: informationService,
 	}
 }
