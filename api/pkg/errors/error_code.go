@@ -11,6 +11,7 @@ var (
 	ErrTeamNotFound        = NewError("TEAM_NOT_FOUND", "チームが見つかりません")
 	ErrLocationNotFound    = NewError("LOCATION_NOT_FOUND", "場所が見つかりません")
 	ErrCompetitionNotFound = NewError("COMPETITION_NOT_FOUND", "大会が見つかりません")
+	ErrMatchNotFound       = NewError("MATCH_NOT_FOUND", "試合が見つかりません")
 
 	/*
 		Validation
@@ -22,6 +23,10 @@ var (
 	ErrSaveCompetition        = NewError("COMPETITION_SAVE_FAILED", "大会の更新に失敗しました")
 	ErrAddCompetitionEntry    = NewError("COMPETITION_ENTRY_ADD_FAILED", "大会エントリーの追加に失敗しました")
 	ErrDeleteCompetitionEntry = NewError("COMPETITION_ENTRY_REMOVE_FAILED", "大会エントリーの削除に失敗しました")
+	ErrSaveMatch              = NewError("MATCH_SAVE_FAILED", "試合の更新に失敗しました")
+	ErrAddMatchEntry          = NewError("MATCH_ENTRY_ADD_FAILED", "試合エントリーの追加に失敗しました")
+	ErrDeleteMatchEntry       = NewError("MATCH_ENTRY_REMOVE_FAILED", "試合エントリーの削除に失敗しました")
+	ErrUpdateMatchEntryScore  = NewError("MATCH_ENTRY_SCORE_UPDATE_FAILED", "試合スコアの更新に失敗しました")
 	/*
 		Authentication
 	*/
