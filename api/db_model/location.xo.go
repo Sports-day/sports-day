@@ -4,6 +4,6 @@ package db_model
 
 // Location represents a row from 'sportsday.locations'.
 type Location struct {
-	ID   string `json:"id"`   // 主キー
+	ID   string `json:"id"`   // ID
 	Name string `json:"name"` // 場所名
 }
