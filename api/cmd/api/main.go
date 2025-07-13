@@ -78,6 +78,7 @@ func main() {
 	sceneRepository := repository.NewScene()
 	informationRepository := repository.NewInformation()
 	competitionRepository := repository.NewCompetition()
+	matchRepository := repository.NewMatch()
 
 	// service
 	userService := service.NewUser(db, userRepository)
@@ -89,9 +90,10 @@ func main() {
 	sceneService := service.NewScene(db, sceneRepository)
 	informationService := service.NewInformation(db, informationRepository)
 	competitionService := service.NewCompetition(db, competitionRepository, teamRepository)
+	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})
@@ -107,7 +109,7 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService))
 
 	address := fmt.Sprintf("%s:%d", env.Get().Server.Host, env.Get().Server.Port)
 
