@@ -48,13 +48,13 @@ input UpdateSportsInput {
 
 input CreateTeamInput {
   name: String!
-  groupId: String!
+  groupId: ID!
   userIds: [ID!]!
 }
 
 input UpdateTeamInput {
   name: String
-  groupId: String
+  groupId: ID
 }
 
 input UpdateTeamUsersInput {
@@ -83,26 +83,26 @@ input UpdateCompetitionEntriesInput {
 }
 
 input MatchResultInput {
-  teamId: String!
+  teamId: ID!
   score: Int!
 }
 
 input CreateMatchInput {
   time: String!
   status: MatchStatus!
-  locationId: String!
-  competitionId: String!
+  locationId: ID!
+  competitionId: ID!
   teamIds: [ID!]!
 }
 
 input UpdateMatchDetailInput {
   time: String
-  locationId: String
+  locationId: ID
 }
 
 input UpdateMatchResultInput {
   status: MatchStatus
-  winnerTeamId: String
+  winnerTeamId: ID
   results: [MatchResultInput!]
 }
 
@@ -111,7 +111,7 @@ input UpdateMatchEntriesInput {
 }
 
 input UpdateMatchEntryScoreInput {
-  teamId: String!
+  teamId: ID!
   score: Int!
 }
 
