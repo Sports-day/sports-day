@@ -72,18 +72,6 @@ input UpdateLocationInput {
 
 input CreateCompetitionInput {
   name: String!
-}
-
-input UpdateCompetitionInput {
-  name: String
-}
-
-input UpdateCompetitionEntriesInput {
-  teamIds: [ID!]!
-}
-
-input CreateCompetitionInput {
-  name: String!
   type: CompetitionType!
 }
 
@@ -257,7 +245,7 @@ type Mutation {
   """
   チームメンバーを更新する
   """
-  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team!
+  updateTeamUsers(teamId: ID!, input: UpdateTeamUsersInput!): Team!
   """
   場所を追加する
   """
@@ -291,11 +279,11 @@ type Mutation {
   """
   大会にチームエントリーを追加する
   """
-  addCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  addCompetitionEntries(competitonId: ID!, input: UpdateCompetitionEntriesInput!): Competition!
   """
   大会からチームエントリーを削除する
   """
-  deleteCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  deleteCompetitionEntries(competitionId: ID!, input: UpdateCompetitionEntriesInput!): Competition!
   """
   試合を作成する
   """
@@ -315,7 +303,7 @@ type Mutation {
   """
   試合にチームエントリーを追加する
   """
-  addMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
+  addMatchEntries(matchId: ID!, input: UpdateMatchEntriesInput!): Match!
   """
   試合からチームエントリーを削除する
   """
