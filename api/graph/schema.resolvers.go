@@ -325,6 +325,33 @@ func (r *mutationResolver) DeleteMatchEntries(ctx context.Context, id string, in
 	return model.FormatMatchResponse(match), nil
 }
 
+// CreateJudgment is the resolver for the createJudgment field.
+func (r *mutationResolver) CreateJudgment(ctx context.Context, input model.CreateJudgmentInput) (*model.Judgment, error) {
+	judgment, err := r.JudgmentService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatJudgmentResponse(judgment), nil
+}
+
+// UpdateJudgment is the resolver for the updateJudgment field.
+func (r *mutationResolver) UpdateJudgment(ctx context.Context, id string, input model.UpdateJudgmentInput) (*model.Judgment, error) {
+	judgment, err := r.JudgmentService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatJudgmentResponse(judgment), nil
+}
+
+// DeleteJudgment is the resolver for the deleteJudgment field.
+func (r *mutationResolver) DeleteJudgment(ctx context.Context, id string) (*model.Judgment, error) {
+	judgment, err := r.JudgmentService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatJudgmentResponse(judgment), nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -538,6 +565,29 @@ func (r *queryResolver) Match(ctx context.Context, id string) (*model.Match, err
 		return nil, err
 	}
 	return model.FormatMatchResponse(match), nil
+}
+
+// Judgments is the resolver for the judgments field.
+func (r *queryResolver) Judgments(ctx context.Context) ([]*model.Judgment, error) {
+	judgments, err := r.JudgmentService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Judgment, 0, len(judgments))
+	for _, judgment := range judgments {
+		res = append(res, model.FormatJudgmentResponse(judgment))
+	}
+	return res, nil
+}
+
+// Judgment is the resolver for the judgment field.
+func (r *queryResolver) Judgment(ctx context.Context, id string) (*model.Judgment, error) {
+	judgment, err := r.JudgmentService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatJudgmentResponse(judgment), nil
 }
 
 // Mutation returns MutationResolver implementation.
