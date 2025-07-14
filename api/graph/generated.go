@@ -238,6 +238,7 @@ type MatchResolver interface {
 	Competition(ctx context.Context, obj *model.Match) (*model.Competition, error)
 	WinnerTeam(ctx context.Context, obj *model.Match) (*model.Team, error)
 	Entries(ctx context.Context, obj *model.Match) ([]*model.MatchEntry, error)
+	Judgments(ctx context.Context, obj *model.Match) ([]*model.Judgment, error)
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
@@ -4427,103 +4428,6 @@ func (ec *executionContext) fieldContext_Match_entries(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Match_judgment(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Match_judgment(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Match().Judgment(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Judgment)
-	fc.Result = res
-	return ec.marshalOJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Match_judgment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Match",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Judgment_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Judgment_name(ctx, field)
-			case "user":
-				return ec.fieldContext_Judgment_user(ctx, field)
-			case "team":
-				return ec.fieldContext_Judgment_team(ctx, field)
-			case "group":
-				return ec.fieldContext_Judgment_group(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _MatchEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.MatchEntry) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_MatchEntry_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_MatchEntry_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "MatchEntry",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _MatchEntry_team(ctx context.Context, field graphql.CollectedField, obj *model.MatchEntry) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MatchEntry_team(ctx, field)
 	if err != nil {
@@ -4545,6 +4449,9 @@ func (ec *executionContext) _MatchEntry_team(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Team)
