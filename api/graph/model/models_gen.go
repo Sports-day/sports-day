@@ -26,6 +26,12 @@ type CreateInformationInput struct {
 	Content string `json:"content"`
 }
 
+type CreateJudgmentInput struct {
+	ID    string         `json:"id"`
+	Name  string         `json:"name"`
+	Entry *JudgmentEntry `json:"entry"`
+}
+
 type CreateLocationInput struct {
 	Name string `json:"name"`
 }
@@ -61,6 +67,14 @@ type Information struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+}
+
+// 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
+// 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
+type JudgmentEntry struct {
+	UserID  *string `json:"userId,omitempty"`
+	TeamID  *string `json:"teamId,omitempty"`
+	GroupID *string `json:"groupId,omitempty"`
 }
 
 type LoginInput struct {
@@ -114,6 +128,11 @@ type UpdateGroupUsersInput struct {
 type UpdateInformationInput struct {
 	Title   *string `json:"title,omitempty"`
 	Content *string `json:"content,omitempty"`
+}
+
+type UpdateJudgmentInput struct {
+	Name  *string        `json:"name,omitempty"`
+	Entry *JudgmentEntry `json:"entry,omitempty"`
 }
 
 type UpdateLocationInput struct {
