@@ -76,3 +76,13 @@ func FormatMatchResponse(match *db_model.Match) *Match {
 		WinnerTeamId:  match.WinnerTeamID.String,
 	}
 }
+
+func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
+	return &Judgment{
+		ID:      judgment.ID,
+		Name:    judgment.Name,
+		UserId:  judgment.UserID.String,
+		TeamId:  judgment.TeamID.String,
+		GroupId: judgment.GroupID.String,
+	}
+}
