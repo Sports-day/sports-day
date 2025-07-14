@@ -9,7 +9,7 @@ import (
 
 // Match represents a row from 'sportsday.matches'.
 type Match struct {
-	ID            string         `json:"id"`             // 主キー
+	ID            string         `json:"id"`             // ID
 	Time          time.Time      `json:"time"`           // 試合時間
 	Status        string         `json:"status"`         // 状態
 	LocationID    string         `json:"location_id"`    // 場所ID
