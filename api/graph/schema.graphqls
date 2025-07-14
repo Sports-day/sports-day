@@ -115,6 +115,27 @@ input UpdateMatchEntryScoreInput {
   score: Int!
 }
 
+"""
+3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。  
+1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
+"""
+input JudgmentEntry {
+	userId: ID
+	teamId: ID
+	groupId: ID 
+}
+
+input CreateJudgmentInput {
+	id: ID!
+	name: String!
+	entry: JudgmentEntry!
+}
+
+input UpdateJudgmentInput {
+	name: String
+	entry: JudgmentEntry
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
@@ -159,6 +180,14 @@ type Query {
   ID指定で試合を取得する
   """
   match(id: ID!): Match!
+  """
+  審判をまとめて取得する
+  """
+  judgments: [Judgment!]!
+  """
+  ID指定で試合を取得する
+  """
+	judgment(id: ID!): Judgment!
 }
 
 type Mutation {
@@ -187,7 +216,7 @@ type Mutation {
   """
   チームメンバーを更新する
   """
-  updateTeamUsers(teamId: ID!, input: UpdateTeamUsersInput!): Team!
+  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team!
   """
   場所を追加する
   """
@@ -221,11 +250,11 @@ type Mutation {
   """
   大会にチームエントリーを追加する
   """
-  addCompetitionEntries(competitonId: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  addCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
   """
   大会からチームエントリーを削除する
   """
-  deleteCompetitionEntries(competitionId: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  deleteCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
   """
   試合を作成する
   """
@@ -245,9 +274,21 @@ type Mutation {
   """
   試合にチームエントリーを追加する
   """
-  addMatchEntries(matchId: ID!, input: UpdateMatchEntriesInput!): Match!
+  addMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
   """
   試合からチームエントリーを削除する
   """
-  deleteMatchEntries(matchId: ID!, input: UpdateMatchEntriesInput!): Match!
+  deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
+  """
+  審判を追加する
+  """
+  createJudgment(input: CreateJudgmentInput!): Judgment!
+  """
+  審判の情報を更新する
+  """
+	updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
+  """
+  審判を削除する
+  """
+	deleteJudgment(id: ID!): Judgment!
 }

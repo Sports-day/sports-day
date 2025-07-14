@@ -4,6 +4,7 @@ type User {
   email: String!
   groups: [Group!]!
   teams: [Team!]!
+  judgments: [Judgment!]!
 }
 
 type Group {
@@ -11,6 +12,7 @@ type Group {
   name: String!
   teams: [Team!]!
   users: [User!]!
+  judgments: [Judgment!]!
 }
 
 type Team {
@@ -20,6 +22,7 @@ type Team {
   users: [User!]!
   competitions: [Competition!]!
   matches: [Match!]!
+  judgments: [Judgment!]!
 }
 
 type Competition {
@@ -55,6 +58,15 @@ type Match {
   competition: Competition!
   winnerTeam: Team
   entries: [MatchEntry!]!
+  judgments: [Judgment!]!
+}
+
+type Judgment {
+	 id: ID!
+	 name: String!
+	 user: User
+	 team: Team
+	 group: Group
 }
 
 type AuthResponse {
