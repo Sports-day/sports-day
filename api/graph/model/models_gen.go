@@ -27,6 +27,12 @@ type CreateInformationInput struct {
 	Content string `json:"content"`
 }
 
+type CreateJudgmentInput struct {
+	ID    string         `json:"id"`
+	Name  string         `json:"name"`
+	Entry *JudgmentEntry `json:"entry"`
+}
+
 type CreateLocationInput struct {
 	Name string `json:"name"`
 }
