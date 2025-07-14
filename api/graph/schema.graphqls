@@ -122,6 +122,27 @@ input UpdateMatchEntryScoreInput {
 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 """
 input JudgmentEntry {
+	userId: ID
+	teamId: ID
+	groupId: ID 
+}
+
+input CreateJudgmentInput {
+	id: ID!
+	name: String!
+	entry: JudgmentEntry!
+}
+
+input UpdateJudgmentInput {
+	name: String
+	entry: JudgmentEntry
+}
+
+"""
+3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。  
+1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
+"""
+input JudgmentEntry {
   name: String
 	userId: ID
 	teamId: ID
@@ -245,7 +266,7 @@ type Mutation {
   """
   チームメンバーを更新する
   """
-  updateTeamUsers(teamId: ID!, input: UpdateTeamUsersInput!): Team!
+  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team!
   """
   場所を追加する
   """
@@ -279,11 +300,11 @@ type Mutation {
   """
   大会にチームエントリーを追加する
   """
-  addCompetitionEntries(competitonId: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  addCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
   """
   大会からチームエントリーを削除する
   """
-  deleteCompetitionEntries(competitionId: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  deleteCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
   """
   試合を作成する
   """
@@ -303,7 +324,7 @@ type Mutation {
   """
   試合にチームエントリーを追加する
   """
-  addMatchEntries(matchId: ID!, input: UpdateMatchEntriesInput!): Match!
+  addMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
   """
   試合からチームエントリーを削除する
   """
