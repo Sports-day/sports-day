@@ -15,6 +15,7 @@ var (
 	ErrInformationNotFound = NewError("INFORMATION_NOT_FOUND", "お知らせが見つかりません")
 	ErrCompetitionNotFound = NewError("COMPETITION_NOT_FOUND", "大会が見つかりません")
 	ErrMatchNotFound       = NewError("MATCH_NOT_FOUND", "試合が見つかりません")
+	ErrJudgmentNotFound    = NewError("JUDGMENT_NOT_FOUND", "審判が見つかりません")
 
 	/*
 		Validation
@@ -33,6 +34,8 @@ var (
 	ErrAddMatchEntry          = NewError("MATCH_ENTRY_ADD_FAILED", "試合エントリーの追加に失敗しました")
 	ErrDeleteMatchEntry       = NewError("MATCH_ENTRY_REMOVE_FAILED", "試合エントリーの削除に失敗しました")
 	ErrUpdateMatchEntryScore  = NewError("MATCH_ENTRY_SCORE_UPDATE_FAILED", "試合スコアの更新に失敗しました")
+	ErrSaveJudgment           = NewError("JUDGMENT_SAVE_FAILED", "審判の更新に失敗しました")
+	ErrJudgmentEntryInvalid   = NewError("JUDGMENT_ENTRY_INVALID", "審判のエントリーは、ユーザー、チーム、グループのいずれか1つのみ指定してください")
 	/*
 		Authentication
 	*/
