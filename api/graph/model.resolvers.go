@@ -305,6 +305,17 @@ func (r *matchResolver) Judgment(ctx context.Context, obj *model.Match) (*model.
 	return model.FormatJudgmentResponse(judgments[0]), nil
 }
 
+// Judgments is the resolver for the judgments field.
+func (r *matchResolver) Judgments(ctx context.Context, obj *model.Match) ([]*model.Judgment, error) {
+	judgments, err := loader.LoadJudgments(ctx, []string{obj.ID})
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(judgments, func(judgment *db_model.Judgment) *model.Judgment {
+		return model.FormatJudgmentResponse(judgment)
+	}), nil
+}
+
 // Team is the resolver for the team field.
 func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*model.Team, error) {
 	teams, err := loader.LoadTeams(ctx, []string{obj.TeamID})
