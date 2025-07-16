@@ -82,6 +82,7 @@ func main() {
 	judgmentRepository := repository.NewJudgment()
 	leagueRepository := repository.NewLeague()
 	tournamentRepository := repository.NewTournament()
+	ruleRepository := repository.NewRule()
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
@@ -101,9 +102,10 @@ func main() {
 	matchService.SetTournamentService(&tournamentService)
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
+	ruleService := service.NewRule(db, ruleRepository)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})

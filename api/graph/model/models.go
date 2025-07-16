@@ -97,3 +97,8 @@ type Standing struct {
 	GoalDiff      int32  `json:"gd"`
 	MatchesPlayed int32  `json:"matchesPlayed"`
 }
+
+type Rule struct {
+	ID   string `json:"id"`
+	Rule string `json:"rule"`
+}

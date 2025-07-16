@@ -206,3 +206,8 @@ type PromotionStatus {
   expectedTeamCount: Int!
   currentEntryCount: Int!
 }
+
+type Rule {
+  id: ID
+  rule: String!
+}

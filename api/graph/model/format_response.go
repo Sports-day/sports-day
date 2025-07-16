@@ -196,3 +196,10 @@ func FormatRankingRuleResponse(rule *db_model.RankingRule) *RankingRule {
 		Priority:     int32(rule.Priority),
 	}
 }
+
+func FormatRuleResponse(rule *db_model.Rule) *Rule {
+	return &Rule{
+		ID:   rule.ID,
+		Rule: rule.Rule,
+	}
+}

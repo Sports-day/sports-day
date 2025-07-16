@@ -118,14 +118,14 @@ input UpdateMatchEntryScoreInput {
 }
 
 """
-3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。  
+3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 """
 input JudgmentEntry {
   name: String
 	userId: ID
 	teamId: ID
-	groupId: ID 
+	groupId: ID
 }
 
 input CreateJudgmentInput {
@@ -250,6 +250,14 @@ input UpdatePromotionRuleInput {
   slot: Int
 }
 
+input CreateRuleInput {
+  rule: String!
+}
+
+input UpdateRuleInput {
+  rule: String
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
@@ -334,6 +342,8 @@ type Query {
   トーナメント順位（全ブラケット統合）
   """
   tournamentRanking(competitionId: ID!): [TournamentRanking!]!
+  rule(id: ID!): Rule!
+  rules: [Rule]!
 }
 
 type Mutation {
@@ -505,4 +515,7 @@ type Mutation {
   SEEDスロットへのチーム手動配置（teamId=null でクリア）
   """
   assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot!
+  createRule(input: CreateRuleInput!): Rule!
+  updateRule(id: ID!, input: UpdateRuleInput!): Rule!
+  deleteRule(id: ID!): Rule!
 }
