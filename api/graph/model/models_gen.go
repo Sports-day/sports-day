@@ -11,13 +11,28 @@ type CreateGroupInput struct {
 	Name string `json:"name"`
 }
 
+type CreateLocationInput struct {
+	Name string `json:"name"`
+}
+
 type CreateSportsInput struct {
 	Name string `json:"name"`
+}
+
+type CreateTeamInput struct {
+	Name    string   `json:"name"`
+	GroupID string   `json:"groupId"`
+	UserIds []string `json:"userIds"`
 }
 
 type CreateUserInput struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type Location struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type LoginInput struct {
@@ -45,7 +60,21 @@ type UpdateGroupUsersInput struct {
 	UserIds []string `json:"userIds"`
 }
 
+type UpdateLocationInput struct {
+	Name *string `json:"name,omitempty"`
+}
+
 type UpdateSportsInput struct {
 	Name   *string `json:"name,omitempty"`
 	Weight *int32  `json:"weight,omitempty"`
+}
+
+type UpdateTeamInput struct {
+	Name    *string `json:"name,omitempty"`
+	GroupID *string `json:"groupId,omitempty"`
+}
+
+type UpdateTeamUsersInput struct {
+	AddUserIds    []string `json:"addUserIds,omitempty"`
+	RemoveUserIds []string `json:"removeUserIds,omitempty"`
 }

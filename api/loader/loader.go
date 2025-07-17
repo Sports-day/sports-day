@@ -12,16 +12,24 @@ import (
 type Loaders struct {
 	UserLoader       *dataloadgen.Loader[string, *db_model.User]
 	GroupLoader      *dataloadgen.Loader[string, *db_model.Group]
+	TeamLoader       *dataloadgen.Loader[string, *db_model.Team]
 	GroupUsersLoader *dataloadgen.Loader[string, []*db_model.GroupUser]
 	UserGroupsLoader *dataloadgen.Loader[string, []*db_model.GroupUser]
+	TeamUsersLoader  *dataloadgen.Loader[string, []*db_model.TeamUser]
+	UserTeamsLoader  *dataloadgen.Loader[string, []*db_model.TeamUser]
+	GroupTeamsLoader *dataloadgen.Loader[string, []*db_model.Team]
 }
 
-func New(userSvc service.User, groupSvc service.Group) *Loaders {
+func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team) *Loaders {
 	return &Loaders{
 		UserLoader:       dataloadgen.NewLoader(newUserLoader(userSvc)),
 		GroupLoader:      dataloadgen.NewLoader(newGroupLoader(groupSvc)),
+		TeamLoader:       dataloadgen.NewLoader(newTeamLoader(teamSvc)),
 		GroupUsersLoader: dataloadgen.NewLoader(newGroupUsersLoader(groupSvc)),
 		UserGroupsLoader: dataloadgen.NewLoader(newUserGroupsLoader(groupSvc)),
+		TeamUsersLoader:  dataloadgen.NewLoader(newTeamUsersLoader(teamSvc)),
+		UserTeamsLoader:  dataloadgen.NewLoader(newUserTeamsLoader(teamSvc)),
+		GroupTeamsLoader: dataloadgen.NewLoader(newGroupTeamsLoader(teamSvc)),
 	}
 }
 

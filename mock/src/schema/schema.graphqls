@@ -1,0 +1,172 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  groups: [Group!]!
+  teams: [Team!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Group {
+  id: ID!
+  name: String!
+  users: [User!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Team {
+  id: ID!
+  name: String!
+  users: [User!]!
+  group: Group
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Scene {
+  id: ID!
+  name: String!
+  description: String
+  sports: [Sport!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Sport {
+  id: ID!
+  name: String!
+  scenes: [Scene!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type SportScene {
+  id: ID!
+  sport: Sport!
+  scene: Scene!
+  entries: [SportEntry!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type SportEntry {
+  id: ID!
+  sportScene: SportScene!
+  team: Team!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Query {
+  users: [User!]!
+  user(id: ID!): User
+  userByEmail(email: String!): User
+  groups: [Group!]!
+  group(id: ID!): Group
+  teams: [Team!]!
+  team(id: ID!): Team
+  scenes: [Scene!]!
+  scene(id: ID!): Scene
+  sports: [Sport!]!
+  sport(id: ID!): Sport
+  sportScenes: [SportScene!]!
+  sportScene(id: ID!): SportScene
+  sportEntries: [SportEntry!]!
+  sportEntry(id: ID!): SportEntry
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+  createGroup(input: CreateGroupInput!): Group!
+  updateGroup(id: ID!, input: UpdateGroupInput!): Group!
+  deleteGroup(id: ID!): Boolean!
+  addUserToGroup(userId: ID!, groupId: ID!): Group!
+  removeUserFromGroup(userId: ID!, groupId: ID!): Group!
+  createTeam(input: CreateTeamInput!): Team!
+  updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+  deleteTeam(id: ID!): Boolean!
+  addTeamMember(userIds: [ID!]!, teamId: ID!): Team!
+  removeTeamMember(userIds: [ID!]!, teamId: ID!): Team!
+  createScene(input: CreateSceneInput!): Scene!
+  updateScene(id: ID!, input: UpdateSceneInput!): Scene!
+  deleteScene(id: ID!): Boolean!
+  createSport(input: CreateSportInput!): Sport!
+  updateSport(id: ID!, input: UpdateSportInput!): Sport!
+  deleteSport(id: ID!): Boolean!
+  createSportScene(input: CreateSportSceneInput!): SportScene!
+  updateSportScene(id: ID!, input: UpdateSportSceneInput!): SportScene!
+  deleteSportScene(id: ID!): Boolean!
+  createSportEntry(input: CreateSportEntryInput!): SportEntry!
+  updateSportEntry(id: ID!, input: UpdateSportEntryInput!): SportEntry!
+  deleteSportEntry(id: ID!): Boolean!
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+}
+
+input UpdateUserInput {
+  name: String
+  email: String
+}
+
+input CreateGroupInput {
+  name: String!
+}
+
+input UpdateGroupInput {
+  name: String
+}
+
+input CreateTeamInput {
+  name: String!
+  groupId: ID
+}
+
+input UpdateTeamInput {
+  name: String
+  groupId: ID
+}
+
+input CreateSceneInput {
+  name: String!
+  description: String
+}
+
+input UpdateSceneInput {
+  name: String
+  description: String
+}
+
+input CreateSportInput {
+  name: String!
+}
+
+input UpdateSportInput {
+  name: String
+}
+
+input CreateSportSceneInput {
+  sportId: ID!
+  sceneId: ID!
+}
+
+input UpdateSportSceneInput {
+  sportId: ID
+  sceneId: ID
+}
+
+input CreateSportEntryInput {
+  sportSceneId: ID!
+  teamId: ID!
+}
+
+input UpdateSportEntryInput {
+  sportSceneId: ID
+  teamId: ID
+}

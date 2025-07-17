@@ -13,6 +13,24 @@ import (
 	"sports-day/api/pkg/slices"
 )
 
+// Teams is the resolver for the teams field.
+func (r *groupResolver) Teams(ctx context.Context, obj *model.Group) ([]*model.Team, error) {
+	groupTeams, err := loader.LoadGroupTeams(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	teamIds := slices.Map(groupTeams, func(team *db_model.Team) string {
+		return team.ID
+	})
+	teams, err := loader.LoadTeams(ctx, teamIds)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(teams, func(team *db_model.Team) *model.Team {
+		return model.FormatTeamResponse(team)
+	}), nil
+}
+
 // Users is the resolver for the users field.
 func (r *groupResolver) Users(ctx context.Context, obj *model.Group) ([]*model.User, error) {
 	groupUsers, err := loader.LoadGroupUsers(ctx, obj.ID)
@@ -21,6 +39,33 @@ func (r *groupResolver) Users(ctx context.Context, obj *model.Group) ([]*model.U
 	}
 	userIds := slices.Map(groupUsers, func(groupUser *db_model.GroupUser) string {
 		return groupUser.UserID
+	})
+	users, err := loader.LoadUsers(ctx, userIds)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(users, func(user *db_model.User) *model.User {
+		return model.FormatUserResponse(user)
+	}), nil
+}
+
+// Group is the resolver for the group field.
+func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group, error) {
+	groups, err := loader.LoadGroups(ctx, []string{obj.GroupID})
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatGroupResponse(groups[0]), nil
+}
+
+// Users is the resolver for the users field.
+func (r *teamResolver) Users(ctx context.Context, obj *model.Team) ([]*model.User, error) {
+	teamUsers, err := loader.LoadTeamUsers(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	userIds := slices.Map(teamUsers, func(teamUser *db_model.TeamUser) string {
+		return teamUser.UserID
 	})
 	users, err := loader.LoadUsers(ctx, userIds)
 	if err != nil {
@@ -49,11 +94,33 @@ func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Gr
 	}), nil
 }
 
+// Teams is the resolver for the teams field.
+func (r *userResolver) Teams(ctx context.Context, obj *model.User) ([]*model.Team, error) {
+	teamUsers, err := loader.LoadUserTeams(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	teamIds := slices.Map(teamUsers, func(teamUser *db_model.TeamUser) string {
+		return teamUser.TeamID
+	})
+	teams, err := loader.LoadTeams(ctx, teamIds)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(teams, func(team *db_model.Team) *model.Team {
+		return model.FormatTeamResponse(team)
+	}), nil
+}
+
 // Group returns GroupResolver implementation.
 func (r *Resolver) Group() GroupResolver { return &groupResolver{r} }
+
+// Team returns TeamResolver implementation.
+func (r *Resolver) Team() TeamResolver { return &teamResolver{r} }
 
 // User returns UserResolver implementation.
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
 type groupResolver struct{ *Resolver }
+type teamResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
