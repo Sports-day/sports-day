@@ -32,7 +32,7 @@ func (s *Information) Create(ctx context.Context, input *model.CreateInformation
 	}
 	information, err := s.informationRepository.Save(ctx, s.db, information)
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, errors.ErrSaveInformation
 	}
 	return information, nil
 }
@@ -61,7 +61,7 @@ func (s *Information) Update(ctx context.Context, input model.UpdateInformationI
 
 	information, err = s.informationRepository.Save(ctx, s.db, information)
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, errors.ErrSaveInformation
 	}
 	return information, nil
 }

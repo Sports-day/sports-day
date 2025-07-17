@@ -25,6 +25,9 @@ func (r information) Save(ctx context.Context, db *gorm.DB, information *db_mode
 func (r information) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Information, error) {
 	var information db_model.Information
 	if err := db.First(&information, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrInformationNotFound
+		}
 		return nil, errors.Wrap(err)
 	}
 	if err := db.Delete(&information).Error; err != nil {

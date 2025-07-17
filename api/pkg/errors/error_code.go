@@ -23,6 +23,7 @@ var (
 	ErrSaveLocation   = NewError("LOCATION_SAVE_FAILED", "場所の更新に失敗しました")
 	ErrSaveSport      = NewError("SPORT_SAVE_FAILED", "スポーツの更新に失敗しました")
 	ErrSaveScene      = NewError("SCENE_SAVE_FAILED", "シーンの更新に失敗しました")
+	ErrSaveInformation = NewError("INFORMATION_SAVE_FAILED", "お知らせの更新に失敗しました")
 	/*
 		Authentication
 	*/
