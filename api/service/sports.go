@@ -51,7 +51,7 @@ func (s *Sport) Create(ctx context.Context, input *model.CreateSportsInput) (*db
 	sport, err := s.sportsRepository.Save(ctx, s.db, sport)
 
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, errors.ErrSaveSport
 	}
 	return sport, nil
 }
@@ -72,7 +72,7 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 
 	sport, err = s.sportsRepository.Save(ctx, s.db, sport)
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, errors.ErrSaveSport
 	}
 	return sport, nil
 }

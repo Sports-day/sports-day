@@ -18,6 +18,9 @@ func NewSports() Sports {
 func (r sports) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Sport, error) {
 	var sport db_model.Sport
 	if err := db.First(&sport, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrSportNotFound
+		}
 		return nil, errors.Wrap(err)
 	}
 	return &sport, nil
@@ -41,6 +44,9 @@ func (r sports) Save(ctx context.Context, db *gorm.DB, sport *db_model.Sport) (*
 func (r sports) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Sport, error) {
 	var sport db_model.Sport
 	if err := db.First(&sport, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrSportNotFound
+		}
 		return nil, errors.Wrap(err)
 	}
 	if err := db.Delete(&sport).Error; err != nil {
