@@ -25,3 +25,26 @@ func FormatSceneResponse(scene *db_model.Scene) *Scene {
 		Name: scene.Name,
 	}
 }
+
+func FormatSportResponse(sport *db_model.Sport) *Sport {
+	return &Sport{
+		ID:     sport.ID,
+		Name:   sport.Name,
+		Weight: int32(sport.Weight),
+	}
+}
+
+func FormatTeamResponse(team *db_model.Team) *Team {
+	return &Team{
+		ID:      team.ID,
+		Name:    team.Name,
+		GroupID: team.GroupID,
+	}
+}
+
+func FormatLocationResponse(location *db_model.Location) *Location {
+	return &Location{
+		ID:   location.ID,
+		Name: location.Name,
+	}
+}

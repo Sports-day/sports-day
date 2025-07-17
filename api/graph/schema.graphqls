@@ -27,6 +27,38 @@ input CreateSceneInput {
 input UpdateSceneInput {
   name: String
 }
+input CreateSportsInput {
+  name: String!
+}
+
+input UpdateSportsInput {
+  name: String
+  weight: Int
+}
+
+input CreateTeamInput {
+  name: String!
+  groupId: String!
+  userIds: [ID!]!
+}
+
+input UpdateTeamInput {
+  name: String
+  groupId: String
+}
+
+input UpdateTeamUsersInput {
+  addUserIds: [ID!]
+  removeUserIds: [ID!]
+}
+
+input CreateLocationInput {
+  name: String!
+}
+
+input UpdateLocationInput {
+  name: String
+}
 
 type Query {
   users: [User!]!
@@ -34,6 +66,24 @@ type Query {
   me: User!
   groups: [Group!]!
   group(id: ID!): Group!
+  sports: [Sport!]!
+  sport(id: ID!): Sport!
+  """
+  チームをまとめて取得する
+  """
+  teams: [Team!]!
+  """
+  ID指定でチームを取得する
+  """
+  team(id: ID!): Team!
+  """
+  場所をまとめて取得する
+  """
+  locations: [Location!]!
+  """
+  ID指定で場所を取得する
+  """
+  location(id: ID!): Location!
   scenes: [Scene!]!
   scene(id: ID!): Scene!
 }
@@ -46,6 +96,37 @@ type Mutation {
   updateGroup(id: ID!, input: UpdateGroupInput!): Group!
   addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
   removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
+  createSports(input: CreateSportsInput!): Sport!
+  deleteSports(id: ID!): Sport!
+  updateSports(id: ID!, input: UpdateSportsInput!): Sport!
+  """
+  チームを作成する
+  """
+  createTeam(input: CreateTeamInput!): Team!
+  """
+  チームを削除する
+  """
+  deleteTeam(id: ID!): Team!
+  """
+  チームの情報を更新する
+  """
+  updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+  """
+  チームメンバーを更新する
+  """
+  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team!
+  """
+  場所を追加する
+  """
+  createLocation(input: CreateLocationInput!): Location!
+  """
+  場所の情報を更新する
+  """
+  updateLocation(id: ID!, input: UpdateLocationInput!): Location!
+  """
+  場所を削除する
+  """
+  deleteLocation(id: ID!): Location!
   createScene(input: CreateSceneInput!): Scene!
   updateScene(id: ID!, input: UpdateSceneInput!): Scene!
   deleteScene(id: ID!): Scene!

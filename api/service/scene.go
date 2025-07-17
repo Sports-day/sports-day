@@ -17,8 +17,8 @@ type Scene struct {
 	sceneRepo repository.Scene
 }
 
-func NewScene(db *gorm.DB, sceneRepo repository.Scene) *Scene {
-	return &Scene{
+func NewScene(db *gorm.DB, sceneRepo repository.Scene) Scene {
+	return Scene{
 		db:        db,
 		sceneRepo: sceneRepo,
 	}
@@ -45,7 +45,11 @@ func (s *Scene) Create(ctx context.Context, input *model.CreateSceneInput) (*db_
 		ID:   ulid.Make(),
 		Name: input.Name,
 	}
-	return s.sceneRepo.Save(ctx, s.db, scene)
+	created, err := s.sceneRepo.Save(ctx, s.db, scene)
+	if err != nil {
+		return nil, errors.ErrSaveScene
+	}
+	return created, nil
 }
 
 func (s *Scene) Update(ctx context.Context, id string, input *model.UpdateSceneInput) (*db_model.Scene, error) {
@@ -56,7 +60,12 @@ func (s *Scene) Update(ctx context.Context, id string, input *model.UpdateSceneI
 	if input.Name != nil {
 		scene.Name = *input.Name
 	}
-	return s.sceneRepo.Save(ctx, s.db, scene)
+
+	updated, err := s.sceneRepo.Save(ctx, s.db, scene)
+	if err != nil {
+		return nil, errors.ErrSaveScene
+	}
+	return updated, nil
 }
 
 func (s *Scene) Delete(ctx context.Context, id string) (*db_model.Scene, error) {
