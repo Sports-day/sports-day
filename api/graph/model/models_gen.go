@@ -16,6 +16,24 @@ type CreateInformationInput struct {
 	Content string `json:"content"`
 }
 
+type CreateLocationInput struct {
+	Name string `json:"name"`
+}
+
+type CreateSceneInput struct {
+	Name string `json:"name"`
+}
+
+type CreateSportsInput struct {
+	Name string `json:"name"`
+}
+
+type CreateTeamInput struct {
+	Name    string   `json:"name"`
+	GroupID string   `json:"groupId"`
+	UserIds []string `json:"userIds"`
+}
+
 type CreateUserInput struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
@@ -25,6 +43,11 @@ type Information struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+}
+
+type Location struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type LoginInput struct {
@@ -38,6 +61,17 @@ type Mutation struct {
 type Query struct {
 }
 
+type Scene struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type Sport struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Weight int32  `json:"weight"`
+}
+
 type UpdateGroupInput struct {
 	Name *string `json:"name,omitempty"`
 }
@@ -49,4 +83,27 @@ type UpdateGroupUsersInput struct {
 type UpdateInformationInput struct {
 	Title   *string `json:"title,omitempty"`
 	Content *string `json:"content,omitempty"`
+}
+
+type UpdateLocationInput struct {
+	Name *string `json:"name,omitempty"`
+}
+
+type UpdateSceneInput struct {
+	Name *string `json:"name,omitempty"`
+}
+
+type UpdateSportsInput struct {
+	Name   *string `json:"name,omitempty"`
+	Weight *int32  `json:"weight,omitempty"`
+}
+
+type UpdateTeamInput struct {
+	Name    *string `json:"name,omitempty"`
+	GroupID *string `json:"groupId,omitempty"`
+}
+
+type UpdateTeamUsersInput struct {
+	AddUserIds    []string `json:"addUserIds,omitempty"`
+	RemoveUserIds []string `json:"removeUserIds,omitempty"`
 }

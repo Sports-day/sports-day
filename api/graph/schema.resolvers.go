@@ -73,6 +73,132 @@ func (r *mutationResolver) RemoveGroupUsers(ctx context.Context, id string, inpu
 	return model.FormatGroupResponse(group), nil
 }
 
+// CreateSports is the resolver for the createSports field.
+func (r *mutationResolver) CreateSports(ctx context.Context, input model.CreateSportsInput) (*model.Sport, error) {
+	sport, err := r.SportService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
+}
+
+// DeleteSports is the resolver for the deleteSports field.
+func (r *mutationResolver) DeleteSports(ctx context.Context, id string) (*model.Sport, error) {
+	sport, err := r.SportService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
+}
+
+// UpdateSports is the resolver for the updateSports field.
+func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sport, error) {
+	sport, err := r.SportService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
+}
+
+// CreateTeam is the resolver for the createTeam field.
+func (r *mutationResolver) CreateTeam(ctx context.Context, input model.CreateTeamInput) (*model.Team, error) {
+	team, err := r.TeamService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
+}
+
+// DeleteTeam is the resolver for the deleteTeam field.
+func (r *mutationResolver) DeleteTeam(ctx context.Context, id string) (*model.Team, error) {
+	team, err := r.TeamService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
+}
+
+// UpdateTeam is the resolver for the updateTeam field.
+func (r *mutationResolver) UpdateTeam(ctx context.Context, id string, input model.UpdateTeamInput) (*model.Team, error) {
+	team, err := r.TeamService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
+}
+
+// UpdateTeamUsers is the resolver for the updateTeamUsers field.
+func (r *mutationResolver) UpdateTeamUsers(ctx context.Context, id string, input model.UpdateTeamUsersInput) (*model.Team, error) {
+	if _, err := r.TeamService.AddUsers(ctx, id, input.AddUserIds); err != nil {
+		return nil, err
+	}
+
+	if _, err := r.TeamService.DeleteUsers(ctx, id, input.RemoveUserIds); err != nil {
+		return nil, err
+	}
+
+	team, err := r.TeamService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return model.FormatTeamResponse(team), nil
+}
+
+// CreateLocation is the resolver for the createLocation field.
+func (r *mutationResolver) CreateLocation(ctx context.Context, input model.CreateLocationInput) (*model.Location, error) {
+	location, err := r.LocationService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLocationResponse(location), nil
+}
+
+// UpdateLocation is the resolver for the updateLocation field.
+func (r *mutationResolver) UpdateLocation(ctx context.Context, id string, input model.UpdateLocationInput) (*model.Location, error) {
+	location, err := r.LocationService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLocationResponse(location), nil
+}
+
+// DeleteLocation is the resolver for the deleteLocation field.
+func (r *mutationResolver) DeleteLocation(ctx context.Context, id string) (*model.Location, error) {
+	location, err := r.LocationService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLocationResponse(location), nil
+}
+
+// CreateScene is the resolver for the createScene field.
+func (r *mutationResolver) CreateScene(ctx context.Context, input model.CreateSceneInput) (*model.Scene, error) {
+	scene, err := r.SceneService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
+}
+
+// UpdateScene is the resolver for the updateScene field.
+func (r *mutationResolver) UpdateScene(ctx context.Context, id string, input model.UpdateSceneInput) (*model.Scene, error) {
+	scene, err := r.SceneService.Update(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
+}
+
+// DeleteScene is the resolver for the deleteScene field.
+func (r *mutationResolver) DeleteScene(ctx context.Context, id string) (*model.Scene, error) {
+	scene, err := r.SceneService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
+}
+
 // CreateInformation is the resolver for the createInformation field.
 func (r *mutationResolver) CreateInformation(ctx context.Context, input model.CreateInformationInput) (*model.Information, error) {
 	information, err := r.InformationService.Create(ctx, &input)
@@ -153,6 +279,97 @@ func (r *queryResolver) Group(ctx context.Context, id string) (*model.Group, err
 		return nil, err
 	}
 	return model.FormatGroupResponse(group), nil
+}
+
+// Sports is the resolver for the sports field.
+func (r *queryResolver) Sports(ctx context.Context) ([]*model.Sport, error) {
+	sports, err := r.SportService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*model.Sport, 0, len(sports))
+	for _, sport := range sports {
+		res = append(res, model.FormatSportResponse(sport))
+	}
+	return res, nil
+}
+
+// Sport is the resolver for the sport field.
+func (r *queryResolver) Sport(ctx context.Context, id string) (*model.Sport, error) {
+	sport, err := r.SportService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportResponse(sport), nil
+}
+
+// Teams is the resolver for the teams field.
+func (r *queryResolver) Teams(ctx context.Context) ([]*model.Team, error) {
+	teams, err := r.TeamService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Team, 0, len(teams))
+	for _, team := range teams {
+		res = append(res, model.FormatTeamResponse(team))
+	}
+	return res, nil
+}
+
+// Team is the resolver for the team field.
+func (r *queryResolver) Team(ctx context.Context, id string) (*model.Team, error) {
+	team, err := r.TeamService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTeamResponse(team), nil
+}
+
+// Locations is the resolver for the locations field.
+func (r *queryResolver) Locations(ctx context.Context) ([]*model.Location, error) {
+	locations, err := r.LocationService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Location, 0, len(locations))
+	for _, location := range locations {
+		res = append(res, model.FormatLocationResponse(location))
+	}
+	return res, nil
+}
+
+// Location is the resolver for the location field.
+func (r *queryResolver) Location(ctx context.Context, id string) (*model.Location, error) {
+	location, err := r.LocationService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLocationResponse(location), nil
+}
+
+// Scenes is the resolver for the scenes field.
+func (r *queryResolver) Scenes(ctx context.Context) ([]*model.Scene, error) {
+	scenes, err := r.SceneService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Scene, 0, len(scenes))
+	for _, scene := range scenes {
+		res = append(res, model.FormatSceneResponse(scene))
+	}
+	return res, nil
+}
+
+// Scene is the resolver for the scene field.
+func (r *queryResolver) Scene(ctx context.Context, id string) (*model.Scene, error) {
+	scene, err := r.SceneService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
 }
 
 // Informations is the resolver for the Informations field.

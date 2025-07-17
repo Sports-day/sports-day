@@ -72,16 +72,24 @@ func main() {
 	// repository
 	userRepository := repository.NewUser()
 	groupRepository := repository.NewGroup()
+	sportRepository := repository.NewSports()
+	teamRepository := repository.NewTeam()
+	locationRepository := repository.NewLocation()
+	sceneRepository := repository.NewScene()
 	informationRepository := repository.NewInformation()
 
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
 	groupService := service.NewGroup(db, groupRepository, userRepository)
+	sportService := service.NewSports(db, sportRepository)
+	teamService := service.NewTeam(db, teamRepository, userRepository)
+	locationService := service.NewLocation(db, locationRepository)
+	sceneService := service.NewScene(db, sceneRepository)
 	informationService := service.NewInformation(db, informationRepository)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, informationService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})
@@ -97,7 +105,7 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService))
 
 	address := fmt.Sprintf("%s:%d", env.Get().Server.Host, env.Get().Server.Port)
 

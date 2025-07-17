@@ -3,12 +3,26 @@ type User {
   name: String!
   email: String!
   groups: [Group!]!
+  teams: [Team!]!
 }
 
 type Group {
   id: ID!
   name: String!
+  teams: [Team!]!
   users: [User!]!
+}
+
+type Team {
+  id: ID!
+  name: String!
+  group: Group!
+  users: [User!]!
+}
+
+type Location {
+  id: ID!
+  name: String!
 }
 
 type AuthResponse {
@@ -20,4 +34,15 @@ type Information {
   id: ID!
   title: String!
   content: String!
+}
+
+type Sport {
+  id: ID!
+  name: String!
+  weight: Int!
+}
+
+type Scene {
+  id: ID!
+  name: String!
 }
