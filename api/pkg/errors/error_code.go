@@ -42,6 +42,7 @@ var (
 	ErrMakeLeagueMatches      = NewError("LEAGUE_MATCH_MAKE_FAILED", "リーグの試合生成に失敗しました")
 	ErrSaveLeague             = NewError("LEAGUE_SAVE_FAILED", "リーグの保存に失敗しました")
 	ErrSaveLeagueStanding     = NewError("LEAGUE_STANDING_SAVE_FAILED", "リーグ結果の保存に失敗しました")
+
 	/*
 		Authentication
 	*/
