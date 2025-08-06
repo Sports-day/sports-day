@@ -17,7 +17,7 @@ type League interface {
 
 	SaveStanding(ctx context.Context, db *gorm.DB, standing *db_model.LeagueStanding) (*db_model.LeagueStanding, error)
 	GetStanding(ctx context.Context, db *gorm.DB, id string, teamID string) (*db_model.LeagueStanding, error)
-	DeleteStanding(ctx context.Context, db *gorm.DB, id, teamID string) (*db_model.LeagueStanding, error)
+	DeleteStanding(ctx context.Context, db *gorm.DB, id string, teamID string) (*db_model.LeagueStanding, error)
 	ListStandings(ctx context.Context, db *gorm.DB, id string) ([]*db_model.LeagueStanding, error)
 
 	BatchGetStandingsByCompetitionIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.LeagueStanding, error)

@@ -67,11 +67,11 @@ func (r league) List(ctx context.Context, db *gorm.DB) ([]*db_model.League, erro
 
 func (r league) SaveStanding(ctx context.Context, db *gorm.DB, standing *db_model.LeagueStanding) (*db_model.LeagueStanding, error) {
 	if err := db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "id"}, {Name: "team_id"}}, // 複合キー
+		Columns: []clause.Column{{Name: "id"}, {Name: "team_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
-			"win", "draw", "lose", "gf", "ga", "points", "`rank`", "updated_at",
+			"win", "draw", "lose", "goals_for", "goals_against", "points", "rank", "updated_at",
 		}),
-	}).Omit("gd").Create(standing).Error; err != nil {
+	}).Omit("goal_diff").Create(standing).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return standing, nil
