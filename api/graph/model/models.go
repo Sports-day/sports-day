@@ -21,6 +21,7 @@ type Competition struct {
 	ID   string          `json:"id"`
 	Name string          `json:"name"`
 	Type CompetitionType `json:"type"`
+	DefaultLocationID string `json:"defaultLocationId"`
 }
 
 type Match struct {
