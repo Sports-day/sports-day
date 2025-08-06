@@ -102,9 +102,10 @@ type ComplexityRoot struct {
 	}
 
 	Location struct {
-		ID      func(childComplexity int) int
-		Matches func(childComplexity int) int
-		Name    func(childComplexity int) int
+		Competitions func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Matches      func(childComplexity int) int
+		Name         func(childComplexity int) int
 	}
 
 	Match struct {
@@ -239,6 +240,7 @@ type ComplexityRoot struct {
 }
 
 type CompetitionResolver interface {
+	DefaultLocation(ctx context.Context, obj *model.Competition) (*model.Location, error)
 	Teams(ctx context.Context, obj *model.Competition) ([]*model.Team, error)
 	Matches(ctx context.Context, obj *model.Competition) ([]*model.Match, error)
 	League(ctx context.Context, obj *model.Competition) (*model.League, error)
@@ -270,6 +272,7 @@ type MatchResolver interface {
 }
 type LocationResolver interface {
 	Matches(ctx context.Context, obj *model.Location) ([]*model.Match, error)
+	Competitions(ctx context.Context, obj *model.Location) ([]*model.Competition, error)
 }
 type MatchResolver interface {
 	Location(ctx context.Context, obj *model.Match) (*model.Location, error)
@@ -394,6 +397,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AuthResponse.User(childComplexity), true
+
+	case "Competition.defaultLocation":
+		if e.complexity.Competition.DefaultLocation == nil {
+			break
+		}
+
+		return e.complexity.Competition.DefaultLocation(childComplexity), true
 
 	case "Competition.id":
 		if e.complexity.Competition.ID == nil {
@@ -1715,6 +1725,29 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_League_standings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_League_standings_argsTeamID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["teamId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_League_standings_argsTeamID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("teamId"))
+	if tmp, ok := rawArgs["teamId"]; ok {
+		return ec.unmarshalOID2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
 
 func (ec *executionContext) field_Mutation_addCompetitionEntries_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
@@ -4826,6 +4859,64 @@ func (ec *executionContext) fieldContext_Location_matches(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Location_competitions(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_competitions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Location().Competitions(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Competition)
+	fc.Result = res
+	return ec.marshalNCompetition2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_competitions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Competition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Competition_name(ctx, field)
+			case "defaultLocation":
+				return ec.fieldContext_Competition_defaultLocation(ctx, field)
+			case "teams":
+				return ec.fieldContext_Competition_teams(ctx, field)
+			case "matches":
+				return ec.fieldContext_Competition_matches(ctx, field)
+			case "league":
+				return ec.fieldContext_Competition_league(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Match_id(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Match_id(ctx, field)
 	if err != nil {
@@ -5000,6 +5091,8 @@ func (ec *executionContext) fieldContext_Match_location(_ context.Context, field
 				return ec.fieldContext_Location_name(ctx, field)
 			case "matches":
 				return ec.fieldContext_Location_matches(ctx, field)
+			case "competitions":
+				return ec.fieldContext_Location_competitions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
@@ -6273,6 +6366,8 @@ func (ec *executionContext) fieldContext_Mutation_createLocation(ctx context.Con
 				return ec.fieldContext_Location_name(ctx, field)
 			case "matches":
 				return ec.fieldContext_Location_matches(ctx, field)
+			case "competitions":
+				return ec.fieldContext_Location_competitions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
@@ -6336,6 +6431,8 @@ func (ec *executionContext) fieldContext_Mutation_updateLocation(ctx context.Con
 				return ec.fieldContext_Location_name(ctx, field)
 			case "matches":
 				return ec.fieldContext_Location_matches(ctx, field)
+			case "competitions":
+				return ec.fieldContext_Location_competitions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
@@ -6399,6 +6496,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteLocation(ctx context.Con
 				return ec.fieldContext_Location_name(ctx, field)
 			case "matches":
 				return ec.fieldContext_Location_matches(ctx, field)
+			case "competitions":
+				return ec.fieldContext_Location_competitions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
@@ -8117,6 +8216,69 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updateLeagueRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateLeagueRule(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateLeagueRule(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateLeagueRuleInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.League)
+	fc.Result = res
+	return ec.marshalNLeague2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐLeague(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateLeagueRule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "competitionId":
+				return ec.fieldContext_League_competitionId(ctx, field)
+			case "calculationType":
+				return ec.fieldContext_League_calculationType(ctx, field)
+			case "standings":
+				return ec.fieldContext_League_standings(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type League", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateLeagueRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_me(ctx, field)
 	if err != nil {
@@ -8593,6 +8755,8 @@ func (ec *executionContext) fieldContext_Query_locations(_ context.Context, fiel
 				return ec.fieldContext_Location_name(ctx, field)
 			case "matches":
 				return ec.fieldContext_Location_matches(ctx, field)
+			case "competitions":
+				return ec.fieldContext_Location_competitions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
@@ -8645,6 +8809,8 @@ func (ec *executionContext) fieldContext_Query_location(ctx context.Context, fie
 				return ec.fieldContext_Location_name(ctx, field)
 			case "matches":
 				return ec.fieldContext_Location_matches(ctx, field)
+			case "competitions":
+				return ec.fieldContext_Location_competitions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
@@ -14660,6 +14826,42 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 					}
 				}()
 				res = ec._Location_matches(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "competitions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Location_competitions(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
