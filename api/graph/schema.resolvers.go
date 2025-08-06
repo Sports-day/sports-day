@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"sports-day/api/graph/model"
 )
@@ -334,6 +335,11 @@ func (r *mutationResolver) UpdateJudgment(ctx context.Context, id string, input 
 	return model.FormatJudgmentResponse(judgment), nil
 }
 
+// UpdateLeagueRule is the resolver for the updateLeagueRule field.
+func (r *mutationResolver) UpdateLeagueRule(ctx context.Context, id string, input model.UpdateLeagueRuleInput) (*model.League, error) {
+	panic(fmt.Errorf("not implemented: UpdateLeagueRule - updateLeagueRule"))
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -570,6 +576,16 @@ func (r *queryResolver) Judgment(ctx context.Context, id string) (*model.Judgmen
 		return nil, err
 	}
 	return model.FormatJudgmentResponse(judgment), nil
+}
+
+// Leagues is the resolver for the leagues field.
+func (r *queryResolver) Leagues(ctx context.Context) ([]*model.League, error) {
+	panic(fmt.Errorf("not implemented: Leagues - leagues"))
+}
+
+// League is the resolver for the league field.
+func (r *queryResolver) League(ctx context.Context, id string) (*model.League, error) {
+	panic(fmt.Errorf("not implemented: League - league"))
 }
 
 // Mutation returns MutationResolver implementation.
