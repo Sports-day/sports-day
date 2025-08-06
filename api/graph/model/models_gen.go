@@ -14,8 +14,9 @@ type AuthResponse struct {
 }
 
 type CreateCompetitionInput struct {
-	Name string          `json:"name"`
+	Name              string           `json:"name"`
 	Type CompetitionType `json:"type"`
+	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
 }
 
 type CreateGroupInput struct {
@@ -80,6 +81,12 @@ type JudgmentEntry struct {
 	GroupID *string `json:"groupId,omitempty"`
 }
 
+type League struct {
+	CompetitionID   string          `json:"competitionId"`
+	CalculationType CalculationType `json:"calculationType"`
+	Standings       []*Standing     `json:"standings"`
+}
+
 type LoginInput struct {
 	Code        string `json:"code"`
 	RedirectURL string `json:"redirectURL"`
@@ -113,13 +120,20 @@ type Sport struct {
 	Weight int32  `json:"weight"`
 }
 
+type Standing struct {
+	Team   *Team `json:"team"`
+	Points int32 `json:"points"`
+	Rank   int32 `json:"rank"`
+}
+
 type UpdateCompetitionEntriesInput struct {
 	TeamIds []string `json:"teamIds"`
 }
 
 type UpdateCompetitionInput struct {
-	Name *string          `json:"name,omitempty"`
+	Name              *string          `json:"name,omitempty"`
 	Type *CompetitionType `json:"type,omitempty"`
+	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -137,6 +151,13 @@ type UpdateInformationInput struct {
 
 type UpdateJudgmentInput struct {
 	Entry *JudgmentEntry `json:"entry,omitempty"`
+}
+
+type UpdateLeagueRuleInput struct {
+	CalculationType *CalculationType `json:"calculation_type,omitempty"`
+	WinPt           *int32           `json:"winPt,omitempty"`
+	DrawPt          *int32           `json:"drawPt,omitempty"`
+	LosePt          *int32           `json:"losePt,omitempty"`
 }
 
 type UpdateLocationInput struct {
