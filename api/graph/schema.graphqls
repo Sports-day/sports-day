@@ -72,10 +72,12 @@ input UpdateLocationInput {
 
 input CreateCompetitionInput {
   name: String!
+  defaultLocationId: ID
 }
 
 input UpdateCompetitionInput {
   name: String
+  defaultLocationId: ID
 }
 
 input UpdateCompetitionEntriesInput {
@@ -218,6 +220,14 @@ type Query {
   ID指定で試合を取得する
   """
 	judgment(id: ID!): Judgment!
+  """
+  リーグをまとめて取得する
+  """
+  leagues: [League!]!
+  """
+  ID指定でリーグを取得する
+  """
+	league(id: ID!): League!
 }
 
 type Mutation {
@@ -313,4 +323,16 @@ type Mutation {
   審判の情報を更新する
   """
 	updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
+  """
+  リーグを追加する
+  """
+  createLeague(input: CreateLeagueInput!): League!
+  """
+  リーグのルールを更新する
+  """
+  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League!
+  """
+  リーグを削除する
+  """
+  deleteLeague(id: ID!): League!
 }

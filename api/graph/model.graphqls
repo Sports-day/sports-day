@@ -7,6 +7,11 @@ type User {
   judgments: [Judgment!]!
 }
 
+type AuthResponse {
+  token: String!
+  user: User!
+}
+
 type Group {
   id: ID!
   name: String!
@@ -23,6 +28,7 @@ type Team {
   competitions: [Competition!]!
   matches: [Match!]!
   judgments: [Judgment!]!
+  leagues: [League!]!
 }
 
 enum CompetitionType {
@@ -34,14 +40,17 @@ type Competition {
   id: ID!
   name: String!
   type: CompetitionType!
+  defaultLocation: Location
   teams: [Team!]!
   matches: [Match!]!
+  league: League
 }
 
 type Location {
   id: ID!
   name: String!
   matches: [Match!]!
+  competitions: [Competition!]!
 }
 
 enum MatchStatus {
@@ -76,9 +85,22 @@ type Judgment {
   group: Group
 }
 
-type AuthResponse {
-  token: String!
-  user: User!
+enum CalculationType {
+  TOTAL_SCORE
+  DIFF_SCORE
+  WIN_SCORE
+}
+
+type Standing {
+  team: Team!
+  points: Int!
+  rank: Int!
+}
+
+type League {
+  competitionId: ID!
+  calculationType: CalculationType!
+  standings(teamId: ID): [Standing!]!
 }
 
 type Information {
