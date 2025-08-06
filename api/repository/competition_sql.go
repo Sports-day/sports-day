@@ -105,3 +105,11 @@ func (r competition) BatchGetCompetitionEntriesByCompetitionIDs(ctx context.Cont
 	}
 	return competitionEntries, nil
 }
+
+func (r competition) BatchGetByLocationIDs(ctx context.Context, db *gorm.DB, locationIDs []string) ([]*db_model.Competition, error) {
+	var competitions []*db_model.Competition
+	if err := db.Where("default_location_id IN ?", locationIDs).Find(&competitions).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return competitions, nil
+}
