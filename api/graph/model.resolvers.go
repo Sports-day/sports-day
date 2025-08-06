@@ -6,12 +6,28 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
 	"sports-day/api/pkg/slices"
 )
+
+// DefaultLocation is the resolver for the defaultLocation field.
+func (r *competitionResolver) DefaultLocation(ctx context.Context, obj *model.Competition) (*model.Location, error) {
+	if obj.DefaultLocationID == "" {
+		return nil, nil
+	}
+	locations, err := loader.LoadLocations(ctx, []string{obj.DefaultLocationID})
+	if err != nil {
+		return nil, err
+	}
+	if len(locations) == 0 || locations[0] == nil {
+		return nil, nil
+	}
+	return model.FormatLocationResponse(locations[0]), nil
+}
 
 // Teams is the resolver for the teams field.
 func (r *competitionResolver) Teams(ctx context.Context, obj *model.Competition) ([]*model.Team, error) {
@@ -40,6 +56,11 @@ func (r *competitionResolver) Matches(ctx context.Context, obj *model.Competitio
 	return slices.Map(matches, func(match *db_model.Match) *model.Match {
 		return model.FormatMatchResponse(match)
 	}), nil
+}
+
+// League is the resolver for the league field.
+func (r *competitionResolver) League(ctx context.Context, obj *model.Competition) (*model.League, error) {
+	panic(fmt.Errorf("not implemented: League - league"))
 }
 
 // Teams is the resolver for the teams field.
@@ -142,6 +163,17 @@ func (r *locationResolver) Matches(ctx context.Context, obj *model.Location) ([]
 	}
 	return slices.Map(matches, func(match *db_model.Match) *model.Match {
 		return model.FormatMatchResponse(match)
+	}), nil
+}
+
+// Competitions is the resolver for the competitions field.
+func (r *locationResolver) Competitions(ctx context.Context, obj *model.Location) ([]*model.Competition, error) {
+	competitions, err := loader.LoadLocationCompetitions(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(competitions, func(competition *db_model.Competition) *model.Competition {
+		return model.FormatCompetitionResponse(competition)
 	}), nil
 }
 
@@ -317,6 +349,11 @@ func (r *teamResolver) Judgments(ctx context.Context, obj *model.Team) ([]*model
 	return slices.Map(judgments, func(judgment *db_model.Judgment) *model.Judgment {
 		return model.FormatJudgmentResponse(judgment)
 	}), nil
+}
+
+// Leagues is the resolver for the leagues field.
+func (r *teamResolver) Leagues(ctx context.Context, obj *model.Team) ([]*model.League, error) {
+	panic(fmt.Errorf("not implemented: Leagues - leagues"))
 }
 
 // Groups is the resolver for the groups field.
