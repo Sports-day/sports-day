@@ -40,15 +40,17 @@ type Competition {
   id: ID!
   name: String!
   type: CompetitionType!
+  defaultLocation: Location
   teams: [Team!]!
   matches: [Match!]!
-  league: League!
+  league: League
 }
 
 type Location {
   id: ID!
   name: String!
   matches: [Match!]!
+  competitions: [Competition!]!
 }
 
 enum MatchStatus {
@@ -90,7 +92,6 @@ enum CalculationType {
 }
 
 type Standing {
-  id: ID!
   team: Team!
   points: Int!
   rank: Int!
@@ -104,8 +105,6 @@ type Standing {
 
 type League {
   id: ID!
-  name: String!
-  teams: [Team!]!
   calculationType: CalculationType!
   standings: [Standing!]!
 }
