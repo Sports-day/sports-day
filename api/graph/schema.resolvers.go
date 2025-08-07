@@ -335,9 +335,19 @@ func (r *mutationResolver) UpdateJudgment(ctx context.Context, id string, input 
 	return model.FormatJudgmentResponse(judgment), nil
 }
 
+// CreateLeague is the resolver for the createLeague field.
+func (r *mutationResolver) CreateLeague(ctx context.Context, input model.CreateLeagueInput) (*model.League, error) {
+	panic(fmt.Errorf("not implemented: CreateLeague - createLeague"))
+}
+
 // UpdateLeagueRule is the resolver for the updateLeagueRule field.
 func (r *mutationResolver) UpdateLeagueRule(ctx context.Context, id string, input model.UpdateLeagueRuleInput) (*model.League, error) {
 	panic(fmt.Errorf("not implemented: UpdateLeagueRule - updateLeagueRule"))
+}
+
+// DeleteLeague is the resolver for the deleteLeague field.
+func (r *mutationResolver) DeleteLeague(ctx context.Context, id string) (*model.League, error) {
+	panic(fmt.Errorf("not implemented: DeleteLeague - deleteLeague"))
 }
 
 // Users is the resolver for the users field.

@@ -33,6 +33,21 @@ func (r league) Get(ctx context.Context, db *gorm.DB, competitionID string) (*db
 	return &league, nil
 }
 
+func (r league) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.League, error) {
+	var league db_model.League
+	if err := db.First(&league, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrLeagueNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+
+	if err := db.Delete(&league).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return &league, nil
+}
+
 func (r league) BatchGet(ctx context.Context, db *gorm.DB, competitionIDs []string) ([]*db_model.League, error) {
 	var leagues []*db_model.League
 	if err := db.Where("competition_id IN (?)", competitionIDs).Find(&leagues).Error; err != nil {
@@ -62,6 +77,21 @@ func (r league) GetStanding(ctx context.Context, db *gorm.DB, competitionID, tea
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrLeagueStandingNotFound
 		}
+		return nil, errors.Wrap(err)
+	}
+	return &standing, nil
+}
+
+func (r league) DeleteStanding(ctx context.Context, db *gorm.DB, id string, teamId string) (*db_model.LeagueStanding, error) {
+	var standing db_model.LeagueStanding
+	if err := db.First(&standing, "competition_id = ? AND team_id = ?", id, teamId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrLeagueStandingNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+
+	if err := db.Delete(&standing).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return &standing, nil

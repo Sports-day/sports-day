@@ -43,7 +43,7 @@ type Competition {
   defaultLocation: Location
   teams: [Team!]!
   matches: [Match!]!
-  league: League
+  leagues: [League!]!
 }
 
 type Location {
@@ -98,7 +98,8 @@ type Standing {
 }
 
 type League {
-  competitionId: ID!
+  id: ID!
+  teams: [Team!]!
   calculationType: CalculationType!
   standings(teamId: ID): [Standing!]!
 }

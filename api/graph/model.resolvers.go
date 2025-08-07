@@ -58,9 +58,9 @@ func (r *competitionResolver) Matches(ctx context.Context, obj *model.Competitio
 	}), nil
 }
 
-// League is the resolver for the league field.
-func (r *competitionResolver) League(ctx context.Context, obj *model.Competition) (*model.League, error) {
-	panic(fmt.Errorf("not implemented: League - league"))
+// Leagues is the resolver for the leagues field.
+func (r *competitionResolver) Leagues(ctx context.Context, obj *model.Competition) ([]*model.League, error) {
+	panic(fmt.Errorf("not implemented: Leagues - leagues"))
 }
 
 // Teams is the resolver for the teams field.
@@ -432,3 +432,15 @@ type locationResolver struct{ *Resolver }
 type matchResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *competitionResolver) League(ctx context.Context, obj *model.Competition) (*model.League, error) {
+	panic(fmt.Errorf("not implemented: League - league"))
+}
+*/

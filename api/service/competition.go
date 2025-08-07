@@ -162,20 +162,20 @@ func (s *Competition) GetCompetitionMapByLocationIDs(ctx context.Context, locati
 	}
 
 	competitionsMap := make(map[string][]*db_model.Competition, len(locationIds))
-    for _, id := range locationIds {
-        competitionsMap[id] = []*db_model.Competition{}
-    }
+	for _, id := range locationIds {
+		competitionsMap[id] = []*db_model.Competition{}
+	}
 
 	for _, comp := range competitions {
-        if !comp.DefaultLocationID.Valid {
-            continue
-        }
+		if !comp.DefaultLocationID.Valid {
+			continue
+		}
 
-        locID := comp.DefaultLocationID.String
+		locID := comp.DefaultLocationID.String
 
-        if _, ok := competitionsMap[locID]; ok {
-            competitionsMap[locID] = append(competitionsMap[locID], comp)
-        }
-    }
+		if _, ok := competitionsMap[locID]; ok {
+			competitionsMap[locID] = append(competitionsMap[locID], comp)
+		}
+	}
 	return competitionsMap, nil
 }

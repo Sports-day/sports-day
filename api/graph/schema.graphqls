@@ -153,19 +153,16 @@ input UpdateJudgmentInput {
 	entry: JudgmentEntry
 }
 
-"""
-3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。  
-1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
-"""
-input JudgmentEntry {
-  name: String
-	userId: ID
-	teamId: ID
-	groupId: ID 
+input CreateLeagueInput {
+  competitionId: ID!
+  calculationType: CalculationType!
 }
 
-input UpdateJudgmentInput {
-	entry: JudgmentEntry
+input UpdateLeagueRuleInput {
+	calculationType: CalculationType
+	winPt:  Int
+  drawPt: Int
+  losePt: Int
 }
 
 type Query {

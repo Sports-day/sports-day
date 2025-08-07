@@ -40,6 +40,7 @@ var (
 	ErrJudgmentEntryInvalid   = NewError("JUDGMENT_ENTRY_INVALID", "審判のエントリーは、ユーザー、チーム、グループのいずれか1つのみ指定してください")
 	ErrUpsertLeague           = NewError("LEAGUE_UPSERT_FAILED", "リーグ情報の更新に失敗しました")
 	ErrMakeLeagueMatches      = NewError("LEAGUE_MATCH_MAKE_FAILED", "リーグの試合生成に失敗しました")
+	ErrSaveLeague             = NewError("LEAGUE_SAVE_FAILED", "リーグの保存に失敗しました")
 	/*
 		Authentication
 	*/
