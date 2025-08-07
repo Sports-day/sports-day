@@ -243,7 +243,7 @@ type CompetitionResolver interface {
 	DefaultLocation(ctx context.Context, obj *model.Competition) (*model.Location, error)
 	Teams(ctx context.Context, obj *model.Competition) ([]*model.Team, error)
 	Matches(ctx context.Context, obj *model.Competition) ([]*model.Match, error)
-	League(ctx context.Context, obj *model.Competition) (*model.League, error)
+	Leagues(ctx context.Context, obj *model.Competition) ([]*model.League, error)
 }
 type GroupResolver interface {
 	Teams(ctx context.Context, obj *model.Group) ([]*model.Team, error)
@@ -412,12 +412,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Competition.ID(childComplexity), true
 
-	case "Competition.league":
-		if e.complexity.Competition.League == nil {
+	case "Competition.leagues":
+		if e.complexity.Competition.Leagues == nil {
 			break
 		}
 
-		return e.complexity.Competition.League(childComplexity), true
+		return e.complexity.Competition.Leagues(childComplexity), true
 
 	case "Competition.matches":
 		if e.complexity.Competition.Matches == nil {
@@ -3745,8 +3745,8 @@ func (ec *executionContext) fieldContext_Competition_matches(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Competition_league(ctx context.Context, field graphql.CollectedField, obj *model.Competition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Competition_league(ctx, field)
+func (ec *executionContext) _Competition_leagues(ctx context.Context, field graphql.CollectedField, obj *model.Competition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Competition_leagues(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3759,7 +3759,7 @@ func (ec *executionContext) _Competition_league(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Competition().League(rctx, obj)
+		return ec.resolvers.Competition().Leagues(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3771,12 +3771,12 @@ func (ec *executionContext) _Competition_league(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.League)
+	res := resTmp.([]*model.League)
 	fc.Result = res
 	return ec.marshalNLeague2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐLeague(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Competition_league(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Competition_leagues(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Competition",
 		Field:      field,
@@ -4908,8 +4908,8 @@ func (ec *executionContext) fieldContext_Location_competitions(_ context.Context
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -5149,8 +5149,8 @@ func (ec *executionContext) fieldContext_Match_competition(_ context.Context, fi
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -6937,8 +6937,8 @@ func (ec *executionContext) fieldContext_Mutation_createCompetition(ctx context.
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -7006,8 +7006,8 @@ func (ec *executionContext) fieldContext_Mutation_updateCompetition(ctx context.
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -7075,8 +7075,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteCompetition(ctx context.
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -7144,8 +7144,8 @@ func (ec *executionContext) fieldContext_Mutation_addCompetitionEntries(ctx cont
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -7213,8 +7213,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteCompetitionEntries(ctx c
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -8216,6 +8216,71 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createLeague(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createLeague(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateLeague(rctx, fc.Args["input"].(model.CreateLeagueInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.League)
+	fc.Result = res
+	return ec.marshalNLeague2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐLeague(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createLeague(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_League_id(ctx, field)
+			case "teams":
+				return ec.fieldContext_League_teams(ctx, field)
+			case "calculationType":
+				return ec.fieldContext_League_calculationType(ctx, field)
+			case "standings":
+				return ec.fieldContext_League_standings(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type League", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createLeague_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_updateLeagueRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_updateLeagueRule(ctx, field)
 	if err != nil {
@@ -8255,8 +8320,10 @@ func (ec *executionContext) fieldContext_Mutation_updateLeagueRule(ctx context.C
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "competitionId":
-				return ec.fieldContext_League_competitionId(ctx, field)
+			case "id":
+				return ec.fieldContext_League_id(ctx, field)
+			case "teams":
+				return ec.fieldContext_League_teams(ctx, field)
 			case "calculationType":
 				return ec.fieldContext_League_calculationType(ctx, field)
 			case "standings":
@@ -8273,6 +8340,71 @@ func (ec *executionContext) fieldContext_Mutation_updateLeagueRule(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateLeagueRule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteLeague(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteLeague(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteLeague(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.League)
+	fc.Result = res
+	return ec.marshalNLeague2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐLeague(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteLeague(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_League_id(ctx, field)
+			case "teams":
+				return ec.fieldContext_League_teams(ctx, field)
+			case "calculationType":
+				return ec.fieldContext_League_calculationType(ctx, field)
+			case "standings":
+				return ec.fieldContext_League_standings(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type League", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteLeague_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -9104,8 +9236,8 @@ func (ec *executionContext) fieldContext_Query_competitions(_ context.Context, f
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -9162,8 +9294,8 @@ func (ec *executionContext) fieldContext_Query_competition(ctx context.Context, 
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -10623,8 +10755,8 @@ func (ec *executionContext) fieldContext_Team_competitions(_ context.Context, fi
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
 				return ec.fieldContext_Competition_matches(ctx, field)
-			case "league":
-				return ec.fieldContext_Competition_league(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Competition_leagues(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
@@ -14274,7 +14406,7 @@ func (ec *executionContext) _Competition(ctx context.Context, sel ast.SelectionS
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "league":
+		case "leagues":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {

@@ -94,7 +94,8 @@ type JudgmentEntry struct {
 }
 
 type League struct {
-	CompetitionID   string          `json:"competitionId"`
+	ID              string          `json:"id"`
+	Teams           []*Team         `json:"teams"`
 	CalculationType CalculationType `json:"calculationType"`
 	Standings       []*Standing     `json:"standings"`
 }
@@ -166,7 +167,7 @@ type UpdateJudgmentInput struct {
 }
 
 type UpdateLeagueRuleInput struct {
-	CalculationType *CalculationType `json:"calculation_type,omitempty"`
+	CalculationType *CalculationType `json:"calculationType,omitempty"`
 	WinPt           *int32           `json:"winPt,omitempty"`
 	DrawPt          *int32           `json:"drawPt,omitempty"`
 	LosePt          *int32           `json:"losePt,omitempty"`

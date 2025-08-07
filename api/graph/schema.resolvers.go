@@ -409,6 +409,11 @@ func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id stri
 	return res, nil
 }
 
+// DeleteLeague is the resolver for the deleteLeague field.
+func (r *mutationResolver) DeleteLeague(ctx context.Context, id string) (*model.League, error) {
+	panic(fmt.Errorf("not implemented: DeleteLeague - deleteLeague"))
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
