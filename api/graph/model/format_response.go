@@ -142,24 +142,3 @@ func FormatStandingResponse(standing *db_model.LeagueStanding) *Standing {
 		Rank:         int32(standing.Rank),
 	}
 }
-
-func FormatMatchResponse(match *db_model.Match) *Match {
-	return &Match{
-		ID:            match.ID,
-		Time:          match.Time.Format(time.RFC3339),
-		Status:        MatchStatus(match.Status),
-		LocationId:    match.LocationID,
-		CompetitionId: match.CompetitionID,
-		WinnerTeamId:  match.WinnerTeamID.String,
-	}
-}
-
-func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
-	return &Judgment{
-		ID:      judgment.ID,
-		Name:    judgment.Name,
-		UserId:  judgment.UserID.String,
-		TeamId:  judgment.TeamID.String,
-		GroupId: judgment.GroupID.String,
-	}
-}

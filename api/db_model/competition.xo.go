@@ -11,6 +11,6 @@ import (
 type Competition struct {
 	ID                string         `json:"id"`                  // 主キー
 	Name              string         `json:"name"`                // 大会名
-	Type string `json:"type"` // 大会種別
+	Type              string         `json:"type"`                // 大会種別
 	DefaultLocationID sql.NullString `json:"default_location_id"` // 既定の会場
 }

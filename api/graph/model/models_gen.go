@@ -14,8 +14,7 @@ type AuthResponse struct {
 }
 
 type CreateCompetitionInput struct {
-	Name              string           `json:"name"`
-	Type CompetitionType `json:"type"`
+	Name              string  `json:"name"`
 	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
 }
 
@@ -87,7 +86,6 @@ type Information struct {
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
 // 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 type JudgmentEntry struct {
-	Name    *string `json:"name,omitempty"`
 	UserID  *string `json:"userId,omitempty"`
 	TeamID  *string `json:"teamId,omitempty"`
 	GroupID *string `json:"groupId,omitempty"`
@@ -144,8 +142,7 @@ type UpdateCompetitionEntriesInput struct {
 }
 
 type UpdateCompetitionInput struct {
-	Name              *string          `json:"name,omitempty"`
-	Type *CompetitionType `json:"type,omitempty"`
+	Name              *string `json:"name,omitempty"`
 	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
 }
 
@@ -163,6 +160,7 @@ type UpdateInformationInput struct {
 }
 
 type UpdateJudgmentInput struct {
+	Name  *string        `json:"name,omitempty"`
 	Entry *JudgmentEntry `json:"entry,omitempty"`
 }
 
