@@ -30,6 +30,7 @@ func (s *Competition) Create(ctx context.Context, input *model.CreateCompetition
 	competition := &db_model.Competition{
 		ID:   ulid.Make(),
 		Name: input.Name,
+		Type: string(input.Type),
 	}
 
 	competition, err := s.competitionRepository.Save(ctx, s.db, competition)
@@ -55,6 +56,10 @@ func (s *Competition) Update(ctx context.Context, id string, input model.UpdateC
 
 	if input.Name != nil {
 		competition.Name = *input.Name
+	}
+
+	if input.Type != nil {
+		competition.Type = string(*input.Type)
 	}
 
 	competition, err = s.competitionRepository.Save(ctx, s.db, competition)
