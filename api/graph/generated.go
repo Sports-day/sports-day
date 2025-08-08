@@ -65,6 +65,7 @@ type ComplexityRoot struct {
 		Matches func(childComplexity int) int
 		Name    func(childComplexity int) int
 		Teams   func(childComplexity int) int
+		Type    func(childComplexity int) int
 	}
 
 	Group struct {
@@ -99,7 +100,7 @@ type ComplexityRoot struct {
 		Competition func(childComplexity int) int
 		Entries     func(childComplexity int) int
 		ID          func(childComplexity int) int
-		Judgments   func(childComplexity int) int
+		Judgment    func(childComplexity int) int
 		Location    func(childComplexity int) int
 		Status      func(childComplexity int) int
 		Time        func(childComplexity int) int
@@ -107,6 +108,7 @@ type ComplexityRoot struct {
 	}
 
 	MatchEntry struct {
+		ID    func(childComplexity int) int
 		Score func(childComplexity int) int
 		Team  func(childComplexity int) int
 	}
@@ -118,7 +120,6 @@ type ComplexityRoot struct {
 		CreateCompetition        func(childComplexity int, input model.CreateCompetitionInput) int
 		CreateGroup               func(childComplexity int, input model.CreateGroupInput) int
 		CreateInformation func(childComplexity int, input model.CreateInformationInput) int
-		CreateJudgment           func(childComplexity int, input model.CreateJudgmentInput) int
 		CreateLocation            func(childComplexity int, input model.CreateLocationInput) int
 		CreateScene       func(childComplexity int, input model.CreateSceneInput) int
 		CreateSports      func(childComplexity int, input model.CreateSportsInput) int
@@ -129,7 +130,6 @@ type ComplexityRoot struct {
 		DeleteCompetitionEntries func(childComplexity int, id string, input model.UpdateCompetitionEntriesInput) int
 		DeleteGroup               func(childComplexity int, id string) int
 		DeleteInformation func(childComplexity int, id string) int
-		DeleteJudgment           func(childComplexity int, id string) int
 		DeleteLocation    func(childComplexity int, id string) int
 		DeleteScene       func(childComplexity int, id string) int
 		DeleteSports              func(childComplexity int, id string) int
@@ -226,7 +226,7 @@ type MatchResolver interface {
 	Competition(ctx context.Context, obj *model.Match) (*model.Competition, error)
 	WinnerTeam(ctx context.Context, obj *model.Match) (*model.Team, error)
 	Entries(ctx context.Context, obj *model.Match) ([]*model.MatchEntry, error)
-	Judgments(ctx context.Context, obj *model.Match) ([]*model.Judgment, error)
+	Judgment(ctx context.Context, obj *model.Match) (*model.Judgment, error)
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
@@ -263,9 +263,7 @@ type MutationResolver interface {
 	DeleteMatch(ctx context.Context, id string) (*model.Match, error)
 	AddMatchEntries(ctx context.Context, id string, input model.UpdateMatchEntriesInput) (*model.Match, error)
 	DeleteMatchEntries(ctx context.Context, id string, input model.UpdateMatchEntriesInput) (*model.Match, error)
-	CreateJudgment(ctx context.Context, input model.CreateJudgmentInput) (*model.Judgment, error)
 	UpdateJudgment(ctx context.Context, id string, input model.UpdateJudgmentInput) (*model.Judgment, error)
-	DeleteJudgment(ctx context.Context, id string) (*model.Judgment, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -363,6 +361,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Competition.Teams(childComplexity), true
+
+	case "Competition.type":
+		if e.complexity.Competition.Type == nil {
+			break
+		}
+
+		return e.complexity.Competition.Type(childComplexity), true
 
 	case "Group.id":
 		if e.complexity.Group.ID == nil {
@@ -497,12 +502,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Match.ID(childComplexity), true
 
-	case "Match.judgments":
-		if e.complexity.Match.Judgments == nil {
+	case "Match.judgment":
+		if e.complexity.Match.Judgment == nil {
 			break
 		}
 
-		return e.complexity.Match.Judgments(childComplexity), true
+		return e.complexity.Match.Judgment(childComplexity), true
 
 	case "Match.location":
 		if e.complexity.Match.Location == nil {
@@ -531,6 +536,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Match.WinnerTeam(childComplexity), true
+
+	case "MatchEntry.id":
+		if e.complexity.MatchEntry.ID == nil {
+			break
+		}
+
+		return e.complexity.MatchEntry.ID(childComplexity), true
 
 	case "MatchEntry.score":
 		if e.complexity.MatchEntry.Score == nil {
@@ -617,18 +629,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateInformation(childComplexity, args["input"].(model.CreateInformationInput)), true
-
-	case "Mutation.createJudgment":
-		if e.complexity.Mutation.CreateJudgment == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createJudgment_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateJudgment(childComplexity, args["input"].(model.CreateJudgmentInput)), true
 
 	case "Mutation.createLocation":
 		if e.complexity.Mutation.CreateLocation == nil {
@@ -749,18 +749,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteInformation(childComplexity, args["id"].(string)), true
-
-	case "Mutation.deleteJudgment":
-		if e.complexity.Mutation.DeleteJudgment == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteJudgment_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteJudgment(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteLocation":
 		if e.complexity.Mutation.DeleteLocation == nil {
@@ -1324,7 +1312,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateCompetitionInput,
 		ec.unmarshalInputCreateGroupInput,
 		ec.unmarshalInputCreateInformationInput,
-		ec.unmarshalInputCreateJudgmentInput,
 		ec.unmarshalInputCreateLocationInput,
 		ec.unmarshalInputCreateSceneInput,
 		ec.unmarshalInputCreateSportsInput,
@@ -1658,29 +1645,6 @@ func (ec *executionContext) field_Mutation_createInformation_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_createJudgment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_createJudgment_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_createJudgment_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.CreateJudgmentInput, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCreateJudgmentInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateJudgmentInput(ctx, tmp)
-	}
-
-	var zeroVal model.CreateJudgmentInput
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_createLocation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1917,29 +1881,6 @@ func (ec *executionContext) field_Mutation_deleteInformation_args(ctx context.Co
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_deleteInformation_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteJudgment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_deleteJudgment_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_deleteJudgment_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -3166,6 +3107,50 @@ func (ec *executionContext) fieldContext_Competition_name(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Competition_type(ctx context.Context, field graphql.CollectedField, obj *model.Competition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Competition_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.CompetitionType)
+	fc.Result = res
+	return ec.marshalNCompetitionType2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Competition_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Competition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type CompetitionType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Competition_teams(ctx context.Context, field graphql.CollectedField, obj *model.Competition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Competition_teams(ctx, field)
 	if err != nil {
@@ -3279,8 +3264,8 @@ func (ec *executionContext) fieldContext_Competition_matches(_ context.Context, 
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -3747,14 +3732,11 @@ func (ec *executionContext) _Judgment_name(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Judgment_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4076,8 +4058,8 @@ func (ec *executionContext) fieldContext_Location_matches(_ context.Context, fie
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -4312,6 +4294,8 @@ func (ec *executionContext) fieldContext_Match_competition(_ context.Context, fi
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -4419,6 +4403,8 @@ func (ec *executionContext) fieldContext_Match_entries(_ context.Context, field 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_MatchEntry_id(ctx, field)
 			case "team":
 				return ec.fieldContext_MatchEntry_team(ctx, field)
 			case "score":
@@ -4430,8 +4416,8 @@ func (ec *executionContext) fieldContext_Match_entries(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Match_judgments(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Match_judgments(ctx, field)
+func (ec *executionContext) _Match_judgment(ctx context.Context, field graphql.CollectedField, obj *model.Match) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Match_judgment(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -4444,24 +4430,21 @@ func (ec *executionContext) _Match_judgments(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Match().Judgments(rctx, obj)
+		return ec.resolvers.Match().Judgment(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Judgment)
+	res := resTmp.(*model.Judgment)
 	fc.Result = res
-	return ec.marshalNJudgment2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentᚄ(ctx, field.Selections, res)
+	return ec.marshalOJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Match_judgments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Match_judgment(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Match",
 		Field:      field,
@@ -4481,6 +4464,50 @@ func (ec *executionContext) fieldContext_Match_judgments(_ context.Context, fiel
 				return ec.fieldContext_Judgment_group(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MatchEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.MatchEntry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_MatchEntry_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_MatchEntry_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MatchEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4507,14 +4534,11 @@ func (ec *executionContext) _MatchEntry_team(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Team)
 	fc.Result = res
-	return ec.marshalNTeam2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐTeam(ctx, field.Selections, res)
+	return ec.marshalOTeam2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐTeam(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MatchEntry_team(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6132,6 +6156,8 @@ func (ec *executionContext) fieldContext_Mutation_createCompetition(ctx context.
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -6197,6 +6223,8 @@ func (ec *executionContext) fieldContext_Mutation_updateCompetition(ctx context.
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -6262,6 +6290,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteCompetition(ctx context.
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -6327,6 +6357,8 @@ func (ec *executionContext) fieldContext_Mutation_addCompetitionEntries(ctx cont
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -6392,6 +6424,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteCompetitionEntries(ctx c
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -6467,8 +6501,8 @@ func (ec *executionContext) fieldContext_Mutation_createMatch(ctx context.Contex
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -6540,8 +6574,8 @@ func (ec *executionContext) fieldContext_Mutation_updateMatchDetail(ctx context.
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -6613,8 +6647,8 @@ func (ec *executionContext) fieldContext_Mutation_updateMatchResult(ctx context.
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -6686,8 +6720,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteMatch(ctx context.Contex
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -6759,8 +6793,8 @@ func (ec *executionContext) fieldContext_Mutation_addMatchEntries(ctx context.Co
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -6832,8 +6866,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteMatchEntries(ctx context
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -6919,8 +6953,8 @@ func (ec *executionContext) fieldContext_Mutation_createJudgment(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateJudgment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateJudgment(ctx, field)
+func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_users(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6933,7 +6967,7 @@ func (ec *executionContext) _Mutation_updateJudgment(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateJudgment(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateJudgmentInput))
+		return ec.resolvers.Query().Users(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6945,43 +6979,34 @@ func (ec *executionContext) _Mutation_updateJudgment(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Judgment)
+	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalNJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateJudgment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Mutation",
+		Object:     "Query",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Judgment_id(ctx, field)
+				return ec.fieldContext_User_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Judgment_name(ctx, field)
-			case "user":
-				return ec.fieldContext_Judgment_user(ctx, field)
-			case "team":
-				return ec.fieldContext_Judgment_team(ctx, field)
-			case "group":
-				return ec.fieldContext_Judgment_group(ctx, field)
+				return ec.fieldContext_User_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "groups":
+				return ec.fieldContext_User_groups(ctx, field)
+			case "teams":
+				return ec.fieldContext_User_teams(ctx, field)
+			case "judgments":
+				return ec.fieldContext_User_judgments(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateJudgment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -7047,133 +7072,6 @@ func (ec *executionContext) fieldContext_Mutation_deleteJudgment(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteJudgment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_users(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Users(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "groups":
-				return ec.fieldContext_User_groups(ctx, field)
-			case "teams":
-				return ec.fieldContext_User_teams(ctx, field)
-			case "judgments":
-				return ec.fieldContext_User_judgments(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_user(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().User(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "groups":
-				return ec.fieldContext_User_groups(ctx, field)
-			case "teams":
-				return ec.fieldContext_User_teams(ctx, field)
-			case "judgments":
-				return ec.fieldContext_User_judgments(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_user_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7355,6 +7253,121 @@ func (ec *executionContext) fieldContext_Query_group(ctx context.Context, field 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_group_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_sports(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sports(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Sports(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Sport)
+	fc.Result = res
+	return ec.marshalNSport2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Sport_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Sport_name(ctx, field)
+			case "weight":
+				return ec.fieldContext_Sport_weight(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_sport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sport(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Sport(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Sport)
+	fc.Result = res
+	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Sport_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Sport_name(ctx, field)
+			case "weight":
+				return ec.fieldContext_Sport_weight(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7991,6 +8004,8 @@ func (ec *executionContext) fieldContext_Query_competitions(_ context.Context, f
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -8045,6 +8060,8 @@ func (ec *executionContext) fieldContext_Query_competition(ctx context.Context, 
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -8120,8 +8137,8 @@ func (ec *executionContext) fieldContext_Query_matches(_ context.Context, field 
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -8182,8 +8199,8 @@ func (ec *executionContext) fieldContext_Query_match(ctx context.Context, field 
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -8921,6 +8938,8 @@ func (ec *executionContext) fieldContext_Team_competitions(_ context.Context, fi
 				return ec.fieldContext_Competition_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Competition_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Competition_type(ctx, field)
 			case "teams":
 				return ec.fieldContext_Competition_teams(ctx, field)
 			case "matches":
@@ -8985,8 +9004,8 @@ func (ec *executionContext) fieldContext_Team_matches(_ context.Context, field g
 				return ec.fieldContext_Match_winnerTeam(ctx, field)
 			case "entries":
 				return ec.fieldContext_Match_entries(ctx, field)
-			case "judgments":
-				return ec.fieldContext_Match_judgments(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
 		},
@@ -11312,7 +11331,7 @@ func (ec *executionContext) unmarshalInputCreateCompetitionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name"}
+	fieldsInOrder := [...]string{"name", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11326,6 +11345,13 @@ func (ec *executionContext) unmarshalInputCreateCompetitionInput(ctx context.Con
 				return it, err
 			}
 			it.Name = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNCompetitionType2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
 		}
 	}
 
@@ -11387,47 +11413,6 @@ func (ec *executionContext) unmarshalInputCreateInformationInput(ctx context.Con
 				return it, err
 			}
 			it.Content = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputCreateJudgmentInput(ctx context.Context, obj any) (model.CreateJudgmentInput, error) {
-	var it model.CreateJudgmentInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "name", "entry"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "entry":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entry"))
-			data, err := ec.unmarshalNJudgmentEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentEntry(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Entry = data
 		}
 	}
 
@@ -11522,7 +11507,7 @@ func (ec *executionContext) unmarshalInputCreateMatchInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"time", "status", "locationId", "competitionId", "teamIds"}
+	fieldsInOrder := [...]string{"time", "status", "locationId", "competitionId", "teamIds", "judgment"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11559,11 +11544,18 @@ func (ec *executionContext) unmarshalInputCreateMatchInput(ctx context.Context, 
 			it.CompetitionID = data
 		case "teamIds":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamIds"))
-			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.TeamIds = data
+		case "judgment":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("judgment"))
+			data, err := ec.unmarshalOJudgmentEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentEntry(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Judgment = data
 		}
 	}
 
@@ -11652,13 +11644,20 @@ func (ec *executionContext) unmarshalInputJudgmentEntry(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"userId", "teamId", "groupId"}
+	fieldsInOrder := [...]string{"name", "userId", "teamId", "groupId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		case "userId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
@@ -11788,7 +11787,7 @@ func (ec *executionContext) unmarshalInputUpdateCompetitionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name"}
+	fieldsInOrder := [...]string{"name", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11802,6 +11801,13 @@ func (ec *executionContext) unmarshalInputUpdateCompetitionInput(ctx context.Con
 				return it, err
 			}
 			it.Name = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOCompetitionType2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
 		}
 	}
 
@@ -11896,8 +11902,8 @@ func (ec *executionContext) unmarshalInputUpdateInformationInput(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateJudgmentInput(ctx context.Context, obj any) (model.UpdateJudgmentInput, error) {
-	var it model.UpdateJudgmentInput
+func (ec *executionContext) unmarshalInputUpdateInformationInput(ctx context.Context, obj any) (model.UpdateInformationInput, error) {
+	var it model.UpdateInformationInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12295,6 +12301,11 @@ func (ec *executionContext) _Competition(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "type":
+			out.Values[i] = ec._Competition_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "teams":
 			field := field
 
@@ -12560,9 +12571,182 @@ func (ec *executionContext) _Judgment(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "name":
 			out.Values[i] = ec._Judgment_name(ctx, field, obj)
+		case "user":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Judgment_user(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "team":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Judgment_team(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "group":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Judgment_group(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "judgments":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Group_judgments(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var judgmentImplementors = []string{"Judgment"}
+
+func (ec *executionContext) _Judgment(ctx context.Context, sel ast.SelectionSet, obj *model.Judgment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, judgmentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Judgment")
+		case "id":
+			out.Values[i] = ec._Judgment_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "name":
+			out.Values[i] = ec._Judgment_name(ctx, field, obj)
 		case "user":
 			field := field
 
@@ -12841,6 +13025,104 @@ func (ec *executionContext) _Judgment(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var informationImplementors = []string{"Information"}
+
+func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionSet, obj *model.Information) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, informationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Information")
+		case "id":
+			out.Values[i] = ec._Information_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "title":
+			out.Values[i] = ec._Information_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._Information_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var informationImplementors = []string{"Information"}
+
+func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionSet, obj *model.Information) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, informationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Information")
+		case "id":
+			out.Values[i] = ec._Information_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "title":
+			out.Values[i] = ec._Information_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._Information_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13209,19 +13491,16 @@ func (ec *executionContext) _Match(ctx context.Context, sel ast.SelectionSet, ob
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "judgments":
+		case "judgment":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Match_judgments(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
+				res = ec._Match_judgment(ctx, field, obj)
 				return res
 			}
 
@@ -13279,11 +13558,13 @@ func (ec *executionContext) _MatchEntry(ctx context.Context, sel ast.SelectionSe
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("MatchEntry")
-		case "team":
-			out.Values[i] = ec._MatchEntry_team(ctx, field, obj)
+		case "id":
+			out.Values[i] = ec._MatchEntry_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "team":
+			out.Values[i] = ec._MatchEntry_team(ctx, field, obj)
 		case "score":
 			out.Values[i] = ec._MatchEntry_score(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13569,23 +13850,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "createJudgment":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createJudgment(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "updateJudgment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateJudgment(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deleteJudgment":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteJudgment(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -15021,6 +15288,16 @@ func (ec *executionContext) marshalNCompetition2ᚖsportsᚑdayᚋapiᚋgraphᚋ
 	return ec._Competition(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNCompetitionType2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionType(ctx context.Context, v any) (model.CompetitionType, error) {
+	var res model.CompetitionType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCompetitionType2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionType(ctx context.Context, sel ast.SelectionSet, v model.CompetitionType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNCreateCompetitionInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateCompetitionInput(ctx context.Context, v any) (model.CreateCompetitionInput, error) {
 	res, err := ec.unmarshalInputCreateCompetitionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15033,11 +15310,6 @@ func (ec *executionContext) unmarshalNCreateGroupInput2sportsᚑdayᚋapiᚋgrap
 
 func (ec *executionContext) unmarshalNCreateInformationInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateInformationInput(ctx context.Context, v any) (model.CreateInformationInput, error) {
 	res, err := ec.unmarshalInputCreateInformationInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNCreateJudgmentInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateJudgmentInput(ctx context.Context, v any) (model.CreateJudgmentInput, error) {
-	res, err := ec.unmarshalInputCreateJudgmentInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -15977,6 +16249,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOCompetitionType2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionType(ctx context.Context, v any) (*model.CompetitionType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.CompetitionType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCompetitionType2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionType(ctx context.Context, sel ast.SelectionSet, v *model.CompetitionType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalOGroup2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v *model.Group) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -16054,6 +16342,13 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalOJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx context.Context, sel ast.SelectionSet, v *model.Judgment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Judgment(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOJudgmentEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentEntry(ctx context.Context, v any) (*model.JudgmentEntry, error) {
 	if v == nil {
 		return nil, nil
@@ -16096,6 +16391,16 @@ func (ec *executionContext) marshalOMatchStatus2ᚖsportsᚑdayᚋapiᚋgraphᚋ
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOString2string(ctx context.Context, v any) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

@@ -91,7 +91,7 @@ func main() {
 	sceneService := service.NewScene(db, sceneRepository)
 	informationService := service.NewInformation(db, informationRepository)
 	competitionService := service.NewCompetition(db, competitionRepository, teamRepository)
-	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository)
+	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository)
 
 	// graphql
