@@ -31,14 +31,6 @@ type CreateLocationInput struct {
 	Name string `json:"name"`
 }
 
-type CreateSceneInput struct {
-	Name string `json:"name"`
-}
-
-type CreateSportsInput struct {
-	Name string `json:"name"`
-}
-
 type CreateMatchInput struct {
 	Time          string         `json:"time"`
 	Status        MatchStatus    `json:"status"`
@@ -46,6 +38,14 @@ type CreateMatchInput struct {
 	CompetitionID string         `json:"competitionId"`
 	TeamIds       []string       `json:"teamIds,omitempty"`
 	Judgment      *JudgmentEntry `json:"judgment,omitempty"`
+}
+
+type CreateSceneInput struct {
+	Name string `json:"name"`
+}
+
+type CreateSportsInput struct {
+	Name string `json:"name"`
 }
 
 type CreateTeamInput struct {
@@ -137,15 +137,6 @@ type UpdateLocationInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
-type UpdateSceneInput struct {
-	Name *string `json:"name,omitempty"`
-}
-
-type UpdateSportsInput struct {
-	Name   *string `json:"name,omitempty"`
-	Weight *int32  `json:"weight,omitempty"`
-}
-
 type UpdateMatchDetailInput struct {
 	Time       *string `json:"time,omitempty"`
 	LocationID *string `json:"locationId,omitempty"`
@@ -164,6 +155,15 @@ type UpdateMatchResultInput struct {
 	Status       *MatchStatus        `json:"status,omitempty"`
 	WinnerTeamID *string             `json:"winnerTeamId,omitempty"`
 	Results      []*MatchResultInput `json:"results,omitempty"`
+}
+
+type UpdateSceneInput struct {
+	Name *string `json:"name,omitempty"`
+}
+
+type UpdateSportsInput struct {
+	Name   *string `json:"name,omitempty"`
+	Weight *int32  `json:"weight,omitempty"`
 }
 
 type UpdateTeamInput struct {

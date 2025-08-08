@@ -76,18 +76,18 @@ type ComplexityRoot struct {
 		Users     func(childComplexity int) int
 	}
 
-	Judgment struct {
-		Group func(childComplexity int) int
-		ID    func(childComplexity int) int
-		Name  func(childComplexity int) int
-		Teams func(childComplexity int) int
-		Users func(childComplexity int) int
-	}
-
 	Information struct {
 		Content func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Title   func(childComplexity int) int
+	}
+
+	Judgment struct {
+		Group func(childComplexity int) int
+		ID    func(childComplexity int) int
+		Name  func(childComplexity int) int
+		Team  func(childComplexity int) int
+		User  func(childComplexity int) int
 	}
 
 	Location struct {
@@ -115,43 +115,45 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddCompetitionEntries    func(childComplexity int, id string, input model.UpdateCompetitionEntriesInput) int
-		AddGroupUsers             func(childComplexity int, id string, input model.UpdateGroupUsersInput) int
+		AddGroupUsers            func(childComplexity int, id string, input model.UpdateGroupUsersInput) int
 		AddMatchEntries          func(childComplexity int, id string, input model.UpdateMatchEntriesInput) int
 		CreateCompetition        func(childComplexity int, input model.CreateCompetitionInput) int
-		CreateGroup               func(childComplexity int, input model.CreateGroupInput) int
-		CreateInformation func(childComplexity int, input model.CreateInformationInput) int
-		CreateLocation            func(childComplexity int, input model.CreateLocationInput) int
-		CreateScene       func(childComplexity int, input model.CreateSceneInput) int
-		CreateSports      func(childComplexity int, input model.CreateSportsInput) int
+		CreateGroup              func(childComplexity int, input model.CreateGroupInput) int
+		CreateInformation        func(childComplexity int, input model.CreateInformationInput) int
+		CreateLocation           func(childComplexity int, input model.CreateLocationInput) int
 		CreateMatch              func(childComplexity int, input model.CreateMatchInput) int
-		CreateTeam                func(childComplexity int, input model.CreateTeamInput) int
-		CreateUser                func(childComplexity int, input model.CreateUserInput) int
+		CreateScene              func(childComplexity int, input model.CreateSceneInput) int
+		CreateSports             func(childComplexity int, input model.CreateSportsInput) int
+		CreateTeam               func(childComplexity int, input model.CreateTeamInput) int
+		CreateUser               func(childComplexity int, input model.CreateUserInput) int
 		DeleteCompetition        func(childComplexity int, id string) int
 		DeleteCompetitionEntries func(childComplexity int, id string, input model.UpdateCompetitionEntriesInput) int
-		DeleteGroup               func(childComplexity int, id string) int
-		DeleteInformation func(childComplexity int, id string) int
-		DeleteLocation    func(childComplexity int, id string) int
-		DeleteScene       func(childComplexity int, id string) int
-		DeleteSports              func(childComplexity int, id string) int
+		DeleteGroup              func(childComplexity int, id string) int
+		DeleteInformation        func(childComplexity int, id string) int
+		DeleteLocation           func(childComplexity int, id string) int
 		DeleteMatch              func(childComplexity int, id string) int
 		DeleteMatchEntries       func(childComplexity int, id string, input model.UpdateMatchEntriesInput) int
-		DeleteTeam                func(childComplexity int, id string) int
-		Login                     func(childComplexity int, input model.LoginInput) int
-		RemoveGroupUsers          func(childComplexity int, id string, input model.UpdateGroupUsersInput) int
+		DeleteScene              func(childComplexity int, id string) int
+		DeleteSports             func(childComplexity int, id string) int
+		DeleteTeam               func(childComplexity int, id string) int
+		Login                    func(childComplexity int, input model.LoginInput) int
+		RemoveGroupUsers         func(childComplexity int, id string, input model.UpdateGroupUsersInput) int
 		UpdateCompetition        func(childComplexity int, id string, input model.UpdateCompetitionInput) int
-		UpdateGroup               func(childComplexity int, id string, input model.UpdateGroupInput) int
-		UpdateInformation func(childComplexity int, id string, input model.UpdateInformationInput) int
+		UpdateGroup              func(childComplexity int, id string, input model.UpdateGroupInput) int
+		UpdateInformation        func(childComplexity int, id string, input model.UpdateInformationInput) int
 		UpdateJudgment           func(childComplexity int, id string, input model.UpdateJudgmentInput) int
-		UpdateLocation            func(childComplexity int, id string, input model.UpdateLocationInput) int
-		UpdateScene       func(childComplexity int, id string, input model.UpdateSceneInput) int
-		UpdateSports      func(childComplexity int, id string, input model.UpdateSportsInput) int
+		UpdateLocation           func(childComplexity int, id string, input model.UpdateLocationInput) int
 		UpdateMatchDetail        func(childComplexity int, id string, input model.UpdateMatchDetailInput) int
 		UpdateMatchResult        func(childComplexity int, id string, input model.UpdateMatchResultInput) int
-		UpdateTeam                func(childComplexity int, id string, input model.UpdateTeamInput) int
-		UpdateTeamUsers           func(childComplexity int, id string, input model.UpdateTeamUsersInput) int
+		UpdateScene              func(childComplexity int, id string, input model.UpdateSceneInput) int
+		UpdateSports             func(childComplexity int, id string, input model.UpdateSportsInput) int
+		UpdateTeam               func(childComplexity int, id string, input model.UpdateTeamInput) int
+		UpdateTeamUsers          func(childComplexity int, id string, input model.UpdateTeamUsersInput) int
 	}
 
 	Query struct {
+		Competition  func(childComplexity int, id string) int
+		Competitions func(childComplexity int) int
 		Group        func(childComplexity int, id string) int
 		Groups       func(childComplexity int) int
 		Information  func(childComplexity int, id string) int
@@ -642,6 +644,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateLocation(childComplexity, args["input"].(model.CreateLocationInput)), true
 
+	case "Mutation.createMatch":
+		if e.complexity.Mutation.CreateMatch == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createMatch_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateMatch(childComplexity, args["input"].(model.CreateMatchInput)), true
+
 	case "Mutation.createScene":
 		if e.complexity.Mutation.CreateScene == nil {
 			break
@@ -665,18 +679,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateSports(childComplexity, args["input"].(model.CreateSportsInput)), true
-
-	case "Mutation.createMatch":
-		if e.complexity.Mutation.CreateMatch == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createMatch_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateMatch(childComplexity, args["input"].(model.CreateMatchInput)), true
 
 	case "Mutation.createTeam":
 		if e.complexity.Mutation.CreateTeam == nil {
@@ -762,30 +764,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteLocation(childComplexity, args["id"].(string)), true
 
-	case "Mutation.deleteScene":
-		if e.complexity.Mutation.DeleteScene == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteScene_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteScene(childComplexity, args["id"].(string)), true
-
-	case "Mutation.deleteSports":
-		if e.complexity.Mutation.DeleteSports == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteSports_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteSports(childComplexity, args["id"].(string)), true
-
 	case "Mutation.deleteMatch":
 		if e.complexity.Mutation.DeleteMatch == nil {
 			break
@@ -809,6 +787,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteMatchEntries(childComplexity, args["id"].(string), args["input"].(model.UpdateMatchEntriesInput)), true
+
+	case "Mutation.deleteScene":
+		if e.complexity.Mutation.DeleteScene == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteScene_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteScene(childComplexity, args["id"].(string)), true
+
+	case "Mutation.deleteSports":
+		if e.complexity.Mutation.DeleteSports == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSports_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSports(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteTeam":
 		if e.complexity.Mutation.DeleteTeam == nil {
@@ -906,30 +908,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateLocation(childComplexity, args["id"].(string), args["input"].(model.UpdateLocationInput)), true
 
-	case "Mutation.updateScene":
-		if e.complexity.Mutation.UpdateScene == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateScene_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateScene(childComplexity, args["id"].(string), args["input"].(model.UpdateSceneInput)), true
-
-	case "Mutation.updateSports":
-		if e.complexity.Mutation.UpdateSports == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateSports_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateSports(childComplexity, args["id"].(string), args["input"].(model.UpdateSportsInput)), true
-
 	case "Mutation.updateMatchDetail":
 		if e.complexity.Mutation.UpdateMatchDetail == nil {
 			break
@@ -953,6 +931,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateMatchResult(childComplexity, args["id"].(string), args["input"].(model.UpdateMatchResultInput)), true
+
+	case "Mutation.updateScene":
+		if e.complexity.Mutation.UpdateScene == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateScene_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateScene(childComplexity, args["id"].(string), args["input"].(model.UpdateSceneInput)), true
+
+	case "Mutation.updateSports":
+		if e.complexity.Mutation.UpdateSports == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSports_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateSports(childComplexity, args["id"].(string), args["input"].(model.UpdateSportsInput)), true
 
 	case "Mutation.updateTeam":
 		if e.complexity.Mutation.UpdateTeam == nil {
@@ -1313,9 +1315,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateGroupInput,
 		ec.unmarshalInputCreateInformationInput,
 		ec.unmarshalInputCreateLocationInput,
+		ec.unmarshalInputCreateMatchInput,
 		ec.unmarshalInputCreateSceneInput,
 		ec.unmarshalInputCreateSportsInput,
-		ec.unmarshalInputCreateMatchInput,
 		ec.unmarshalInputCreateTeamInput,
 		ec.unmarshalInputCreateUserInput,
 		ec.unmarshalInputJudgmentEntry,
@@ -1328,12 +1330,12 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateInformationInput,
 		ec.unmarshalInputUpdateJudgmentInput,
 		ec.unmarshalInputUpdateLocationInput,
-		ec.unmarshalInputUpdateSceneInput,
-		ec.unmarshalInputUpdateSportsInput,
 		ec.unmarshalInputUpdateMatchDetailInput,
 		ec.unmarshalInputUpdateMatchEntriesInput,
 		ec.unmarshalInputUpdateMatchEntryScoreInput,
 		ec.unmarshalInputUpdateMatchResultInput,
+		ec.unmarshalInputUpdateSceneInput,
+		ec.unmarshalInputUpdateSportsInput,
 		ec.unmarshalInputUpdateTeamInput,
 		ec.unmarshalInputUpdateTeamUsersInput,
 	)
@@ -1668,6 +1670,29 @@ func (ec *executionContext) field_Mutation_createLocation_argsInput(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_createMatch_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createMatch_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_createMatch_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.CreateMatchInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCreateMatchInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateMatchInput(ctx, tmp)
+	}
+
+	var zeroVal model.CreateMatchInput
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_createScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1711,29 +1736,6 @@ func (ec *executionContext) field_Mutation_createSports_argsInput(
 	}
 
 	var zeroVal model.CreateSportsInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_createMatch_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_createMatch_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_createMatch_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.CreateMatchInput, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCreateMatchInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateMatchInput(ctx, tmp)
-	}
-
-	var zeroVal model.CreateMatchInput
 	return zeroVal, nil
 }
 
@@ -1916,52 +1918,6 @@ func (ec *executionContext) field_Mutation_deleteLocation_argsID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_deleteScene_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_deleteScene_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteSports_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_deleteSports_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_deleteSports_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_deleteMatchEntries_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2014,6 +1970,52 @@ func (ec *executionContext) field_Mutation_deleteMatch_args(ctx context.Context,
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_deleteMatch_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteScene_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteScene_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSports_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteSports_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteSports_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -2318,88 +2320,6 @@ func (ec *executionContext) field_Mutation_updateLocation_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_updateScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_updateScene_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateScene_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_updateScene_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateScene_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.UpdateSceneInput, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNUpdateSceneInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSceneInput(ctx, tmp)
-	}
-
-	var zeroVal model.UpdateSceneInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateSports_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_updateSports_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateSports_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_updateSports_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateSports_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.UpdateSportsInput, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNUpdateSportsInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSportsInput(ctx, tmp)
-	}
-
-	var zeroVal model.UpdateSportsInput
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_updateMatchDetail_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2479,6 +2399,88 @@ func (ec *executionContext) field_Mutation_updateMatchResult_argsInput(
 	}
 
 	var zeroVal model.UpdateMatchResultInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateScene_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Mutation_updateScene_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateScene_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateScene_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.UpdateSceneInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateSceneInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSceneInput(ctx, tmp)
+	}
+
+	var zeroVal model.UpdateSceneInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSports_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateSports_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Mutation_updateSports_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateSports_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSports_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.UpdateSportsInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNUpdateSportsInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSportsInput(ctx, tmp)
+	}
+
+	var zeroVal model.UpdateSportsInput
 	return zeroVal, nil
 }
 
@@ -2702,6 +2704,29 @@ func (ec *executionContext) field_Query_location_argsID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_match_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_match_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_match_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_scene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2736,29 +2761,6 @@ func (ec *executionContext) field_Query_sport_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 func (ec *executionContext) field_Query_sport_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_match_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_match_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_match_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -3479,6 +3481,62 @@ func (ec *executionContext) fieldContext_Group_users(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Group_judgments(ctx context.Context, field graphql.CollectedField, obj *model.Group) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Group_judgments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Group().Judgments(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Judgment)
+	fc.Result = res
+	return ec.marshalNJudgment2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Group_judgments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Group",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Judgment_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Judgment_name(ctx, field)
+			case "user":
+				return ec.fieldContext_Judgment_user(ctx, field)
+			case "team":
+				return ec.fieldContext_Judgment_team(ctx, field)
+			case "group":
+				return ec.fieldContext_Judgment_group(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Information_id(ctx context.Context, field graphql.CollectedField, obj *model.Information) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Information_id(ctx, field)
 	if err != nil {
@@ -3606,62 +3664,6 @@ func (ec *executionContext) fieldContext_Information_content(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Group_judgments(ctx context.Context, field graphql.CollectedField, obj *model.Group) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Group_judgments(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Group().Judgments(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Judgment)
-	fc.Result = res
-	return ec.marshalNJudgment2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Group_judgments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Group",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Judgment_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Judgment_name(ctx, field)
-			case "user":
-				return ec.fieldContext_Judgment_user(ctx, field)
-			case "team":
-				return ec.fieldContext_Judgment_team(ctx, field)
-			case "group":
-				return ec.fieldContext_Judgment_group(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
 		},
 	}
 	return fc, nil
@@ -6886,8 +6888,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteMatchEntries(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createJudgment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createJudgment(ctx, field)
+func (ec *executionContext) _Mutation_updateJudgment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateJudgment(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6900,7 +6902,7 @@ func (ec *executionContext) _Mutation_createJudgment(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateJudgment(rctx, fc.Args["input"].(model.CreateJudgmentInput))
+		return ec.resolvers.Mutation().UpdateJudgment(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateJudgmentInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6917,7 +6919,7 @@ func (ec *executionContext) _Mutation_createJudgment(ctx context.Context, field 
 	return ec.marshalNJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createJudgment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateJudgment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -6946,7 +6948,7 @@ func (ec *executionContext) fieldContext_Mutation_createJudgment(ctx context.Con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createJudgment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateJudgment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7011,8 +7013,8 @@ func (ec *executionContext) fieldContext_Query_users(_ context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteJudgment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteJudgment(ctx, field)
+func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_user(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7025,7 +7027,7 @@ func (ec *executionContext) _Mutation_deleteJudgment(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteJudgment(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Query().User(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7037,31 +7039,33 @@ func (ec *executionContext) _Mutation_deleteJudgment(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Judgment)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteJudgment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Mutation",
+		Object:     "Query",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Judgment_id(ctx, field)
+				return ec.fieldContext_User_id(ctx, field)
 			case "name":
-				return ec.fieldContext_Judgment_name(ctx, field)
-			case "user":
-				return ec.fieldContext_Judgment_user(ctx, field)
-			case "team":
-				return ec.fieldContext_Judgment_team(ctx, field)
-			case "group":
-				return ec.fieldContext_Judgment_group(ctx, field)
+				return ec.fieldContext_User_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "groups":
+				return ec.fieldContext_User_groups(ctx, field)
+			case "teams":
+				return ec.fieldContext_User_teams(ctx, field)
+			case "judgments":
+				return ec.fieldContext_User_judgments(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	defer func() {
@@ -7071,7 +7075,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteJudgment(ctx context.Con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteJudgment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_user_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7253,121 +7257,6 @@ func (ec *executionContext) fieldContext_Query_group(ctx context.Context, field 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_group_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_sports(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_sports(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Sports(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Sport)
-	fc.Result = res
-	return ec.marshalNSport2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Sport_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Sport_name(ctx, field)
-			case "weight":
-				return ec.fieldContext_Sport_weight(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_sport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_sport(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Sport(rctx, fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Sport)
-	fc.Result = res
-	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Sport_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Sport_name(ctx, field)
-			case "weight":
-				return ec.fieldContext_Sport_weight(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_sport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11446,60 +11335,6 @@ func (ec *executionContext) unmarshalInputCreateLocationInput(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreateSceneInput(ctx context.Context, obj any) (model.CreateSceneInput, error) {
-	var it model.CreateSceneInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputCreateSportsInput(ctx context.Context, obj any) (model.CreateSportsInput, error) {
-	var it model.CreateSportsInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputCreateMatchInput(ctx context.Context, obj any) (model.CreateMatchInput, error) {
 	var it model.CreateMatchInput
 	asMap := map[string]any{}
@@ -11556,6 +11391,60 @@ func (ec *executionContext) unmarshalInputCreateMatchInput(ctx context.Context, 
 				return it, err
 			}
 			it.Judgment = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateSceneInput(ctx context.Context, obj any) (model.CreateSceneInput, error) {
+	var it model.CreateSceneInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateSportsInput(ctx context.Context, obj any) (model.CreateSportsInput, error) {
+	var it model.CreateSportsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		}
 	}
 
@@ -11902,27 +11791,20 @@ func (ec *executionContext) unmarshalInputUpdateInformationInput(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateInformationInput(ctx context.Context, obj any) (model.UpdateInformationInput, error) {
-	var it model.UpdateInformationInput
+func (ec *executionContext) unmarshalInputUpdateJudgmentInput(ctx context.Context, obj any) (model.UpdateJudgmentInput, error) {
+	var it model.UpdateJudgmentInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "entry"}
+	fieldsInOrder := [...]string{"entry"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
 		case "entry":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entry"))
 			data, err := ec.unmarshalOJudgmentEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentEntry(ctx, v)
@@ -11957,67 +11839,6 @@ func (ec *executionContext) unmarshalInputUpdateLocationInput(ctx context.Contex
 				return it, err
 			}
 			it.Name = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUpdateSceneInput(ctx context.Context, obj any) (model.UpdateSceneInput, error) {
-	var it model.UpdateSceneInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUpdateSportsInput(ctx context.Context, obj any) (model.UpdateSportsInput, error) {
-	var it model.UpdateSportsInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "weight"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "weight":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weight"))
-			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Weight = data
 		}
 	}
 
@@ -12154,6 +11975,67 @@ func (ec *executionContext) unmarshalInputUpdateMatchResultInput(ctx context.Con
 				return it, err
 			}
 			it.Results = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateSceneInput(ctx context.Context, obj any) (model.UpdateSceneInput, error) {
+	var it model.UpdateSceneInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateSportsInput(ctx context.Context, obj any) (model.UpdateSportsInput, error) {
+	var it model.UpdateSportsInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "weight"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "weight":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("weight"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Weight = data
 		}
 	}
 
@@ -12553,159 +12435,32 @@ func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
-var judgmentImplementors = []string{"Judgment"}
+var informationImplementors = []string{"Information"}
 
-func (ec *executionContext) _Judgment(ctx context.Context, sel ast.SelectionSet, obj *model.Judgment) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, judgmentImplementors)
+func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionSet, obj *model.Information) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, informationImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Judgment")
+			out.Values[i] = graphql.MarshalString("Information")
 		case "id":
-			out.Values[i] = ec._Judgment_id(ctx, field, obj)
+			out.Values[i] = ec._Information_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
-		case "name":
-			out.Values[i] = ec._Judgment_name(ctx, field, obj)
-		case "user":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Judgment_user(ctx, field, obj)
-				return res
+		case "title":
+			out.Values[i] = ec._Information_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
+		case "content":
+			out.Values[i] = ec._Information_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "team":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Judgment_team(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "group":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Judgment_group(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "judgments":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Group_judgments(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12846,381 +12601,6 @@ func (ec *executionContext) _Judgment(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "judgments":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Group_judgments(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var judgmentImplementors = []string{"Judgment"}
-
-func (ec *executionContext) _Judgment(ctx context.Context, sel ast.SelectionSet, obj *model.Judgment) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, judgmentImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Judgment")
-		case "id":
-			out.Values[i] = ec._Judgment_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._Judgment_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "user":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Judgment_user(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "team":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Judgment_team(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "group":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Judgment_group(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var informationImplementors = []string{"Information"}
-
-func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionSet, obj *model.Information) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, informationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Information")
-		case "id":
-			out.Values[i] = ec._Information_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "title":
-			out.Values[i] = ec._Information_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "content":
-			out.Values[i] = ec._Information_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var informationImplementors = []string{"Information"}
-
-func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionSet, obj *model.Information) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, informationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Information")
-		case "id":
-			out.Values[i] = ec._Information_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "title":
-			out.Values[i] = ec._Information_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "content":
-			out.Values[i] = ec._Information_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var informationImplementors = []string{"Information"}
-
-func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionSet, obj *model.Information) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, informationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Information")
-		case "id":
-			out.Values[i] = ec._Information_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "title":
-			out.Values[i] = ec._Information_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "content":
-			out.Values[i] = ec._Information_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var informationImplementors = []string{"Information"}
-
-func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionSet, obj *model.Information) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, informationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Information")
-		case "id":
-			out.Values[i] = ec._Information_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "title":
-			out.Values[i] = ec._Information_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "content":
-			out.Values[i] = ec._Information_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15318,6 +14698,11 @@ func (ec *executionContext) unmarshalNCreateLocationInput2sportsᚑdayᚋapiᚋg
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateMatchInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateMatchInput(ctx context.Context, v any) (model.CreateMatchInput, error) {
+	res, err := ec.unmarshalInputCreateMatchInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateSceneInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateSceneInput(ctx context.Context, v any) (model.CreateSceneInput, error) {
 	res, err := ec.unmarshalInputCreateSceneInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15325,11 +14710,6 @@ func (ec *executionContext) unmarshalNCreateSceneInput2sportsᚑdayᚋapiᚋgrap
 
 func (ec *executionContext) unmarshalNCreateSportsInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateSportsInput(ctx context.Context, v any) (model.CreateSportsInput, error) {
 	res, err := ec.unmarshalInputCreateSportsInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNCreateMatchInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateMatchInput(ctx context.Context, v any) (model.CreateMatchInput, error) {
-	res, err := ec.unmarshalInputCreateMatchInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -15448,6 +14828,64 @@ func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast
 	return ret
 }
 
+func (ec *executionContext) marshalNInformation2sportsᚑdayᚋapiᚋgraphᚋmodelᚐInformation(ctx context.Context, sel ast.SelectionSet, v model.Information) graphql.Marshaler {
+	return ec._Information(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNInformation2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐInformationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Information) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInformation2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐInformation(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNInformation2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐInformation(ctx context.Context, sel ast.SelectionSet, v *model.Information) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Information(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNInt2int32(ctx context.Context, v any) (int32, error) {
 	res, err := graphql.UnmarshalInt32(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15461,6 +14899,64 @@ func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNJudgment2sportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx context.Context, sel ast.SelectionSet, v model.Judgment) graphql.Marshaler {
+	return ec._Judgment(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNJudgment2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Judgment) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx context.Context, sel ast.SelectionSet, v *model.Judgment) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Judgment(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNLocation2sportsᚑdayᚋapiᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v model.Location) graphql.Marshaler {
@@ -15524,122 +15020,6 @@ func (ec *executionContext) marshalNLocation2ᚖsportsᚑdayᚋapiᚋgraphᚋmod
 func (ec *executionContext) unmarshalNLoginInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
 	res, err := ec.unmarshalInputLoginInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNScene2sportsᚑdayᚋapiᚋgraphᚋmodelᚐScene(ctx context.Context, sel ast.SelectionSet, v model.Scene) graphql.Marshaler {
-	return ec._Scene(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNScene2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSceneᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Scene) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐScene(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐScene(ctx context.Context, sel ast.SelectionSet, v *model.Scene) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Scene(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNSport2sportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v model.Sport) graphql.Marshaler {
-	return ec._Sport(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNSport2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Sport) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v *model.Sport) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Sport(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNMatch2sportsᚑdayᚋapiᚋgraphᚋmodelᚐMatch(ctx context.Context, sel ast.SelectionSet, v model.Match) graphql.Marshaler {
@@ -15769,6 +15149,122 @@ func (ec *executionContext) marshalNMatchStatus2sportsᚑdayᚋapiᚋgraphᚋmod
 	return v
 }
 
+func (ec *executionContext) marshalNScene2sportsᚑdayᚋapiᚋgraphᚋmodelᚐScene(ctx context.Context, sel ast.SelectionSet, v model.Scene) graphql.Marshaler {
+	return ec._Scene(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNScene2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSceneᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Scene) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐScene(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐScene(ctx context.Context, sel ast.SelectionSet, v *model.Scene) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Scene(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSport2sportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v model.Sport) graphql.Marshaler {
+	return ec._Sport(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSport2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Sport) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v *model.Sport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Sport(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15877,16 +15373,6 @@ func (ec *executionContext) unmarshalNUpdateLocationInput2sportsᚑdayᚋapiᚋg
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateSceneInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSceneInput(ctx context.Context, v any) (model.UpdateSceneInput, error) {
-	res, err := ec.unmarshalInputUpdateSceneInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUpdateSportsInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSportsInput(ctx context.Context, v any) (model.UpdateSportsInput, error) {
-	res, err := ec.unmarshalInputUpdateSportsInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNUpdateMatchDetailInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateMatchDetailInput(ctx context.Context, v any) (model.UpdateMatchDetailInput, error) {
 	res, err := ec.unmarshalInputUpdateMatchDetailInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -15899,6 +15385,16 @@ func (ec *executionContext) unmarshalNUpdateMatchEntriesInput2sportsᚑdayᚋapi
 
 func (ec *executionContext) unmarshalNUpdateMatchResultInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateMatchResultInput(ctx context.Context, v any) (model.UpdateMatchResultInput, error) {
 	res, err := ec.unmarshalInputUpdateMatchResultInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateSceneInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSceneInput(ctx context.Context, v any) (model.UpdateSceneInput, error) {
+	res, err := ec.unmarshalInputUpdateSceneInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateSportsInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateSportsInput(ctx context.Context, v any) (model.UpdateSportsInput, error) {
+	res, err := ec.unmarshalInputUpdateSportsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -16310,22 +15806,6 @@ func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast
 	return ret
 }
 
-func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalInt32(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalInt32(*v)
-	return res
-}
-
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -16339,6 +15819,22 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 	res := graphql.MarshalID(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt32(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt32(*v)
 	return res
 }
 
