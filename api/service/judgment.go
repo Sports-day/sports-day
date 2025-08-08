@@ -54,7 +54,7 @@ func (s *Judgment) Update(ctx context.Context, id string, input model.UpdateJudg
 		}
 		if e.Name != nil {  
     		count++  
-}  
+		}  
 
 		// 1つ以下の場合のみ処理を続行（0個も許可、2個以上はエラー）
 		if count <= 1 {
