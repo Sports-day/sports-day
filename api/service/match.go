@@ -77,6 +77,9 @@ func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_
 
 			// バリデーション: User, Team, Group のうち1つだけが指定されているかチェック
 			count := 0
+			if j.Name != nil {
+				count++
+			}
 			if j.UserID != nil {
 				count++
 			}
