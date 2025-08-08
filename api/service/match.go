@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
+	pkggorm "sports-day/api/pkg/gorm"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
 
@@ -20,15 +20,17 @@ type Match struct {
 	teamRepository        repository.Team
 	locationRepository    repository.Location
 	competitionRepository repository.Competition
+	judgmentRepository    repository.Judgment
 }
 
-func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repository.Team, locationRepository repository.Location, competitionRepository repository.Competition) Match {
+func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repository.Team, locationRepository repository.Location, competitionRepository repository.Competition, judgmentRepository repository.Judgment) Match {
 	return Match{
 		db:                    db,
 		matchRepository:       matchRepository,
 		teamRepository:        teamRepository,
 		locationRepository:    locationRepository,
 		competitionRepository: competitionRepository,
+		judgmentRepository:    judgmentRepository,
 	}
 }
 
@@ -47,7 +49,7 @@ func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_
 			Status:        string(input.Status),
 			LocationID:    input.LocationID,
 			CompetitionID: input.CompetitionID,
-			WinnerTeamID:  sql.NullString{Valid: false},
+			WinnerTeamID:  pkggorm.ToNullString(nil),
 		}
 		created, err := s.matchRepository.Save(ctx, tx, m)
 		if err != nil {
@@ -58,6 +60,56 @@ func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_
 			if _, err := s.matchRepository.AddMatchEntries(ctx, tx, created.ID, input.TeamIds); err != nil {
 				return errors.ErrAddMatchEntry
 			}
+		}
+
+		// 審判を作成（指定されていれば設定、なければnull）
+		judgment := &db_model.Judgment{
+			ID:      created.ID,                // MatchIDと同じIDを使用
+			Name:    pkggorm.ToNullString(nil), // デフォルトは未設定
+			UserID:  pkggorm.ToNullString(nil), // デフォルトは未割り当て
+			TeamID:  pkggorm.ToNullString(nil), // デフォルトは未割り当て
+			GroupID: pkggorm.ToNullString(nil), // デフォルトは未割り当て
+		}
+
+		// 審判が指定されている場合の処理
+		if input.Judgment != nil {
+			j := input.Judgment
+
+			// バリデーション: User, Team, Group のうち1つだけが指定されているかチェック
+			count := 0
+			if j.UserID != nil {
+				count++
+			}
+			if j.TeamID != nil {
+				count++
+			}
+			if j.GroupID != nil {
+				count++
+			}
+
+			// 1つだけ指定されている場合のみ設定
+			if count == 1 {
+				if j.Name != nil {
+					judgment.Name = pkggorm.ToNullString(j.Name)
+				}
+				if j.UserID != nil {
+					judgment.UserID = pkggorm.ToNullString(j.UserID)
+				}
+				if j.TeamID != nil {
+					judgment.TeamID = pkggorm.ToNullString(j.TeamID)
+				}
+				if j.GroupID != nil {
+					judgment.GroupID = pkggorm.ToNullString(j.GroupID)
+				}
+			} else if count > 1 {
+				// 複数指定されている場合はエラー
+				return errors.ErrJudgmentEntryInvalid
+			}
+			// count == 0 の場合は何も設定せず（null値のまま）
+		}
+
+		if _, err := s.judgmentRepository.Save(ctx, tx, judgment); err != nil {
+			return errors.ErrSaveJudgment
 		}
 
 		match = created
@@ -115,7 +167,7 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 			m.Status = string(*input.Status)
 		}
 		if input.WinnerTeamID != nil {
-			m.WinnerTeamID = sql.NullString{String: *input.WinnerTeamID, Valid: true}
+			m.WinnerTeamID = pkggorm.ToNullString(input.WinnerTeamID)
 		}
 
 		updated, err := s.matchRepository.Save(ctx, tx, m)
@@ -223,7 +275,9 @@ func (s *Match) GetMatchEntriesMapByTeamIDs(ctx context.Context, teamIds []strin
 
 	matchEntriesMap := make(map[string][]*db_model.MatchEntry)
 	for _, matchEntry := range matchEntries {
-		matchEntriesMap[matchEntry.TeamID] = append(matchEntriesMap[matchEntry.TeamID], matchEntry)
+		if matchEntry.TeamID.Valid {
+			matchEntriesMap[matchEntry.TeamID.String] = append(matchEntriesMap[matchEntry.TeamID.String], matchEntry)
+		}
 	}
 	return matchEntriesMap, nil
 }
