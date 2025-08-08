@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	"gorm.io/gorm"
 
 	"sports-day/api/db_model"
 	"sports-day/api/pkg/errors"
+	"sports-day/api/pkg/ulid"
 )
 
 type matchRepository struct{}
@@ -68,10 +70,18 @@ func (r *matchRepository) AddMatchEntries(ctx context.Context, db *gorm.DB, matc
 	var entries []*db_model.MatchEntry
 	for _, teamId := range teamIds {
 		entry := &db_model.MatchEntry{
+			ID:      ulid.Make(),
 			MatchID: matchId,
-			TeamID:  teamId,
 			Score:   0,
 		}
+
+		// teamIdが空文字列の場合はNULL値を設定
+		if teamId == "" {
+			entry.TeamID = sql.NullString{Valid: false}
+		} else {
+			entry.TeamID = sql.NullString{String: teamId, Valid: true}
+		}
+
 		if err := db.WithContext(ctx).Create(entry).Error; err != nil {
 			return nil, errors.Wrap(err)
 		}
