@@ -109,17 +109,10 @@ func (s *League) GetLeaguesMapByIDs(ctx context.Context, ids []string) (map[stri
 	return leagueMap, nil
 }
 
-func (s *League) CreateLeagueStanding(ctx context.Context, input *model.CreateLeagueStandingInput) (*db_model.LeagueStanding, error) {
+func (s *League) CreateLeagueStanding(ctx context.Context, id string, teamId string) (*db_model.LeagueStanding, error) {
     standing := &db_model.LeagueStanding{
-        ID:     input.ID,
-        TeamID: input.TeamID,
-        Win:    input.Win,
-        Draw:   input.Draw,
-        Lose:   input.Lose,
-        Gf:     input.Gf,
-        Ga:     input.Ga,
-        Gd:     sql.NullInt64{Valid: true, Int64: input.Gf - input.Ga},
-        Points: input.Points,
+        ID:     id,
+        TeamID: teamId,
     }
 
     savedStanding, err := s.leagueRepository.SaveStanding(ctx, s.db, standing)
