@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"database/sql"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
+	pkggorm "sports-day/api/pkg/gorm"
 	"sports-day/api/repository"
 
 	"gorm.io/gorm"
@@ -24,29 +24,6 @@ func NewJudgment(db *gorm.DB, judgmentRepository repository.Judgment) Judgment {
 	}
 }
 
-func toNullString(ptr *string) sql.NullString {
-	if ptr == nil {
-		return sql.NullString{Valid: false}
-	}
-	return sql.NullString{String: *ptr, Valid: true}
-}
-
-func (s *Judgment) Create(ctx context.Context, input *model.CreateJudgmentInput) (*db_model.Judgment, error) {
-	judgment := &db_model.Judgment{
-		ID:      input.ID,
-		Name:    input.Name,
-		UserID:  toNullString(input.Entry.UserID),
-		TeamID:  toNullString(input.Entry.TeamID),
-		GroupID: toNullString(input.Entry.GroupID),
-	}
-
-	judgment, err := s.judgmentRepository.Save(ctx, s.db, judgment)
-	if err != nil {
-		return nil, errors.ErrSaveJudgment
-	}
-	return judgment, nil
-}
-
 func (s *Judgment) Get(ctx context.Context, id string) (*db_model.Judgment, error) {
 	judgment, err := s.judgmentRepository.Get(ctx, s.db, id)
 	if err != nil {
@@ -61,13 +38,10 @@ func (s *Judgment) Update(ctx context.Context, id string, input model.UpdateJudg
 		return nil, errors.Wrap(err)
 	}
 
-	if input.Name != nil {
-		judgment.Name = *input.Name
-	}
-
 	if input.Entry != nil {
 		e := input.Entry
 
+		// バリデーション: User, Team, Group のうち1つ以下が指定されているかチェック
 		count := 0
 		if e.UserID != nil {
 			count++
@@ -78,26 +52,26 @@ func (s *Judgment) Update(ctx context.Context, id string, input model.UpdateJudg
 		if e.GroupID != nil {
 			count++
 		}
-		if count != 1 {
+
+		// 1つ以下の場合のみ処理を続行（0個も許可、2個以上はエラー）
+		if count <= 1 {
+			// nameはJudgmentEntryから取得
+			if e.Name != nil {
+				judgment.Name = pkggorm.ToNullString(e.Name)
+			}
+
+			judgment.UserID = pkggorm.ToNullString(e.UserID)
+			judgment.TeamID = pkggorm.ToNullString(e.TeamID)
+			judgment.GroupID = pkggorm.ToNullString(e.GroupID)
+		} else {
+			// 複数指定されている場合はエラー
 			return nil, errors.ErrJudgmentEntryInvalid
 		}
-
-		judgment.UserID = toNullString(e.UserID)
-		judgment.TeamID = toNullString(e.TeamID)
-		judgment.GroupID = toNullString(e.GroupID)
 	}
 
 	judgment, err = s.judgmentRepository.Save(ctx, s.db, judgment)
 	if err != nil {
 		return nil, errors.ErrSaveJudgment
-	}
-	return judgment, nil
-}
-
-func (s *Judgment) Delete(ctx context.Context, id string) (*db_model.Judgment, error) {
-	judgment, err := s.judgmentRepository.Delete(ctx, s.db, id)
-	if err != nil {
-		return nil, errors.Wrap(err)
 	}
 	return judgment, nil
 }
