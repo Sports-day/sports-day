@@ -13,7 +13,8 @@
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.12"
     },
-    "ghcr.io/rails/devcontainer/features/mysql-client:1.1.1": {}
+    "ghcr.io/rails/devcontainer/features/mysql-client:1.1.1": {},
+    "ghcr.io/va-h/devcontainers-features/uv:1": {}
   },
   "forwardPorts": [3000, 3001, 3002, 8080, 8888],
   "portsAttributes": {
