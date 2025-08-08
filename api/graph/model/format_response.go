@@ -63,6 +63,7 @@ func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
 	return &Competition{
 		ID:   competition.ID,
 		Name: competition.Name,
+		Type: CompetitionType(competition.Type),
 	}
 }
 
@@ -77,10 +78,17 @@ func FormatMatchResponse(match *db_model.Match) *Match {
 	}
 }
 
+func FormatMatchEntryResponse(entry *db_model.MatchEntry) *MatchEntry {
+	return &MatchEntry{
+		ID:    entry.ID,
+		Score: int32(entry.Score),
+	}
+}
+
 func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
 	return &Judgment{
 		ID:      judgment.ID,
-		Name:    judgment.Name,
+		Name:    judgment.Name.String,
 		UserId:  judgment.UserID.String,
 		TeamId:  judgment.TeamID.String,
 		GroupId: judgment.GroupID.String,
