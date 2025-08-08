@@ -14,7 +14,8 @@ type AuthResponse struct {
 }
 
 type CreateCompetitionInput struct {
-	Name string `json:"name"`
+	Name string          `json:"name"`
+	Type CompetitionType `json:"type"`
 }
 
 type CreateGroupInput struct {
@@ -24,12 +25,6 @@ type CreateGroupInput struct {
 type CreateInformationInput struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
-}
-
-type CreateJudgmentInput struct {
-	ID    string         `json:"id"`
-	Name  string         `json:"name"`
-	Entry *JudgmentEntry `json:"entry"`
 }
 
 type CreateLocationInput struct {
@@ -45,11 +40,12 @@ type CreateSportsInput struct {
 }
 
 type CreateMatchInput struct {
-	Time          string      `json:"time"`
-	Status        MatchStatus `json:"status"`
-	LocationID    string      `json:"locationId"`
-	CompetitionID string      `json:"competitionId"`
-	TeamIds       []string    `json:"teamIds"`
+	Time          string         `json:"time"`
+	Status        MatchStatus    `json:"status"`
+	LocationID    string         `json:"locationId"`
+	CompetitionID string         `json:"competitionId"`
+	TeamIds       []string       `json:"teamIds,omitempty"`
+	Judgment      *JudgmentEntry `json:"judgment,omitempty"`
 }
 
 type CreateTeamInput struct {
@@ -72,6 +68,7 @@ type Information struct {
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
 // 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 type JudgmentEntry struct {
+	Name    *string `json:"name,omitempty"`
 	UserID  *string `json:"userId,omitempty"`
 	TeamID  *string `json:"teamId,omitempty"`
 	GroupID *string `json:"groupId,omitempty"`
@@ -83,8 +80,9 @@ type LoginInput struct {
 }
 
 type MatchEntry struct {
-	Team  *Team `json:"team"`
-	Score int32 `json:"score"`
+	ID    string `json:"id"`
+	Team  *Team  `json:"team,omitempty"`
+	Score int32  `json:"score"`
 }
 
 type MatchResultInput struct {
@@ -114,7 +112,8 @@ type UpdateCompetitionEntriesInput struct {
 }
 
 type UpdateCompetitionInput struct {
-	Name *string `json:"name,omitempty"`
+	Name *string          `json:"name,omitempty"`
+	Type *CompetitionType `json:"type,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -131,7 +130,6 @@ type UpdateInformationInput struct {
 }
 
 type UpdateJudgmentInput struct {
-	Name  *string        `json:"name,omitempty"`
 	Entry *JudgmentEntry `json:"entry,omitempty"`
 }
 
@@ -176,6 +174,47 @@ type UpdateTeamInput struct {
 type UpdateTeamUsersInput struct {
 	AddUserIds    []string `json:"addUserIds,omitempty"`
 	RemoveUserIds []string `json:"removeUserIds,omitempty"`
+}
+
+type CompetitionType string
+
+const (
+	CompetitionTypeLeague     CompetitionType = "LEAGUE"
+	CompetitionTypeTournament CompetitionType = "TOURNAMENT"
+)
+
+var AllCompetitionType = []CompetitionType{
+	CompetitionTypeLeague,
+	CompetitionTypeTournament,
+}
+
+func (e CompetitionType) IsValid() bool {
+	switch e {
+	case CompetitionTypeLeague, CompetitionTypeTournament:
+		return true
+	}
+	return false
+}
+
+func (e CompetitionType) String() string {
+	return string(e)
+}
+
+func (e *CompetitionType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CompetitionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CompetitionType", str)
+	}
+	return nil
+}
+
+func (e CompetitionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type MatchStatus string

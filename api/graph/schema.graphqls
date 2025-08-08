@@ -72,10 +72,12 @@ input UpdateLocationInput {
 
 input CreateCompetitionInput {
   name: String!
+  type: CompetitionType!
 }
 
 input UpdateCompetitionInput {
   name: String
+  type: CompetitionType
 }
 
 input UpdateCompetitionEntriesInput {
@@ -92,7 +94,8 @@ input CreateMatchInput {
   status: MatchStatus!
   locationId: ID!
   competitionId: ID!
-  teamIds: [ID!]!
+  teamIds: [ID!]
+  judgment: JudgmentEntry
 }
 
 input UpdateMatchDetailInput {
@@ -120,19 +123,13 @@ input UpdateMatchEntryScoreInput {
 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 """
 input JudgmentEntry {
+  name: String
 	userId: ID
 	teamId: ID
 	groupId: ID 
 }
 
-input CreateJudgmentInput {
-	id: ID!
-	name: String!
-	entry: JudgmentEntry!
-}
-
 input UpdateJudgmentInput {
-	name: String
 	entry: JudgmentEntry
 }
 
@@ -280,15 +277,7 @@ type Mutation {
   """
   deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
   """
-  審判を追加する
-  """
-  createJudgment(input: CreateJudgmentInput!): Judgment!
-  """
   審判の情報を更新する
   """
 	updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
-  """
-  審判を削除する
-  """
-	deleteJudgment(id: ID!): Judgment!
 }

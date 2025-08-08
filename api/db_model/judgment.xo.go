@@ -9,7 +9,7 @@ import (
 // Judgment represents a row from 'sportsday.judgments'.
 type Judgment struct {
 	ID      string         `json:"id"`       // 試合ID
-	Name    string         `json:"name"`     // 名前
+	Name    sql.NullString `json:"name"`     // 名前
 	UserID  sql.NullString `json:"user_id"`  // ユーザーID
 	TeamID  sql.NullString `json:"team_id"`  // チームID
 	GroupID sql.NullString `json:"group_id"` // グループID

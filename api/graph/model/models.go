@@ -18,8 +18,9 @@ type Team struct {
 }
 
 type Competition struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID   string          `json:"id"`
+	Name string          `json:"name"`
+	Type CompetitionType `json:"type"`
 }
 
 type Match struct {

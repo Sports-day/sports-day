@@ -25,9 +25,15 @@ type Team {
   judgments: [Judgment!]!
 }
 
+enum CompetitionType {
+  LEAGUE
+  TOURNAMENT
+}
+
 type Competition {
   id: ID!
   name: String!
+  type: CompetitionType!
   teams: [Team!]!
   matches: [Match!]!
 }
@@ -46,7 +52,8 @@ enum MatchStatus {
 }
 
 type MatchEntry {
-  team: Team!
+  id: ID!
+  team: Team
   score: Int!
 }
 
@@ -58,15 +65,15 @@ type Match {
   competition: Competition!
   winnerTeam: Team
   entries: [MatchEntry!]!
-  judgments: [Judgment!]!
+  judgment: Judgment
 }
 
 type Judgment {
-	 id: ID!
-	 name: String!
-	 user: User
-	 team: Team
-	 group: Group
+  id: ID!
+  name: String
+  user: User
+  team: Team
+  group: Group
 }
 
 type AuthResponse {
