@@ -325,27 +325,9 @@ func (r *mutationResolver) DeleteMatchEntries(ctx context.Context, id string, in
 	return model.FormatMatchResponse(match), nil
 }
 
-// CreateJudgment is the resolver for the createJudgment field.
-func (r *mutationResolver) CreateJudgment(ctx context.Context, input model.CreateJudgmentInput) (*model.Judgment, error) {
-	judgment, err := r.JudgmentService.Create(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
-	return model.FormatJudgmentResponse(judgment), nil
-}
-
 // UpdateJudgment is the resolver for the updateJudgment field.
 func (r *mutationResolver) UpdateJudgment(ctx context.Context, id string, input model.UpdateJudgmentInput) (*model.Judgment, error) {
 	judgment, err := r.JudgmentService.Update(ctx, id, input)
-	if err != nil {
-		return nil, err
-	}
-	return model.FormatJudgmentResponse(judgment), nil
-}
-
-// DeleteJudgment is the resolver for the deleteJudgment field.
-func (r *mutationResolver) DeleteJudgment(ctx context.Context, id string) (*model.Judgment, error) {
-	judgment, err := r.JudgmentService.Delete(ctx, id)
 	if err != nil {
 		return nil, err
 	}

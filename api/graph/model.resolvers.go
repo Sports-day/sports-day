@@ -182,34 +182,55 @@ func (r *matchResolver) Entries(ctx context.Context, obj *model.Match) ([]*model
 		return nil, err
 	}
 
-	teamIDs := slices.Map(entries, func(entry *db_model.MatchEntry) string {
-		return entry.TeamID
-	})
+	// TeamIDが有効なエントリーのみを抽出してチーム情報を取得
+	var validTeamIDs []string
+	for _, entry := range entries {
+		if entry.TeamID.Valid {
+			validTeamIDs = append(validTeamIDs, entry.TeamID.String)
+		}
+	}
 
-	teams, err := loader.LoadTeams(ctx, teamIDs)
-	if err != nil {
-		return nil, err
+	var teams []*db_model.Team
+	if len(validTeamIDs) > 0 {
+		teams, err = loader.LoadTeams(ctx, validTeamIDs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// チームIDをキーとするマップを作成
+	teamMap := make(map[string]*db_model.Team)
+	for _, team := range teams {
+		teamMap[team.ID] = team
 	}
 
 	var res []*model.MatchEntry
-	for i, team := range entries {
-		res = append(res, &model.MatchEntry{
-			Team:  model.FormatTeamResponse(teams[i]),
-			Score: int32(team.Score),
-		})
+	for _, entry := range entries {
+		matchEntry := &model.MatchEntry{
+			ID:    entry.ID,
+			Score: int32(entry.Score),
+		}
+
+		// TeamIDが有効な場合のみTeamを設定
+		if entry.TeamID.Valid {
+			if team, exists := teamMap[entry.TeamID.String]; exists {
+				matchEntry.Team = model.FormatTeamResponse(team)
+			}
+		}
+
+		res = append(res, matchEntry)
 	}
 	return res, nil
 }
 
-// Judgments is the resolver for the judgments field.
-func (r *matchResolver) Judgments(ctx context.Context, obj *model.Match) ([]*model.Judgment, error) {
+// Judgment is the resolver for the judgment field.
+func (r *matchResolver) Judgment(ctx context.Context, obj *model.Match) (*model.Judgment, error) {
 	judgments, err := loader.LoadJudgments(ctx, []string{obj.ID})
 	if err != nil {
 		return nil, err
 	}
-	return slices.Map(judgments, func(judgment *db_model.Judgment) *model.Judgment {
-		return model.FormatJudgmentResponse(judgment)
-	}), nil
+
+	return model.FormatJudgmentResponse(judgments[0]), nil
 }
 
 // Group is the resolver for the group field.
