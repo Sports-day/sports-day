@@ -265,17 +265,6 @@ func (r *matchResolver) Judgment(ctx context.Context, obj *model.Match) (*model.
 	return model.FormatJudgmentResponse(judgments[0]), nil
 }
 
-// Judgments is the resolver for the judgments field.
-func (r *matchResolver) Judgments(ctx context.Context, obj *model.Match) ([]*model.Judgment, error) {
-	judgments, err := loader.LoadJudgments(ctx, []string{obj.ID})
-	if err != nil {
-		return nil, err
-	}
-	return slices.Map(judgments, func(judgment *db_model.Judgment) *model.Judgment {
-		return model.FormatJudgmentResponse(judgment)
-	}), nil
-}
-
 // Group is the resolver for the group field.
 func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group, error) {
 	groups, err := loader.LoadGroups(ctx, []string{obj.GroupID})
@@ -432,15 +421,3 @@ type locationResolver struct{ *Resolver }
 type matchResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *competitionResolver) League(ctx context.Context, obj *model.Competition) (*model.League, error) {
-	panic(fmt.Errorf("not implemented: League - league"))
-}
-*/

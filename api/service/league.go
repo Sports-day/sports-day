@@ -47,11 +47,11 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 }
 
 func (s *League) Delete(ctx context.Context, id string) (*db_model.League, error) {
-    league, err := s.leagueRepository.Delete(ctx, s.db, id)
-    if err != nil {
-        return nil, errors.Wrap(err)
-    }
-    return league, nil
+	league, err := s.leagueRepository.Delete(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return league, nil
 }
 
 func (s *League) Get(ctx context.Context, id string) (*db_model.League, error) {
@@ -110,16 +110,16 @@ func (s *League) GetLeaguesMapByIDs(ctx context.Context, ids []string) (map[stri
 }
 
 func (s *League) CreateLeagueStanding(ctx context.Context, id string, teamId string) (*db_model.LeagueStanding, error) {
-    standing := &db_model.LeagueStanding{
-        ID:     id,
-        TeamID: teamId,
-    }
+	standing := &db_model.LeagueStanding{
+		ID:     id,
+		TeamID: teamId,
+	}
 
-    savedStanding, err := s.leagueRepository.SaveStanding(ctx, s.db, standing)
-    if err != nil {
-        return nil, errors.ErrSaveLeagueStanding
-    }
-    return savedStanding, nil
+	savedStanding, err := s.leagueRepository.SaveStanding(ctx, s.db, standing)
+	if err != nil {
+		return nil, errors.ErrSaveLeagueStanding
+	}
+	return savedStanding, nil
 
 }
 

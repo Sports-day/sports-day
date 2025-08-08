@@ -343,35 +343,6 @@ INSERT INTO judgments (id, name, user_id,  team_id, group_id) VALUES
 -- --------------------------------------- ▲
 
 
-  -- 審判（Judgment）データ挿入 ------------- ▼
-INSERT INTO judgments (id, name, user_id,  team_id, group_id) VALUES
-  -- 01JSE1ZQK0A2X6JQK1Q2X6JQA（サッカーAリーグ第1試合）は
-  -- 個人ユーザー「山田 太郎」が担当
-  ('01JSE1ZQK0A2X6JQK1Q2X6JQA', '主審 山田太郎',
-   '01JS96Z96329JZHCYD45D72SYB', NULL, NULL),
-
-  -- 01JSE1ZQK0A2X6JQK1Q2X6JQB（バスケCリーグ第1試合）は
-  -- チーム「サムライスピリッツA」が担当
-  ('01JSE1ZQK0A2X6JQK1Q2X6JQB', '主審 チーム サムライA',
-   NULL, '01JSB1ZQK0A2X6JQK1Q2X6JQK', NULL),
-
-  -- 01JSE1ZQK0A2X6JQK1Q2X6JQC（バレーAトーナメント決勝）は
-  -- グループ「ライジングサン」が担当
-  ('01JSE1ZQK0A2X6JQK1Q2X6JQC', '主審 グループ ライジングサン',
-   NULL, NULL, '01JS96Z963QE7DYBQ6Q7BH95S8'),
-
-  -- 01JSE1ZQK0A2X6JQK1Q2X6JQD（陸上Dリーグ第1試合）は
-  -- 個人ユーザー「鈴木 美咲」が担当
-  ('01JSE1ZQK0A2X6JQK1Q2X6JQD', '主審 鈴木美咲',
-   '01JS96Z963RP3AJQ9CMBS7QCCF', NULL, NULL),
-
-  -- 01JSE1ZQK0A2X6JQK1Q2X6JQE（水泳Bトーナメント決勝）は
-  -- チーム「なでしこドリームC」が担当
-  ('01JSE1ZQK0A2X6JQK1Q2X6JQE', '主審 チーム なでC',
-   NULL, '01JSB1ZQK0A2X6JQK1Q2X6JQV', NULL);
--- --------------------------------------- ▲
-
-
 -- migrate:down
 DELETE FROM team_users;
 DELETE FROM teams;

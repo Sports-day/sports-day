@@ -84,20 +84,6 @@ input UpdateCompetitionEntriesInput {
   teamIds: [ID!]!
 }
 
-input CreateCompetitionInput {
-  name: String!
-  type: CompetitionType!
-}
-
-input UpdateCompetitionInput {
-  name: String
-  type: CompetitionType
-}
-
-input UpdateCompetitionEntriesInput {
-  teamIds: [ID!]!
-}
-
 input MatchResultInput {
   teamId: ID!
   score: Int!
