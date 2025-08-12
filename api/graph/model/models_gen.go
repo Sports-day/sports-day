@@ -86,16 +86,10 @@ type Information struct {
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
 // 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 type JudgmentEntry struct {
+	Name    *string `json:"name,omitempty"`
 	UserID  *string `json:"userId,omitempty"`
 	TeamID  *string `json:"teamId,omitempty"`
 	GroupID *string `json:"groupId,omitempty"`
-}
-
-type League struct {
-	ID              string          `json:"id"`
-	Teams           []*Team         `json:"teams"`
-	CalculationType CalculationType `json:"calculationType"`
-	Standings       []*Standing     `json:"standings"`
 }
 
 type LoginInput struct {
@@ -131,12 +125,6 @@ type Sport struct {
 	Weight int32  `json:"weight"`
 }
 
-type Standing struct {
-	Team   *Team `json:"team"`
-	Points int32 `json:"points"`
-	Rank   int32 `json:"rank"`
-}
-
 type UpdateCompetitionEntriesInput struct {
 	TeamIds []string `json:"teamIds"`
 }
@@ -160,7 +148,6 @@ type UpdateInformationInput struct {
 }
 
 type UpdateJudgmentInput struct {
-	Name  *string        `json:"name,omitempty"`
 	Entry *JudgmentEntry `json:"entry,omitempty"`
 }
 
