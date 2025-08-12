@@ -72,12 +72,11 @@ input UpdateLocationInput {
 
 input CreateCompetitionInput {
   name: String!
-  defaultLocationId: ID
+  type: CompetitionType!
 }
 
 input UpdateCompetitionInput {
   name: String
-  defaultLocationId: ID
 }
 
 input UpdateCompetitionEntriesInput {

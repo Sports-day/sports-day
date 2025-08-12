@@ -40,17 +40,15 @@ type Competition {
   id: ID!
   name: String!
   type: CompetitionType!
-  defaultLocation: Location
   teams: [Team!]!
   matches: [Match!]!
-  leagues: [League!]!
+  league: League!
 }
 
 type Location {
   id: ID!
   name: String!
   matches: [Match!]!
-  competitions: [Competition!]!
 }
 
 enum MatchStatus {
@@ -99,9 +97,9 @@ type Standing {
   win: Int!
   draw: Int!
   lose: Int!
-  gf: Int!
-  ga: Int!
-  gd: Int!
+  goalsFor: Int!
+  goalsAgainst: Int!
+  goalDiff: Int!
 }
 
 type League {
