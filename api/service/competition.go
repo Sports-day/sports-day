@@ -32,7 +32,7 @@ func (s *Competition) Create(ctx context.Context, input *model.CreateCompetition
 	competition := &db_model.Competition{
 		ID:   ulid.Make(),
 		Name: input.Name,
-		Type: "TOURNAMENT",
+		Type: input.Type.String(),
 	}
 
 	competition, err := s.competitionRepository.Save(ctx, s.db, competition)
@@ -84,38 +84,39 @@ func (s *Competition) List(ctx context.Context) ([]*db_model.Competition, error)
 }
 
 func (s *Competition) AddEntries(ctx context.Context, competitionId string, teamIds []string) (*db_model.Competition, error) {
-	competition, err := s.competitionRepository.Get(ctx, s.db, competitionId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.ErrCompetitionNotFound
-		}
-		return nil, errors.Wrap(err)
-	}
+	var competition *db_model.Competition
 
-	err = s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// tx を使って大会取得
+		comp, err := s.competitionRepository.Get(ctx, tx, competitionId)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		competition = comp
+
+		// エントリー追加
 		if _, err := s.competitionRepository.AddCompetitionEntries(ctx, tx, competitionId, teamIds); err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 
-		if competition.Type == "LEAGUE" {
-			for _, teamId := range teamIds {
-				standing := &db_model.LeagueStanding{
+		// リーグなら standings を作成/Upsert
+		if comp.Type == "LEAGUE" {
+			for _, teamID := range teamIds {
+				st := &db_model.LeagueStanding{
 					ID:     competitionId,
-					TeamID: teamId,
+					TeamID: teamID,
 				}
-				if _, err := s.leagueRepository.SaveStanding(ctx, tx, standing); err != nil {
-					return err
+				if _, err := s.leagueRepository.SaveStanding(ctx, tx, st); err != nil {
+					return errors.Wrap(err)
 				}
 			}
 		}
-
 		return nil
 	})
 
 	if err != nil {
 		return nil, errors.ErrAddCompetitionEntry
 	}
-
 	return competition, nil
 }
 

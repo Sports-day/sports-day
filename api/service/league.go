@@ -40,18 +40,10 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 		// 1. 大会を作成
 		competitionID := ulid.Make()
 
-		var defaultLocationID sql.NullString
-		if input.DefaultLocationID != nil {
-			defaultLocationID = sql.NullString{Valid: true, String: *input.DefaultLocationID}
-		} else {
-			defaultLocationID = sql.NullString{Valid: false}
-		}
-
 		competition := &db_model.Competition{
-			ID:                competitionID,
-			Name:              input.Name,
-			Type:              "LEAGUE",
-			DefaultLocationID: defaultLocationID,
+			ID:   competitionID,
+			Name: input.Name,
+			Type: "LEAGUE",
 		}
 
 		if err := tx.Save(competition).Error; err != nil {
@@ -351,6 +343,8 @@ func (s *League) generateOddRoundRobin(teamIDs []string) [][2]string {
 }
 
 func (s *League) CalculateStandings(ctx context.Context, competitionID string) ([]*db_model.LeagueStanding, error) {
+	var calculatedStandings []*db_model.LeagueStanding
+
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		// 1. リーグルールを取得
 		league, err := s.leagueRepository.Get(ctx, tx, competitionID)
@@ -408,18 +402,20 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 				return err
 			}
 		}
+
+		rows, err := s.leagueRepository.ListStandings(ctx, tx, competitionID)
+		if err != nil {
+			return err
+		}
+		calculatedStandings = rows
+
 		return nil
 	})
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	rows, err := s.leagueRepository.ListStandings(ctx, s.db, competitionID)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
-	return rows, nil
+	return calculatedStandings, nil
 }
 
 // indexEntriesByMatchID は試合エントリーを試合IDで索引化するヘルパー関数
@@ -444,15 +440,15 @@ func computeStandingsFromMatches(
 	teamStats := make(map[string]*db_model.LeagueStanding)
 	for _, entry := range competitionEntries {
 		teamStats[entry.TeamID] = &db_model.LeagueStanding{
-			ID:     league.ID, // CompetitionID
-			TeamID: entry.TeamID,
-			Win:    0,
-			Draw:   0,
-			Lose:   0,
-			Gf:     0,
-			Ga:     0,
-			Points: 0,
-			Rank:   0,
+			ID:           league.ID, // CompetitionID
+			TeamID:       entry.TeamID,
+			Win:          0,
+			Draw:         0,
+			Lose:         0,
+			GoalsFor:     0,
+			GoalsAgainst: 0,
+			Points:       0,
+			Rank:         0,
 		}
 	}
 
@@ -482,10 +478,10 @@ func computeStandingsFromMatches(
 		}
 
 		// 得失点を更新
-		stats1.Gf += team1Entry.Score
-		stats1.Ga += team2Entry.Score
-		stats2.Gf += team2Entry.Score
-		stats2.Ga += team1Entry.Score
+		stats1.GoalsFor += team1Entry.Score
+		stats1.GoalsAgainst += team2Entry.Score
+		stats2.GoalsFor += team2Entry.Score
+		stats2.GoalsAgainst += team1Entry.Score
 
 		// 勝敗を判定してポイントを計算
 		if team1Entry.Score > team2Entry.Score {
@@ -569,9 +565,9 @@ func comparePrimaryKey(a, b *db_model.LeagueStanding, calcType string) int {
 	case "WIN_SCORE":
 		return compareInt(a.Points, b.Points)
 	case "DIFF_SCORE":
-		return compareInt(a.Gf-a.Ga, b.Gf-b.Ga)
+		return compareInt(a.GoalsFor-a.GoalsAgainst, b.GoalsFor-b.GoalsAgainst)
 	case "TOTAL_SCORE":
-		return compareInt(a.Gf, b.Gf)
+		return compareInt(a.GoalsFor, b.GoalsFor)
 	default:
 		return compareInt(a.Points, b.Points)
 	}
@@ -584,12 +580,12 @@ func compareTiebreaker(a, b *db_model.LeagueStanding, tiebreaker string) int {
 		return compareInt(a.Points, b.Points)
 	case "GOAL_DIFF":
 		// GDは使わず、都度 gf - ga
-		return compareInt(a.Gf-a.Ga, b.Gf-b.Ga)
+		return compareInt(a.GoalsFor-a.GoalsAgainst, b.GoalsFor-b.GoalsAgainst)
 	case "GOALS_FOR":
-		return compareInt(a.Gf, b.Gf)
+		return compareInt(a.GoalsFor, b.GoalsFor)
 	case "GOALS_AGAINST":
 		// 失点は少ない方が上位なので逆順
-		return compareInt(b.Ga, a.Ga)
+		return compareInt(b.GoalsAgainst, a.GoalsAgainst)
 	default:
 		return 0
 	}
