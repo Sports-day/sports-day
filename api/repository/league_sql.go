@@ -7,6 +7,7 @@ import (
 	"sports-day/api/pkg/errors"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type league struct{}
@@ -22,9 +23,9 @@ func (r league) Save(ctx context.Context, db *gorm.DB, league *db_model.League) 
 	return league, nil
 }
 
-func (r league) Get(ctx context.Context, db *gorm.DB, competitionID string) (*db_model.League, error) {
+func (r league) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.League, error) {
 	var league db_model.League
-	if err := db.First(&league, "competition_id = ?", competitionID).Error; err != nil {
+	if err := db.First(&league, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrLeagueNotFound
 		}
@@ -48,9 +49,9 @@ func (r league) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.L
 	return &league, nil
 }
 
-func (r league) BatchGet(ctx context.Context, db *gorm.DB, competitionIDs []string) ([]*db_model.League, error) {
+func (r league) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.League, error) {
 	var leagues []*db_model.League
-	if err := db.Where("competition_id IN (?)", competitionIDs).Find(&leagues).Error; err != nil {
+	if err := db.Where("id IN (?)", ids).Find(&leagues).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return leagues, nil
@@ -65,15 +66,20 @@ func (r league) List(ctx context.Context, db *gorm.DB) ([]*db_model.League, erro
 }
 
 func (r league) SaveStanding(ctx context.Context, db *gorm.DB, standing *db_model.LeagueStanding) (*db_model.LeagueStanding, error) {
-	if err := db.Save(standing).Error; err != nil {
+	if err := db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}, {Name: "team_id"}}, // 複合キー
+		DoUpdates: clause.AssignmentColumns([]string{
+			"win", "draw", "lose", "gf", "ga", "points", "`rank`", "updated_at",
+		}),
+	}).Omit("gd").Create(standing).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return standing, nil
 }
 
-func (r league) GetStanding(ctx context.Context, db *gorm.DB, competitionID, teamID string) (*db_model.LeagueStanding, error) {
+func (r league) GetStanding(ctx context.Context, db *gorm.DB, id, teamID string) (*db_model.LeagueStanding, error) {
 	var standing db_model.LeagueStanding
-	if err := db.First(&standing, "competition_id = ? AND team_id = ?", competitionID, teamID).Error; err != nil {
+	if err := db.First(&standing, "id = ? AND team_id = ?", id, teamID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrLeagueStandingNotFound
 		}
@@ -84,7 +90,7 @@ func (r league) GetStanding(ctx context.Context, db *gorm.DB, competitionID, tea
 
 func (r league) DeleteStanding(ctx context.Context, db *gorm.DB, id string, teamId string) (*db_model.LeagueStanding, error) {
 	var standing db_model.LeagueStanding
-	if err := db.First(&standing, "competition_id = ? AND team_id = ?", id, teamId).Error; err != nil {
+	if err := db.First(&standing, "id = ? AND team_id = ?", id, teamId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrLeagueStandingNotFound
 		}
@@ -97,17 +103,17 @@ func (r league) DeleteStanding(ctx context.Context, db *gorm.DB, id string, team
 	return &standing, nil
 }
 
-func (r league) ListStandings(ctx context.Context, db *gorm.DB, competitionID string) ([]*db_model.LeagueStanding, error) {
+func (r league) ListStandings(ctx context.Context, db *gorm.DB, id string) ([]*db_model.LeagueStanding, error) {
 	var standings []*db_model.LeagueStanding
-	if err := db.Where("competition_id = ?", competitionID).Find(&standings).Error; err != nil {
+	if err := db.Where("id = ?", id).Find(&standings).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return standings, nil
 }
 
-func (r league) BatchGetStandingsByCompetitionIDs(ctx context.Context, db *gorm.DB, competitionIDs []string) ([]*db_model.LeagueStanding, error) {
+func (r league) BatchGetStandingsByCompetitionIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.LeagueStanding, error) {
 	var standings []*db_model.LeagueStanding
-	if err := db.Where("competition_id IN (?)", competitionIDs).Find(&standings).Error; err != nil {
+	if err := db.Where("id IN (?)", ids).Find(&standings).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return standings, nil
