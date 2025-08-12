@@ -92,7 +92,7 @@ input MatchResultInput {
 input CreateMatchInput {
   time: String!
   status: MatchStatus!
-  locationId: ID!
+  locationId: ID
   competitionId: ID!
   teamIds: [ID!]
   judgment: JudgmentEntry
@@ -123,6 +123,7 @@ input UpdateMatchEntryScoreInput {
 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 """
 input JudgmentEntry {
+  name: String
 	userId: ID
 	teamId: ID
 	groupId: ID 
@@ -130,17 +131,16 @@ input JudgmentEntry {
 
 input CreateJudgmentInput {
 	id: ID!
-	name: String!
 	entry: JudgmentEntry!
 }
 
 input UpdateJudgmentInput {
-	name: String
 	entry: JudgmentEntry
 }
 
 input CreateLeagueInput {
-  competitionId: ID!
+  name: String!
+  defaultLocationId: ID
   calculationType: CalculationType!
 }
 
@@ -149,6 +149,13 @@ input UpdateLeagueRuleInput {
 	winPt:  Int
   drawPt: Int
   losePt: Int
+}
+
+input GenerateRoundRobinInput {
+  startTime: String!
+  matchDuration: Int!
+  breakDuration: Int!
+  locationId: ID
 }
 
 type Query {
@@ -318,4 +325,12 @@ type Mutation {
   リーグを削除する
   """
   deleteLeague(id: ID!): League!
+  """
+  リーグの総当たり戦を自動生成する
+  """
+  generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]!
+  """
+  リーグの順位表を計算する
+  """
+  calculateLeagueStandings(id: ID!): [Standing!]!
 }

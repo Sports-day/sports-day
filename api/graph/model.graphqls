@@ -70,7 +70,7 @@ type Match {
   id: ID!
   time: String!
   status: MatchStatus!
-  location: Location!
+  location: Location
   competition: Competition!
   winnerTeam: Team
   entries: [MatchEntry!]!
@@ -92,16 +92,24 @@ enum CalculationType {
 }
 
 type Standing {
+  id: ID!
   team: Team!
   points: Int!
   rank: Int!
+  win: Int!
+  draw: Int!
+  lose: Int!
+  gf: Int!
+  ga: Int!
+  gd: Int!
 }
 
 type League {
   id: ID!
+  name: String!
   teams: [Team!]!
   calculationType: CalculationType!
-  standings(teamId: ID): [Standing!]!
+  standings: [Standing!]!
 }
 
 type Information {
