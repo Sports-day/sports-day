@@ -353,19 +353,19 @@ func (s *League) generateOddRoundRobin(teamIDs []string) [][2]string {
 func (s *League) CalculateStandings(ctx context.Context, competitionID string) ([]*db_model.LeagueStanding, error) {
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		// 1. リーグルールを取得
-		league, err := s.leagueRepository.Get(ctx, s.db, competitionID)
+		league, err := s.leagueRepository.Get(ctx, tx, competitionID)
 		if err != nil {
 			return err
 		}
 
 		// 2. 参加チームを取得
-		competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, s.db, []string{competitionID})
+		competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{competitionID})
 		if err != nil {
 			return err
 		}
 
 		// 3. 全試合を取得
-		allMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, s.db, []string{competitionID})
+		allMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{competitionID})
 		if err != nil {
 			return err
 		}
@@ -383,7 +383,7 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 		// 5. 試合エントリーを取得して索引化
 		var entriesByMatch map[string][]*db_model.MatchEntry
 		if len(matchIDs) > 0 {
-			matchEntries, err := s.matchRepository.BatchGetMatchEntriesByMatchIDs(ctx, s.db, matchIDs)
+			matchEntries, err := s.matchRepository.BatchGetMatchEntriesByMatchIDs(ctx, tx, matchIDs)
 			if err != nil {
 				return err
 			}
@@ -403,7 +403,7 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 		// 将来的にはここでUpsertすることも可能
 
 		for _, standing := range standings {
-			_, err := s.leagueRepository.SaveStanding(ctx, s.db, standing)
+			_, err := s.leagueRepository.SaveStanding(ctx, tx, standing)
 			if err != nil {
 				return err
 			}
@@ -451,7 +451,6 @@ func computeStandingsFromMatches(
 			Lose:   0,
 			Gf:     0,
 			Ga:     0,
-			Gd:     0,
 			Points: 0,
 			Rank:   0,
 		}
