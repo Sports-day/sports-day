@@ -20,37 +20,77 @@ type League struct {
 	leagueRepository      repository.League
 	matchRepository       repository.Match
 	competitionRepository repository.Competition
+	competitionService    *Competition
 }
 
-func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition) League {
+func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition) League {
 	return League{
 		db:                    db,
 		leagueRepository:      leagueRepository,
 		matchRepository:       matchRepository,
 		competitionRepository: competitionRepository,
+		competitionService:    competitionService,
 	}
 }
 
 func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*db_model.League, error) {
+	var league *db_model.League
 
-	league := &db_model.League{
-		ID:              input.CompetitionID,
-		CalculationType: string(input.CalculationType),
-	}
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 1. 大会を作成
+		competitionID := ulid.Make()
 
-	league, err := s.leagueRepository.Save(ctx, s.db, league)
+		var defaultLocationID sql.NullString
+		if input.DefaultLocationID != nil {
+			defaultLocationID = sql.NullString{Valid: true, String: *input.DefaultLocationID}
+		} else {
+			defaultLocationID = sql.NullString{Valid: false}
+		}
+
+		competition := &db_model.Competition{
+			ID:                competitionID,
+			Name:              input.Name,
+			Type:              "LEAGUE",
+			DefaultLocationID: defaultLocationID,
+		}
+
+		if err := tx.Save(competition).Error; err != nil {
+			return errors.Wrap(err)
+		}
+
+		// 2. リーグを作成
+		league = &db_model.League{
+			ID:              competitionID,
+			CalculationType: string(input.CalculationType),
+		}
+
+		if err := tx.Save(league).Error; err != nil {
+			return errors.Wrap(err)
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, errors.ErrSaveLeague
 	}
 	return league, nil
-
 }
 
 func (s *League) Delete(ctx context.Context, id string) (*db_model.League, error) {
-	league, err := s.leagueRepository.Delete(ctx, s.db, id)
+	// 1. 削除前にリーグ情報を取得（削除後に返すため）
+	league, err := s.leagueRepository.Get(ctx, s.db, id)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	// 2. CompetitionServiceを使って大会を削除
+	// ON DELETE CASCADEにより、leagues, league_standings等が自動削除される
+	_, err = s.competitionService.Delete(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
 	return league, nil
 }
 
@@ -120,60 +160,53 @@ func (s *League) CreateLeagueStanding(ctx context.Context, id string, teamId str
 		return nil, errors.ErrSaveLeagueStanding
 	}
 	return savedStanding, nil
-
 }
 
 func (s *League) GetStandingsMapByCompetitionIDs(ctx context.Context, competitionIDs []string) (map[string][]*db_model.LeagueStanding, error) {
-	standingMap := make(map[string][]*db_model.LeagueStanding)
+	standingMap := make(map[string][]*db_model.LeagueStanding, len(competitionIDs))
 
-	for _, competitionID := range competitionIDs {
-		standings, err := s.calculateStandings(ctx, competitionID)
-		if err != nil {
-			return nil, errors.Wrap(err)
-		}
-		standingMap[competitionID] = standings
+	// バッチでまとめて取得
+	rows, err := s.leagueRepository.BatchGetStandingsByCompetitionIDs(ctx, s.db, competitionIDs)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	// 先にキーを初期化（0件の大会にも空スライスを入れる）
+	for _, id := range competitionIDs {
+		standingMap[id] = []*db_model.LeagueStanding{}
+	}
+
+	// グルーピング
+	for _, r := range rows {
+		standingMap[r.ID] = append(standingMap[r.ID], r)
 	}
 
 	return standingMap, nil
 }
 
 func (s *League) GetStandingsMapByTeamIDs(ctx context.Context, teamIDs []string) (map[string][]*db_model.LeagueStanding, error) {
-	standingMap := make(map[string][]*db_model.LeagueStanding)
+	standingMap := make(map[string][]*db_model.LeagueStanding, len(teamIDs))
 
-	// 各チームが参加している大会を取得
-	competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByTeamIDs(ctx, s.db, teamIDs)
+	// バッチでまとめて取得（指定チームの全大会分）
+	rows, err := s.leagueRepository.BatchGetStandingsByTeamIDs(ctx, s.db, teamIDs)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	// チームごとの大会リストを作成
-	teamCompetitionsMap := make(map[string][]string)
-	for _, entry := range competitionEntries {
-		teamCompetitionsMap[entry.TeamID] = append(teamCompetitionsMap[entry.TeamID], entry.CompetitionID)
+	// 先にキーを初期化（0件のチームにも空スライスを入れる）
+	for _, tid := range teamIDs {
+		standingMap[tid] = []*db_model.LeagueStanding{}
 	}
 
-	// 各チームの順位表を取得
-	for _, teamID := range teamIDs {
-		competitionIDs := teamCompetitionsMap[teamID]
-		for _, competitionID := range competitionIDs {
-			standings, err := s.calculateStandings(ctx, competitionID)
-			if err != nil {
-				return nil, errors.Wrap(err)
-			}
-
-			// 該当チームの順位表のみ抽出
-			for _, standing := range standings {
-				if standing.TeamID == teamID {
-					standingMap[teamID] = append(standingMap[teamID], standing)
-				}
-			}
-		}
+	// グルーピング
+	for _, r := range rows {
+		standingMap[r.TeamID] = append(standingMap[r.TeamID], r)
 	}
 
 	return standingMap, nil
 }
 
-func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string) ([]*db_model.Match, error) {
+func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, input *model.GenerateRoundRobinInput) ([]*db_model.Match, error) {
 	var createdMatches []*db_model.Match
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -187,42 +220,54 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string) (
 			return errors.ErrMakeLeagueMatches
 		}
 
-		competition, err := s.competitionRepository.Get(ctx, s.db, competitionID)
-		if err != nil {
-			return err
-		}
-
 		teamIDs := make([]string, len(entries))
 		for i, e := range entries {
 			teamIDs[i] = e.TeamID
 		}
 
-		// ② 総当たりでマッチ生成＋エントリー登録
-		for i := 0; i < len(teamIDs)-1; i++ {
-			for j := i + 1; j < len(teamIDs); j++ {
-				// マッチ生成
-				m := &db_model.Match{
-					ID:            ulid.Make(),
-					Time:          time.Now(),
-					Status:        "STANBY",
-					CompetitionID: competitionID,
-					LocationID:    competition.DefaultLocationID.String,
-				}
-				saved, err := s.matchRepository.Save(ctx, tx, m)
-				if err != nil {
-					return err
-				}
+		// 開始時刻をパース
+		startTime, err := time.Parse(time.RFC3339, input.StartTime)
+		if err != nil {
+			return errors.Wrap(err)
+		}
 
-				if _, err := s.matchRepository.AddMatchEntries(
-					ctx, tx,
-					saved.ID,
-					[]string{teamIDs[i], teamIDs[j]},
-				); err != nil {
-					return err
-				}
+		// 場所IDの処理
+		var locationID sql.NullString
+		if input.LocationID != nil {
+			locationID = sql.NullString{Valid: true, String: *input.LocationID}
+		} else {
+			locationID = sql.NullString{Valid: false}
+		}
 
-				createdMatches = append(createdMatches, saved)
+		// ② 最適化されたラウンドロビンスケジュールを生成
+		schedule := s.generateOptimizedRoundRobinSchedule(teamIDs)
+
+		// ③ スケジュールに基づいてマッチを生成
+		for matchIndex, matchup := range schedule {
+			// 各試合の開始時刻を計算
+			matchTime := startTime.Add(time.Duration(matchIndex) * (time.Duration(input.MatchDuration+input.BreakDuration) * time.Minute))
+
+			m := &db_model.Match{
+				ID:            ulid.Make(),
+				Time:          matchTime,
+				Status:        "STANDBY",
+				CompetitionID: competitionID,
+				LocationID:    locationID,
 			}
+			saved, err := s.matchRepository.Save(ctx, tx, m)
+			if err != nil {
+				return err
+			}
+
+			if _, err := s.matchRepository.AddMatchEntries(
+				ctx, tx,
+				saved.ID,
+				[]string{matchup[0], matchup[1]},
+			); err != nil {
+				return err
+			}
+
+			createdMatches = append(createdMatches, saved)
 		}
 
 		return nil
@@ -234,244 +279,371 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string) (
 	return createdMatches, nil
 }
 
-// 既存の LeagueStanding 構造体を変更せずに実装
-
-func (s *League) calculateStandings(ctx context.Context, competitionID string) ([]*db_model.LeagueStanding, error) {
-	// リーグ情報を取得
-	league, err := s.leagueRepository.Get(ctx, s.db, competitionID)
-	if err != nil {
-		return nil, errors.Wrap(err)
+// generateOptimizedRoundRobinSchedule は最適化されたラウンドロビンスケジュールを生成します
+func (s *League) generateOptimizedRoundRobinSchedule(teamIDs []string) [][2]string {
+	n := len(teamIDs)
+	if n < 2 {
+		return nil
 	}
 
-	// 大会の参加チームを取得
-	competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, s.db, []string{competitionID})
-	if err != nil {
-		return nil, errors.Wrap(err)
+	// チーム数が偶数の場合は標準的なラウンドロビンアルゴリズムを使用
+	if n%2 == 0 {
+		return s.generateEvenRoundRobin(teamIDs)
+	} else {
+		// チーム数が奇数の場合はダミーチームを追加して偶数にする
+		return s.generateOddRoundRobin(teamIDs)
 	}
+}
 
-	var entries []*db_model.CompetitionEntry
-	for _, entry := range competitionEntries {
-		if entry.CompetitionID == competitionID {
-			entries = append(entries, entry)
+// generateEvenRoundRobin は偶数チーム用の最適化されたスケジュールを生成
+func (s *League) generateEvenRoundRobin(teamIDs []string) [][2]string {
+	n := len(teamIDs)
+	var schedule [][2]string
+
+	// 標準的なラウンドロビンアルゴリズム（回転法）
+	teams := make([]string, n)
+	copy(teams, teamIDs)
+
+	for round := 0; round < n-1; round++ {
+		// 各ラウンドでの対戦を生成
+		for i := 0; i < n/2; i++ {
+			team1 := teams[i]
+			team2 := teams[n-1-i]
+			schedule = append(schedule, [2]string{team1, team2})
+		}
+
+		// 最初のチーム以外を回転（時計回り）
+		if n > 2 {
+			temp := teams[n-1]
+			for i := n - 1; i > 1; i-- {
+				teams[i] = teams[i-1]
+			}
+			teams[1] = temp
 		}
 	}
 
-	// 大会の試合を取得
-	matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, s.db, []string{competitionID})
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
+	return schedule
+}
 
-	var competitionMatches []*db_model.Match
-	for _, match := range matches {
-		if match.CompetitionID == competitionID {
-			competitionMatches = append(competitionMatches, match)
+// generateOddRoundRobin は奇数チーム用の最適化されたスケジュールを生成
+func (s *League) generateOddRoundRobin(teamIDs []string) [][2]string {
+	n := len(teamIDs)
+	var schedule [][2]string
+
+	// 奇数の場合、各ラウンドで1チームが休み
+	teams := make([]string, n)
+	copy(teams, teamIDs)
+
+	for round := 0; round < n; round++ {
+		// 各ラウンドでの対戦を生成（1チームは休み）
+		for i := 0; i < n/2; i++ {
+			team1Idx := (round + i) % n
+			team2Idx := (round + n - 1 - i) % n
+
+			// 同じチーム同士の対戦を避ける
+			if team1Idx != team2Idx {
+				schedule = append(schedule, [2]string{teams[team1Idx], teams[team2Idx]})
+			}
 		}
 	}
 
-	// 試合IDを収集
-	var matchIDs []string
-	for _, match := range competitionMatches {
-		matchIDs = append(matchIDs, match.ID)
-	}
+	return schedule
+}
 
-	// 試合エントリーを取得
-	matchEntries, err := s.matchRepository.BatchGetMatchEntriesByMatchIDs(ctx, s.db, matchIDs)
+func (s *League) CalculateStandings(ctx context.Context, competitionID string) ([]*db_model.LeagueStanding, error) {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 1. リーグルールを取得
+		league, err := s.leagueRepository.Get(ctx, s.db, competitionID)
+		if err != nil {
+			return err
+		}
+
+		// 2. 参加チームを取得
+		competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, s.db, []string{competitionID})
+		if err != nil {
+			return err
+		}
+
+		// 3. 全試合を取得
+		allMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, s.db, []string{competitionID})
+		if err != nil {
+			return err
+		}
+
+		// 4. FINISHED試合のみをフィルタ
+		var finishedMatches []*db_model.Match
+		var matchIDs []string
+		for _, match := range allMatches {
+			if match.Status == "FINISHED" {
+				finishedMatches = append(finishedMatches, match)
+				matchIDs = append(matchIDs, match.ID)
+			}
+		}
+
+		// 5. 試合エントリーを取得して索引化
+		var entriesByMatch map[string][]*db_model.MatchEntry
+		if len(matchIDs) > 0 {
+			matchEntries, err := s.matchRepository.BatchGetMatchEntriesByMatchIDs(ctx, s.db, matchIDs)
+			if err != nil {
+				return err
+			}
+			entriesByMatch = indexEntriesByMatchID(matchEntries)
+		} else {
+			entriesByMatch = make(map[string][]*db_model.MatchEntry)
+		}
+
+		// 6. 純関数で順位表を計算（総計のみ）
+		standings := computeStandingsFromMatches(finishedMatches, entriesByMatch, competitionEntries, league)
+
+		// 7. ソートとランク付け
+		sortStandings(standings, league.CalculationType)
+		assignRanks(standings, league.CalculationType)
+
+		// 8. 必要に応じてDBに保存（現在の実装では保存せず返却のみ）
+		// 将来的にはここでUpsertすることも可能
+
+		for _, standing := range standings {
+			_, err := s.leagueRepository.SaveStanding(ctx, s.db, standing)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	// リーグが完了しているかチェック（内部判定）
-	isLeagueFinished := s.isLeagueFinished(competitionMatches)
+	rows, err := s.leagueRepository.ListStandings(ctx, s.db, competitionID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
 
+	return rows, nil
+}
+
+// indexEntriesByMatchID は試合エントリーを試合IDで索引化するヘルパー関数
+func indexEntriesByMatchID(entries []*db_model.MatchEntry) map[string][]*db_model.MatchEntry {
+	indexed := make(map[string][]*db_model.MatchEntry)
+	for _, entry := range entries {
+		indexed[entry.MatchID] = append(indexed[entry.MatchID], entry)
+	}
+	return indexed
+}
+
+// computeStandingsFromMatches は純関数として試合結果から順位表を計算
+// 入力: FINISHED試合のみ、試合エントリーのマップ、参加チーム、リーグルール
+// 出力: 総計ベースの順位表（平均値は一切計算しない）
+func computeStandingsFromMatches(
+	finishedMatches []*db_model.Match,
+	entriesByMatch map[string][]*db_model.MatchEntry,
+	competitionEntries []*db_model.CompetitionEntry,
+	league *db_model.League,
+) []*db_model.LeagueStanding {
 	// チームごとの統計を初期化
 	teamStats := make(map[string]*db_model.LeagueStanding)
-	for _, entry := range entries {
+	for _, entry := range competitionEntries {
 		teamStats[entry.TeamID] = &db_model.LeagueStanding{
-			ID:     competitionID,
+			ID:     league.ID, // CompetitionID
 			TeamID: entry.TeamID,
 			Win:    0,
 			Draw:   0,
 			Lose:   0,
 			Gf:     0,
 			Ga:     0,
-			Gd:     sql.NullInt64{Valid: true, Int64: 0},
+			Gd:     0,
 			Points: 0,
 			Rank:   0,
 		}
 	}
 
-	// 各チームの総試合数を計算（予定試合数）
-	teamTotalMatches := make(map[string]int)
-	for _, match := range competitionMatches {
-		var matchTeamEntries []*db_model.MatchEntry
-		for _, entry := range matchEntries {
-			if entry.MatchID == match.ID {
-				matchTeamEntries = append(matchTeamEntries, entry)
-			}
-		}
-		if len(matchTeamEntries) == 2 {
-			teamTotalMatches[matchTeamEntries[0].TeamID]++
-			teamTotalMatches[matchTeamEntries[1].TeamID]++
-		}
-	}
+	// 各FINISHED試合の結果を集計
+	for _, match := range finishedMatches {
+		entries := entriesByMatch[match.ID]
 
-	// 試合結果を集計
-	for _, match := range competitionMatches {
-		if match.Status != "finished" {
+		// 2チームの対戦でない場合はスキップ
+		if len(entries) != 2 {
 			continue
 		}
 
-		var matchTeamEntries []*db_model.MatchEntry
-		for _, entry := range matchEntries {
-			if entry.MatchID == match.ID {
-				matchTeamEntries = append(matchTeamEntries, entry)
-			}
-		}
+		team1Entry := entries[0]
+		team2Entry := entries[1]
 
-		if len(matchTeamEntries) != 2 {
+		// チームIDがnullの場合はスキップ
+		if !team1Entry.TeamID.Valid || !team2Entry.TeamID.Valid {
 			continue
 		}
 
-		team1 := matchTeamEntries[0]
-		team2 := matchTeamEntries[1]
+		stats1, ok1 := teamStats[team1Entry.TeamID.String]
+		stats2, ok2 := teamStats[team2Entry.TeamID.String]
 
-		stats1 := teamStats[team1.TeamID]
-		stats2 := teamStats[team2.TeamID]
+		// 参加チームでない場合はスキップ
+		if !ok1 || !ok2 {
+			continue
+		}
 
-		stats1.Gf += team1.Score
-		stats1.Ga += team2.Score
-		stats2.Gf += team2.Score
-		stats2.Ga += team1.Score
+		// 得失点を更新
+		stats1.Gf += team1Entry.Score
+		stats1.Ga += team2Entry.Score
+		stats2.Gf += team2Entry.Score
+		stats2.Ga += team1Entry.Score
 
-		// 勝敗を判定
-		if team1.Score > team2.Score {
+		// 勝敗を判定してポイントを計算
+		if team1Entry.Score > team2Entry.Score {
+			// Team1の勝利
 			stats1.Win++
 			stats1.Points += league.WinPt
 			stats2.Lose++
 			stats2.Points += league.LosePt
-		} else if team1.Score < team2.Score {
+		} else if team1Entry.Score < team2Entry.Score {
+			// Team2の勝利
 			stats1.Lose++
 			stats1.Points += league.LosePt
 			stats2.Win++
 			stats2.Points += league.WinPt
 		} else {
+			// 引き分け
 			stats1.Draw++
 			stats1.Points += league.DrawPt
 			stats2.Draw++
 			stats2.Points += league.DrawPt
 		}
-
-		// 得失点差を更新
-		stats1.Gd = sql.NullInt64{Valid: true, Int64: int64(stats1.Gf - stats1.Ga)}
-		stats2.Gd = sql.NullInt64{Valid: true, Int64: int64(stats2.Gf - stats2.Ga)}
 	}
 
-	// リーグ進行中の場合のみ平均値で置き換え
-	if !isLeagueFinished {
-		for _, stats := range teamStats {
-			totalMatches := teamTotalMatches[stats.TeamID]
-			if totalMatches > 0 {
-				// 既存のフィールドを平均値で置き換え
-				avgPoints := float64(stats.Points) / float64(totalMatches)
-				avgGf := float64(stats.Gf) / float64(totalMatches)
-				avgGa := float64(stats.Ga) / float64(totalMatches)
-				avgGd := avgGf - avgGa
-
-				// 小数点を保持するために適切にスケーリング（例：1000倍）
-				stats.Points = int(avgPoints * 1000)
-				stats.Gf = int(avgGf * 1000)
-				stats.Ga = int(avgGa * 1000)
-				stats.Gd = sql.NullInt64{Valid: true, Int64: int64(avgGd * 1000)}
-			} else {
-				// 試合がない場合は-999的な値を設定
-				stats.Points = -999000
-				stats.Gf = -999000
-				stats.Ga = -999000
-				stats.Gd = sql.NullInt64{Valid: true, Int64: -999000}
-			}
-		}
-	}
-
-	// 順位表を配列に変換
+	// mapをsliceに変換
 	var standings []*db_model.LeagueStanding
 	for _, stats := range teamStats {
 		standings = append(standings, stats)
 	}
 
-	// ソートして順位を決定
-	s.sortStandingsWithContext(standings, league.CalculationType)
-	s.assignRanksWithContext(standings, league.CalculationType)
-
-	return standings, nil
+	return standings
 }
 
-// リーグが完了しているかどうかを判定する内部メソッド
-func (s *League) isLeagueFinished(matches []*db_model.Match) bool {
-	if len(matches) == 0 {
-		return false
-	}
+// sortStandings は計算タイプに基づいて順位表をソート
+// 主キー → タイブレーク → TeamIDの順で安定ソート
+func sortStandings(standings []*db_model.LeagueStanding, calcType string) {
+	// タイブレークルールの定義
+	// 将来的に設定化可能な設計
+	tiebreakers := getTiebreakers(calcType)
 
-	for _, match := range matches {
-		if match.Status != "finished" {
-			return false
-		}
-	}
-	return true
-}
+	sort.SliceStable(standings, func(i, j int) bool {
+		a, b := standings[i], standings[j]
 
-// コンテキストを考慮したソート
-func (s *League) sortStandingsWithContext(standings []*db_model.LeagueStanding, calcType string) {
-	sort.Slice(standings, func(i, j int) bool {
-		if standings[i].Points != standings[j].Points {
-			return standings[i].Points > standings[j].Points
+		// 主キーで比較
+		primaryCmp := comparePrimaryKey(a, b, calcType)
+		if primaryCmp != 0 {
+			return primaryCmp > 0
 		}
 
-		switch calcType {
-		case "DIFF_SCORE":
-			return standings[i].Gd.Int64 > standings[j].Gd.Int64
-		case "TOTAL_SCORE":
-			return standings[i].Gf > standings[j].Gf
-		default:
-			return false
+		// タイブレーカーで比較
+		for _, tb := range tiebreakers {
+			cmp := compareTiebreaker(a, b, tb)
+			if cmp != 0 {
+				return cmp > 0
+			}
 		}
+
+		// 最終的にTeamIDで安定化（昇順）
+		return a.TeamID < b.TeamID
 	})
 }
 
-// コンテキストを考慮した順位設定
-func (s *League) assignRanksWithContext(standings []*db_model.LeagueStanding, calcType string) {
+// getTiebreakers は計算タイプに応じたタイブレークルールを返す
+func getTiebreakers(calcType string) []string {
+	switch calcType {
+	case "WIN_SCORE":
+		return []string{"GOAL_DIFF", "GOALS_FOR"}
+	case "DIFF_SCORE":
+		return []string{"GOALS_FOR", "POINTS"}
+	case "TOTAL_SCORE":
+		return []string{"GOAL_DIFF", "POINTS"}
+	default:
+		// デフォルトはWIN_SCOREと同じ
+		return []string{"GOAL_DIFF", "GOALS_FOR"}
+	}
+}
+
+// comparePrimaryKey は主キーでの比較結果を返す
+// 戻り値: 1 (a > b), -1 (a < b), 0 (a == b)
+func comparePrimaryKey(a, b *db_model.LeagueStanding, calcType string) int {
+	switch calcType {
+	case "WIN_SCORE":
+		return compareInt(a.Points, b.Points)
+	case "DIFF_SCORE":
+		return compareInt(a.Gf-a.Ga, b.Gf-b.Ga)
+	case "TOTAL_SCORE":
+		return compareInt(a.Gf, b.Gf)
+	default:
+		return compareInt(a.Points, b.Points)
+	}
+}
+
+// compareTiebreaker はタイブレーカーでの比較結果を返す
+func compareTiebreaker(a, b *db_model.LeagueStanding, tiebreaker string) int {
+	switch tiebreaker {
+	case "POINTS":
+		return compareInt(a.Points, b.Points)
+	case "GOAL_DIFF":
+		// GDは使わず、都度 gf - ga
+		return compareInt(a.Gf-a.Ga, b.Gf-b.Ga)
+	case "GOALS_FOR":
+		return compareInt(a.Gf, b.Gf)
+	case "GOALS_AGAINST":
+		// 失点は少ない方が上位なので逆順
+		return compareInt(b.Ga, a.Ga)
+	default:
+		return 0
+	}
+}
+
+// compareInt は整数の比較結果を返す
+func compareInt(a, b int) int {
+	if a > b {
+		return 1
+	} else if a < b {
+		return -1
+	}
+	return 0
+}
+
+// assignRanks は順位を付与する
+// 主キーとタイブレーカー全てが同じ場合のみ同順位とする
+func assignRanks(standings []*db_model.LeagueStanding, calcType string) {
 	if len(standings) == 0 {
 		return
 	}
 
+	tiebreakers := getTiebreakers(calcType)
 	standings[0].Rank = 1
 	currentRank := 1
 
 	for i := 1; i < len(standings); i++ {
-		isSameRank := false
+		prev := standings[i-1]
+		curr := standings[i]
 
-		switch calcType {
-		case "DIFF_SCORE":
-			if standings[i].Points == standings[i-1].Points &&
-				standings[i].Gd.Int64 == standings[i-1].Gd.Int64 {
-				isSameRank = true
-			}
-		case "TOTAL_SCORE":
-			if standings[i].Points == standings[i-1].Points &&
-				standings[i].Gf == standings[i-1].Gf {
-				isSameRank = true
-			}
-		default:
-			if standings[i].Points == standings[i-1].Points {
-				isSameRank = true
+		// 主キーが異なる場合は異なる順位
+		if comparePrimaryKey(prev, curr, calcType) != 0 {
+			currentRank = i + 1
+			curr.Rank = currentRank
+			continue
+		}
+
+		// タイブレーカーを全てチェック
+		isSameRank := true
+		for _, tb := range tiebreakers {
+			if compareTiebreaker(prev, curr, tb) != 0 {
+				isSameRank = false
+				break
 			}
 		}
 
 		if isSameRank {
-			standings[i].Rank = currentRank
+			// 同順位
+			curr.Rank = currentRank
 		} else {
+			// 異なる順位（飛び番号）
 			currentRank = i + 1
-			standings[i].Rank = currentRank
+			curr.Rank = currentRank
 		}
 	}
 }
