@@ -35,6 +35,8 @@ type Loaders struct {
 	LeagueStandingsLoader      *dataloadgen.Loader[string, []*db_model.LeagueStanding]
 	TeamLeaguesLoader          *dataloadgen.Loader[string, []*db_model.LeagueStanding]
 	LocationCompetitionsLoader *dataloadgen.Loader[string, []*db_model.Competition]
+	LeagueStandingsLoader      *dataloadgen.Loader[string, []*db_model.LeagueStanding]
+	TeamLeaguesLoader          *dataloadgen.Loader[string, []*db_model.LeagueStanding]
 }
 
 func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League) *Loaders {
@@ -64,6 +66,8 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 		LeagueStandingsLoader:      dataloadgen.NewLoader(newLeagueStandingsLoader(leagueSvc)),
 		TeamLeaguesLoader:          dataloadgen.NewLoader(newTeamLeaguesLoader(leagueSvc)),
 		LocationCompetitionsLoader: dataloadgen.NewLoader(newLocationCompetitionsLoader(competitionSvc)),
+		LeagueStandingsLoader:      dataloadgen.NewLoader(newLeagueStandingsLoader(leagueSvc)),
+		TeamLeaguesLoader:          dataloadgen.NewLoader(newTeamLeaguesLoader(leagueSvc)),
 	}
 }
 
