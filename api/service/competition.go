@@ -108,12 +108,14 @@ func (s *Competition) AddEntries(ctx context.Context, competitionId string, team
 				}
 			}
 		}
+
 		return nil
 	})
 
 	if err != nil {
 		return nil, errors.ErrAddCompetitionEntry
 	}
+
 	return competition, nil
 }
 

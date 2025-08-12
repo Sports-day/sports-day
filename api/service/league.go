@@ -276,9 +276,7 @@ func (s *League) generateEvenRoundRobin(teamIDs []string) [][2]string {
 
 	for round := 0; round < n-1; round++ {
 		for i := 0; i < n/2; i++ {
-			team1 := teams[i]
-			team2 := teams[n-1-i]
-			schedule = append(schedule, [2]string{team1, team2})
+			schedule = append(schedule, [2]string{teams[i], teams[n-1-i]})
 		}
 
 		if n > 2 {
@@ -304,7 +302,6 @@ func (s *League) generateOddRoundRobin(teamIDs []string) [][2]string {
 		for i := 0; i < n/2; i++ {
 			team1Idx := (round + i) % n
 			team2Idx := (round + n - 1 - i) % n
-
 			if team1Idx != team2Idx {
 				schedule = append(schedule, [2]string{teams[team1Idx], teams[team2Idx]})
 			}
@@ -315,20 +312,19 @@ func (s *League) generateOddRoundRobin(teamIDs []string) [][2]string {
 }
 
 func (s *League) CalculateStandings(ctx context.Context, competitionID string) ([]*db_model.LeagueStanding, error) {
+	var calculatedStandings []*db_model.LeagueStanding
+
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		// 1. リーグルールを取得
 		league, err := s.leagueRepository.Get(ctx, tx, competitionID)
 		if err != nil {
 			return err
 		}
 
-		// 2. 参加チームを取得
 		competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{competitionID})
 		if err != nil {
 			return err
 		}
 
-		// 3. 全試合を取得
 		allMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{competitionID})
 		if err != nil {
 			return err
@@ -360,11 +356,16 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 		assignRanks(standings, league.CalculationType)
 
 		for _, standing := range standings {
-			_, err := s.leagueRepository.SaveStanding(ctx, tx, standing)
-			if err != nil {
+			if _, err := s.leagueRepository.SaveStanding(ctx, tx, standing); err != nil {
 				return err
 			}
 		}
+
+		rows, err := s.leagueRepository.ListStandings(ctx, tx, competitionID)
+		if err != nil {
+			return err
+		}
+		calculatedStandings = rows
 
 		return nil
 	})
@@ -372,12 +373,7 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 		return nil, errors.Wrap(err)
 	}
 
-	rows, err := s.leagueRepository.ListStandings(ctx, s.db, competitionID)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
-	return rows, nil
+	return calculatedStandings, nil
 }
 
 func indexEntriesByMatchID(entries []*db_model.MatchEntry) map[string][]*db_model.MatchEntry {
@@ -413,7 +409,6 @@ func computeStandingsFromMatches(
 
 	for _, match := range finishedMatches {
 		entries := entriesByMatch[match.ID]
-
 		if len(entries) != 2 {
 			continue
 		}
@@ -425,12 +420,8 @@ func computeStandingsFromMatches(
 			continue
 		}
 
-		stats1, ok1 := teamStats[team1Entry.TeamID.String]
-		stats2, ok2 := teamStats[team2Entry.TeamID.String]
-
-		if !ok1 || !ok2 {
-			continue
-		}
+		stats1 := teamStats[team1Entry.TeamID.String]
+		stats2 := teamStats[team2Entry.TeamID.String]
 
 		stats1.GoalsFor += team1Entry.Score
 		stats1.GoalsAgainst += team2Entry.Score
@@ -469,14 +460,12 @@ func sortStandings(standings []*db_model.LeagueStanding, calcType string) {
 	sort.SliceStable(standings, func(i, j int) bool {
 		a, b := standings[i], standings[j]
 
-		primaryCmp := comparePrimaryKey(a, b, calcType)
-		if primaryCmp != 0 {
-			return primaryCmp > 0
+		if cmp := comparePrimaryKey(a, b, calcType); cmp != 0 {
+			return cmp > 0
 		}
 
 		for _, tb := range tiebreakers {
-			cmp := compareTiebreaker(a, b, tb)
-			if cmp != 0 {
+			if cmp := compareTiebreaker(a, b, tb); cmp != 0 {
 				return cmp > 0
 			}
 		}
@@ -529,7 +518,8 @@ func compareTiebreaker(a, b *db_model.LeagueStanding, tiebreaker string) int {
 func compareInt(a, b int) int {
 	if a > b {
 		return 1
-	} else if a < b {
+	}
+	if a < b {
 		return -1
 	}
 	return 0
