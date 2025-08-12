@@ -316,16 +316,19 @@ func (s *League) generateOddRoundRobin(teamIDs []string) [][2]string {
 
 func (s *League) CalculateStandings(ctx context.Context, competitionID string) ([]*db_model.LeagueStanding, error) {
 	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 1. リーグルールを取得
 		league, err := s.leagueRepository.Get(ctx, tx, competitionID)
 		if err != nil {
 			return err
 		}
 
+		// 2. 参加チームを取得
 		competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{competitionID})
 		if err != nil {
 			return err
 		}
 
+		// 3. 全試合を取得
 		allMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{competitionID})
 		if err != nil {
 			return err
@@ -357,7 +360,8 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 		assignRanks(standings, league.CalculationType)
 
 		for _, standing := range standings {
-			if _, err := s.leagueRepository.SaveStanding(ctx, tx, standing); err != nil {
+			_, err := s.leagueRepository.SaveStanding(ctx, tx, standing)
+			if err != nil {
 				return err
 			}
 		}
