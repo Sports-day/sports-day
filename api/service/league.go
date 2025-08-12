@@ -39,10 +39,16 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		competitionID := ulid.Make()
 
+		var defaultLocationID sql.NullString
+		if input.DefaultLocationID != nil {
+			defaultLocationID = sql.NullString{Valid: true, String: *input.DefaultLocationID}
+		}
+
 		competition := &db_model.Competition{
-			ID:   competitionID,
-			Name: input.Name,
-			Type: "LEAGUE",
+			ID:                competitionID,
+			Name:              input.Name,
+			Type:              "LEAGUE",
+			DefaultLocationID: defaultLocationID,
 		}
 
 		if err := tx.Save(competition).Error; err != nil {
@@ -191,8 +197,7 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 	var createdMatches []*db_model.Match
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		entries, err := s.competitionRepository.
-			BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{competitionID})
+		entries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{competitionID})
 		if err != nil {
 			return err
 		}
@@ -213,8 +218,6 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 		var locationID sql.NullString
 		if input.LocationID != nil {
 			locationID = sql.NullString{Valid: true, String: *input.LocationID}
-		} else {
-			locationID = sql.NullString{Valid: false}
 		}
 
 		schedule := s.generateOptimizedRoundRobinSchedule(teamIDs)
@@ -229,16 +232,13 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 				CompetitionID: competitionID,
 				LocationID:    locationID,
 			}
+
 			saved, err := s.matchRepository.Save(ctx, tx, m)
 			if err != nil {
 				return err
 			}
 
-			if _, err := s.matchRepository.AddMatchEntries(
-				ctx, tx,
-				saved.ID,
-				[]string{matchup[0], matchup[1]},
-			); err != nil {
+			if _, err := s.matchRepository.AddMatchEntries(ctx, tx, saved.ID, []string{matchup[0], matchup[1]}); err != nil {
 				return err
 			}
 
@@ -251,6 +251,7 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
 	return createdMatches, nil
 }
 
@@ -314,8 +315,6 @@ func (s *League) generateOddRoundRobin(teamIDs []string) [][2]string {
 }
 
 func (s *League) CalculateStandings(ctx context.Context, competitionID string) ([]*db_model.LeagueStanding, error) {
-	var calculatedStandings []*db_model.LeagueStanding
-
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		league, err := s.leagueRepository.Get(ctx, tx, competitionID)
 		if err != nil {
@@ -358,17 +357,10 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 		assignRanks(standings, league.CalculationType)
 
 		for _, standing := range standings {
-			_, err := s.leagueRepository.SaveStanding(ctx, tx, standing)
-			if err != nil {
+			if _, err := s.leagueRepository.SaveStanding(ctx, tx, standing); err != nil {
 				return err
 			}
 		}
-
-		rows, err := s.leagueRepository.ListStandings(ctx, tx, competitionID)
-		if err != nil {
-			return err
-		}
-		calculatedStandings = rows
 
 		return nil
 	})
@@ -376,7 +368,12 @@ func (s *League) CalculateStandings(ctx context.Context, competitionID string) (
 		return nil, errors.Wrap(err)
 	}
 
-	return calculatedStandings, nil
+	rows, err := s.leagueRepository.ListStandings(ctx, s.db, competitionID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return rows, nil
 }
 
 func indexEntriesByMatchID(entries []*db_model.MatchEntry) map[string][]*db_model.MatchEntry {
@@ -393,7 +390,9 @@ func computeStandingsFromMatches(
 	competitionEntries []*db_model.CompetitionEntry,
 	league *db_model.League,
 ) []*db_model.LeagueStanding {
+
 	teamStats := make(map[string]*db_model.LeagueStanding)
+
 	for _, entry := range competitionEntries {
 		teamStats[entry.TeamID] = &db_model.LeagueStanding{
 			ID:           league.ID,
