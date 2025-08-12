@@ -13,21 +13,6 @@ import (
 	"sports-day/api/pkg/slices"
 )
 
-// DefaultLocation is the resolver for the defaultLocation field.
-func (r *competitionResolver) DefaultLocation(ctx context.Context, obj *model.Competition) (*model.Location, error) {
-	if obj.DefaultLocationID == "" {
-		return nil, nil
-	}
-	locations, err := loader.LoadLocations(ctx, []string{obj.DefaultLocationID})
-	if err != nil {
-		return nil, err
-	}
-	if len(locations) == 0 || locations[0] == nil {
-		return nil, nil
-	}
-	return model.FormatLocationResponse(locations[0]), nil
-}
-
 // Teams is the resolver for the teams field.
 func (r *competitionResolver) Teams(ctx context.Context, obj *model.Competition) ([]*model.Team, error) {
 	competitionEntries, err := loader.LoadCompetitionEntries(ctx, obj.ID)
@@ -57,37 +42,19 @@ func (r *competitionResolver) Matches(ctx context.Context, obj *model.Competitio
 	}), nil
 }
 
-// Leagues is the resolver for the leagues field.
-func (r *competitionResolver) Leagues(ctx context.Context, obj *model.Competition) ([]*model.League, error) {
-	// 大会がリーグタイプの場合のみリーグを返す
-	if obj.Type != model.CompetitionTypeLeague {
-		return []*model.League{}, nil
-	}
-
-	leagues, err := loader.LoadLeagues(ctx, []string{obj.ID})
+// League is the resolver for the league field.
+func (r *competitionResolver) League(ctx context.Context, obj *model.Competition) (*model.League, error) {
+	league, err := loader.LoadLeagues(ctx, []string{obj.ID})
 	if err != nil {
 		return nil, err
 	}
 
-	competitions, err := loader.LoadCompetitions(ctx, []string{obj.ID})
+	competition, err := loader.LoadCompetitions(ctx, []string{obj.ID})
 	if err != nil {
 		return nil, err
 	}
 
-	compMap := make(map[string]*db_model.Competition, len(competitions))
-	for _, c := range competitions {
-		compMap[c.ID] = c
-	}
-
-	res := make([]*model.League, 0, len(leagues))
-	for _, lg := range leagues {
-		comp, ok := compMap[lg.ID]
-		if !ok {
-			return nil, err
-		}
-		res = append(res, model.FormatLeagueResponse(lg, comp))
-	}
-	return res, nil
+	return model.FormatLeagueResponse(league[0], competition[0]), nil
 }
 
 // Teams is the resolver for the teams field.
@@ -223,18 +190,7 @@ func (r *leagueResolver) Standings(ctx context.Context, obj *model.League) ([]*m
 	// Standing形式に変換
 	res := make([]*model.Standing, 0, len(standings))
 	for _, standing := range standings {
-		res = append(res, &model.Standing{
-			ID:     standing.ID,
-			TeamID: standing.TeamID,
-			Points: int32(standing.Points),
-			Rank:   int32(standing.Rank),
-			Win:    int32(standing.Win),
-			Draw:   int32(standing.Draw),
-			Lose:   int32(standing.Lose),
-			Gf:     int32(standing.Gf),
-			Gd:     int32(standing.Gd),
-			Ga:     int32(standing.Ga),
-		})
+		res = append(res, model.FormatStandingResponse(standing))
 	}
 
 	return res, nil
@@ -248,17 +204,6 @@ func (r *locationResolver) Matches(ctx context.Context, obj *model.Location) ([]
 	}
 	return slices.Map(matches, func(match *db_model.Match) *model.Match {
 		return model.FormatMatchResponse(match)
-	}), nil
-}
-
-// Competitions is the resolver for the competitions field.
-func (r *locationResolver) Competitions(ctx context.Context, obj *model.Location) ([]*model.Competition, error) {
-	competitions, err := loader.LoadLocationCompetitions(ctx, obj.ID)
-	if err != nil {
-		return nil, err
-	}
-	return slices.Map(competitions, func(competition *db_model.Competition) *model.Competition {
-		return model.FormatCompetitionResponse(competition)
 	}), nil
 }
 
@@ -581,3 +526,21 @@ type matchResolver struct{ *Resolver }
 type standingResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *standingResolver) Gf(ctx context.Context, obj *model.Standing) (int32, error) {
+	panic(fmt.Errorf("not implemented: Gf - gf"))
+}
+func (r *standingResolver) Ga(ctx context.Context, obj *model.Standing) (int32, error) {
+	panic(fmt.Errorf("not implemented: Ga - ga"))
+}
+func (r *standingResolver) Gd(ctx context.Context, obj *model.Standing) (int32, error) {
+	panic(fmt.Errorf("not implemented: Gd - gd"))
+}
+*/
