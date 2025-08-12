@@ -4,14 +4,14 @@ package db_model
 
 // LeagueStanding represents a row from 'sportsday.league_standings'.
 type LeagueStanding struct {
-	ID     string `json:"id"`      // 大会ID
-	TeamID string `json:"team_id"` // チームID
-	Win    int    `json:"win"`     // 勝利数
-	Draw   int    `json:"draw"`    // 引き分け数
-	Lose   int    `json:"lose"`    // 敗北数
-	Gf     int    `json:"gf"`      // 総得点
-	Ga     int    `json:"ga"`      // 総失点
-	Gd     int    `json:"gd"`      // 得失点差
-	Points int    `json:"points"`  // 勝点
-	Rank   int    `json:"rank"`    // 順位
+	ID           string `json:"id"`            // 大会ID
+	TeamID       string `json:"team_id"`       // チームID
+	Win          int    `json:"win"`           // 勝利数
+	Draw         int    `json:"draw"`          // 引き分け数
+	Lose         int    `json:"lose"`          // 敗北数
+	GoalsFor     int    `json:"goals_for"`     // 総得点
+	GoalsAgainst int    `json:"goals_against"` // 総失点
+	GoalDiff     int    `json:"goal_diff"`     // 得失点差
+	Points       int    `json:"points"`        // 勝点
+	Rank         int    `json:"rank"`          // 順位
 }

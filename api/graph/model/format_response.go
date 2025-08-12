@@ -130,15 +130,15 @@ func FormatLeagueResponse(league *db_model.League, competition *db_model.Competi
 
 func FormatStandingResponse(standing *db_model.LeagueStanding) *Standing {
 	return &Standing{
-		ID:     standing.ID,
-		TeamID: standing.TeamID,
-		Win:    int32(standing.Win),
-		Draw:   int32(standing.Draw),
-		Lose:   int32(standing.Lose),
-		Gf:     int32(standing.Gf),
-		Ga:     int32(standing.Ga),
-		Gd:     int32(standing.Gd),
-		Points: int32(standing.Points),
-		Rank:   int32(standing.Rank),
+		ID:           standing.ID,
+		TeamID:       standing.TeamID,
+		Win:          int32(standing.Win),
+		Draw:         int32(standing.Draw),
+		Lose:         int32(standing.Lose),
+		GoalsFor:     int32(standing.GoalsFor),
+		GoalsAgainst: int32(standing.GoalsAgainst),
+		GoalDiff:     int32(standing.GoalDiff),
+		Points:       int32(standing.Points),
+		Rank:         int32(standing.Rank),
 	}
 }

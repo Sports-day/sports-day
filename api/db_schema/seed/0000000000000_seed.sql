@@ -384,7 +384,7 @@ VALUES
   ('01JSD1ZQK0A2X6JQK1Q2X6JQD', 'WIN_SCORE', 3, 1, 0);
 
 -- リーグ順位表データ挿入
-INSERT INTO league_standings (id, team_id, win, draw, lose, gf, ga, points, `rank`)
+INSERT INTO league_standings (id, team_id, win, draw, lose, goals_for, goals_against, points, `rank`)
 VALUES
   -- サッカーAリーグの順位表（試合結果から計算）
   -- なでしこA: 2勝1敗（8得点4失点、得失点差+4）→ 6ポイント

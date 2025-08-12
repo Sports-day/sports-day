@@ -18,10 +18,9 @@ type Team struct {
 }
 
 type Competition struct {
-	ID                string          `json:"id"`
-	Name              string          `json:"name"`
-	Type              CompetitionType `json:"type"`
-	DefaultLocationID string          `json:"defaultLocationId"`
+	ID   string          `json:"id"`
+	Name string          `json:"name"`
+	Type CompetitionType `json:"type"`
 }
 
 type Match struct {
@@ -53,14 +52,14 @@ type League struct {
 }
 
 type Standing struct {
-	ID     string `json:"id"`
-	TeamID string `json:"team_id"`
-	Points int32  `json:"points"`
-	Rank   int32  `json:"rank"`
-	Win    int32  `json:"win"`
-	Draw   int32  `json:"draw"`
-	Lose   int32  `json:"lose"`
-	Gf     int32  `json:"gf"`
-	Ga     int32  `json:"ga"`
-	Gd     int32  `json:"gd"`
+	ID           string `json:"id"`
+	TeamID       string `json:"team_id"`
+	Points       int32  `json:"points"`
+	Rank         int32  `json:"rank"`
+	Win          int32  `json:"win"`
+	Draw         int32  `json:"draw"`
+	Lose         int32  `json:"lose"`
+	GoalsFor     int32  `json:"gf"`
+	GoalsAgainst int32  `json:"ga"`
+	GoalDiff     int32  `json:"gd"`
 }
