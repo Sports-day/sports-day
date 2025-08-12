@@ -14,8 +14,8 @@ type AuthResponse struct {
 }
 
 type CreateCompetitionInput struct {
-	Name              string  `json:"name"`
-	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
+	Name string          `json:"name"`
+	Type CompetitionType `json:"type"`
 }
 
 type CreateGroupInput struct {
@@ -130,8 +130,7 @@ type UpdateCompetitionEntriesInput struct {
 }
 
 type UpdateCompetitionInput struct {
-	Name              *string `json:"name,omitempty"`
-	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
+	Name *string `json:"name,omitempty"`
 }
 
 type UpdateGroupInput struct {
