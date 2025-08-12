@@ -47,7 +47,7 @@ func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_
 			ID:            ulid.Make(),
 			Time:          parsedTime,
 			Status:        string(input.Status),
-			LocationID:    input.LocationID,
+			LocationID:    pkggorm.ToNullString(input.LocationID),
 			CompetitionID: input.CompetitionID,
 			WinnerTeamID:  pkggorm.ToNullString(nil),
 		}
@@ -147,7 +147,7 @@ func (s *Match) UpdateDetail(ctx context.Context, id string, input model.UpdateM
 		match.Time = parsedTime
 	}
 	if input.LocationID != nil {
-		match.LocationID = *input.LocationID
+		match.LocationID = pkggorm.ToNullString(input.LocationID)
 	}
 
 	match, err = s.matchRepository.Save(ctx, s.db, match)
@@ -193,6 +193,7 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
 	return match, nil
 }
 
@@ -306,7 +307,9 @@ func (s *Match) GetMatchesMapByLocationIDs(ctx context.Context, locationIds []st
 
 	locationMatchesMap := make(map[string][]*db_model.Match)
 	for _, match := range matches {
-		locationMatchesMap[match.LocationID] = append(locationMatchesMap[match.LocationID], match)
+		if match.LocationID.Valid {
+			locationMatchesMap[match.LocationID.String] = append(locationMatchesMap[match.LocationID.String], match)
+		}
 	}
 	return locationMatchesMap, nil
 }
