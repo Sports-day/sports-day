@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -376,7 +375,6 @@ func (r *mutationResolver) DeleteLeague(ctx context.Context, id string) (*model.
 		return nil, err
 	}
 
-	// 削除されたリーグの情報を返す
 	response := model.FormatLeagueResponse(deletedLeague, competition)
 	return response, nil
 }
@@ -409,9 +407,32 @@ func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id stri
 	return res, nil
 }
 
-// DeleteLeague is the resolver for the deleteLeague field.
-func (r *mutationResolver) DeleteLeague(ctx context.Context, id string) (*model.League, error) {
-	panic(fmt.Errorf("not implemented: DeleteLeague - deleteLeague"))
+// GenerateRoundRobin is the resolver for the generateRoundRobin field.
+func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, input model.GenerateRoundRobinInput) ([]*model.Match, error) {
+	matches, err := r.LeagueService.GenerateRoundRobin(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Match, 0, len(matches))
+	for _, match := range matches {
+		res = append(res, model.FormatMatchResponse(match))
+	}
+	return res, nil
+}
+
+// CalculateLeagueStandings is the resolver for the calculateLeagueStandings field.
+func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id string) ([]*model.Standing, error) {
+	standings, err := r.LeagueService.CalculateStandings(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Standing, 0, len(standings))
+	for _, standing := range standings {
+		res = append(res, model.FormatStandingResponse(standing))
+	}
+	return res, nil
 }
 
 // Users is the resolver for the users field.

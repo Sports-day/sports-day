@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -60,17 +59,28 @@ func (r *competitionResolver) Matches(ctx context.Context, obj *model.Competitio
 
 // League is the resolver for the league field.
 func (r *competitionResolver) League(ctx context.Context, obj *model.Competition) (*model.League, error) {
-	league, err := loader.LoadLeagues(ctx, []string{obj.ID})
+	// 大会がリーグタイプでなければ null
+	if obj.Type != model.CompetitionTypeLeague {
+		return nil, nil
+	}
+
+	leagues, err := loader.LoadLeagues(ctx, []string{obj.ID})
 	if err != nil {
 		return nil, err
 	}
+	if len(leagues) == 0 || leagues[0] == nil {
+		return nil, nil
+	}
 
-	competition, err := loader.LoadCompetitions(ctx, []string{obj.ID})
+	competitions, err := loader.LoadCompetitions(ctx, []string{obj.ID})
 	if err != nil {
 		return nil, err
 	}
+	if len(competitions) == 0 || competitions[0] == nil {
+		return nil, nil
+	}
 
-	return model.FormatLeagueResponse(league[0], competition[0]), nil
+	return model.FormatLeagueResponse(leagues[0], competitions[0]), nil
 }
 
 // Teams is the resolver for the teams field.
