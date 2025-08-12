@@ -6,8 +6,8 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
+	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
 
@@ -337,17 +337,75 @@ func (r *mutationResolver) UpdateJudgment(ctx context.Context, id string, input 
 
 // CreateLeague is the resolver for the createLeague field.
 func (r *mutationResolver) CreateLeague(ctx context.Context, input model.CreateLeagueInput) (*model.League, error) {
-	panic(fmt.Errorf("not implemented: CreateLeague - createLeague"))
+	league, err := r.LeagueService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	competition, err := r.CompetitionService.Get(ctx, league.ID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLeagueResponse(league, competition), nil
 }
 
 // UpdateLeagueRule is the resolver for the updateLeagueRule field.
 func (r *mutationResolver) UpdateLeagueRule(ctx context.Context, id string, input model.UpdateLeagueRuleInput) (*model.League, error) {
-	panic(fmt.Errorf("not implemented: UpdateLeagueRule - updateLeagueRule"))
+	league, err := r.LeagueService.UpdateLeagueRule(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	competition, err := r.CompetitionService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLeagueResponse(league, competition), nil
 }
 
 // DeleteLeague is the resolver for the deleteLeague field.
 func (r *mutationResolver) DeleteLeague(ctx context.Context, id string) (*model.League, error) {
-	panic(fmt.Errorf("not implemented: DeleteLeague - deleteLeague"))
+	competition, err := r.CompetitionService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	deletedLeague, err := r.LeagueService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// 削除されたリーグの情報を返す
+	response := model.FormatLeagueResponse(deletedLeague, competition)
+	return response, nil
+}
+
+// GenerateRoundRobin is the resolver for the generateRoundRobin field.
+func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, input model.GenerateRoundRobinInput) ([]*model.Match, error) {
+	matches, err := r.LeagueService.GenerateRoundRobin(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Match, 0, len(matches))
+	for _, match := range matches {
+		res = append(res, model.FormatMatchResponse(match))
+	}
+	return res, nil
+}
+
+// CalculateLeagueStandings is the resolver for the calculateLeagueStandings field.
+func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id string) ([]*model.Standing, error) {
+	standings, err := r.LeagueService.CalculateStandings(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Standing, 0, len(standings))
+	for _, standing := range standings {
+		res = append(res, model.FormatStandingResponse(standing))
+	}
+	return res, nil
 }
 
 // Users is the resolver for the users field.
@@ -590,12 +648,49 @@ func (r *queryResolver) Judgment(ctx context.Context, id string) (*model.Judgmen
 
 // Leagues is the resolver for the leagues field.
 func (r *queryResolver) Leagues(ctx context.Context) ([]*model.League, error) {
-	panic(fmt.Errorf("not implemented: Leagues - leagues"))
+	leagues, err := r.LeagueService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]string, 0, len(leagues))
+	for _, lg := range leagues {
+		ids = append(ids, lg.ID)
+	}
+
+	comps, err := r.CompetitionService.GetCompetitionsMapByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	compMap := make(map[string]*db_model.Competition, len(comps))
+	for _, c := range comps {
+		compMap[c.ID] = c
+	}
+
+	res := make([]*model.League, 0, len(leagues))
+	for _, league := range leagues {
+		comp, ok := compMap[league.ID]
+		if !ok {
+			return nil, err
+		}
+		res = append(res, model.FormatLeagueResponse(league, comp))
+	}
+	return res, nil
 }
 
 // League is the resolver for the league field.
 func (r *queryResolver) League(ctx context.Context, id string) (*model.League, error) {
-	panic(fmt.Errorf("not implemented: League - league"))
+	league, err := r.LeagueService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	competition, err := r.CompetitionService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatLeagueResponse(league, competition), nil
 }
 
 // Mutation returns MutationResolver implementation.
