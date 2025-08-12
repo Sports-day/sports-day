@@ -29,13 +29,13 @@ type CreateInformationInput struct {
 
 type CreateJudgmentInput struct {
 	ID    string         `json:"id"`
-	Name  string         `json:"name"`
 	Entry *JudgmentEntry `json:"entry"`
 }
 
 type CreateLeagueInput struct {
-	CompetitionID   string          `json:"competitionId"`
-	CalculationType CalculationType `json:"calculationType"`
+	Name              string          `json:"name"`
+	DefaultLocationID *string         `json:"defaultLocationId,omitempty"`
+	CalculationType   CalculationType `json:"calculationType"`
 }
 
 type CreateLocationInput struct {
@@ -45,7 +45,7 @@ type CreateLocationInput struct {
 type CreateMatchInput struct {
 	Time          string         `json:"time"`
 	Status        MatchStatus    `json:"status"`
-	LocationID    string         `json:"locationId"`
+	LocationID    *string        `json:"locationId,omitempty"`
 	CompetitionID string         `json:"competitionId"`
 	TeamIds       []string       `json:"teamIds,omitempty"`
 	Judgment      *JudgmentEntry `json:"judgment,omitempty"`
@@ -70,6 +70,13 @@ type CreateUserInput struct {
 	Email string `json:"email"`
 }
 
+type GenerateRoundRobinInput struct {
+	StartTime     string  `json:"startTime"`
+	MatchDuration int32   `json:"matchDuration"`
+	BreakDuration int32   `json:"breakDuration"`
+	LocationID    *string `json:"locationId,omitempty"`
+}
+
 type Information struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"`
@@ -79,16 +86,10 @@ type Information struct {
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
 // 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 type JudgmentEntry struct {
+	Name    *string `json:"name,omitempty"`
 	UserID  *string `json:"userId,omitempty"`
 	TeamID  *string `json:"teamId,omitempty"`
 	GroupID *string `json:"groupId,omitempty"`
-}
-
-type League struct {
-	ID              string          `json:"id"`
-	Teams           []*Team         `json:"teams"`
-	CalculationType CalculationType `json:"calculationType"`
-	Standings       []*Standing     `json:"standings"`
 }
 
 type LoginInput struct {
@@ -124,12 +125,6 @@ type Sport struct {
 	Weight int32  `json:"weight"`
 }
 
-type Standing struct {
-	Team   *Team `json:"team"`
-	Points int32 `json:"points"`
-	Rank   int32 `json:"rank"`
-}
-
 type UpdateCompetitionEntriesInput struct {
 	TeamIds []string `json:"teamIds"`
 }
@@ -153,7 +148,6 @@ type UpdateInformationInput struct {
 }
 
 type UpdateJudgmentInput struct {
-	Name  *string        `json:"name,omitempty"`
 	Entry *JudgmentEntry `json:"entry,omitempty"`
 }
 

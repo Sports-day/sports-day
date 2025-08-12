@@ -45,3 +45,22 @@ type Judgment struct {
 	TeamId  string `json:"teamId"`
 	GroupId string `json:"groupId"`
 }
+
+type League struct {
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	CalculationType CalculationType `json:"calculationType"`
+}
+
+type Standing struct {
+	ID     string `json:"id"`
+	TeamID string `json:"team_id"`
+	Points int32  `json:"points"`
+	Rank   int32  `json:"rank"`
+	Win    int32  `json:"win"`
+	Draw   int32  `json:"draw"`
+	Lose   int32  `json:"lose"`
+	Gf     int32  `json:"gf"`
+	Ga     int32  `json:"ga"`
+	Gd     int32  `json:"gd"`
+}

@@ -12,7 +12,7 @@ type Match struct {
 	ID            string         `json:"id"`             // ID
 	Time          time.Time      `json:"time"`           // 試合時間
 	Status        string         `json:"status"`         // 状態
-	LocationID    string         `json:"location_id"`    // 場所ID
+	LocationID    sql.NullString `json:"location_id"`    // 場所ID
 	CompetitionID string         `json:"competition_id"` // 大会ID
 	WinnerTeamID  sql.NullString `json:"winner_team_id"` // 勝利チームID
 }
