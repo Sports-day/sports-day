@@ -1726,29 +1726,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_League_standings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_League_standings_argsTeamID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["teamId"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_League_standings_argsTeamID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("teamId"))
-	if tmp, ok := rawArgs["teamId"]; ok {
-		return ec.unmarshalOID2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_addCompetitionEntries_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -8496,6 +8473,8 @@ func (ec *executionContext) fieldContext_Mutation_updateLeagueRule(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_League_id(ctx, field)
+			case "name":
+				return ec.fieldContext_League_name(ctx, field)
 			case "teams":
 				return ec.fieldContext_League_teams(ctx, field)
 			case "calculationType":
@@ -8561,6 +8540,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteLeague(ctx context.Conte
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_League_id(ctx, field)
+			case "name":
+				return ec.fieldContext_League_name(ctx, field)
 			case "teams":
 				return ec.fieldContext_League_teams(ctx, field)
 			case "calculationType":
@@ -14203,20 +14184,13 @@ func (ec *executionContext) unmarshalInputUpdateJudgmentInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "entry"}
+	fieldsInOrder := [...]string{"entry"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
 		case "entry":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entry"))
 			data, err := ec.unmarshalOJudgmentEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentEntry(ctx, v)
