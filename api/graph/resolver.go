@@ -18,6 +18,7 @@ type Resolver struct {
 	CompetitionService service.Competition
 	MatchService       service.Match
 	JudgmentService    service.Judgment
+	LeagueService      service.League
 }
 
 func NewResolver(
@@ -32,6 +33,7 @@ func NewResolver(
 	competitionService service.Competition,
 	matchService service.Match,
 	judgmentService service.Judgment,
+	leagueService service.League,
 ) *Resolver {
 	return &Resolver{
 		UserService:        userService,
@@ -45,5 +47,6 @@ func NewResolver(
 		CompetitionService: competitionService,
 		MatchService:       matchService,
 		JudgmentService:    judgmentService,
+		LeagueService:      leagueService,
 	}
 }

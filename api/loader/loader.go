@@ -17,6 +17,7 @@ type Loaders struct {
 	LocationLoader           *dataloadgen.Loader[string, *db_model.Location]
 	MatchLoader              *dataloadgen.Loader[string, *db_model.Match]
 	JudgmentLoader           *dataloadgen.Loader[string, *db_model.Judgment]
+	LeagueLoader             *dataloadgen.Loader[string, *db_model.League]
 	GroupUsersLoader         *dataloadgen.Loader[string, []*db_model.GroupUser]
 	UserGroupsLoader         *dataloadgen.Loader[string, []*db_model.GroupUser]
 	TeamUsersLoader          *dataloadgen.Loader[string, []*db_model.TeamUser]
@@ -31,9 +32,11 @@ type Loaders struct {
 	UserJudgmentsLoader      *dataloadgen.Loader[string, []*db_model.Judgment]
 	TeamJudgmentsLoader      *dataloadgen.Loader[string, []*db_model.Judgment]
 	GroupJudgmentsLoader     *dataloadgen.Loader[string, []*db_model.Judgment]
+	LeagueStandingsLoader    *dataloadgen.Loader[string, []*db_model.LeagueStanding]
+	TeamLeaguesLoader        *dataloadgen.Loader[string, []*db_model.LeagueStanding]
 }
 
-func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment) *Loaders {
+func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League) *Loaders {
 	return &Loaders{
 		UserLoader:               dataloadgen.NewLoader(newUserLoader(userSvc)),
 		GroupLoader:              dataloadgen.NewLoader(newGroupLoader(groupSvc)),
@@ -42,6 +45,7 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 		LocationLoader:           dataloadgen.NewLoader(newLocationLoader(locationSvc)),
 		MatchLoader:              dataloadgen.NewLoader(newMatchLoader(matchSvc)),
 		JudgmentLoader:           dataloadgen.NewLoader(newJudgmentLoader(judgmentSvc)),
+		LeagueLoader:             dataloadgen.NewLoader(newLeagueLoader(leagueSvc)),
 		GroupUsersLoader:         dataloadgen.NewLoader(newGroupUsersLoader(groupSvc)),
 		UserGroupsLoader:         dataloadgen.NewLoader(newUserGroupsLoader(groupSvc)),
 		TeamUsersLoader:          dataloadgen.NewLoader(newTeamUsersLoader(teamSvc)),
@@ -56,6 +60,8 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 		UserJudgmentsLoader:      dataloadgen.NewLoader(newUserJudgmentsLoader(judgmentSvc)),
 		TeamJudgmentsLoader:      dataloadgen.NewLoader(newTeamJudgmentsLoader(judgmentSvc)),
 		GroupJudgmentsLoader:     dataloadgen.NewLoader(newGroupJudgmentsLoader(judgmentSvc)),
+		LeagueStandingsLoader:    dataloadgen.NewLoader(newLeagueStandingsLoader(leagueSvc)),
+		TeamLeaguesLoader:        dataloadgen.NewLoader(newTeamLeaguesLoader(leagueSvc)),
 	}
 }
 

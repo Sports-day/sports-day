@@ -22,7 +22,8 @@ func newJudgmentLoader(svc service.Judgment) func(context.Context, []string) ([]
 			if judgment, ok := rowMap[judgmentID]; ok {
 				judgments[i] = judgment
 			} else {
-				errs[i] = errors.ErrJudgmentNotFound
+				judgments[i] = nil
+				errs[i] = nil
 			}
 		}
 		return judgments, errs

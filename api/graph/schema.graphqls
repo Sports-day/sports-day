@@ -77,7 +77,6 @@ input CreateCompetitionInput {
 
 input UpdateCompetitionInput {
   name: String
-  type: CompetitionType
 }
 
 input UpdateCompetitionEntriesInput {
@@ -92,7 +91,7 @@ input MatchResultInput {
 input CreateMatchInput {
   time: String!
   status: MatchStatus!
-  locationId: ID!
+  locationId: ID
   competitionId: ID!
   teamIds: [ID!]
   judgment: JudgmentEntry
@@ -129,8 +128,33 @@ input JudgmentEntry {
 	groupId: ID 
 }
 
+input CreateJudgmentInput {
+	id: ID!
+	entry: JudgmentEntry!
+}
+
 input UpdateJudgmentInput {
 	entry: JudgmentEntry
+}
+
+input CreateLeagueInput {
+  name: String!
+  defaultLocationId: ID
+  calculationType: CalculationType!
+}
+
+input UpdateLeagueRuleInput {
+	calculationType: CalculationType
+	winPt:  Int
+  drawPt: Int
+  losePt: Int
+}
+
+input GenerateRoundRobinInput {
+  startTime: String!
+  matchDuration: Int!
+  breakDuration: Int!
+  locationId: ID
 }
 
 type Query {
@@ -185,6 +209,14 @@ type Query {
   ID指定で試合を取得する
   """
 	judgment(id: ID!): Judgment!
+  """
+  リーグをまとめて取得する
+  """
+  leagues: [League!]!
+  """
+  ID指定でリーグを取得する
+  """
+	league(id: ID!): League!
 }
 
 type Mutation {
@@ -280,4 +312,24 @@ type Mutation {
   審判の情報を更新する
   """
 	updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
+  """
+  リーグを追加する
+  """
+  createLeague(input: CreateLeagueInput!): League!
+  """
+  リーグのルールを更新する
+  """
+  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League!
+  """
+  リーグを削除する
+  """
+  deleteLeague(id: ID!): League!
+  """
+  リーグの総当たり戦を自動生成する
+  """
+  generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]!
+  """
+  リーグの順位表を計算する
+  """
+  calculateLeagueStandings(id: ID!): [Standing!]!
 }

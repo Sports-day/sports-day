@@ -27,6 +27,17 @@ type CreateInformationInput struct {
 	Content string `json:"content"`
 }
 
+type CreateJudgmentInput struct {
+	ID    string         `json:"id"`
+	Entry *JudgmentEntry `json:"entry"`
+}
+
+type CreateLeagueInput struct {
+	Name              string          `json:"name"`
+	DefaultLocationID *string         `json:"defaultLocationId,omitempty"`
+	CalculationType   CalculationType `json:"calculationType"`
+}
+
 type CreateLocationInput struct {
 	Name string `json:"name"`
 }
@@ -34,7 +45,7 @@ type CreateLocationInput struct {
 type CreateMatchInput struct {
 	Time          string         `json:"time"`
 	Status        MatchStatus    `json:"status"`
-	LocationID    string         `json:"locationId"`
+	LocationID    *string        `json:"locationId,omitempty"`
 	CompetitionID string         `json:"competitionId"`
 	TeamIds       []string       `json:"teamIds,omitempty"`
 	Judgment      *JudgmentEntry `json:"judgment,omitempty"`
@@ -57,6 +68,13 @@ type CreateTeamInput struct {
 type CreateUserInput struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type GenerateRoundRobinInput struct {
+	StartTime     string  `json:"startTime"`
+	MatchDuration int32   `json:"matchDuration"`
+	BreakDuration int32   `json:"breakDuration"`
+	LocationID    *string `json:"locationId,omitempty"`
 }
 
 type Information struct {
@@ -112,8 +130,7 @@ type UpdateCompetitionEntriesInput struct {
 }
 
 type UpdateCompetitionInput struct {
-	Name *string          `json:"name,omitempty"`
-	Type *CompetitionType `json:"type,omitempty"`
+	Name *string `json:"name,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -131,6 +148,13 @@ type UpdateInformationInput struct {
 
 type UpdateJudgmentInput struct {
 	Entry *JudgmentEntry `json:"entry,omitempty"`
+}
+
+type UpdateLeagueRuleInput struct {
+	CalculationType *CalculationType `json:"calculationType,omitempty"`
+	WinPt           *int32           `json:"winPt,omitempty"`
+	DrawPt          *int32           `json:"drawPt,omitempty"`
+	LosePt          *int32           `json:"losePt,omitempty"`
 }
 
 type UpdateLocationInput struct {
@@ -174,6 +198,49 @@ type UpdateTeamInput struct {
 type UpdateTeamUsersInput struct {
 	AddUserIds    []string `json:"addUserIds,omitempty"`
 	RemoveUserIds []string `json:"removeUserIds,omitempty"`
+}
+
+type CalculationType string
+
+const (
+	CalculationTypeTotalScore CalculationType = "TOTAL_SCORE"
+	CalculationTypeDiffScore  CalculationType = "DIFF_SCORE"
+	CalculationTypeWinScore   CalculationType = "WIN_SCORE"
+)
+
+var AllCalculationType = []CalculationType{
+	CalculationTypeTotalScore,
+	CalculationTypeDiffScore,
+	CalculationTypeWinScore,
+}
+
+func (e CalculationType) IsValid() bool {
+	switch e {
+	case CalculationTypeTotalScore, CalculationTypeDiffScore, CalculationTypeWinScore:
+		return true
+	}
+	return false
+}
+
+func (e CalculationType) String() string {
+	return string(e)
+}
+
+func (e *CalculationType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CalculationType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CalculationType", str)
+	}
+	return nil
+}
+
+func (e CalculationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type CompetitionType string

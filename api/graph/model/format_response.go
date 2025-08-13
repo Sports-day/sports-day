@@ -68,13 +68,23 @@ func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
 }
 
 func FormatMatchResponse(match *db_model.Match) *Match {
+	var locationId string
+	if match.LocationID.Valid {
+		locationId = match.LocationID.String
+	}
+
+	var winnerTeamId string
+	if match.WinnerTeamID.Valid {
+		winnerTeamId = match.WinnerTeamID.String
+	}
+
 	return &Match{
 		ID:            match.ID,
 		Time:          match.Time.Format(time.RFC3339),
 		Status:        MatchStatus(match.Status),
-		LocationId:    match.LocationID,
+		LocationId:    locationId,
 		CompetitionId: match.CompetitionID,
-		WinnerTeamId:  match.WinnerTeamID.String,
+		WinnerTeamId:  winnerTeamId,
 	}
 }
 
@@ -86,11 +96,49 @@ func FormatMatchEntryResponse(entry *db_model.MatchEntry) *MatchEntry {
 }
 
 func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
+	var name, userId, teamId, groupId string
+
+	if judgment.Name.Valid {
+		name = judgment.Name.String
+	}
+	if judgment.UserID.Valid {
+		userId = judgment.UserID.String
+	}
+	if judgment.TeamID.Valid {
+		teamId = judgment.TeamID.String
+	}
+	if judgment.GroupID.Valid {
+		groupId = judgment.GroupID.String
+	}
+
 	return &Judgment{
 		ID:      judgment.ID,
-		Name:    judgment.Name.String,
-		UserId:  judgment.UserID.String,
-		TeamId:  judgment.TeamID.String,
-		GroupId: judgment.GroupID.String,
+		Name:    name,
+		UserId:  userId,
+		TeamId:  teamId,
+		GroupId: groupId,
+	}
+}
+
+func FormatLeagueResponse(league *db_model.League, competition *db_model.Competition) *League {
+	return &League{
+		ID:              league.ID,
+		Name:            competition.Name,
+		CalculationType: CalculationType(league.CalculationType),
+	}
+}
+
+func FormatStandingResponse(standing *db_model.LeagueStanding) *Standing {
+	return &Standing{
+		ID:           standing.ID,
+		TeamID:       standing.TeamID,
+		Win:          int32(standing.Win),
+		Draw:         int32(standing.Draw),
+		Lose:         int32(standing.Lose),
+		GoalsFor:     int32(standing.GoalsFor),
+		GoalsAgainst: int32(standing.GoalsAgainst),
+		GoalDiff:     int32(standing.GoalDiff),
+		Points:       int32(standing.Points),
+		Rank:         int32(standing.Rank),
 	}
 }

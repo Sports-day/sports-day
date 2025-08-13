@@ -6,16 +6,18 @@ var (
 	/*
 		NotFound
 	*/
-	ErrUserNotFound        = NewError("USER_NOT_FOUND", "ユーザーが見つかりません")
-	ErrGroupNotFound       = NewError("GROUP_NOT_FOUND", "グループが見つかりません")
-	ErrTeamNotFound        = NewError("TEAM_NOT_FOUND", "チームが見つかりません")
-	ErrLocationNotFound    = NewError("LOCATION_NOT_FOUND", "場所が見つかりません")
-	ErrSportNotFound       = NewError("SPORT_NOT_FOUND", "スポーツが見つかりません")
-	ErrSceneNotFound       = NewError("SCENE_NOT_FOUND", "シーンが見つかりません")
-	ErrInformationNotFound = NewError("INFORMATION_NOT_FOUND", "お知らせが見つかりません")
-	ErrCompetitionNotFound = NewError("COMPETITION_NOT_FOUND", "大会が見つかりません")
-	ErrMatchNotFound       = NewError("MATCH_NOT_FOUND", "試合が見つかりません")
-	ErrJudgmentNotFound    = NewError("JUDGMENT_NOT_FOUND", "審判が見つかりません")
+	ErrUserNotFound           = NewError("USER_NOT_FOUND", "ユーザーが見つかりません")
+	ErrGroupNotFound          = NewError("GROUP_NOT_FOUND", "グループが見つかりません")
+	ErrTeamNotFound           = NewError("TEAM_NOT_FOUND", "チームが見つかりません")
+	ErrLocationNotFound       = NewError("LOCATION_NOT_FOUND", "場所が見つかりません")
+	ErrSportNotFound          = NewError("SPORT_NOT_FOUND", "スポーツが見つかりません")
+	ErrSceneNotFound          = NewError("SCENE_NOT_FOUND", "シーンが見つかりません")
+	ErrInformationNotFound    = NewError("INFORMATION_NOT_FOUND", "お知らせが見つかりません")
+	ErrCompetitionNotFound    = NewError("COMPETITION_NOT_FOUND", "大会が見つかりません")
+	ErrMatchNotFound          = NewError("MATCH_NOT_FOUND", "試合が見つかりません")
+	ErrJudgmentNotFound       = NewError("JUDGMENT_NOT_FOUND", "審判が見つかりません")
+	ErrLeagueNotFound         = NewError("LEAGUE_NOT_FOUND", "リーグが見つかりません")
+	ErrLeagueStandingNotFound = NewError("LEAGUE_STANDING_NOT_FOUND", "リーグ結果が見つかりません")
 
 	/*
 		Validation
@@ -36,6 +38,10 @@ var (
 	ErrUpdateMatchEntryScore  = NewError("MATCH_ENTRY_SCORE_UPDATE_FAILED", "試合スコアの更新に失敗しました")
 	ErrSaveJudgment           = NewError("JUDGMENT_SAVE_FAILED", "審判の更新に失敗しました")
 	ErrJudgmentEntryInvalid   = NewError("JUDGMENT_ENTRY_INVALID", "審判のエントリーは、ユーザー、チーム、グループのいずれか1つのみ指定してください")
+	ErrUpsertLeague           = NewError("LEAGUE_UPSERT_FAILED", "リーグ情報の更新に失敗しました")
+	ErrMakeLeagueMatches      = NewError("LEAGUE_MATCH_MAKE_FAILED", "リーグの試合生成に失敗しました")
+	ErrSaveLeague             = NewError("LEAGUE_SAVE_FAILED", "リーグの保存に失敗しました")
+	ErrSaveLeagueStanding     = NewError("LEAGUE_STANDING_SAVE_FAILED", "リーグ結果の保存に失敗しました")
 	/*
 		Authentication
 	*/
