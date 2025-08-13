@@ -171,27 +171,3 @@ func (s *Competition) GetCompetitionEntriesMapByCompetitionIDs(ctx context.Conte
 	}
 	return competitionEntriesMap, nil
 }
-func (s *Competition) GetCompetitionMapByLocationIDs(ctx context.Context, locationIds []string) (map[string][]*db_model.Competition, error) {
-	competitions, err := s.competitionRepository.BatchGetByLocationIDs(ctx, s.db, locationIds)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
-	competitionsMap := make(map[string][]*db_model.Competition, len(locationIds))
-	for _, id := range locationIds {
-		competitionsMap[id] = []*db_model.Competition{}
-	}
-
-	for _, comp := range competitions {
-		if !comp.DefaultLocationID.Valid {
-			continue
-		}
-
-		locID := comp.DefaultLocationID.String
-
-		if _, ok := competitionsMap[locID]; ok {
-			competitionsMap[locID] = append(competitionsMap[locID], comp)
-		}
-	}
-	return competitionsMap, nil
-}
