@@ -1,28 +1,82 @@
-import { information } from "@/Data/SunnyData";
-import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-import SportCard from "@/components/cards/sportcard";
-import GoFinal from "@/components/buttons/gofinalbutton";
+"use client";
 
-export type weatherProps = {
-  weatherdata: information[];
+import { Grid, Box } from "@mui/material";
+import SportCard from "@/components/cards/AboutSportPage/sportcard";
+import { gql, useQuery } from "@apollo/client";
+import { motion } from "framer-motion";
+
+type WeatherData = { name: string; id: string };
+
+type Props = {
+  weather: WeatherData[];
   type: string;
 };
 
-export default function SportCards({ weatherdata, type }: weatherProps) {
+const GET_TEAMDATA = gql`
+  query GetTeamData {
+    sportScenes {
+      sport {
+        id
+      }
+      scene {
+        id
+      }
+      entries {
+        team {
+          users {
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
+export default function SportCards({ weather, type }: Props) {
+  const { data } = useQuery(GET_TEAMDATA);
+
+  const hasTeamMap = new Map<string, boolean>();
+
+  weather.forEach((item) => {
+    const entry = data?.sportScenes?.find(
+      (d) => d.sport?.id === item.id && d.scene?.id === type
+    );
+    const users = entry?.entries?.flatMap((s) => s.team?.users ?? []) ?? [];
+    hasTeamMap.set(item.id, users.length > 0);
+  });
+
   return (
     <Box
-      sx={{ background: "#f5f5f5", borderRadius: "10px", mx: "3vh", p: "3vh" }}
+      sx={{
+        height: "55vh",
+        background: "#e1e4f6",
+        borderRadius: "10px",
+        m: "1%",
+        p: "3%",
+        display: "flex",
+        flexDirection: "clumn",
+        flexGrow: 1,
+        overflowY: "auto",
+      }}
     >
       <Grid container spacing={2}>
-        {weatherdata.map((item, index) => (
-          <Grid xs={6} md={4} lg={4} xl={3} key={index}>
-            <SportCard
-              icon={item.icon}
-              name={item.name}
-              sportid={item.sportid}
-              type={type as string}
-            />
+        {weather.map((item, index) => (
+          <Grid item xs={6} md={4} lg={4} xl={3} key={item.id}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.1,
+              }}
+            >
+              <SportCard
+                name={item.name}
+                sportId={item.id}
+                type={type}
+                hasTeam={hasTeamMap.get(item.id) ?? false}
+              />
+            </motion.div>
           </Grid>
         ))}
       </Grid>

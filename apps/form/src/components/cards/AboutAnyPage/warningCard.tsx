@@ -1,10 +1,8 @@
 "use client";
 
-import Toolbar from "@mui/material/Toolbar";
-import Card from "@mui/material/Card";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import { Toolbar, Card, Typography, Button, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import WarningIcon from "@mui/icons-material/Warning";
 import { useState } from "react";
 
 type warnProps = {
@@ -17,22 +15,30 @@ export default function Warning({ warncomment }: warnProps) {
     setVisible(false);
   };
   return (
-    <div>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        my: "1%",
+        width: "100%",
+        height: "100%",
+      }}
+    >
       {visiable && (
         <Card
+          variant="outlined"
           sx={{
+            borderColor: "#A27B1D",
             background: "#FDF5DE",
-            border: "#A27B1D",
-            mt: "3vh",
+            width: "60%",
           }}
         >
-          <Toolbar sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center", m: "1%" }}>
+            <WarningIcon sx={{ color: "#A27B1D", mr: "3%" }} />
             <Typography
               sx={{
                 color: "#A27B1D",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
+                justifyContent: "flex-start",
                 flexGrow: 1,
               }}
             >
@@ -41,9 +47,9 @@ export default function Warning({ warncomment }: warnProps) {
             <Button onClick={handleClose}>
               <CloseIcon sx={{ color: "#A27B1D" }} />
             </Button>
-          </Toolbar>
+          </Box>
         </Card>
       )}
-    </div>
+    </Box>
   );
 }

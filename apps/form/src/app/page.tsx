@@ -1,19 +1,28 @@
-import Grid from "@mui/material/Grid";
-import Warning from "@/components/other/warningcomment";
-import SportCards from "@/features/sportCards";
-import WeatherCards from "@/features/weathercards";
-import { SunnyCardInformation } from "@/Data/SunnyData";
-import Header from "@/components/other/header";
+"use client";
+
+import { gql, useQuery } from "@apollo/client";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import CircularUnderLoad from "@/features/loading";
+
+const GET_TYPE = gql`
+  query GetType {
+    scenes {
+      id
+    }
+  }
+`;
 
 export default function Home() {
-  return (
-    <Grid container spacing={3} direction="column">
-      <Grid container spacing={10} direction="row">
-        <Header />
-        <WeatherCards />
-        <Warning warncomment="これは晴れの画面です." />
-      </Grid>
-      <SportCards weatherdata={SunnyCardInformation} />
-    </Grid>
-  );
+  const { data, loading } = useQuery(GET_TYPE);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && data?.scenes?.[0]?.id) {
+      const id = data.scenes[0].id;
+      router.push(`/weather/${id}`);
+    }
+  }, [loading, data, router]);
+
+  return <CircularUnderLoad />;
 }

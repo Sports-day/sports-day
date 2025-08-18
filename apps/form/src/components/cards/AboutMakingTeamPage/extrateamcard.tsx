@@ -1,25 +1,26 @@
-import Card from "@mui/material/Card";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import CardActionArea from "@mui/material/CardActionArea";
+import { Card, Typography, Stack, CardActionArea } from "@mui/material";
 import Link from "next/link";
 
-export default function ExtraTeamCard({
-  sports,
-}: {
-  sports: string | undefined;
-}) {
+export type informationProps = {
+  sports: string;
+  type: string;
+};
+
+export default function ExtraTeamCard({ sports, type }: informationProps) {
   return (
-    <Link href={`weather//sport/${sports}/teams/makenewteam`} passHref>
+    <Link href={`/weather/${type}/sport/${sports}/team/makenewteam`} passHref>
       <Card
         variant="outlined"
         sx={{
-          height: "50vh",
+          height: "100%",
           borderRadius: "10px",
           background: "#F4F5F9",
           boerderColor: "#5B6DC6",
           borderWidth: "2px",
           component: "div",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <CardActionArea>
