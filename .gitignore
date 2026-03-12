@@ -52,3 +52,5 @@ api/db_schema/schema.sql
 # cline
 .clinerules
 /memory-bank/
+
+.claude/settings.local.json
