@@ -41,7 +41,7 @@
     }
   },
   // register util aliases
-  "postCreateCommand": "cat ${containerWorkspaceFolder}/.devcontainer/aliases.sh >> ~/.zshrc && ${containerWorkspaceFolder}/.devcontainer/init.sh",
+  "postCreateCommand": "cat ${containerWorkspaceFolder}/.devcontainer/aliases.sh >> ~/.zshrc && bash ${containerWorkspaceFolder}/.devcontainer/init.sh",
   "customizations": {
     "vscode": {
       "settings": {
