@@ -61,3 +61,4 @@ func (c *Client) DeleteObject(objectKey string) error {
 		minio.RemoveObjectOptions{},
 	)
 }
+
