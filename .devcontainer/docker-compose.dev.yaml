@@ -13,5 +13,16 @@ services:
       MYSQL_DATABASE: sportsday
     volumes:
       - mysql_data:/var/lib/mysql
+  rustfs:
+    image: rustfs/rustfs
+    ports:
+      - "9000:9000"
+    environment:
+      ACCESS_KEY: admin
+      SECRET_KEY: password
+    volumes:
+      - rustfs_data:/data
+
 volumes:
   mysql_data:
+  rustfs_data:
