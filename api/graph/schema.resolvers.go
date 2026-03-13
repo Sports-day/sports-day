@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -411,7 +410,20 @@ func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id stri
 
 // CreateImageUploadURL is the resolver for the createImageUploadURL field.
 func (r *mutationResolver) CreateImageUploadURL(ctx context.Context, input model.CreateImageUploadURLInput) (*model.ImageUploadURL, error) {
-	panic(fmt.Errorf("not implemented: CreateImageUploadURL - createImageUploadURL"))
+	res, err := r.ImageService.CreateUploadURL(
+		ctx,
+		string(input.OwnerType),
+		input.OwnerID,
+		input.Filename,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ImageUploadURL{
+		URL:       res.URL,
+		ObjectKey: res.ObjectKey,
+	}, nil
 }
 
 // Users is the resolver for the users field.

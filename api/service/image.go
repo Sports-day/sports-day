@@ -25,9 +25,8 @@ func NewImage(
 	db *gorm.DB,
 	imageRepository repository.Image,
 	storage *storage.Client,
-) *Image {
-
-	return &Image{
+) Image {
+	return Image{
 		db:              db,
 		imageRepository: imageRepository,
 		storage:         storage,

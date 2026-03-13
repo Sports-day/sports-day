@@ -21,6 +21,8 @@ import (
 	"sports-day/api/repository"
 	"sports-day/api/service"
 
+	"sports-day/api/pkg/storage"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
@@ -81,7 +83,14 @@ func main() {
 	matchRepository := repository.NewMatch()
 	judgmentRepository := repository.NewJudgment()
 	leagueRepository := repository.NewLeague()
-
+	imageRepository := repository.NewImage()
+	storageClient, err := storage.New(
+		env.Get().Storage.Endpoint,
+		env.Get().Storage.AccessKey,
+		env.Get().Storage.SecretKey,
+		env.Get().Storage.Bucket,
+		env.Get().Storage.UseSSL,
+	)	
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
@@ -95,9 +104,10 @@ func main() {
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository)
 	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService)
+	imageService := service.NewImage(db, imageRepository, storageClient)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, imageService,)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})

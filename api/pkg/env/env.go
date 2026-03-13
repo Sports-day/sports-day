@@ -31,6 +31,13 @@ type Env struct {
 			ExpirySeconds int    `envconfig:"JWT_EXPIRY_SECONDS" default:"3600"`
 		}
 	}
+	Storage struct {
+		Endpoint  string `envconfig:"STORAGE_ENDPOINT" required:"true"`
+		AccessKey string `envconfig:"STORAGE_ACCESS_KEY" required:"true"`
+		SecretKey string `envconfig:"STORAGE_SECRET_KEY" required:"true"`
+		Bucket    string `envconfig:"STORAGE_BUCKET" required:"true"`
+		UseSSL    bool   `envconfig:"STORAGE_USE_SSL" default:"false"`
+	}
 	Debug bool `envconfig:"DEBUG" default:"false"`
 }
 
