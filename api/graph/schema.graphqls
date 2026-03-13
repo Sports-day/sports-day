@@ -345,13 +345,6 @@ enum ImageOwnerType {
   SPORT
 }
 
-type Image {
-  id: ID!
-  objectKey: String!
-  ownerType: ImageOwnerType!
-  ownerId: ID!
-}
-
 input CreateImageUploadURLInput {
   ownerType: ImageOwnerType!
   ownerId: ID!
