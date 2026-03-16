@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -94,10 +93,27 @@ func (r *mutationResolver) DeleteSports(ctx context.Context, id string) (*model.
 
 // UpdateSports is the resolver for the updateSports field.
 func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sport, error) {
-	sport, err := r.SportService.Update(ctx, id, input)
+	sport, err := r.SportService.Update(
+		ctx,
+		id,
+		input,
+	)
+
 	if err != nil {
 		return nil, err
 	}
+
+	if input.ImageID != nil {
+		err := r.SportService.SetImage(
+			ctx,
+			id,
+			*input.ImageID,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return model.FormatSportResponse(sport), nil
 }
 
@@ -394,12 +410,13 @@ func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, in
 	return res, nil
 }
 
-// CreateImageUploadURL is the resolver for the calculateLeagueStandings field.
-func (r *mutationResolver) CreateImageUploadURL(
-	ctx context.Context,
-	input model.CreateImageUploadURLInput,
-) (*model.ImageUploadURL, error) {
+// CalculateLeagueStandings is the resolver for the calculateLeagueStandings field.
+func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id string) ([]*model.Standing, error) {
+	return []*model.Standing{}, nil
+}
 
+// CreateImageUploadURL is the resolver for the calculateLeagueStandings field.
+func (r *mutationResolver) CreateImageUploadURL(ctx context.Context, input model.CreateImageUploadURLInput) (*model.ImageUploadURL, error) {
 	img, uploadURL, err := r.ImageService.CreateUploadURL(
 		ctx,
 		string(input.OwnerType),
@@ -701,15 +718,6 @@ func (r *queryResolver) League(ctx context.Context, id string) (*model.League, e
 	}
 	return model.FormatLeagueResponse(league, competition), nil
 }
-
-func (r *mutationResolver) CalculateLeagueStandings(
-	ctx context.Context,
-	id string,
-) ([]*model.Standing, error) {
-	return []*model.Standing{}, nil
-}
-
-
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }

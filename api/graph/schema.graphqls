@@ -44,6 +44,7 @@ input CreateSportsInput {
 input UpdateSportsInput {
   name: String
   weight: Int
+  imageId: ID
 }
 
 input CreateTeamInput {
@@ -77,6 +78,7 @@ input CreateCompetitionInput {
 
 input UpdateCompetitionInput {
   name: String
+  imageId: ID
 }
 
 input UpdateCompetitionEntriesInput {

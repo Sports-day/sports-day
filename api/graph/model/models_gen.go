@@ -141,7 +141,8 @@ type UpdateCompetitionEntriesInput struct {
 }
 
 type UpdateCompetitionInput struct {
-	Name *string `json:"name,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	ImageID *string `json:"imageId,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -197,8 +198,9 @@ type UpdateSceneInput struct {
 }
 
 type UpdateSportsInput struct {
-	Name   *string `json:"name,omitempty"`
-	Weight *int32  `json:"weight,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	Weight  *int32  `json:"weight,omitempty"`
+	ImageID *string `json:"imageId,omitempty"`
 }
 
 type UpdateTeamInput struct {

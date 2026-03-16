@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
