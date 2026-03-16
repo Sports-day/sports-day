@@ -93,10 +93,27 @@ func (r *mutationResolver) DeleteSports(ctx context.Context, id string) (*model.
 
 // UpdateSports is the resolver for the updateSports field.
 func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sport, error) {
-	sport, err := r.SportService.Update(ctx, id, input)
+	sport, err := r.SportService.Update(
+		ctx,
+		id,
+		input,
+	)
+
 	if err != nil {
 		return nil, err
 	}
+
+	if input.ImageID != nil {
+		err := r.SportService.SetImage(
+			ctx,
+			id,
+			*input.ImageID,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	rankingRules, err := r.SportService.GetRankingRules(ctx, id)
 	if err != nil {
 		return nil, err
@@ -614,7 +631,6 @@ func (r *mutationResolver) CreateImageUploadURL(
 	ctx context.Context,
 	input model.CreateImageUploadURLInput,
 ) (*model.ImageUploadURL, error) {
-
 	img, uploadURL, err := r.ImageService.CreateUploadURL(
 		ctx,
 		string(input.OwnerType),

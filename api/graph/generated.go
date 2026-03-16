@@ -8,11 +8,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sports-day/api/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
-
-	"sports-day/api/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -13814,7 +13813,7 @@ func (ec *executionContext) unmarshalInputUpdateCompetitionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name"}
+	fieldsInOrder := [...]string{"name", "imageId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -13828,6 +13827,13 @@ func (ec *executionContext) unmarshalInputUpdateCompetitionInput(ctx context.Con
 				return it, err
 			}
 			it.Name = data
+		case "imageId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imageId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ImageID = data
 		}
 	}
 
@@ -14194,7 +14200,7 @@ func (ec *executionContext) unmarshalInputUpdateSportsInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "weight"}
+	fieldsInOrder := [...]string{"name", "weight", "imageId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -14215,6 +14221,13 @@ func (ec *executionContext) unmarshalInputUpdateSportsInput(ctx context.Context,
 				return it, err
 			}
 			it.Weight = data
+		case "imageId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("imageId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ImageID = data
 		}
 	}
 
