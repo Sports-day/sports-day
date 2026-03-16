@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	goerrors "errors"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -15,18 +16,23 @@ import (
 type Sport struct {
 	db               *gorm.DB
 	sportsRepository repository.Sports
+	imageRepository  repository.Image
 }
 
-func NewSports(db *gorm.DB, sportsRepository repository.Sports) Sport {
+func NewSports(
+	db *gorm.DB,
+	sportsRepository repository.Sports,
+	imageRepository repository.Image,
+) Sport {
 	return Sport{
 		db:               db,
 		sportsRepository: sportsRepository,
+		imageRepository:  imageRepository,
 	}
 }
 
 func (s *Sport) Get(ctx context.Context, id string) (*db_model.Sport, error) {
 	sport, err := s.sportsRepository.Get(ctx, s.db, id)
-
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -35,7 +41,6 @@ func (s *Sport) Get(ctx context.Context, id string) (*db_model.Sport, error) {
 
 func (s *Sport) List(ctx context.Context) ([]*db_model.Sport, error) {
 	sports, err := s.sportsRepository.List(ctx, s.db)
-
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -49,10 +54,10 @@ func (s *Sport) Create(ctx context.Context, input *model.CreateSportsInput) (*db
 	}
 
 	sport, err := s.sportsRepository.Save(ctx, s.db, sport)
-
 	if err != nil {
 		return nil, errors.ErrSaveSport
 	}
+
 	return sport, nil
 }
 
@@ -74,6 +79,7 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 	if err != nil {
 		return nil, errors.ErrSaveSport
 	}
+
 	return sport, nil
 }
 
@@ -143,4 +149,27 @@ func (s *Sport) SetRankingRules(ctx context.Context, sportID string, rules []mod
 		return nil, errors.ErrSaveRankingRule
 	}
 	return result, nil
+}
+
+func (s *Sport) SetImage(
+	ctx context.Context,
+	sportID string,
+	imageID string,
+) error {
+
+	img, err := s.imageRepository.Get(ctx, s.db, imageID)
+	if err != nil {
+		return err
+	}
+
+	if img.Status != "uploaded" {
+		return goerrors.New("image not uploaded yet")
+	}
+
+	return s.sportsRepository.UpdateImageID(
+		ctx,
+		s.db,
+		sportID,
+		imageID,
+	)
 }
