@@ -5,6 +5,9 @@ services:
     command: sleep infinity
     volumes:
       - ..:/workspace:cached
+      - claude_data:/home/vscode/.claude
+      - codex_data:/home/vscode/.codex
+      - gh_data:/home/vscode/.config/gh
   mysql:
     image: mysql:8
     container_name: sports-day-mysql
@@ -15,3 +18,6 @@ services:
       - mysql_data:/var/lib/mysql
 volumes:
   mysql_data:
+  claude_data:
+  codex_data:
+  gh_data:

@@ -1,0 +1,9 @@
+# 個人の環境変数を設定するファイル
+# このファイルを .envrc にコピーして値を設定してください
+# cp .envrc.example .envrc
+
+# Codex CLI (OpenAI API)
+# export OPENAI_API_KEY="sk-..."
+
+# Anthropic API
+# export ANTHROPIC_API_KEY="sk-ant-..."
