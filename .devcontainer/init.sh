@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
-# Fix directory permissions
-sudo mkdir -p ~/.claude ~/.codex ~/.config/gh \
-  && sudo chown -R $(whoami):$(whoami) ~/.claude ~/.codex ~/.config/gh
+# ボリューム初回作成時は root 所有のため修正
+[ -O ~/.zshrc ] || sudo chown -R vscode:vscode /home/vscode
 
-# Claude Code
-curl -fsSL https://claude.ai/install.sh | bash
+# シェル設定
+cat > ~/.zshenv << 'EOF'
+source /workspace/.devcontainer/aliases.sh
+eval "$(direnv hook zsh)"
+EOF
 
-# Codex CLI
-npm install -g @openai/codex
+# ツール（未インストール時のみ）
+command -v claude  &>/dev/null || curl -fsSL https://claude.ai/install.sh | bash
+command -v codex   &>/dev/null || npm install -g @openai/codex
+command -v direnv  &>/dev/null || (sudo apt-get update && sudo apt-get install -y direnv)
 
-# direnv
-sudo apt-get update && sudo apt-get install -y direnv
-echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc
-
-# .envrc の初期化（存在しない場合のみ）
-if [ ! -f /workspace/.envrc ]; then
-  cp /workspace/.envrc.example /workspace/.envrc
-fi
+# .envrc 初期化
+[ -f /workspace/.envrc ] || cp /workspace/.envrc.example /workspace/.envrc
+direnv allow /workspace/.envrc
