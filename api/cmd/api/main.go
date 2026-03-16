@@ -99,7 +99,6 @@ func main() {
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
 	groupService := service.NewGroup(db, groupRepository, userRepository)
-	sportService := service.NewSports(db, sportRepository)
 	teamService := service.NewTeam(db, teamRepository, userRepository)
 	locationService := service.NewLocation(db, locationRepository)
 	sceneService := service.NewScene(db, sceneRepository)
@@ -115,6 +114,11 @@ func main() {
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
+	sportService := service.NewSports(
+		db,
+		sportRepository,
+		imageRepository,
+	)
 
 	imageService := service.NewImage(
 		db,
