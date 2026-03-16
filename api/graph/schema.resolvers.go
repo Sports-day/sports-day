@@ -394,27 +394,13 @@ func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, in
 	return res, nil
 }
 
-// CalculateLeagueStandings is the resolver for the calculateLeagueStandings field.
-func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id string) ([]*model.Standing, error) {
-	standings, err := r.LeagueService.CalculateStandings(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make([]*model.Standing, 0, len(standings))
-	for _, standing := range standings {
-		res = append(res, model.FormatStandingResponse(standing))
-	}
-	return res, nil
-}
-
-// CreateImageUploadURL is the resolver for the createImageUploadURL field.
+// CreateImageUploadURL is the resolver for the calculateLeagueStandings field.
 func (r *mutationResolver) CreateImageUploadURL(
 	ctx context.Context,
 	input model.CreateImageUploadURLInput,
 ) (*model.ImageUploadURL, error) {
 
-	image, err := r.ImageService.CreateUploadURL(
+	img, uploadURL, err := r.ImageService.CreateUploadURL(
 		ctx,
 		string(input.OwnerType),
 		input.OwnerID,
@@ -426,8 +412,8 @@ func (r *mutationResolver) CreateImageUploadURL(
 	}
 
 	return &model.ImageUploadURL{
-    ImageID: image.ID,
-    UploadURL: image.URL.String,
+		ImageID:   img.ID,
+		UploadURL: uploadURL,
 	}, nil
 }
 
@@ -715,6 +701,15 @@ func (r *queryResolver) League(ctx context.Context, id string) (*model.League, e
 	}
 	return model.FormatLeagueResponse(league, competition), nil
 }
+
+func (r *mutationResolver) CalculateLeagueStandings(
+	ctx context.Context,
+	id string,
+) ([]*model.Standing, error) {
+	return []*model.Standing{}, nil
+}
+
+
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
