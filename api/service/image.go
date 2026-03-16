@@ -42,3 +42,12 @@ func (s *Image) CreateUploadURL(
 
 	return img, nil
 }
+
+func (s *Image) MarkUploaded(
+	ctx context.Context,
+	id string,
+	url string,
+) (*db_model.Image, error) {
+
+	return s.imageRepository.MarkUploaded(ctx, s.db, id, url)
+}
