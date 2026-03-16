@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+
 type Sports interface {
 	Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Sport, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Sport, error)
@@ -17,4 +18,26 @@ type Sports interface {
 	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Sport, error)
 	ListRankingRules(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.RankingRule, error)
 	SetRankingRules(ctx context.Context, db *gorm.DB, sportID string, rules []*db_model.RankingRule) ([]*db_model.RankingRule, error)
+	UpdateImageID(
+		ctx context.Context,
+		db *gorm.DB,
+		sportID string,
+		imageID string,
+	) error
 }
+
+func (r *sportsRepository) UpdateImageID(
+	ctx context.Context,
+	db *gorm.DB,
+	sportID string,
+	imageID string,
+) error {
+
+	return db.WithContext(ctx).
+		Model(&db_model.Sport{}).
+		Where("id = ?", sportID).
+		Update("image_id", imageID).
+		Error
+}
+
+
