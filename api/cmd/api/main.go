@@ -14,6 +14,7 @@ import (
 
 	"sports-day/api"
 	"sports-day/api/graph"
+	"sports-day/api/internal/webhook"
 	"sports-day/api/middleware"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/env"
@@ -125,6 +126,15 @@ func main() {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
 	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService))
+	mux.Handle(
+		"/internal/webhooks/upload",
+		webhook.HandleUploadWebhook(
+			imageRepository,
+			env.Get().Auth.JWT.SecretKey,
+			env.Get().Storage.Endpoint,
+			env.Get().Storage.Bucket,
+		),
+	)
 
 	address := fmt.Sprintf("%s:%d", env.Get().Server.Host, env.Get().Server.Port)
 
