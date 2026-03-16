@@ -54,3 +54,4 @@ api/db_schema/schema.sql
 /memory-bank/
 
 .claude/settings.local.json
+.envrc
