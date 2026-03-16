@@ -609,6 +609,24 @@ func (r *mutationResolver) DeleteRule(ctx context.Context, id string) (*model.Ru
 	return model.FormatRuleResponse(rule), nil
 }
 
+// CreateImageUploadURL is the resolver for the createImageUploadURL field.
+func (r *mutationResolver) CreateImageUploadURL(ctx context.Context, input model.CreateImageUploadURLInput) (*model.ImageUploadURL, error) {
+	res, err := r.ImageService.CreateUploadURL(
+		ctx,
+		string(input.OwnerType),
+		input.OwnerID,
+		input.Filename,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ImageUploadURL{
+		UploadURL: res.URL.String,
+		ImageID:   res.ID,
+	}, nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
