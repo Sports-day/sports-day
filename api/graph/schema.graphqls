@@ -118,23 +118,23 @@ input UpdateMatchEntryScoreInput {
 }
 
 """
-3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。  
+3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 """
 input JudgmentEntry {
   name: String
-	userId: ID
-	teamId: ID
-	groupId: ID 
+  userId: ID
+  teamId: ID
+  groupId: ID
 }
 
 input CreateJudgmentInput {
-	id: ID!
-	entry: JudgmentEntry!
+  id: ID!
+  entry: JudgmentEntry!
 }
 
 input UpdateJudgmentInput {
-	entry: JudgmentEntry
+  entry: JudgmentEntry
 }
 
 input CreateLeagueInput {
@@ -144,8 +144,8 @@ input CreateLeagueInput {
 }
 
 input UpdateLeagueRuleInput {
-	calculationType: CalculationType
-	winPt:  Int
+  calculationType: CalculationType
+  winPt: Int
   drawPt: Int
   losePt: Int
 }
@@ -208,7 +208,7 @@ type Query {
   """
   ID指定で試合を取得する
   """
-	judgment(id: ID!): Judgment!
+  judgment(id: ID!): Judgment!
   """
   リーグをまとめて取得する
   """
@@ -216,7 +216,24 @@ type Query {
   """
   ID指定でリーグを取得する
   """
-	league(id: ID!): League!
+  league(id: ID!): League!
+}
+
+input CreateImageUploadURLInput {
+  ownerType: ImageOwnerType!
+  ownerId: ID
+  filename: String!
+}
+
+enum ImageOwnerType {
+  USER
+  SPORT
+  COMPETITION
+}
+
+type ImageUploadURL {
+  uploadUrl: String!
+  imageId: ID!
 }
 
 type Mutation {
@@ -279,11 +296,17 @@ type Mutation {
   """
   大会にチームエントリーを追加する
   """
-  addCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  addCompetitionEntries(
+    id: ID!
+    input: UpdateCompetitionEntriesInput!
+  ): Competition!
   """
   大会からチームエントリーを削除する
   """
-  deleteCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  deleteCompetitionEntries(
+    id: ID!
+    input: UpdateCompetitionEntriesInput!
+  ): Competition!
   """
   試合を作成する
   """
@@ -311,7 +334,7 @@ type Mutation {
   """
   審判の情報を更新する
   """
-	updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
+  updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
   """
   リーグを追加する
   """
@@ -332,4 +355,8 @@ type Mutation {
   リーグの順位表を計算する
   """
   calculateLeagueStandings(id: ID!): [Standing!]!
+  """
+  画像アップロード用のURLを発行する
+  """
+  createImageUploadURL(input: CreateImageUploadURLInput!): ImageUploadURL!
 }
