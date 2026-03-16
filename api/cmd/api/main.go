@@ -26,6 +26,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func main() {
@@ -86,6 +88,13 @@ func main() {
 	ruleRepository := repository.NewRule()
 	imageRepository := repository.NewImage()
 
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		api.Logger.Fatal().Err(err).Msg("failed to load aws config")
+	}
+	
+	s3Client := s3.NewFromConfig(cfg)
+
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
@@ -106,7 +115,13 @@ func main() {
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
-	imageService := service.NewImage(db, imageRepository)
+
+	imageService := service.NewImage(
+		db,
+		imageRepository,
+		s3Client,
+		env.Get().Storage.Bucket,
+	)
 
 	// graphql
 	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService)}

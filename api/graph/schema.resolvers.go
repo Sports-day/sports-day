@@ -615,7 +615,7 @@ func (r *mutationResolver) CreateImageUploadURL(
 	input model.CreateImageUploadURLInput,
 ) (*model.ImageUploadURL, error) {
 
-	image, err := r.ImageService.CreateUploadURL(
+	img, uploadURL, err := r.ImageService.CreateUploadURL(
 		ctx,
 		string(input.OwnerType),
 		input.OwnerID,
@@ -627,8 +627,8 @@ func (r *mutationResolver) CreateImageUploadURL(
 	}
 
 	return &model.ImageUploadURL{
-    ImageID: image.ID,
-    UploadURL: image.URL.String,
+		ImageID:   img.ID,
+		UploadURL: uploadURL,
 	}, nil
 }
 
