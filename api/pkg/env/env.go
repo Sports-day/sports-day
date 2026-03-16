@@ -31,6 +31,11 @@ type Env struct {
 			ExpirySeconds int    `envconfig:"JWT_EXPIRY_SECONDS" default:"3600"`
 		}
 	}
+	Storage struct {
+        Endpoint string `envconfig:"STORAGE_ENDPOINT"`
+        Bucket   string `envconfig:"STORAGE_BUCKET"`
+    }
+	
 	Debug bool `envconfig:"DEBUG" default:"false"`
 }
 
