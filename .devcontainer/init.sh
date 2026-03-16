@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+# Fix directory permissions
+sudo mkdir -p ~/.claude ~/.codex ~/.config/gh \
+  && sudo chown -R $(whoami):$(whoami) ~/.claude ~/.codex ~/.config/gh
+
 # Claude Code
 curl -fsSL https://claude.ai/install.sh | bash
 
