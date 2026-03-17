@@ -15,7 +15,7 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
           height: "100%",
           borderRadius: "10px",
           background: "#F4F5F9",
-          boerderColor: "#5B6DC6",
+          borderColor: "#5B6DC6",
           borderWidth: "2px",
           component: "div",
           display: "flex",

@@ -30,9 +30,12 @@ export default function SportChoise() {
     variables: { sceneId: type },
   });
 
-  if (loading) return <CircularUnderLoad />;
-  if (error) return <Error />;
-
+  if (loading) {
+    return <CircularUnderLoad />;
+  }
+  if (error) {
+    throw error;
+  }
   const weatherType = data?.scene.name;
   const sportData = data?.scene.sports;
 

@@ -54,7 +54,7 @@ export default function SportCards({ weather, type }: Props) {
         m: "1%",
         p: "3%",
         display: "flex",
-        flexDirection: "clumn",
+        flexDirection: "column",
         flexGrow: 1,
         overflowY: "auto",
       }}

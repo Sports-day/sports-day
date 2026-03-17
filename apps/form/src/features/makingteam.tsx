@@ -45,15 +45,16 @@ export default function MakingTeams({
   weather,
 }: MakingProps) {
   const { data, loading } = useQuery(GET_SCENE_SPORT);
-  const teams = data?.sportScenes?.filter(
-    (d) => d.sport.id === sports && d.scene.id === type
-  );
+  const teams =
+    data?.sportScenes?.filter(
+      (d) => d.sport.id === sports && d.scene.id === type
+    ) ?? [];
 
   if (loading) {
-    <CircularUnderLoad />;
+    return <CircularUnderLoad />;
   }
 
-  const selectedTeams = teams?.flatMap((d) => d.entries.map((s) => s.team));
+  const selectedTeams = teams.flatMap((d) => d.entries.map((s) => s.team));
 
   return (
     <Stack sx={{ height: "80vh", overflow: "hidden" }}>
@@ -110,10 +111,10 @@ export default function MakingTeams({
                 <Grid key={item.id} item xs={12} sm={6} md={4} lg={3} xl={2}>
                   <TeamCard
                     teamid={item.id}
-                    teamname={item?.name}
+                    teamname={item.name}
                     type={type}
                     sports={sports}
-                    member={item?.users.map((n) => ({ name: n.name }))}
+                    member={item.users.map((n) => ({ name: n.name }))}
                   />
                 </Grid>
               ))}

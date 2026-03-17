@@ -77,7 +77,6 @@ export default function NotSelected() {
   const nonSelectedUser1 = AllUsers?.filter(
     (user) => !SceneTeamUser1.includes(user.id)
   );
-  console.log(nonSelectedUser1);
 
   const nonSelectedUser2 = AllUsers?.filter(
     (user) => !SceneTeamUser2.includes(user.id)
@@ -93,7 +92,6 @@ export default function NotSelected() {
       nonselected: nonSelectedUser2,
     },
   ];
-  console.log(AllSceneData);
 
   return (
     <Box

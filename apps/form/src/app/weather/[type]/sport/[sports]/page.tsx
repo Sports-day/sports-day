@@ -30,7 +30,7 @@ export default function TeamEdit() {
     <CircularUnderLoad />;
   }
   if (error) {
-    <Error />;
+    throw error;
   }
   const sportname = data?.sport.name;
   const weather = data?.scene.name;

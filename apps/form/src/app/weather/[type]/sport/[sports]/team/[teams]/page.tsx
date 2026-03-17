@@ -28,8 +28,12 @@ export default function MemberEdit() {
     variables: { sport_Id: sports, scene_Id: type },
   });
 
-  if (loading) return <CircularUnderLoad />;
-  if (error) return <Error />;
+  if (loading) {
+    return <CircularUnderLoad />;
+  }
+  if (error) {
+    throw error;
+  }
 
   const weatherName = data?.scene?.name;
   const sportName = data?.sport?.name;
@@ -47,7 +51,7 @@ export default function MemberEdit() {
       >
         <Instruction weather={weatherName} sportname={sportName} />
       </Stack>
-      <TeamEdit />;
+      <TeamEdit />
       <SubFooter />
     </Box>
   );

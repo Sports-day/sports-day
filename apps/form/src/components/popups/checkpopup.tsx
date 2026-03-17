@@ -26,7 +26,9 @@ const DELETE_TEAM = gql`
 `;
 
 export default function CheckPopup({ teamid, open, setOpen }: CheckPopupProps) {
-  const [DeleteTeam] = useMutation(DELETE_TEAM);
+  const [DeleteTeam] = useMutation(DELETE_TEAM, {
+    refetchQueries: ["GetSceneSport"],
+  });
 
   const handleClose = () => {
     setOpen(false);
@@ -66,10 +68,9 @@ export default function CheckPopup({ teamid, open, setOpen }: CheckPopupProps) {
       <DialogActions sx={{ display: "flex", justifyContent: "center" }}>
         <Button
           variant="contained"
-          onClick={() => {
+          onClick={async () => {
             handleClose();
-            handleDelete(teamid);
-            window.location.reload();
+            await handleDelete(teamid);
           }}
         >
           削除

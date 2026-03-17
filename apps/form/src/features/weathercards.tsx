@@ -22,7 +22,6 @@ export default function WeatherCards({ id }: weatherProps) {
   const { data, loading, error } = useQuery(GET_WEATHER);
   if (loading) return <CircularUnderLoad />;
   if (error) return <div>error</div>;
-  console.log(data);
   const weather = data?.scenes.map((d) => ({
     id: d.id,
     name: d.name,
