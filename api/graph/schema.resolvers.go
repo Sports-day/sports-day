@@ -408,6 +408,50 @@ func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id stri
 	return res, nil
 }
 
+// CreateSportScene is the resolver for the createSportScene field.
+func (r *mutationResolver) CreateSportScene(ctx context.Context, input model.CreateSportSceneInput) (*model.SportScene, error) {
+	res, err := r.SceneService.CreateSportScene(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SportScene{
+		ID: res.ID,
+	}, nil
+}
+
+// DeleteSportScene is the resolver for the deleteSportScene field.
+func (r *mutationResolver) DeleteSportScene(ctx context.Context, id string) (*model.SportScene, error) {
+	res, err := r.SceneService.DeleteSportScene(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SportScene{
+		ID: res.ID,
+	}, nil
+}
+
+// CreateSportEntry is the resolver for the createSportEntry field.
+func (r *mutationResolver) CreateSportEntry(ctx context.Context, input model.CreateSportEntryInput) (*model.SportEntry, error) {
+	res, err := r.SceneService.CreateSportEntry(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SportEntry{
+		ID: res.ID,
+	}, nil
+}
+
+// DeleteSportEntry is the resolver for the deleteSportEntry field.
+func (r *mutationResolver) DeleteSportEntry(ctx context.Context, id string) (*model.SportEntry, error) {
+	res, err := r.SceneService.DeleteSportEntry(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SportEntry{
+		ID: res.ID,
+	}, nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -691,6 +735,36 @@ func (r *queryResolver) League(ctx context.Context, id string) (*model.League, e
 		return nil, err
 	}
 	return model.FormatLeagueResponse(league, competition), nil
+}
+
+// SportScenes is the resolver for the sportScenes field.
+func (r *queryResolver) SportScenes(ctx context.Context, sportID string) ([]*model.SportScene, error) {
+	res, err := r.SceneService.FindSportSceneBySportID(ctx, sportID)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*model.SportScene, 0, len(res))
+	for _, s := range res {
+		items = append(items, &model.SportScene{
+			ID: s.ID,
+		})
+	}
+	return items, nil
+}
+
+// SportEntries is the resolver for the sportEntries field.
+func (r *queryResolver) SportEntries(ctx context.Context, sportSceneID string) ([]*model.SportEntry, error) {
+	res, err := r.SceneService.FindSportEntryBySportSceneID(ctx, sportSceneID)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*model.SportEntry, 0, len(res))
+	for _, e := range res {
+		items = append(items, &model.SportEntry{
+			ID: e.ID,
+		})
+	}
+	return items, nil
 }
 
 // Mutation returns MutationResolver implementation.

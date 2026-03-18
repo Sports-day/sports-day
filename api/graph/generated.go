@@ -136,6 +136,8 @@ type ComplexityRoot struct {
 		CreateLocation           func(childComplexity int, input model.CreateLocationInput) int
 		CreateMatch              func(childComplexity int, input model.CreateMatchInput) int
 		CreateScene              func(childComplexity int, input model.CreateSceneInput) int
+		CreateSportEntry         func(childComplexity int, input model.CreateSportEntryInput) int
+		CreateSportScene         func(childComplexity int, input model.CreateSportSceneInput) int
 		CreateSports             func(childComplexity int, input model.CreateSportsInput) int
 		CreateTeam               func(childComplexity int, input model.CreateTeamInput) int
 		CreateUser               func(childComplexity int, input model.CreateUserInput) int
@@ -148,6 +150,8 @@ type ComplexityRoot struct {
 		DeleteMatch              func(childComplexity int, id string) int
 		DeleteMatchEntries       func(childComplexity int, id string, input model.UpdateMatchEntriesInput) int
 		DeleteScene              func(childComplexity int, id string) int
+		DeleteSportEntry         func(childComplexity int, id string) int
+		DeleteSportScene         func(childComplexity int, id string) int
 		DeleteSports             func(childComplexity int, id string) int
 		DeleteTeam               func(childComplexity int, id string) int
 		GenerateRoundRobin       func(childComplexity int, id string, input model.GenerateRoundRobinInput) int
@@ -186,6 +190,8 @@ type ComplexityRoot struct {
 		Scene        func(childComplexity int, id string) int
 		Scenes       func(childComplexity int) int
 		Sport        func(childComplexity int, id string) int
+		SportEntries func(childComplexity int, sportSceneID string) int
+		SportScenes  func(childComplexity int, sportID string) int
 		Sports       func(childComplexity int) int
 		Team         func(childComplexity int, id string) int
 		Teams        func(childComplexity int) int
@@ -201,7 +207,20 @@ type ComplexityRoot struct {
 	Sport struct {
 		ID     func(childComplexity int) int
 		Name   func(childComplexity int) int
+		Scene  func(childComplexity int) int
 		Weight func(childComplexity int) int
+	}
+
+	SportEntry struct {
+		ID         func(childComplexity int) int
+		SportScene func(childComplexity int) int
+		Team       func(childComplexity int) int
+	}
+
+	SportScene struct {
+		ID    func(childComplexity int) int
+		Scene func(childComplexity int) int
+		Sport func(childComplexity int) int
 	}
 
 	Standing struct {
@@ -309,6 +328,10 @@ type MutationResolver interface {
 	DeleteLeague(ctx context.Context, id string) (*model.League, error)
 	GenerateRoundRobin(ctx context.Context, id string, input model.GenerateRoundRobinInput) ([]*model.Match, error)
 	CalculateLeagueStandings(ctx context.Context, id string) ([]*model.Standing, error)
+	CreateSportScene(ctx context.Context, input model.CreateSportSceneInput) (*model.SportScene, error)
+	DeleteSportScene(ctx context.Context, id string) (*model.SportScene, error)
+	CreateSportEntry(ctx context.Context, input model.CreateSportEntryInput) (*model.SportEntry, error)
+	DeleteSportEntry(ctx context.Context, id string) (*model.SportEntry, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -334,6 +357,8 @@ type QueryResolver interface {
 	Judgment(ctx context.Context, id string) (*model.Judgment, error)
 	Leagues(ctx context.Context) ([]*model.League, error)
 	League(ctx context.Context, id string) (*model.League, error)
+	SportScenes(ctx context.Context, sportID string) ([]*model.SportScene, error)
+	SportEntries(ctx context.Context, sportSceneID string) ([]*model.SportEntry, error)
 }
 type StandingResolver interface {
 	Team(ctx context.Context, obj *model.Standing) (*model.Team, error)
@@ -783,6 +808,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateScene(childComplexity, args["input"].(model.CreateSceneInput)), true
 
+	case "Mutation.createSportEntry":
+		if e.complexity.Mutation.CreateSportEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSportEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSportEntry(childComplexity, args["input"].(model.CreateSportEntryInput)), true
+
+	case "Mutation.createSportScene":
+		if e.complexity.Mutation.CreateSportScene == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSportScene_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSportScene(childComplexity, args["input"].(model.CreateSportSceneInput)), true
+
 	case "Mutation.createSports":
 		if e.complexity.Mutation.CreateSports == nil {
 			break
@@ -926,6 +975,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteScene(childComplexity, args["id"].(string)), true
+
+	case "Mutation.deleteSportEntry":
+		if e.complexity.Mutation.DeleteSportEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSportEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSportEntry(childComplexity, args["id"].(string)), true
+
+	case "Mutation.deleteSportScene":
+		if e.complexity.Mutation.DeleteSportScene == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSportScene_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSportScene(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteSports":
 		if e.complexity.Mutation.DeleteSports == nil {
@@ -1302,6 +1375,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Sport(childComplexity, args["id"].(string)), true
 
+	case "Query.sportEntries":
+		if e.complexity.Query.SportEntries == nil {
+			break
+		}
+
+		args, err := ec.field_Query_sportEntries_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SportEntries(childComplexity, args["sportSceneId"].(string)), true
+
+	case "Query.sportScenes":
+		if e.complexity.Query.SportScenes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_sportScenes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SportScenes(childComplexity, args["sportId"].(string)), true
+
 	case "Query.sports":
 		if e.complexity.Query.Sports == nil {
 			break
@@ -1375,12 +1472,61 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Sport.Name(childComplexity), true
 
+	case "Sport.scene":
+		if e.complexity.Sport.Scene == nil {
+			break
+		}
+
+		return e.complexity.Sport.Scene(childComplexity), true
+
 	case "Sport.weight":
 		if e.complexity.Sport.Weight == nil {
 			break
 		}
 
 		return e.complexity.Sport.Weight(childComplexity), true
+
+	case "SportEntry.id":
+		if e.complexity.SportEntry.ID == nil {
+			break
+		}
+
+		return e.complexity.SportEntry.ID(childComplexity), true
+
+	case "SportEntry.sportScene":
+		if e.complexity.SportEntry.SportScene == nil {
+			break
+		}
+
+		return e.complexity.SportEntry.SportScene(childComplexity), true
+
+	case "SportEntry.team":
+		if e.complexity.SportEntry.Team == nil {
+			break
+		}
+
+		return e.complexity.SportEntry.Team(childComplexity), true
+
+	case "SportScene.id":
+		if e.complexity.SportScene.ID == nil {
+			break
+		}
+
+		return e.complexity.SportScene.ID(childComplexity), true
+
+	case "SportScene.scene":
+		if e.complexity.SportScene.Scene == nil {
+			break
+		}
+
+		return e.complexity.SportScene.Scene(childComplexity), true
+
+	case "SportScene.sport":
+		if e.complexity.SportScene.Sport == nil {
+			break
+		}
+
+		return e.complexity.SportScene.Sport(childComplexity), true
 
 	case "Standing.draw":
 		if e.complexity.Standing.Draw == nil {
@@ -1566,6 +1712,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateLocationInput,
 		ec.unmarshalInputCreateMatchInput,
 		ec.unmarshalInputCreateSceneInput,
+		ec.unmarshalInputCreateSportEntryInput,
+		ec.unmarshalInputCreateSportSceneInput,
 		ec.unmarshalInputCreateSportsInput,
 		ec.unmarshalInputCreateTeamInput,
 		ec.unmarshalInputCreateUserInput,
@@ -2013,6 +2161,52 @@ func (ec *executionContext) field_Mutation_createScene_argsInput(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_createSportEntry_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createSportEntry_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_createSportEntry_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.CreateSportEntryInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCreateSportEntryInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateSportEntryInput(ctx, tmp)
+	}
+
+	var zeroVal model.CreateSportEntryInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createSportScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createSportScene_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_createSportScene_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.CreateSportSceneInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCreateSportSceneInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateSportSceneInput(ctx, tmp)
+	}
+
+	var zeroVal model.CreateSportSceneInput
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_createSports_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2313,6 +2507,52 @@ func (ec *executionContext) field_Mutation_deleteScene_args(ctx context.Context,
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_deleteScene_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSportEntry_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteSportEntry_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteSportEntry_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSportScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteSportScene_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteSportScene_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -3168,6 +3408,52 @@ func (ec *executionContext) field_Query_scene_argsID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_sportEntries_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_sportEntries_argsSportSceneID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sportSceneId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_sportEntries_argsSportSceneID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sportSceneId"))
+	if tmp, ok := rawArgs["sportSceneId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_sportScenes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_sportScenes_argsSportID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sportId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_sportScenes_argsSportID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sportId"))
+	if tmp, ok := rawArgs["sportId"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
@@ -5876,6 +6162,8 @@ func (ec *executionContext) fieldContext_Mutation_createSports(ctx context.Conte
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "scene":
+				return ec.fieldContext_Sport_scene(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -5939,6 +6227,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteSports(ctx context.Conte
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "scene":
+				return ec.fieldContext_Sport_scene(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -6002,6 +6292,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSports(ctx context.Conte
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "scene":
+				return ec.fieldContext_Sport_scene(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -8074,6 +8366,258 @@ func (ec *executionContext) fieldContext_Mutation_calculateLeagueStandings(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createSportScene(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createSportScene(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateSportScene(rctx, fc.Args["input"].(model.CreateSportSceneInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SportScene)
+	fc.Result = res
+	return ec.marshalNSportScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createSportScene(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportScene_id(ctx, field)
+			case "sport":
+				return ec.fieldContext_SportScene_sport(ctx, field)
+			case "scene":
+				return ec.fieldContext_SportScene_scene(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportScene", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSportScene_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSportScene(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSportScene(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSportScene(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SportScene)
+	fc.Result = res
+	return ec.marshalNSportScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSportScene(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportScene_id(ctx, field)
+			case "sport":
+				return ec.fieldContext_SportScene_sport(ctx, field)
+			case "scene":
+				return ec.fieldContext_SportScene_scene(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportScene", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSportScene_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createSportEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createSportEntry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateSportEntry(rctx, fc.Args["input"].(model.CreateSportEntryInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SportEntry)
+	fc.Result = res
+	return ec.marshalNSportEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createSportEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportEntry_id(ctx, field)
+			case "sportScene":
+				return ec.fieldContext_SportEntry_sportScene(ctx, field)
+			case "team":
+				return ec.fieldContext_SportEntry_team(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportEntry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSportEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSportEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSportEntry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSportEntry(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SportEntry)
+	fc.Result = res
+	return ec.marshalNSportEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSportEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportEntry_id(ctx, field)
+			case "sportScene":
+				return ec.fieldContext_SportEntry_sportScene(ctx, field)
+			case "team":
+				return ec.fieldContext_SportEntry_team(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportEntry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSportEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_users(ctx, field)
 	if err != nil {
@@ -8427,6 +8971,8 @@ func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field g
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "scene":
+				return ec.fieldContext_Sport_scene(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -8479,6 +9025,8 @@ func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field 
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "scene":
+				return ec.fieldContext_Sport_scene(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -9481,6 +10029,132 @@ func (ec *executionContext) fieldContext_Query_league(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_sportScenes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sportScenes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SportScenes(rctx, fc.Args["sportId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SportScene)
+	fc.Result = res
+	return ec.marshalNSportScene2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportSceneᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sportScenes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportScene_id(ctx, field)
+			case "sport":
+				return ec.fieldContext_SportScene_sport(ctx, field)
+			case "scene":
+				return ec.fieldContext_SportScene_scene(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportScene", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sportScenes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_sportEntries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sportEntries(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SportEntries(rctx, fc.Args["sportSceneId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SportEntry)
+	fc.Result = res
+	return ec.marshalNSportEntry2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportEntryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sportEntries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportEntry_id(ctx, field)
+			case "sportScene":
+				return ec.fieldContext_SportEntry_sportScene(ctx, field)
+			case "team":
+				return ec.fieldContext_SportEntry_team(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportEntry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sportEntries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -9827,6 +10501,361 @@ func (ec *executionContext) fieldContext_Sport_weight(_ context.Context, field g
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Sport_scene(ctx context.Context, field graphql.CollectedField, obj *model.Sport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sport_scene(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scene, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SportScene)
+	fc.Result = res
+	return ec.marshalOSportScene2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportSceneᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Sport_scene(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Sport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportScene_id(ctx, field)
+			case "sport":
+				return ec.fieldContext_SportScene_sport(ctx, field)
+			case "scene":
+				return ec.fieldContext_SportScene_scene(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportScene", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SportEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.SportEntry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportEntry_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportEntry_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SportEntry_sportScene(ctx context.Context, field graphql.CollectedField, obj *model.SportEntry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportEntry_sportScene(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SportScene, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SportScene)
+	fc.Result = res
+	return ec.marshalNSportScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportEntry_sportScene(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SportScene_id(ctx, field)
+			case "sport":
+				return ec.fieldContext_SportScene_sport(ctx, field)
+			case "scene":
+				return ec.fieldContext_SportScene_scene(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportScene", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SportEntry_team(ctx context.Context, field graphql.CollectedField, obj *model.SportEntry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportEntry_team(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Team, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Team)
+	fc.Result = res
+	return ec.marshalNTeam2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐTeam(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportEntry_team(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportEntry",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Team_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Team_name(ctx, field)
+			case "group":
+				return ec.fieldContext_Team_group(ctx, field)
+			case "users":
+				return ec.fieldContext_Team_users(ctx, field)
+			case "competitions":
+				return ec.fieldContext_Team_competitions(ctx, field)
+			case "matches":
+				return ec.fieldContext_Team_matches(ctx, field)
+			case "judgments":
+				return ec.fieldContext_Team_judgments(ctx, field)
+			case "leagues":
+				return ec.fieldContext_Team_leagues(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Team", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SportScene_id(ctx context.Context, field graphql.CollectedField, obj *model.SportScene) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportScene_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportScene_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportScene",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SportScene_sport(ctx context.Context, field graphql.CollectedField, obj *model.SportScene) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportScene_sport(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sport, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Sport)
+	fc.Result = res
+	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportScene_sport(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportScene",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Sport_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Sport_name(ctx, field)
+			case "weight":
+				return ec.fieldContext_Sport_weight(ctx, field)
+			case "scene":
+				return ec.fieldContext_Sport_scene(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SportScene_scene(ctx context.Context, field graphql.CollectedField, obj *model.SportScene) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportScene_scene(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scene, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Scene)
+	fc.Result = res
+	return ec.marshalNScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐScene(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportScene_scene(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportScene",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Scene_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Scene_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Scene", field.Name)
 		},
 	}
 	return fc, nil
@@ -13267,6 +14296,74 @@ func (ec *executionContext) unmarshalInputCreateSceneInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateSportEntryInput(ctx context.Context, obj any) (model.CreateSportEntryInput, error) {
+	var it model.CreateSportEntryInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"sportSceneId", "teamId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "sportSceneId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sportSceneId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SportSceneID = data
+		case "teamId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TeamID = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateSportSceneInput(ctx context.Context, obj any) (model.CreateSportSceneInput, error) {
+	var it model.CreateSportSceneInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"sportId", "sceneId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "sportId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sportId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SportID = data
+		case "sceneId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sceneId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SceneID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateSportsInput(ctx context.Context, obj any) (model.CreateSportsInput, error) {
 	var it model.CreateSportsInput
 	asMap := map[string]any{}
@@ -15358,6 +16455,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createSportScene":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSportScene(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteSportScene":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSportScene(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createSportEntry":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSportEntry(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteSportEntry":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSportEntry(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15906,6 +17031,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "sportScenes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sportScenes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "sportEntries":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sportEntries(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -16004,6 +17173,106 @@ func (ec *executionContext) _Sport(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "weight":
 			out.Values[i] = ec._Sport_weight(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "scene":
+			out.Values[i] = ec._Sport_scene(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sportEntryImplementors = []string{"SportEntry"}
+
+func (ec *executionContext) _SportEntry(ctx context.Context, sel ast.SelectionSet, obj *model.SportEntry) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sportEntryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SportEntry")
+		case "id":
+			out.Values[i] = ec._SportEntry_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sportScene":
+			out.Values[i] = ec._SportEntry_sportScene(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "team":
+			out.Values[i] = ec._SportEntry_team(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sportSceneImplementors = []string{"SportScene"}
+
+func (ec *executionContext) _SportScene(ctx context.Context, sel ast.SelectionSet, obj *model.SportScene) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sportSceneImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SportScene")
+		case "id":
+			out.Values[i] = ec._SportScene_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sport":
+			out.Values[i] = ec._SportScene_sport(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "scene":
+			out.Values[i] = ec._SportScene_scene(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -17039,6 +18308,16 @@ func (ec *executionContext) unmarshalNCreateSceneInput2sportsᚑdayᚋapiᚋgrap
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateSportEntryInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateSportEntryInput(ctx context.Context, v any) (model.CreateSportEntryInput, error) {
+	res, err := ec.unmarshalInputCreateSportEntryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateSportSceneInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateSportSceneInput(ctx context.Context, v any) (model.CreateSportSceneInput, error) {
+	res, err := ec.unmarshalInputCreateSportSceneInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateSportsInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateSportsInput(ctx context.Context, v any) (model.CreateSportsInput, error) {
 	res, err := ec.unmarshalInputCreateSportsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -17662,6 +18941,122 @@ func (ec *executionContext) marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodel�
 		return graphql.Null
 	}
 	return ec._Sport(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSportEntry2sportsᚑdayᚋapiᚋgraphᚋmodelᚐSportEntry(ctx context.Context, sel ast.SelectionSet, v model.SportEntry) graphql.Marshaler {
+	return ec._SportEntry(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSportEntry2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SportEntry) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSportEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportEntry(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSportEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportEntry(ctx context.Context, sel ast.SelectionSet, v *model.SportEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SportEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSportScene2sportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx context.Context, sel ast.SelectionSet, v model.SportScene) graphql.Marshaler {
+	return ec._SportScene(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSportScene2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportSceneᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SportScene) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSportScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSportScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx context.Context, sel ast.SelectionSet, v *model.SportScene) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SportScene(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNStanding2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐStandingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Standing) graphql.Marshaler {
@@ -18352,6 +19747,53 @@ func (ec *executionContext) marshalOMatchStatus2ᚖsportsᚑdayᚋapiᚋgraphᚋ
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOSportScene2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportSceneᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SportScene) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSportScene2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v any) (string, error) {

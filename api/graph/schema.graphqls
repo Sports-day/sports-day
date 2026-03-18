@@ -157,6 +157,15 @@ input GenerateRoundRobinInput {
   locationId: ID
 }
 
+input CreateSportSceneInput {
+  sportId: ID!
+  sceneId: ID!
+}
+input CreateSportEntryInput {
+  sportSceneId: ID!
+  teamId: ID!
+}
+
 type Query {
   users: [User!]!
   user(id: ID!): User!
@@ -183,7 +192,13 @@ type Query {
   location(id: ID!): Location!
   scenes: [Scene!]!
   scene(id: ID!): Scene!
+  """
+  お知らせをまとめて取得する
+  """
   Informations: [Information!]!
+  """
+  ID指定でお知らせを取得する
+  """
   Information(id: ID!): Information!
   """
   大会をまとめて取得する
@@ -217,6 +232,14 @@ type Query {
   ID指定でリーグを取得する
   """
 	league(id: ID!): League!
+  """
+  ID指定でスポーツシーンをまとめて取得する
+  """
+  sportScenes(sportId: ID!): [SportScene!]!
+  """
+  ID指定でスポーツエントリーをまとめて取得する
+  """
+  sportEntries(sportSceneId: ID!): [SportEntry!]!
 }
 
 type Mutation {
@@ -332,4 +355,20 @@ type Mutation {
   リーグの順位表を計算する
   """
   calculateLeagueStandings(id: ID!): [Standing!]!
+  """
+  スポーツシーンを追加する
+  """
+  createSportScene(input: CreateSportSceneInput!): SportScene!
+  """
+  スポーツシーンを削除する
+  """
+  deleteSportScene(id: ID!): SportScene!
+  """
+  スポーツエントリーを追加する
+  """
+  createSportEntry(input: CreateSportEntryInput!): SportEntry!
+  """
+  スポーツエントリーを削除する
+  """
+  deleteSportEntry(id: ID!): SportEntry!
 }
