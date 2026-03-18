@@ -69,5 +69,96 @@ func (s *Scene) Update(ctx context.Context, id string, input *model.UpdateSceneI
 }
 
 func (s *Scene) Delete(ctx context.Context, id string) (*db_model.Scene, error) {
+	linkedScenes, err := s.sceneRepo.FindSportSceneBySceneID(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if len(linkedScenes) > 0 {
+		return nil, errors.ErrSceneCannotDelete
+	}
 	return s.sceneRepo.Delete(ctx, s.db, id)
+}
+
+func (s *Scene) CreateSportScene(ctx context.Context, input *model.CreateSportSceneInput) (*db_model.SportScene, error) {
+	sportScene := &db_model.SportScene{
+		ID:      ulid.Make(),
+		SportID: input.SportID,
+		SceneID: input.SceneID,
+	}
+	created, err := s.sceneRepo.CreateSportScene(ctx, s.db, sportScene)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return created, nil
+}
+
+func (s *Scene) FindSportSceneByID(ctx context.Context, id string) (*db_model.SportScene, error) {
+	sportScene, err := s.sceneRepo.FindSportSceneByID(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportScene, nil
+}
+func (s *Scene) FindSportSceneBySportID(ctx context.Context, sportID string) ([]*db_model.SportScene, error) {
+	sportScene, err := s.sceneRepo.FindSportSceneBySportID(ctx, s.db, sportID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportScene, nil
+}
+func (s *Scene) FindSportSceneBySceneID(ctx context.Context, sceneID string) ([]*db_model.SportScene, error) {
+	sportScene, err := s.sceneRepo.FindSportSceneBySceneID(ctx, s.db, sceneID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportScene, nil
+}
+func (s *Scene) DeleteSportScene(ctx context.Context, id string) (*db_model.SportScene, error) {
+	sportScene, err := s.sceneRepo.DeleteSportScene(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportScene, nil
+}
+
+func (s *Scene) CreateSportEntry(ctx context.Context, input *model.CreateSportEntryInput) (*db_model.SportEntry, error) {
+	sportEntry := &db_model.SportEntry{
+		ID:           ulid.Make(),
+		SportSceneID: input.SportSceneID,
+		TeamID:       input.TeamID,
+	}
+	created, err := s.sceneRepo.CreateSportEntry(ctx, s.db, sportEntry)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return created, nil
+}
+
+func (s *Scene) FindSportEntryByID(ctx context.Context, id string) (*db_model.SportEntry, error) {
+	sportEntry, err := s.sceneRepo.FindSportEntryByID(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportEntry, nil
+}
+func (s *Scene) FindSportEntryBySportSceneID(ctx context.Context, sportSceneID string) ([]*db_model.SportEntry, error) {
+	sportEntry, err := s.sceneRepo.FindSportEntryBySportSceneID(ctx, s.db, sportSceneID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportEntry, nil
+}
+func (s *Scene) FindSportEntryByTeamID(ctx context.Context, teamID string) ([]*db_model.SportEntry, error) {
+	sportEntry, err := s.sceneRepo.FindSportEntryByTeamID(ctx, s.db, teamID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportEntry, nil
+}
+func (s *Scene) DeleteSportEntry(ctx context.Context, id string) (*db_model.SportEntry, error) {
+	sportEntry, err := s.sceneRepo.DeleteSportEntry(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportEntry, nil
 }
