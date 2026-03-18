@@ -4,6 +4,7 @@ package db_model
 
 // Scene represents a row from 'sportsday.scenes'.
 type Scene struct {
-	ID   string `json:"id"`   // ID
-	Name string `json:"name"` // シーン名
+	ID        string `json:"id"`         // ID
+	Name      string `json:"name"`       // シーン名
+	IsDeleted bool   `json:"is_deleted"` // 論理削除フラグ
 }
