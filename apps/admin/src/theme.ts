@@ -36,7 +36,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: 'none',
-          boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+          boxShadow: '0px 1px 8px 0px rgba(0, 0, 0, 0.25)',
         },
         outlined: {
           backgroundColor: '#EFF0F8',
