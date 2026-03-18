@@ -18,6 +18,8 @@ var (
 	ErrJudgmentNotFound       = NewError("JUDGMENT_NOT_FOUND", "審判が見つかりません")
 	ErrLeagueNotFound         = NewError("LEAGUE_NOT_FOUND", "リーグが見つかりません")
 	ErrLeagueStandingNotFound = NewError("LEAGUE_STANDING_NOT_FOUND", "リーグ結果が見つかりません")
+	ErrSportSceneNotFound     = NewError("SPORT_SCENE_NOT_FOUND", "スポーツシーンが見つかりません")
+	ErrSportEntryNotFound     = NewError("SPORT_ENTRY_NOT_FOUND", "スポーツエントリーが見つかりません")
 
 	/*
 		Validation
@@ -42,6 +44,8 @@ var (
 	ErrMakeLeagueMatches      = NewError("LEAGUE_MATCH_MAKE_FAILED", "リーグの試合生成に失敗しました")
 	ErrSaveLeague             = NewError("LEAGUE_SAVE_FAILED", "リーグの保存に失敗しました")
 	ErrSaveLeagueStanding     = NewError("LEAGUE_STANDING_SAVE_FAILED", "リーグ結果の保存に失敗しました")
+	ErrSceneCannotDelete      = NewError("SCENE_CANNOT_DELETE", "このシーンはスポーツに紐づいているため削除できません")
+
 	/*
 		Authentication
 	*/
