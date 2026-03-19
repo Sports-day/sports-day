@@ -88,7 +88,10 @@ func main() {
 	ruleRepository := repository.NewRule()
 	imageRepository := repository.NewImage()
 
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	cfg, err := config.LoadDefaultConfig(
+ 	   context.Background(),
+    	config.WithRegion("ap-northeast-1"),
+	)
 	if err != nil {
 		api.Logger.Fatal().Err(err).Msg("failed to load aws config")
 	}
@@ -139,6 +142,24 @@ func main() {
 
 	// mux
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/api/v1/images/presign", func(w http.ResponseWriter, r *http.Request) {
+  	  if r.Method != http.MethodPost {
+   	     w.WriteHeader(http.StatusMethodNotAllowed)
+    	    return
+    	}
+
+	    ctx := r.Context()
+
+    	img, url, err := imageService.CreateUploadURL(ctx)
+    	if err != nil {
+       		http.Error(w, err.Error(), http.StatusInternalServerError)
+        	return
+    	}
+
+	    w.Header().Set("Content-Type", "application/json")
+    	fmt.Fprintf(w, `{"upload_url":"%s","image_id":"%s"}`, url, img.ID)
+	})
 
 	// playground only in debug mode
 	if env.Get().Debug {
