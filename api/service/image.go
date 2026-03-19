@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"sports-day/api/db_model"
 	"sports-day/api/pkg/errors"
-	"sports-day/api/pkg/storage"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
 
@@ -36,39 +36,34 @@ func NewImage(
 }
 
 func (s *Image) CreateUploadURL(
-	ctx context.Context,
-	ownerType string,
-	ownerID *string,
-	filename string,
+    ctx context.Context,
 ) (*db_model.Image, string, error) {
 
-	img := &db_model.Image{
-		ID:     ulid.Make(),
-		Status: "pending",
-	}
+    img := &db_model.Image{
+        ID:     ulid.Make(),
+        Status: "pending",
+    }
 
-	img, err := s.imageRepository.Create(ctx, s.db, img)
-	if err != nil {
-		return nil, "", errors.Wrap(err)
-	}
+    img, err := s.imageRepository.Create(ctx, s.db, img)
+    if err != nil {
+        return nil, "", errors.Wrap(err)
+    }
 
-	uploadURL, err := storage.PresignPut(
-		s.s3,
-		s.bucket,
-		img.ID,
+    presigner := s3.NewPresignClient(s.s3)
+
+    key := img.ID
+	
+	presigned, err := presigner.PresignPutObject(
+    	ctx,
+    	&s3.PutObjectInput{
+        	Bucket: &s.bucket,
+        	Key:    &key,
+   		},
+    	s3.WithPresignExpires(15*time.Minute),
 	)
+    if err != nil {
+        return nil, "", errors.Wrap(err)
+    }
 
-	if err != nil {
-		return nil, "", errors.Wrap(err)
-	}
-
-	return img, uploadURL, nil
-}
-func (s *Image) MarkUploaded(
-	ctx context.Context,
-	id string,
-	url string,
-) (*db_model.Image, error) {
-
-	return s.imageRepository.MarkUploaded(ctx, s.db, id, url)
+    return img, presigned.URL, nil
 }
