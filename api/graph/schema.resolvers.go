@@ -417,13 +417,7 @@ func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id stri
 
 // CreateImageUploadURL is the resolver for the calculateLeagueStandings field.
 func (r *mutationResolver) CreateImageUploadURL(ctx context.Context, input model.CreateImageUploadURLInput) (*model.ImageUploadURL, error) {
-	img, uploadURL, err := r.ImageService.CreateUploadURL(
-		ctx,
-		string(input.OwnerType),
-		input.OwnerID,
-		input.Filename,
-	)
-
+	img, uploadURL, err := r.ImageService.CreateUploadURL(ctx)
 	if err != nil {
 		return nil, err
 	}
