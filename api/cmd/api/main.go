@@ -26,7 +26,9 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -89,14 +91,24 @@ func main() {
 	imageRepository := repository.NewImage()
 
 	cfg, err := config.LoadDefaultConfig(
- 	   context.Background(),
-    	config.WithRegion("ap-northeast-1"),
+		context.Background(),
+		config.WithRegion("us-east-1"),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				env.Get().Storage.AccessKey,
+				env.Get().Storage.SecretKey,
+				"",
+			),
+		),
 	)
 	if err != nil {
 		api.Logger.Fatal().Err(err).Msg("failed to load aws config")
 	}
-	
-	s3Client := s3.NewFromConfig(cfg)
+
+	s3Client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(env.Get().Storage.Endpoint)
+		o.UsePathStyle = true
+	})
 
 	// service
 	userService := service.NewUser(db, userRepository)
@@ -144,21 +156,21 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/api/v1/images/presign", func(w http.ResponseWriter, r *http.Request) {
-  	  if r.Method != http.MethodPost {
-   	     w.WriteHeader(http.StatusMethodNotAllowed)
-    	    return
-    	}
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
 
-	    ctx := r.Context()
+		ctx := r.Context()
 
-    	img, url, err := imageService.CreateUploadURL(ctx)
-    	if err != nil {
-       		http.Error(w, err.Error(), http.StatusInternalServerError)
-        	return
-    	}
+		img, url, err := imageService.CreateUploadURL(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	    w.Header().Set("Content-Type", "application/json")
-    	fmt.Fprintf(w, `{"upload_url":"%s","image_id":"%s"}`, url, img.ID)
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"upload_url":"%s","image_id":"%s"}`, url, img.ID)
 	})
 
 	// playground only in debug mode
@@ -170,6 +182,7 @@ func main() {
 		"/internal/webhooks/upload",
 		webhook.HandleUploadWebhook(
 			imageRepository,
+			db,
 			env.Get().Auth.JWT.SecretKey,
 			env.Get().Storage.Endpoint,
 			env.Get().Storage.Bucket,
