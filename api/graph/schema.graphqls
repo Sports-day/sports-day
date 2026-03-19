@@ -233,13 +233,29 @@ type Query {
   """
 	league(id: ID!): League!
   """
-  ID指定でスポーツシーンをまとめて取得する
+  スポーツIDでスポーツシーン一覧を取得する
   """
   sportScenes(sportId: ID!): [SportScene!]!
   """
-  ID指定でスポーツエントリーをまとめて取得する
+  シーンIDでスポーツシーン一覧を取得する
+  """
+  sportScenesByScene(sceneId: ID!): [SportScene!]!
+  """
+  IDでスポーツシーンを1件取得する
+  """
+  sportScene(id: ID!): SportScene!
+  """
+  スポーツシーンIDでスポーツエントリー一覧を取得する
   """
   sportEntries(sportSceneId: ID!): [SportEntry!]!
+  """
+  チームIDでスポーツエントリー一覧を取得する
+  """
+  sportEntriesByTeam(teamId: ID!): [SportEntry!]!
+  """
+  IDでスポーツエントリーを1件取得する
+  """
+  sportEntry(id: ID!): SportEntry!
 }
 
 type Mutation {

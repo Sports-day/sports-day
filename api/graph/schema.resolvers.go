@@ -753,6 +753,36 @@ func (r *queryResolver) SportScenes(ctx context.Context, sportID string) ([]*mod
 	return items, nil
 }
 
+// SportScenesByScene is the resolver for the sportScenesByScene field.
+func (r *queryResolver) SportScenesByScene(ctx context.Context, sceneID string) ([]*model.SportScene, error) {
+	res, err := r.SceneService.FindSportSceneBySceneID(ctx, sceneID)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*model.SportScene, 0, len(res))
+	for _, s := range res {
+		items = append(items, &model.SportScene{
+			ID:      s.ID,
+			SportID: s.SportID,
+			SceneID: s.SceneID,
+		})
+	}
+	return items, nil
+}
+
+// SportScene is the resolver for the sportScene field.
+func (r *queryResolver) SportScene(ctx context.Context, id string) (*model.SportScene, error) {
+	s, err := r.SceneService.FindSportSceneByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SportScene{
+		ID:      s.ID,
+		SportID: s.SportID,
+		SceneID: s.SceneID,
+	}, nil
+}
+
 // SportEntries is the resolver for the sportEntries field.
 func (r *queryResolver) SportEntries(ctx context.Context, sportSceneID string) ([]*model.SportEntry, error) {
 	res, err := r.SceneService.FindSportEntryBySportSceneID(ctx, sportSceneID)
@@ -763,11 +793,41 @@ func (r *queryResolver) SportEntries(ctx context.Context, sportSceneID string) (
 	for _, e := range res {
 		items = append(items, &model.SportEntry{
 			ID:           e.ID,
-			SportSceneID: e.SportSceneID, 
-			TeamID:       e.TeamID,       
+			SportSceneID: e.SportSceneID,
+			TeamID:       e.TeamID,
 		})
 	}
 	return items, nil
+}
+
+// SportEntriesByTeam is the resolver for the sportEntriesByTeam field.
+func (r *queryResolver) SportEntriesByTeam(ctx context.Context, teamID string) ([]*model.SportEntry, error) {
+	res, err := r.SceneService.FindSportEntryByTeamID(ctx, teamID)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*model.SportEntry, 0, len(res))
+	for _, e := range res {
+		items = append(items, &model.SportEntry{
+			ID:           e.ID,
+			SportSceneID: e.SportSceneID,
+			TeamID:       e.TeamID,
+		})
+	}
+	return items, nil
+}
+
+// SportEntry is the resolver for the sportEntry field.
+func (r *queryResolver) SportEntry(ctx context.Context, id string) (*model.SportEntry, error) {
+	e, err := r.SceneService.FindSportEntryByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SportEntry{
+		ID:           e.ID,
+		SportSceneID: e.SportSceneID,
+		TeamID:       e.TeamID,
+	}, nil
 }
 
 // Mutation returns MutationResolver implementation.
