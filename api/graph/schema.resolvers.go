@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -746,7 +745,9 @@ func (r *queryResolver) SportScenes(ctx context.Context, sportID string) ([]*mod
 	items := make([]*model.SportScene, 0, len(res))
 	for _, s := range res {
 		items = append(items, &model.SportScene{
-			ID: s.ID,
+			ID:      s.ID,
+			SportID: s.SportID,
+			SceneID: s.SceneID,
 		})
 	}
 	return items, nil
@@ -761,7 +762,9 @@ func (r *queryResolver) SportEntries(ctx context.Context, sportSceneID string) (
 	items := make([]*model.SportEntry, 0, len(res))
 	for _, e := range res {
 		items = append(items, &model.SportEntry{
-			ID: e.ID,
+			ID:           e.ID,
+			SportSceneID: e.SportSceneID, 
+			TeamID:       e.TeamID,       
 		})
 	}
 	return items, nil

@@ -124,30 +124,6 @@ type Mutation struct {
 type Query struct {
 }
 
-type Scene struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type Sport struct {
-	ID     string        `json:"id"`
-	Name   string        `json:"name"`
-	Weight int32         `json:"weight"`
-	Scene  []*SportScene `json:"scene,omitempty"`
-}
-
-type SportEntry struct {
-	ID         string      `json:"id"`
-	SportScene *SportScene `json:"sportScene"`
-	Team       *Team       `json:"team"`
-}
-
-type SportScene struct {
-	ID    string `json:"id"`
-	Sport *Sport `json:"sport"`
-	Scene *Scene `json:"scene"`
-}
-
 type UpdateCompetitionEntriesInput struct {
 	TeamIds []string `json:"teamIds"`
 }

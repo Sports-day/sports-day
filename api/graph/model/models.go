@@ -63,3 +63,24 @@ type Standing struct {
 	GoalsAgainst int32  `json:"ga"`
 	GoalDiff     int32  `json:"gd"`
 }
+
+type SportScene struct {
+	ID      string `json:"id"`
+	SportID string `json:"sportId"`
+	SceneID string `json:"sceneId"`
+}
+type SportEntry struct {
+	ID           string `json:"id"`
+	SportSceneID string `json:"sportSceneId"`
+	TeamID       string `json:"teamId"`
+}
+
+type Sport struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Weight int32  `json:"weight"`
+}
+type Scene struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
