@@ -8,6 +8,7 @@ import (
 	"sports-day/api/repository"
 
 	"github.com/oklog/ulid/v2"
+	"gorm.io/gorm"
 )
 
 type S3Event struct {
@@ -22,6 +23,7 @@ type S3Event struct {
 
 func HandleUploadWebhook(
 	repo repository.Image,
+	db *gorm.DB,
 	secret string,
 	cdnBase string,
 	bucket string,
@@ -53,7 +55,7 @@ func HandleUploadWebhook(
 
 			_, _ = repo.MarkUploaded(
 				r.Context(),
-				nil,
+				db,
 				imgID.String(),
 				publicURL,
 			)
