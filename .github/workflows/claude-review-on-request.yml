@@ -1,0 +1,46 @@
+name: Claude Review on Review Request
+
+on:
+  pull_request:
+    types: [review_requested]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    if: github.event.requested_reviewer != null && github.event.requested_reviewer.login == 'Rgent0310'
+
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Run Claude review
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Review this pull request as a reviewer.
+            Focus on:
+            - correctness
+            - security risks
+            - breaking changes
+            - missing tests
+            - CI failures if present
+
+            Leave concise, actionable comments.
+            Do not comment on trivial formatting issues.
