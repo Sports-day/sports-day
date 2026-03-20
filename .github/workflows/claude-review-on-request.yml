@@ -1,0 +1,73 @@
+name: Claude Review on Review Request
+
+on:
+  pull_request:
+    types: [review_requested]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.requested_reviewer != null &&
+      github.event.requested_reviewer.login == 'Rgent0310' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+      checks: read
+      statuses: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Run Claude review
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --model claude-opus-4-6
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this pull request as a reviewer.
+            Think and reason in English, but write all comments and feedback in Japanese.
+
+            ## DB
+            - Check that the schema is properly normalized
+            - Check that the design considers maintainability and extensibility
+            - Check for issues with indexes and constraints
+
+            ## Backend
+            - Check for security risks
+            - Check for redundant, contradictory, or data-inconsistency-causing implementations
+            - Check for API implementation mistakes
+
+            ## Frontend
+            - Check for redundant implementations
+            - Check for security risks
+
+            ## General
+            - Check that the code is simple and clearly communicates its intent
+            - Check that maintainability is considered
+            - Check for CI failures if present
+
+            Leave concise, actionable comments.
+            Do not comment on trivial formatting issues.
