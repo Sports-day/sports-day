@@ -8,8 +8,8 @@ import (
 
 // AdminArbitrationEntry represents a row from 'sportsday.admin_arbitration_entries'.
 type AdminArbitrationEntry struct {
-	ID            string        `json:"id"`             // id
-	ArbitrationID string        `json:"arbitration_id"` // arbitration_id
-	TeamID        string        `json:"team_id"`        // team_id
-	ResolvedRank  sql.NullInt64 `json:"resolved_rank"`  // NULL=未裁定, NOT NULL=裁定済みの絶対順位
+	ID            string        `json:"id"`             // ID
+	ArbitrationID string        `json:"arbitration_id"` // 裁定ID
+	TeamID        string        `json:"team_id"`        // チームID
+	ResolvedRank  sql.NullInt64 `json:"resolved_rank"`  // 裁定順位
 }

@@ -4,8 +4,8 @@ package db_model
 
 // RankingRule represents a row from 'sportsday.ranking_rules'.
 type RankingRule struct {
-	ID           string       `json:"id"`            // id
-	LeagueID     string       `json:"league_id"`     // league_id
-	ConditionKey ConditionKey `json:"condition_key"` // condition_key
-	Priority     int          `json:"priority"`      // 1始まり、小さい値ほど優先順位が高い
+	ID           string `json:"id"`            // ID
+	LeagueID     string `json:"league_id"`     // リーグID
+	ConditionKey string `json:"condition_key"` // 条件キー
+	Priority     int    `json:"priority"`      // 優先順位
 }

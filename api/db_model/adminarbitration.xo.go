@@ -5,7 +5,7 @@ package db_model
 
 // AdminArbitration represents a row from 'sportsday.admin_arbitrations'.
 type AdminArbitration struct {
-	ID       string `json:"id"`        // id
-	LeagueID string `json:"league_id"` // league_id
-	Status   Status `json:"status"`    // status
+	ID       string `json:"id"`        // ID
+	LeagueID string `json:"league_id"` // リーグID
+	Status   string `json:"status"`    // 状態
 }
