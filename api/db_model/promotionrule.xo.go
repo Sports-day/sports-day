@@ -8,9 +8,9 @@ import (
 
 // PromotionRule represents a row from 'sportsday.promotion_rules'.
 type PromotionRule struct {
-	ID                  string        `json:"id"`                    // id
-	SourceCompetitionID string        `json:"source_competition_id"` // source_competition_id
-	TargetCompetitionID string        `json:"target_competition_id"` // target_competition_id
-	RankSpec            string        `json:"rank_spec"`             // 進出対象順位の仕様: "1", "1,3", "1-4" 等
-	SlotStart           sql.NullInt64 `json:"slot_start"`            // トーナメント進出時のスロット開始位置（リーグ進出時はNULL）
+	ID                  string        `json:"id"`                    // ID
+	SourceCompetitionID string        `json:"source_competition_id"` // 進出元大会ID
+	TargetCompetitionID string        `json:"target_competition_id"` // 進出先大会ID
+	RankSpec            string        `json:"rank_spec"`             // 進出対象順位
+	SlotStart           sql.NullInt64 `json:"slot_start"`            // スロット開始位置
 }
