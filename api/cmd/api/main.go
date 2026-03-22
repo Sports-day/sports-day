@@ -81,6 +81,7 @@ func main() {
 	matchRepository := repository.NewMatch()
 	judgmentRepository := repository.NewJudgment()
 	leagueRepository := repository.NewLeague()
+	rankingRuleRepository := repository.NewRankingRule()
 
 	// service
 	userService := service.NewUser(db, userRepository)
@@ -94,7 +95,7 @@ func main() {
 	competitionService := service.NewCompetition(db, competitionRepository, teamRepository)
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository)
-	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService)
+	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService, rankingRuleRepository)
 
 	// graphql
 	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService)}

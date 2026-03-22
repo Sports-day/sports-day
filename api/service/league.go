@@ -20,15 +20,17 @@ type League struct {
 	matchRepository       repository.Match
 	competitionRepository repository.Competition
 	competitionService    *Competition
+	rankingRuleRepository repository.RankingRule
 }
 
-func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition) League {
+func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, rankingRuleRepository repository.RankingRule) League {
 	return League{
 		db:                    db,
 		leagueRepository:      leagueRepository,
 		matchRepository:       matchRepository,
 		competitionRepository: competitionRepository,
 		competitionService:    competitionService,
+		rankingRuleRepository: rankingRuleRepository,
 	}
 }
 
@@ -56,11 +58,31 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 			return errors.Wrap(err)
 		}
 
+		if input.RankingRules != nil && len(input.RankingRules) > 0 {
+			if err := validateRankingRules(input.RankingRules); err != nil {
+				return err
+			}
+
+			rules := make([]*db_model.RankingRule, len(input.RankingRules))
+			for i, r := range input.RankingRules {
+				rules[i] = &db_model.RankingRule{
+					ID:           ulid.Make(),
+					LeagueID:     competitionID,
+					ConditionKey: string(r.ConditionKey),
+					Priority:     int(r.Priority),
+				}
+			}
+
+			if _, err := s.rankingRuleRepository.BatchCreate(ctx, tx, rules); err != nil {
+				return errors.Wrap(err)
+			}
+		}
+
 		return nil
 	})
 
 	if err != nil {
-		return nil, errors.ErrSaveLeague
+		return nil, errors.Wrap(err)
 	}
 	return league, nil
 }
@@ -129,6 +151,95 @@ func (s *League) GetLeaguesMapByIDs(ctx context.Context, ids []string) (map[stri
 		leagueMap[league.ID] = league
 	}
 	return leagueMap, nil
+}
+
+func (s *League) SetRankingRules(ctx context.Context, leagueID string, input *model.SetRankingRulesInput) ([]*db_model.RankingRule, error) {
+	if err := validateRankingRules(input.Rules); err != nil {
+		return nil, err
+	}
+
+	_, err := s.leagueRepository.Get(ctx, s.db, leagueID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	var created []*db_model.RankingRule
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.rankingRuleRepository.DeleteByLeagueID(ctx, tx, leagueID); err != nil {
+			return errors.Wrap(err)
+		}
+
+		rules := make([]*db_model.RankingRule, len(input.Rules))
+		for i, r := range input.Rules {
+			rules[i] = &db_model.RankingRule{
+				ID:           ulid.Make(),
+				LeagueID:     leagueID,
+				ConditionKey: string(r.ConditionKey),
+				Priority:     int(r.Priority),
+			}
+		}
+
+		created, err = s.rankingRuleRepository.BatchCreate(ctx, tx, rules)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return created, nil
+}
+
+func (s *League) GetRankingRulesMapByLeagueIDs(ctx context.Context, leagueIDs []string) (map[string][]*db_model.RankingRule, error) {
+	rulesMap := make(map[string][]*db_model.RankingRule, len(leagueIDs))
+
+	for _, id := range leagueIDs {
+		rulesMap[id] = []*db_model.RankingRule{}
+	}
+
+	rows, err := s.rankingRuleRepository.BatchGetByLeagueIDs(ctx, s.db, leagueIDs)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	for _, r := range rows {
+		rulesMap[r.LeagueID] = append(rulesMap[r.LeagueID], r)
+	}
+
+	return rulesMap, nil
+}
+
+func validateRankingRules(rules []*model.RankingRuleInput) error {
+	if len(rules) == 0 {
+		return errors.ErrRankingRuleEmpty
+	}
+
+	conditionKeys := make(map[string]bool)
+	priorities := make(map[int32]bool)
+
+	for _, r := range rules {
+		if conditionKeys[string(r.ConditionKey)] {
+			return errors.ErrRankingRuleDuplicate
+		}
+		conditionKeys[string(r.ConditionKey)] = true
+
+		if priorities[r.Priority] {
+			return errors.ErrRankingRulePriority
+		}
+		priorities[r.Priority] = true
+	}
+
+	for i := int32(1); i <= int32(len(rules)); i++ {
+		if !priorities[i] {
+			return errors.ErrRankingRulePriority
+		}
+	}
+
+	return nil
 }
 
 func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, input *model.GenerateRoundRobinInput) ([]*db_model.Match, error) {

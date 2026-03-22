@@ -33,8 +33,9 @@ type CreateJudgmentInput struct {
 }
 
 type CreateLeagueInput struct {
-	Name              string  `json:"name"`
-	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
+	Name              string              `json:"name"`
+	DefaultLocationID *string             `json:"defaultLocationId,omitempty"`
+	RankingRules      []*RankingRuleInput `json:"rankingRules,omitempty"`
 }
 
 type CreateLocationInput struct {

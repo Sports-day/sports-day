@@ -32,6 +32,7 @@ type Loaders struct {
 	UserJudgmentsLoader      *dataloadgen.Loader[string, []*db_model.Judgment]
 	TeamJudgmentsLoader      *dataloadgen.Loader[string, []*db_model.Judgment]
 	GroupJudgmentsLoader     *dataloadgen.Loader[string, []*db_model.Judgment]
+	RankingRulesLoader       *dataloadgen.Loader[string, []*db_model.RankingRule]
 }
 
 func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League) *Loaders {
@@ -58,6 +59,7 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 		UserJudgmentsLoader:      dataloadgen.NewLoader(newUserJudgmentsLoader(judgmentSvc)),
 		TeamJudgmentsLoader:      dataloadgen.NewLoader(newTeamJudgmentsLoader(judgmentSvc)),
 		GroupJudgmentsLoader:     dataloadgen.NewLoader(newGroupJudgmentsLoader(judgmentSvc)),
+		RankingRulesLoader:       dataloadgen.NewLoader(newRankingRulesLoader(leagueSvc)),
 	}
 }
 

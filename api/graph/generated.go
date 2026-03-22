@@ -14590,7 +14590,7 @@ func (ec *executionContext) unmarshalInputCreateLeagueInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "defaultLocationId"}
+	fieldsInOrder := [...]string{"name", "defaultLocationId", "rankingRules"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -14611,6 +14611,13 @@ func (ec *executionContext) unmarshalInputCreateLeagueInput(ctx context.Context,
 				return it, err
 			}
 			it.DefaultLocationID = data
+		case "rankingRules":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rankingRules"))
+			data, err := ec.unmarshalORankingRuleInput2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRankingRuleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RankingRules = data
 		}
 	}
 
@@ -20518,6 +20525,26 @@ func (ec *executionContext) marshalOMatchStatus2ᚖsportsᚑdayᚋapiᚋgraphᚋ
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalORankingRuleInput2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRankingRuleInputᚄ(ctx context.Context, v any) ([]*model.RankingRuleInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.RankingRuleInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNRankingRuleInput2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRankingRuleInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v any) (string, error) {
