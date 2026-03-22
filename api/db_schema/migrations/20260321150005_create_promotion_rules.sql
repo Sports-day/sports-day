@@ -1,9 +1,9 @@
 -- migrate:up
 CREATE TABLE `promotion_rules` (
-  `id` varchar(26) COLLATE utf8mb4_bin NOT NULL COMMENT 'ID',
-  `source_competition_id` varchar(26) COLLATE utf8mb4_bin NOT NULL COMMENT '進出元大会ID',
-  `target_competition_id` varchar(26) COLLATE utf8mb4_bin NOT NULL COMMENT '進出先大会ID',
-  `rank_spec` varchar(100) COLLATE utf8mb4_bin NOT NULL COMMENT '進出対象順位',
+  `id` varchar(26) NOT NULL COMMENT 'ID',
+  `source_competition_id` varchar(26) NOT NULL COMMENT '進出元大会ID',
+  `target_competition_id` varchar(26) NOT NULL COMMENT '進出先大会ID',
+  `rank_spec` varchar(100) NOT NULL COMMENT '進出対象順位',
   `slot_start` int DEFAULT NULL COMMENT 'スロット開始位置',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

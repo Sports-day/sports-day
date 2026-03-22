@@ -1,8 +1,8 @@
 -- migrate:up
 CREATE TABLE `ranking_rules` (
-  `id` varchar(26) COLLATE utf8mb4_bin NOT NULL COMMENT 'ID',
-  `league_id` varchar(26) COLLATE utf8mb4_bin NOT NULL COMMENT 'リーグID',
-  `condition_key` varchar(16) COLLATE utf8mb4_bin NOT NULL COMMENT '条件キー',
+  `id` varchar(26) NOT NULL COMMENT 'ID',
+  `league_id` varchar(26) NOT NULL COMMENT 'リーグID',
+  `condition_key` varchar(16) NOT NULL COMMENT '条件キー',
   `priority` int NOT NULL COMMENT '優先順位',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_league_condition` (`league_id`, `condition_key`),
