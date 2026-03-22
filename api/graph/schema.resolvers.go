@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -349,9 +348,9 @@ func (r *mutationResolver) CreateLeague(ctx context.Context, input model.CreateL
 	return model.FormatLeagueResponse(league, competition), nil
 }
 
-// UpdateLeagueRule is the resolver for the updateLeagueRule field.
-func (r *mutationResolver) UpdateLeagueRule(ctx context.Context, id string, input model.UpdateLeagueRuleInput) (*model.League, error) {
-	league, err := r.LeagueService.UpdateLeagueRule(ctx, id, &input)
+// UpdateLeaguePoints is the resolver for the updateLeaguePoints field.
+func (r *mutationResolver) UpdateLeaguePoints(ctx context.Context, id string, input model.UpdateLeaguePointsInput) (*model.League, error) {
+	league, err := r.LeagueService.UpdateLeaguePoints(ctx, id, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +374,6 @@ func (r *mutationResolver) DeleteLeague(ctx context.Context, id string) (*model.
 		return nil, err
 	}
 
-	// 削除されたリーグの情報を返す
 	response := model.FormatLeagueResponse(deletedLeague, competition)
 	return response, nil
 }
@@ -394,18 +392,29 @@ func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, in
 	return res, nil
 }
 
-// CalculateLeagueStandings is the resolver for the calculateLeagueStandings field.
-func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id string) ([]*model.Standing, error) {
-	standings, err := r.LeagueService.CalculateStandings(ctx, id)
-	if err != nil {
-		return nil, err
-	}
+// SetRankingRules is the resolver for the setRankingRules field.
+func (r *mutationResolver) SetRankingRules(ctx context.Context, leagueID string, input model.SetRankingRulesInput) ([]*model.RankingRule, error) {
+	panic("not implemented")
+}
 
-	res := make([]*model.Standing, 0, len(standings))
-	for _, standing := range standings {
-		res = append(res, model.FormatStandingResponse(standing))
-	}
-	return res, nil
+// SetTiebreakPriorities is the resolver for the setTiebreakPriorities field.
+func (r *mutationResolver) SetTiebreakPriorities(ctx context.Context, leagueID string, input model.SetTiebreakPrioritiesInput) ([]*model.TiebreakPriority, error) {
+	panic("not implemented")
+}
+
+// CreatePromotionRule is the resolver for the createPromotionRule field.
+func (r *mutationResolver) CreatePromotionRule(ctx context.Context, input model.CreatePromotionRuleInput) (*model.PromotionRule, error) {
+	panic("not implemented")
+}
+
+// UpdatePromotionRule is the resolver for the updatePromotionRule field.
+func (r *mutationResolver) UpdatePromotionRule(ctx context.Context, id string, input model.UpdatePromotionRuleInput) (*model.PromotionRule, error) {
+	panic("not implemented")
+}
+
+// DeletePromotionRule is the resolver for the deletePromotionRule field.
+func (r *mutationResolver) DeletePromotionRule(ctx context.Context, id string) (*model.PromotionRule, error) {
+	panic("not implemented")
 }
 
 // Users is the resolver for the users field.
@@ -691,6 +700,21 @@ func (r *queryResolver) League(ctx context.Context, id string) (*model.League, e
 		return nil, err
 	}
 	return model.FormatLeagueResponse(league, competition), nil
+}
+
+// LeagueStandings is the resolver for the leagueStandings field.
+func (r *queryResolver) LeagueStandings(ctx context.Context, leagueID string) ([]*model.ComputedStanding, error) {
+	panic("not implemented")
+}
+
+// TiebreakPriorities is the resolver for the tiebreakPriorities field.
+func (r *queryResolver) TiebreakPriorities(ctx context.Context, leagueID string) ([]*model.TiebreakPriority, error) {
+	panic("not implemented")
+}
+
+// PromotionRules is the resolver for the promotionRules field.
+func (r *queryResolver) PromotionRules(ctx context.Context, competitionID string) ([]*model.PromotionRule, error) {
+	panic("not implemented")
 }
 
 // Mutation returns MutationResolver implementation.
