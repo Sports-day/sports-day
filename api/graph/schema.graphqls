@@ -140,6 +140,7 @@ input UpdateJudgmentInput {
 input CreateLeagueInput {
   name: String!
   defaultLocationId: ID
+  rankingRules: [RankingRuleInput!]
 }
 
 input UpdateLeaguePointsInput {

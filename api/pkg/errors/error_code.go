@@ -40,6 +40,11 @@ var (
 	ErrUpsertLeague           = NewError("LEAGUE_UPSERT_FAILED", "リーグ情報の更新に失敗しました")
 	ErrMakeLeagueMatches      = NewError("LEAGUE_MATCH_MAKE_FAILED", "リーグの試合生成に失敗しました")
 	ErrSaveLeague             = NewError("LEAGUE_SAVE_FAILED", "リーグの保存に失敗しました")
+	ErrRankingRuleNotFound    = NewError("RANKING_RULE_NOT_FOUND", "順位決定ルールが見つかりません")
+	ErrSaveRankingRule        = NewError("RANKING_RULE_SAVE_FAILED", "順位決定ルールの保存に失敗しました")
+	ErrRankingRuleEmpty       = NewError("RANKING_RULE_EMPTY", "順位決定ルールは最低1つ必要です")
+	ErrRankingRuleDuplicate   = NewError("RANKING_RULE_DUPLICATE", "同一リーグ内で条件キーが重複しています")
+	ErrRankingRulePriority    = NewError("RANKING_RULE_PRIORITY_INVALID", "優先順位は1からの連番である必要があります")
 	/*
 		Authentication
 	*/

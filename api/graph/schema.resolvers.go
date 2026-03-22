@@ -394,7 +394,16 @@ func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, in
 
 // SetRankingRules is the resolver for the setRankingRules field.
 func (r *mutationResolver) SetRankingRules(ctx context.Context, leagueID string, input model.SetRankingRulesInput) ([]*model.RankingRule, error) {
-	panic("not implemented")
+	rules, err := r.LeagueService.SetRankingRules(ctx, leagueID, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.RankingRule, 0, len(rules))
+	for _, rule := range rules {
+		res = append(res, model.FormatRankingRuleResponse(rule))
+	}
+	return res, nil
 }
 
 // SetTiebreakPriorities is the resolver for the setTiebreakPriorities field.
