@@ -122,23 +122,16 @@ func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
 
 func FormatLeagueResponse(league *db_model.League, competition *db_model.Competition) *League {
 	return &League{
-		ID:              league.ID,
-		Name:            competition.Name,
-		CalculationType: CalculationType(league.CalculationType),
+		ID:   league.ID,
+		Name: competition.Name,
 	}
 }
 
-func FormatStandingResponse(standing *db_model.LeagueStanding) *Standing {
-	return &Standing{
-		ID:           standing.ID,
-		TeamID:       standing.TeamID,
-		Win:          int32(standing.Win),
-		Draw:         int32(standing.Draw),
-		Lose:         int32(standing.Lose),
-		GoalsFor:     int32(standing.GoalsFor),
-		GoalsAgainst: int32(standing.GoalsAgainst),
-		GoalDiff:     int32(standing.GoalDiff),
-		Points:       int32(standing.Points),
-		Rank:         int32(standing.Rank),
+func FormatRankingRuleResponse(rule *db_model.RankingRule) *RankingRule {
+	return &RankingRule{
+		ID:           rule.ID,
+		LeagueID:     rule.LeagueID,
+		ConditionKey: RankingCondition(rule.ConditionKey),
+		Priority:     int32(rule.Priority),
 	}
 }

@@ -118,14 +118,14 @@ input UpdateMatchEntryScoreInput {
 }
 
 """
-3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。  
+3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
 """
 input JudgmentEntry {
   name: String
 	userId: ID
 	teamId: ID
-	groupId: ID 
+	groupId: ID
 }
 
 input CreateJudgmentInput {
@@ -140,11 +140,9 @@ input UpdateJudgmentInput {
 input CreateLeagueInput {
   name: String!
   defaultLocationId: ID
-  calculationType: CalculationType!
 }
 
-input UpdateLeagueRuleInput {
-	calculationType: CalculationType
+input UpdateLeaguePointsInput {
 	winPt:  Int
   drawPt: Int
   losePt: Int
@@ -155,6 +153,31 @@ input GenerateRoundRobinInput {
   matchDuration: Int!
   breakDuration: Int!
   locationId: ID
+}
+
+input SetRankingRulesInput {
+  conditionKeys: [RankingCondition!]!
+}
+
+input ResolveArbitrationInput {
+  entries: [ArbitrationEntryInput!]!
+}
+
+input ArbitrationEntryInput {
+  teamId: ID!
+  resolvedRank: Int!
+}
+
+input CreatePromotionRuleInput {
+  sourceCompetitionId: ID!
+  targetCompetitionId: ID!
+  rankSpec: String!
+  slotStart: Int
+}
+
+input UpdatePromotionRuleInput {
+  rankSpec: String
+  slotStart: Int
 }
 
 type Query {
@@ -217,6 +240,18 @@ type Query {
   ID指定でリーグを取得する
   """
 	league(id: ID!): League!
+  """
+  リーグの順位表を取得する
+  """
+  leagueStandings(leagueId: ID!): [ComputedStanding!]!
+  """
+  管理者裁定を取得する
+  """
+  adminArbitrations(leagueId: ID!): [AdminArbitration!]!
+  """
+  自動進出ルールを取得する
+  """
+  promotionRules(competitionId: ID!): [PromotionRule!]!
 }
 
 type Mutation {
@@ -317,9 +352,9 @@ type Mutation {
   """
   createLeague(input: CreateLeagueInput!): League!
   """
-  リーグのルールを更新する
+  リーグのポイント設定を更新する
   """
-  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League!
+  updateLeaguePoints(id: ID!, input: UpdateLeaguePointsInput!): League!
   """
   リーグを削除する
   """
@@ -329,7 +364,23 @@ type Mutation {
   """
   generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]!
   """
-  リーグの順位表を計算する
+  リーグの順位決定ルールを設定する
   """
-  calculateLeagueStandings(id: ID!): [Standing!]!
+  setRankingRules(leagueId: ID!, input: SetRankingRulesInput!): [RankingRule!]!
+  """
+  管理者裁定の結果を入力する
+  """
+  resolveArbitration(id: ID!, input: ResolveArbitrationInput!): AdminArbitration!
+  """
+  自動進出ルールを作成する
+  """
+  createPromotionRule(input: CreatePromotionRuleInput!): PromotionRule!
+  """
+  自動進出ルールを更新する
+  """
+  updatePromotionRule(id: ID!, input: UpdatePromotionRuleInput!): PromotionRule!
+  """
+  自動進出ルールを削除する
+  """
+  deletePromotionRule(id: ID!): PromotionRule!
 }

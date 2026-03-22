@@ -6,7 +6,7 @@ package graph
 
 import (
 	"context"
-
+	"fmt"
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -151,49 +151,37 @@ func (r *judgmentResolver) Group(ctx context.Context, obj *model.Judgment) (*mod
 
 // Teams is the resolver for the teams field.
 func (r *leagueResolver) Teams(ctx context.Context, obj *model.League) ([]*model.Team, error) {
-	// リーグの順位表を取得
-	standings, err := loader.LoadLeagueStandings(ctx, obj.ID)
+	competitionEntries, err := loader.LoadCompetitionEntries(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 順位表が空の場合は空のスライスを返す
-	if len(standings) == 0 {
+	if len(competitionEntries) == 0 {
 		return []*model.Team{}, nil
 	}
 
-	// 全てのTeamIDを収集
-	teamIds := slices.Map(standings, func(standing *db_model.LeagueStanding) string {
-		return standing.TeamID
+	teamIds := slices.Map(competitionEntries, func(entry *db_model.CompetitionEntry) string {
+		return entry.TeamID
 	})
 
-	// チーム情報を一括取得
 	teams, err := loader.LoadTeams(ctx, teamIds)
 	if err != nil {
 		return nil, err
 	}
 
-	// レスポンス形式に変換
 	return slices.Map(teams, func(team *db_model.Team) *model.Team {
 		return model.FormatTeamResponse(team)
 	}), nil
 }
 
 // Standings is the resolver for the standings field.
-func (r *leagueResolver) Standings(ctx context.Context, obj *model.League) ([]*model.Standing, error) {
-	// リーグの順位表を取得
-	standings, err := loader.LoadLeagueStandings(ctx, obj.ID)
-	if err != nil {
-		return nil, err
-	}
+func (r *leagueResolver) Standings(ctx context.Context, obj *model.League) ([]*model.ComputedStanding, error) {
+	panic(fmt.Errorf("not implemented: Standings - standings"))
+}
 
-	// Standing形式に変換
-	res := make([]*model.Standing, 0, len(standings))
-	for _, standing := range standings {
-		res = append(res, model.FormatStandingResponse(standing))
-	}
-
-	return res, nil
+// RankingRules is the resolver for the rankingRules field.
+func (r *leagueResolver) RankingRules(ctx context.Context, obj *model.League) ([]*model.RankingRule, error) {
+	panic(fmt.Errorf("not implemented: RankingRules - rankingRules"))
 }
 
 // Matches is the resolver for the matches field.
@@ -250,7 +238,6 @@ func (r *matchResolver) Entries(ctx context.Context, obj *model.Match) ([]*model
 		return nil, err
 	}
 
-	// TeamIDが有効なエントリーのみを抽出してチーム情報を取得
 	var validTeamIDs []string
 	for _, entry := range entries {
 		if entry.TeamID.Valid {
@@ -266,7 +253,6 @@ func (r *matchResolver) Entries(ctx context.Context, obj *model.Match) ([]*model
 		}
 	}
 
-	// チームIDをキーとするマップを作成
 	teamMap := make(map[string]*db_model.Team)
 	for _, team := range teams {
 		teamMap[team.ID] = team
@@ -279,7 +265,6 @@ func (r *matchResolver) Entries(ctx context.Context, obj *model.Match) ([]*model
 			Score: int32(entry.Score),
 		}
 
-		// TeamIDが有効な場合のみTeamを設定
 		if entry.TeamID.Valid {
 			if team, exists := teamMap[entry.TeamID.String]; exists {
 				matchEntry.Team = model.FormatTeamResponse(team)
@@ -298,23 +283,10 @@ func (r *matchResolver) Judgment(ctx context.Context, obj *model.Match) (*model.
 		return nil, err
 	}
 
-	// 見つからない場合はnullを返す
 	if len(judgments) == 0 || judgments[0] == nil {
 		return nil, nil
 	}
 	return model.FormatJudgmentResponse(judgments[0]), nil
-}
-
-// Team is the resolver for the team field.
-func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*model.Team, error) {
-	teams, err := loader.LoadTeams(ctx, []string{obj.TeamID})
-	if err != nil {
-		return nil, err
-	}
-	if len(teams) == 0 || teams[0] == nil {
-		return nil, err
-	}
-	return model.FormatTeamResponse(teams[0]), nil
 }
 
 // Group is the resolver for the group field.
@@ -394,34 +366,26 @@ func (r *teamResolver) Judgments(ctx context.Context, obj *model.Team) ([]*model
 
 // Leagues is the resolver for the leagues field.
 func (r *teamResolver) Leagues(ctx context.Context, obj *model.Team) ([]*model.League, error) {
-	// チームが参加しているリーグの順位表を取得
-	standings, err := loader.LoadTeamLeagues(ctx, obj.ID)
+	competitionEntries, err := loader.LoadEntryCompetitions(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	// リーグIDを収集
-	leagueIds := slices.Map(standings, func(standing *db_model.LeagueStanding) string {
-		return standing.ID
-	})
-
-	// 重複を除去
-	uniqueLeagueIds := make([]string, 0)
-	seen := make(map[string]bool)
-	for _, id := range leagueIds {
-		if !seen[id] {
-			uniqueLeagueIds = append(uniqueLeagueIds, id)
-			seen[id] = true
-		}
+	var leagueCompetitionIds []string
+	for _, entry := range competitionEntries {
+		leagueCompetitionIds = append(leagueCompetitionIds, entry.CompetitionID)
 	}
 
-	// リーグ情報を取得
-	leagues, err := loader.LoadLeagues(ctx, uniqueLeagueIds)
+	if len(leagueCompetitionIds) == 0 {
+		return []*model.League{}, nil
+	}
+
+	leagues, err := loader.LoadLeagues(ctx, leagueCompetitionIds)
 	if err != nil {
 		return nil, err
 	}
 
-	competitions, err := loader.LoadCompetitions(ctx, uniqueLeagueIds)
+	competitions, err := loader.LoadCompetitions(ctx, leagueCompetitionIds)
 	if err != nil {
 		return nil, err
 	}
@@ -431,11 +395,14 @@ func (r *teamResolver) Leagues(ctx context.Context, obj *model.Team) ([]*model.L
 		compMap[c.ID] = c
 	}
 
-	res := make([]*model.League, 0, len(leagues))
+	var res []*model.League
 	for _, lg := range leagues {
+		if lg == nil {
+			continue
+		}
 		comp, ok := compMap[lg.ID]
 		if !ok {
-			return nil, err
+			continue
 		}
 		res = append(res, model.FormatLeagueResponse(lg, comp))
 	}
@@ -508,9 +475,6 @@ func (r *Resolver) Location() LocationResolver { return &locationResolver{r} }
 // Match returns MatchResolver implementation.
 func (r *Resolver) Match() MatchResolver { return &matchResolver{r} }
 
-// Standing returns StandingResolver implementation.
-func (r *Resolver) Standing() StandingResolver { return &standingResolver{r} }
-
 // Team returns TeamResolver implementation.
 func (r *Resolver) Team() TeamResolver { return &teamResolver{r} }
 
@@ -523,6 +487,5 @@ type judgmentResolver struct{ *Resolver }
 type leagueResolver struct{ *Resolver }
 type locationResolver struct{ *Resolver }
 type matchResolver struct{ *Resolver }
-type standingResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
