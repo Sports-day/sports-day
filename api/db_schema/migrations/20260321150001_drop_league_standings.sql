@@ -3,8 +3,8 @@ DROP TABLE IF EXISTS `league_standings`;
 
 -- migrate:down
 CREATE TABLE `league_standings` (
-  `id` varchar(26) COLLATE utf8mb4_bin NOT NULL COMMENT '大会ID',
-  `team_id` varchar(26) COLLATE utf8mb4_bin NOT NULL COMMENT 'チームID',
+  `id` varchar(26) NOT NULL COMMENT '大会ID',
+  `team_id` varchar(26) NOT NULL COMMENT 'チームID',
   `win` int NOT NULL DEFAULT '0' COMMENT '勝利数',
   `draw` int NOT NULL DEFAULT '0' COMMENT '引き分け数',
   `lose` int NOT NULL DEFAULT '0' COMMENT '敗北数',
