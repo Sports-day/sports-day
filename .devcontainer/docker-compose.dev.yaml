@@ -14,6 +14,19 @@ services:
       MYSQL_DATABASE: sportsday
     volumes:
       - mysql_data:/var/lib/mysql
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    container_name: sports-day-keycloak
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8888
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
+    ports:
+      - "8888:8080"
+    command: start-dev
 volumes:
   mysql_data:
   vscode_home:
