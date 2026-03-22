@@ -55,6 +55,16 @@ type CreateSceneInput struct {
 	Name string `json:"name"`
 }
 
+type CreateSportEntryInput struct {
+	SportSceneID string `json:"sportSceneId"`
+	TeamID       string `json:"teamId"`
+}
+
+type CreateSportSceneInput struct {
+	SportID string `json:"sportId"`
+	SceneID string `json:"sceneId"`
+}
+
 type CreateSportsInput struct {
 	Name string `json:"name"`
 }
@@ -112,17 +122,6 @@ type Mutation struct {
 }
 
 type Query struct {
-}
-
-type Scene struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type Sport struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Weight int32  `json:"weight"`
 }
 
 type UpdateCompetitionEntriesInput struct {

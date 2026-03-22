@@ -120,9 +120,23 @@ type Sport {
   id: ID!
   name: String!
   weight: Int!
+  scene: [SportScene!]
 }
 
 type Scene {
   id: ID!
   name: String!
 }
+
+type SportScene {
+  id: ID!
+  sport: Sport!
+  scene: Scene!
+}
+
+type SportEntry {
+  id: ID!
+  sportScene: SportScene!
+  team: Team!
+}
+
