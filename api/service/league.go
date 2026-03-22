@@ -194,23 +194,12 @@ func (s *League) SetRankingRules(ctx context.Context, leagueID string, input *mo
 	return created, nil
 }
 
-func (s *League) GetRankingRulesMapByLeagueIDs(ctx context.Context, leagueIDs []string) (map[string][]*db_model.RankingRule, error) {
-	rulesMap := make(map[string][]*db_model.RankingRule, len(leagueIDs))
-
-	for _, id := range leagueIDs {
-		rulesMap[id] = []*db_model.RankingRule{}
-	}
-
-	rows, err := s.rankingRuleRepository.BatchGetByLeagueIDs(ctx, s.db, leagueIDs)
+func (s *League) ListRankingRulesByLeagueID(ctx context.Context, leagueID string) ([]*db_model.RankingRule, error) {
+	rules, err := s.rankingRuleRepository.ListByLeagueID(ctx, s.db, leagueID)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-
-	for _, r := range rows {
-		rulesMap[r.LeagueID] = append(rulesMap[r.LeagueID], r)
-	}
-
-	return rulesMap, nil
+	return rules, nil
 }
 
 func validateRankingRules(rules []*model.RankingRuleInput) error {

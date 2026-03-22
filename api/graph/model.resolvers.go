@@ -192,7 +192,7 @@ func (r *leagueResolver) Standings(ctx context.Context, obj *model.League) ([]*m
 
 // RankingRules is the resolver for the rankingRules field.
 func (r *leagueResolver) RankingRules(ctx context.Context, obj *model.League) ([]*model.RankingRule, error) {
-	rules, err := loader.LoadRankingRules(ctx, obj.ID)
+	rules, err := r.LeagueService.ListRankingRulesByLeagueID(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}

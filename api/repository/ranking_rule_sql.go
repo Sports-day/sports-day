@@ -39,11 +39,3 @@ func (r rankingRule) ListByLeagueID(ctx context.Context, db *gorm.DB, leagueID s
 	}
 	return rules, nil
 }
-
-func (r rankingRule) BatchGetByLeagueIDs(ctx context.Context, db *gorm.DB, leagueIDs []string) ([]*db_model.RankingRule, error) {
-	var rules []*db_model.RankingRule
-	if err := db.Where("league_id IN (?)", leagueIDs).Order("priority ASC").Find(&rules).Error; err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return rules, nil
-}
