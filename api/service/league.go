@@ -15,22 +15,24 @@ import (
 )
 
 type League struct {
-	db                    *gorm.DB
-	leagueRepository      repository.League
-	matchRepository       repository.Match
-	competitionRepository repository.Competition
-	competitionService    *Competition
-	rankingRuleRepository repository.RankingRule
+	db                         *gorm.DB
+	leagueRepository           repository.League
+	matchRepository            repository.Match
+	competitionRepository      repository.Competition
+	competitionService         *Competition
+	rankingRuleRepository      repository.RankingRule
+	tiebreakPriorityRepository repository.TiebreakPriority
 }
 
-func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, rankingRuleRepository repository.RankingRule) League {
+func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, rankingRuleRepository repository.RankingRule, tiebreakPriorityRepository repository.TiebreakPriority) League {
 	return League{
-		db:                    db,
-		leagueRepository:      leagueRepository,
-		matchRepository:       matchRepository,
-		competitionRepository: competitionRepository,
-		competitionService:    competitionService,
-		rankingRuleRepository: rankingRuleRepository,
+		db:                         db,
+		leagueRepository:           leagueRepository,
+		matchRepository:            matchRepository,
+		competitionRepository:      competitionRepository,
+		competitionService:         competitionService,
+		rankingRuleRepository:      rankingRuleRepository,
+		tiebreakPriorityRepository: tiebreakPriorityRepository,
 	}
 }
 

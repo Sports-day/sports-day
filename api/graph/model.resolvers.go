@@ -187,7 +187,7 @@ func (r *leagueResolver) Teams(ctx context.Context, obj *model.League) ([]*model
 
 // Standings is the resolver for the standings field.
 func (r *leagueResolver) Standings(ctx context.Context, obj *model.League) ([]*model.ComputedStanding, error) {
-	panic("not implemented")
+	return r.LeagueService.ComputeStandings(ctx, obj.ID)
 }
 
 // RankingRules is the resolver for the rankingRules field.
