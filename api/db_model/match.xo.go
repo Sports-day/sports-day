@@ -15,5 +15,4 @@ type Match struct {
 	LocationID    sql.NullString `json:"location_id"`    // 場所ID
 	CompetitionID string         `json:"competition_id"` // 大会ID
 	WinnerTeamID  sql.NullString `json:"winner_team_id"` // 勝利チームID
-	TournamentID  sql.NullString `json:"tournament_id"`  // 所属ブラケットID（トーナメント用）
 }
