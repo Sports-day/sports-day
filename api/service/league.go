@@ -232,6 +232,69 @@ func validateRankingRules(rules []*model.RankingRuleInput) error {
 	return nil
 }
 
+func (s *League) SetTiebreakPriorities(ctx context.Context, leagueID string, input *model.SetTiebreakPrioritiesInput) ([]*db_model.TiebreakPriority, error) {
+	if len(input.Priorities) == 0 {
+		return nil, errors.ErrTiebreakPriorityEmpty
+	}
+
+	teamIDs := make(map[string]bool)
+	priorityValues := make(map[int32]bool)
+	for _, p := range input.Priorities {
+		if teamIDs[p.TeamID] {
+			return nil, errors.ErrTiebreakPriorityDuplicateTeam
+		}
+		teamIDs[p.TeamID] = true
+
+		if priorityValues[p.Priority] {
+			return nil, errors.ErrTiebreakPriorityDuplicateValue
+		}
+		priorityValues[p.Priority] = true
+	}
+
+	_, err := s.leagueRepository.Get(ctx, s.db, leagueID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	var created []*db_model.TiebreakPriority
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.leagueRepository.DeleteTiebreakPrioritiesByLeagueID(ctx, tx, leagueID); err != nil {
+			return errors.Wrap(err)
+		}
+
+		priorities := make([]*db_model.TiebreakPriority, len(input.Priorities))
+		for i, p := range input.Priorities {
+			priorities[i] = &db_model.TiebreakPriority{
+				ID:       ulid.Make(),
+				LeagueID: leagueID,
+				TeamID:   p.TeamID,
+				Priority: int(p.Priority),
+			}
+		}
+
+		created, err = s.leagueRepository.BatchCreateTiebreakPriorities(ctx, tx, priorities)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.ErrSaveTiebreakPriority
+	}
+	return created, nil
+}
+
+func (s *League) ListTiebreakPriorities(ctx context.Context, leagueID string) ([]*db_model.TiebreakPriority, error) {
+	priorities, err := s.leagueRepository.ListTiebreakPrioritiesByLeagueID(ctx, s.db, leagueID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return priorities, nil
+}
+
 func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, input *model.GenerateRoundRobinInput) ([]*db_model.Match, error) {
 	var createdMatches []*db_model.Match
 

@@ -71,3 +71,20 @@ func (r league) ListTiebreakPrioritiesByLeagueID(ctx context.Context, db *gorm.D
 	}
 	return priorities, nil
 }
+
+func (r league) DeleteTiebreakPrioritiesByLeagueID(ctx context.Context, db *gorm.DB, leagueID string) error {
+	if err := db.Where("league_id = ?", leagueID).Delete(&db_model.TiebreakPriority{}).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (r league) BatchCreateTiebreakPriorities(ctx context.Context, db *gorm.DB, priorities []*db_model.TiebreakPriority) ([]*db_model.TiebreakPriority, error) {
+	if len(priorities) == 0 {
+		return []*db_model.TiebreakPriority{}, nil
+	}
+	if err := db.Create(&priorities).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return priorities, nil
+}
