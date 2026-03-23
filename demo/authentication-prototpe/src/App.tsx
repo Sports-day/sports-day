@@ -1,121 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// src/App.tsx
+import { useEffect, useState } from "react";
+import { User } from "oidc-client-ts";
+import { userManager } from "./authentication";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (window.location.pathname === "/callback") {
+      userManager
+        .signinRedirectCallback()
+        .then((user) => {
+          setUser(user);
+          window.history.replaceState({}, "", "/");
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    userManager
+      .signinSilent()
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+
+    userManager.events.addUserLoaded(setUser);
+    return () => userManager.events.removeUserLoaded(setUser);
+  }, []);
+
+  if (loading) return <div>読み込み中...</div>;
+
+  if (!user) {
+    return (
+      <div>
+        <h1>認証プロトタイプ</h1>
+        <button onClick={() => userManager.signinRedirect()}>
+          Keycloak でログイン
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div>
+      <h1>認証成功!</h1>
 
-      <div className="ticks"></div>
+      <h2>ユーザー情報</h2>
+      <pre>{JSON.stringify(user.profile, null, 2)}</pre>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <h2>Access Token</h2>
+      <textarea
+        readOnly
+        value={user.access_token}
+        rows={10}
+        style={{ width: "100%", fontFamily: "monospace", fontSize: "12px" }}
+      />
+      <p>
+        <small>↑ この AT をコピーして Backend のテストに使う（Phase 2）</small>
+      </p>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <h2>ID Token</h2>
+      <pre style={{ fontSize: "12px", wordBreak: "break-all" }}>
+        {user.id_token}
+      </pre>
+
+      <h2>トークン有効期限</h2>
+      <p>期限切れまで: {user.expires_in} 秒</p>
+
+      <button onClick={() => userManager.signoutRedirect()}>ログアウト</button>
+    </div>
+  );
 }
 
-export default App
+export default App;
