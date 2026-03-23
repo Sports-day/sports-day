@@ -33,9 +33,9 @@ type CreateJudgmentInput struct {
 }
 
 type CreateLeagueInput struct {
-	Name              string          `json:"name"`
-	DefaultLocationID *string         `json:"defaultLocationId,omitempty"`
-	CalculationType   CalculationType `json:"calculationType"`
+	Name              string              `json:"name"`
+	DefaultLocationID *string             `json:"defaultLocationId,omitempty"`
+	RankingRules      []*RankingRuleInput `json:"rankingRules,omitempty"`
 }
 
 type CreateLocationInput struct {
@@ -49,6 +49,13 @@ type CreateMatchInput struct {
 	CompetitionID string         `json:"competitionId"`
 	TeamIds       []string       `json:"teamIds,omitempty"`
 	Judgment      *JudgmentEntry `json:"judgment,omitempty"`
+}
+
+type CreatePromotionRuleInput struct {
+	SourceCompetitionID string `json:"sourceCompetitionId"`
+	TargetCompetitionID string `json:"targetCompetitionId"`
+	RankSpec            string `json:"rankSpec"`
+	SlotStart           *int32 `json:"slotStart,omitempty"`
 }
 
 type CreateSceneInput struct {
@@ -111,7 +118,27 @@ type MatchResultInput struct {
 type Mutation struct {
 }
 
+type PromotionRule struct {
+	ID                  string `json:"id"`
+	SourceCompetitionID string `json:"sourceCompetitionId"`
+	TargetCompetitionID string `json:"targetCompetitionId"`
+	RankSpec            string `json:"rankSpec"`
+	SlotStart           *int32 `json:"slotStart,omitempty"`
+}
+
 type Query struct {
+}
+
+type RankingRule struct {
+	ID           string           `json:"id"`
+	LeagueID     string           `json:"leagueId"`
+	ConditionKey RankingCondition `json:"conditionKey"`
+	Priority     int32            `json:"priority"`
+}
+
+type RankingRuleInput struct {
+	ConditionKey RankingCondition `json:"conditionKey"`
+	Priority     int32            `json:"priority"`
 }
 
 type Scene struct {
@@ -119,10 +146,30 @@ type Scene struct {
 	Name string `json:"name"`
 }
 
+type SetRankingRulesInput struct {
+	Rules []*RankingRuleInput `json:"rules"`
+}
+
+type SetTiebreakPrioritiesInput struct {
+	Priorities []*TiebreakPriorityInput `json:"priorities"`
+}
+
 type Sport struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Weight int32  `json:"weight"`
+}
+
+type TiebreakPriority struct {
+	ID       string `json:"id"`
+	LeagueID string `json:"leagueId"`
+	TeamID   string `json:"teamId"`
+	Priority int32  `json:"priority"`
+}
+
+type TiebreakPriorityInput struct {
+	TeamID   string `json:"teamId"`
+	Priority int32  `json:"priority"`
 }
 
 type UpdateCompetitionEntriesInput struct {
@@ -150,11 +197,10 @@ type UpdateJudgmentInput struct {
 	Entry *JudgmentEntry `json:"entry,omitempty"`
 }
 
-type UpdateLeagueRuleInput struct {
-	CalculationType *CalculationType `json:"calculationType,omitempty"`
-	WinPt           *int32           `json:"winPt,omitempty"`
-	DrawPt          *int32           `json:"drawPt,omitempty"`
-	LosePt          *int32           `json:"losePt,omitempty"`
+type UpdateLeaguePointsInput struct {
+	WinPt  *int32 `json:"winPt,omitempty"`
+	DrawPt *int32 `json:"drawPt,omitempty"`
+	LosePt *int32 `json:"losePt,omitempty"`
 }
 
 type UpdateLocationInput struct {
@@ -181,6 +227,11 @@ type UpdateMatchResultInput struct {
 	Results      []*MatchResultInput `json:"results,omitempty"`
 }
 
+type UpdatePromotionRuleInput struct {
+	RankSpec  *string `json:"rankSpec,omitempty"`
+	SlotStart *int32  `json:"slotStart,omitempty"`
+}
+
 type UpdateSceneInput struct {
 	Name *string `json:"name,omitempty"`
 }
@@ -198,49 +249,6 @@ type UpdateTeamInput struct {
 type UpdateTeamUsersInput struct {
 	AddUserIds    []string `json:"addUserIds,omitempty"`
 	RemoveUserIds []string `json:"removeUserIds,omitempty"`
-}
-
-type CalculationType string
-
-const (
-	CalculationTypeTotalScore CalculationType = "TOTAL_SCORE"
-	CalculationTypeDiffScore  CalculationType = "DIFF_SCORE"
-	CalculationTypeWinScore   CalculationType = "WIN_SCORE"
-)
-
-var AllCalculationType = []CalculationType{
-	CalculationTypeTotalScore,
-	CalculationTypeDiffScore,
-	CalculationTypeWinScore,
-}
-
-func (e CalculationType) IsValid() bool {
-	switch e {
-	case CalculationTypeTotalScore, CalculationTypeDiffScore, CalculationTypeWinScore:
-		return true
-	}
-	return false
-}
-
-func (e CalculationType) String() string {
-	return string(e)
-}
-
-func (e *CalculationType) UnmarshalGQL(v any) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = CalculationType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid CalculationType", str)
-	}
-	return nil
-}
-
-func (e CalculationType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type CompetitionType string
@@ -326,5 +334,52 @@ func (e *MatchStatus) UnmarshalGQL(v any) error {
 }
 
 func (e MatchStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type RankingCondition string
+
+const (
+	RankingConditionWinPoints     RankingCondition = "WIN_POINTS"
+	RankingConditionGoalDiff      RankingCondition = "GOAL_DIFF"
+	RankingConditionTotalGoals    RankingCondition = "TOTAL_GOALS"
+	RankingConditionHeadToHead    RankingCondition = "HEAD_TO_HEAD"
+	RankingConditionAdminDecision RankingCondition = "ADMIN_DECISION"
+)
+
+var AllRankingCondition = []RankingCondition{
+	RankingConditionWinPoints,
+	RankingConditionGoalDiff,
+	RankingConditionTotalGoals,
+	RankingConditionHeadToHead,
+	RankingConditionAdminDecision,
+}
+
+func (e RankingCondition) IsValid() bool {
+	switch e {
+	case RankingConditionWinPoints, RankingConditionGoalDiff, RankingConditionTotalGoals, RankingConditionHeadToHead, RankingConditionAdminDecision:
+		return true
+	}
+	return false
+}
+
+func (e RankingCondition) String() string {
+	return string(e)
+}
+
+func (e *RankingCondition) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = RankingCondition(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid RankingCondition", str)
+	}
+	return nil
+}
+
+func (e RankingCondition) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

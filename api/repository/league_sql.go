@@ -7,7 +7,6 @@ import (
 	"sports-day/api/pkg/errors"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type league struct{}
@@ -65,64 +64,27 @@ func (r league) List(ctx context.Context, db *gorm.DB) ([]*db_model.League, erro
 	return leagues, nil
 }
 
-func (r league) SaveStanding(ctx context.Context, db *gorm.DB, standing *db_model.LeagueStanding) (*db_model.LeagueStanding, error) {
-	if err := db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "id"}, {Name: "team_id"}}, // 複合キー
-		DoUpdates: clause.AssignmentColumns([]string{
-			"win", "draw", "lose", "gf", "ga", "points", "`rank`", "updated_at",
-		}),
-	}).Omit("gd").Create(standing).Error; err != nil {
+func (r league) ListTiebreakPrioritiesByLeagueID(ctx context.Context, db *gorm.DB, leagueID string) ([]*db_model.TiebreakPriority, error) {
+	var priorities []*db_model.TiebreakPriority
+	if err := db.Where("league_id = ?", leagueID).Order("priority ASC").Find(&priorities).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
-	return standing, nil
+	return priorities, nil
 }
 
-func (r league) GetStanding(ctx context.Context, db *gorm.DB, id, teamID string) (*db_model.LeagueStanding, error) {
-	var standing db_model.LeagueStanding
-	if err := db.First(&standing, "id = ? AND team_id = ?", id, teamID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.ErrLeagueStandingNotFound
-		}
-		return nil, errors.Wrap(err)
+func (r league) DeleteTiebreakPrioritiesByLeagueID(ctx context.Context, db *gorm.DB, leagueID string) error {
+	if err := db.Where("league_id = ?", leagueID).Delete(&db_model.TiebreakPriority{}).Error; err != nil {
+		return errors.Wrap(err)
 	}
-	return &standing, nil
+	return nil
 }
 
-func (r league) DeleteStanding(ctx context.Context, db *gorm.DB, id string, teamId string) (*db_model.LeagueStanding, error) {
-	var standing db_model.LeagueStanding
-	if err := db.First(&standing, "id = ? AND team_id = ?", id, teamId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.ErrLeagueStandingNotFound
-		}
+func (r league) BatchCreateTiebreakPriorities(ctx context.Context, db *gorm.DB, priorities []*db_model.TiebreakPriority) ([]*db_model.TiebreakPriority, error) {
+	if len(priorities) == 0 {
+		return []*db_model.TiebreakPriority{}, nil
+	}
+	if err := db.Create(&priorities).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
-
-	if err := db.Delete(&standing).Error; err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return &standing, nil
-}
-
-func (r league) ListStandings(ctx context.Context, db *gorm.DB, id string) ([]*db_model.LeagueStanding, error) {
-	var standings []*db_model.LeagueStanding
-	if err := db.Where("id = ?", id).Find(&standings).Error; err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return standings, nil
-}
-
-func (r league) BatchGetStandingsByCompetitionIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.LeagueStanding, error) {
-	var standings []*db_model.LeagueStanding
-	if err := db.Where("id IN (?)", ids).Find(&standings).Error; err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return standings, nil
-}
-
-func (r league) BatchGetStandingsByTeamIDs(ctx context.Context, db *gorm.DB, teamIDs []string) ([]*db_model.LeagueStanding, error) {
-	var standings []*db_model.LeagueStanding
-	if err := db.Where("team_id IN (?)", teamIDs).Find(&standings).Error; err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return standings, nil
+	return priorities, nil
 }

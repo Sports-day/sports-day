@@ -17,7 +17,6 @@ var (
 	ErrMatchNotFound          = NewError("MATCH_NOT_FOUND", "試合が見つかりません")
 	ErrJudgmentNotFound       = NewError("JUDGMENT_NOT_FOUND", "審判が見つかりません")
 	ErrLeagueNotFound         = NewError("LEAGUE_NOT_FOUND", "リーグが見つかりません")
-	ErrLeagueStandingNotFound = NewError("LEAGUE_STANDING_NOT_FOUND", "リーグ結果が見つかりません")
 
 	/*
 		Validation
@@ -41,7 +40,15 @@ var (
 	ErrUpsertLeague           = NewError("LEAGUE_UPSERT_FAILED", "リーグ情報の更新に失敗しました")
 	ErrMakeLeagueMatches      = NewError("LEAGUE_MATCH_MAKE_FAILED", "リーグの試合生成に失敗しました")
 	ErrSaveLeague             = NewError("LEAGUE_SAVE_FAILED", "リーグの保存に失敗しました")
-	ErrSaveLeagueStanding     = NewError("LEAGUE_STANDING_SAVE_FAILED", "リーグ結果の保存に失敗しました")
+	ErrRankingRuleNotFound    = NewError("RANKING_RULE_NOT_FOUND", "順位決定ルールが見つかりません")
+	ErrSaveRankingRule        = NewError("RANKING_RULE_SAVE_FAILED", "順位決定ルールの保存に失敗しました")
+	ErrRankingRuleEmpty       = NewError("RANKING_RULE_EMPTY", "順位決定ルールは最低1つ必要です")
+	ErrRankingRuleDuplicate   = NewError("RANKING_RULE_DUPLICATE", "同一リーグ内で条件キーが重複しています")
+	ErrRankingRulePriority    = NewError("RANKING_RULE_PRIORITY_INVALID", "優先順位は1からの連番である必要があります")
+	ErrSaveTiebreakPriority          = NewError("TIEBREAK_PRIORITY_SAVE_FAILED", "順位裁定の保存に失敗しました")
+	ErrTiebreakPriorityEmpty         = NewError("TIEBREAK_PRIORITY_EMPTY", "裁定対象のチームを1つ以上指定してください")
+	ErrTiebreakPriorityDuplicateTeam = NewError("TIEBREAK_PRIORITY_DUPLICATE_TEAM", "同じチームが複数回指定されています")
+	ErrTiebreakPriorityDuplicateValue = NewError("TIEBREAK_PRIORITY_DUPLICATE_VALUE", "同じ優先度を複数のチームに設定することはできません")
 	/*
 		Authentication
 	*/

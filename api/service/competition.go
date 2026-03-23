@@ -16,15 +16,13 @@ type Competition struct {
 	db                    *gorm.DB
 	competitionRepository repository.Competition
 	teamRepository        repository.Team
-	leagueRepository      repository.League
 }
 
-func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, teamRepository repository.Team, leagueRepository repository.League) Competition {
+func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, teamRepository repository.Team) Competition {
 	return Competition{
 		db:                    db,
 		competitionRepository: competitionRepository,
 		teamRepository:        teamRepository,
-		leagueRepository:      leagueRepository,
 	}
 }
 
@@ -87,30 +85,16 @@ func (s *Competition) AddEntries(ctx context.Context, competitionId string, team
 	var competition *db_model.Competition
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		// tx を使って大会取得
 		comp, err := s.competitionRepository.Get(ctx, tx, competitionId)
 		if err != nil {
 			return errors.Wrap(err)
 		}
 		competition = comp
 
-		// エントリー追加
 		if _, err := s.competitionRepository.AddCompetitionEntries(ctx, tx, competitionId, teamIds); err != nil {
 			return errors.Wrap(err)
 		}
 
-		// リーグなら standings を作成/Upsert
-		if comp.Type == "LEAGUE" {
-			for _, teamID := range teamIds {
-				st := &db_model.LeagueStanding{
-					ID:     competitionId,
-					TeamID: teamID,
-				}
-				if _, err := s.leagueRepository.SaveStanding(ctx, tx, st); err != nil {
-					return errors.Wrap(err)
-				}
-			}
-		}
 		return nil
 	})
 
