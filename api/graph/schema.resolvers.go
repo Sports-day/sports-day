@@ -408,7 +408,16 @@ func (r *mutationResolver) SetRankingRules(ctx context.Context, leagueID string,
 
 // SetTiebreakPriorities is the resolver for the setTiebreakPriorities field.
 func (r *mutationResolver) SetTiebreakPriorities(ctx context.Context, leagueID string, input model.SetTiebreakPrioritiesInput) ([]*model.TiebreakPriority, error) {
-	panic("not implemented")
+	priorities, err := r.LeagueService.SetTiebreakPriorities(ctx, leagueID, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.TiebreakPriority, 0, len(priorities))
+	for _, p := range priorities {
+		res = append(res, model.FormatTiebreakPriorityResponse(p))
+	}
+	return res, nil
 }
 
 // CreatePromotionRule is the resolver for the createPromotionRule field.
@@ -718,7 +727,16 @@ func (r *queryResolver) LeagueStandings(ctx context.Context, leagueID string) ([
 
 // TiebreakPriorities is the resolver for the tiebreakPriorities field.
 func (r *queryResolver) TiebreakPriorities(ctx context.Context, leagueID string) ([]*model.TiebreakPriority, error) {
-	panic("not implemented")
+	priorities, err := r.LeagueService.ListTiebreakPriorities(ctx, leagueID)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.TiebreakPriority, 0, len(priorities))
+	for _, p := range priorities {
+		res = append(res, model.FormatTiebreakPriorityResponse(p))
+	}
+	return res, nil
 }
 
 // PromotionRules is the resolver for the promotionRules field.

@@ -45,6 +45,10 @@ var (
 	ErrRankingRuleEmpty       = NewError("RANKING_RULE_EMPTY", "順位決定ルールは最低1つ必要です")
 	ErrRankingRuleDuplicate   = NewError("RANKING_RULE_DUPLICATE", "同一リーグ内で条件キーが重複しています")
 	ErrRankingRulePriority    = NewError("RANKING_RULE_PRIORITY_INVALID", "優先順位は1からの連番である必要があります")
+	ErrSaveTiebreakPriority  = NewError("TIEBREAK_PRIORITY_SAVE_FAILED", "タイブレーク優先度の保存に失敗しました")
+	ErrTiebreakPriorityEmpty = NewError("TIEBREAK_PRIORITY_EMPTY", "タイブレーク優先度は最低1つ必要です")
+	ErrTiebreakPriorityDuplicateTeam = NewError("TIEBREAK_PRIORITY_DUPLICATE_TEAM", "同一チームに複数の優先度が指定されています")
+	ErrTiebreakPriorityDuplicateValue = NewError("TIEBREAK_PRIORITY_DUPLICATE_VALUE", "同一の優先度値が重複しています")
 	/*
 		Authentication
 	*/
