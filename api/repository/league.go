@@ -14,4 +14,5 @@ type League interface {
 	Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.League, error)
 	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.League, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.League, error)
+	ListTiebreakPrioritiesByLeagueID(ctx context.Context, db *gorm.DB, leagueID string) ([]*db_model.TiebreakPriority, error)
 }

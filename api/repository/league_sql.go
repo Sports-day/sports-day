@@ -63,3 +63,11 @@ func (r league) List(ctx context.Context, db *gorm.DB) ([]*db_model.League, erro
 	}
 	return leagues, nil
 }
+
+func (r league) ListTiebreakPrioritiesByLeagueID(ctx context.Context, db *gorm.DB, leagueID string) ([]*db_model.TiebreakPriority, error) {
+	var priorities []*db_model.TiebreakPriority
+	if err := db.Where("league_id = ?", leagueID).Order("priority ASC").Find(&priorities).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return priorities, nil
+}
