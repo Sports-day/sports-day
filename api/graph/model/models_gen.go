@@ -22,6 +22,12 @@ type CreateGroupInput struct {
 	Name string `json:"name"`
 }
 
+type CreateImageUploadURLInput struct {
+	OwnerType ImageOwnerType `json:"ownerType"`
+	OwnerID   *string        `json:"ownerId,omitempty"`
+	Filename  string         `json:"filename"`
+}
+
 type CreateInformationInput struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
@@ -77,6 +83,11 @@ type GenerateRoundRobinInput struct {
 	LocationID    *string `json:"locationId,omitempty"`
 }
 
+type ImageUploadURL struct {
+	UploadURL string `json:"uploadUrl"`
+	ImageID   string `json:"imageId"`
+}
+
 type Information struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"`
@@ -130,7 +141,8 @@ type UpdateCompetitionEntriesInput struct {
 }
 
 type UpdateCompetitionInput struct {
-	Name *string `json:"name,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	ImageID *string `json:"imageId,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -186,8 +198,9 @@ type UpdateSceneInput struct {
 }
 
 type UpdateSportsInput struct {
-	Name   *string `json:"name,omitempty"`
-	Weight *int32  `json:"weight,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	Weight  *int32  `json:"weight,omitempty"`
+	ImageID *string `json:"imageId,omitempty"`
 }
 
 type UpdateTeamInput struct {
@@ -281,6 +294,49 @@ func (e *CompetitionType) UnmarshalGQL(v any) error {
 }
 
 func (e CompetitionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ImageOwnerType string
+
+const (
+	ImageOwnerTypeUser        ImageOwnerType = "USER"
+	ImageOwnerTypeSport       ImageOwnerType = "SPORT"
+	ImageOwnerTypeCompetition ImageOwnerType = "COMPETITION"
+)
+
+var AllImageOwnerType = []ImageOwnerType{
+	ImageOwnerTypeUser,
+	ImageOwnerTypeSport,
+	ImageOwnerTypeCompetition,
+}
+
+func (e ImageOwnerType) IsValid() bool {
+	switch e {
+	case ImageOwnerTypeUser, ImageOwnerTypeSport, ImageOwnerTypeCompetition:
+		return true
+	}
+	return false
+}
+
+func (e ImageOwnerType) String() string {
+	return string(e)
+}
+
+func (e *ImageOwnerType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ImageOwnerType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ImageOwnerType", str)
+	}
+	return nil
+}
+
+func (e ImageOwnerType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
