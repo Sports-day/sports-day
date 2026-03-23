@@ -22,6 +22,7 @@ type League struct {
 	competitionRepository repository.Competition
 	competitionService    *Competition
 	rankingRuleRepository repository.RankingRule
+	promotionService      *Promotion
 }
 
 func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, rankingRuleRepository repository.RankingRule) League {
@@ -33,6 +34,10 @@ func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository 
 		competitionService:    competitionService,
 		rankingRuleRepository: rankingRuleRepository,
 	}
+}
+
+func (s *League) SetPromotionService(promotionService *Promotion) {
+	s.promotionService = promotionService
 }
 
 func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*db_model.League, error) {
@@ -276,6 +281,12 @@ func (s *League) SetTiebreakPriorities(ctx context.Context, leagueID string, inp
 		created, err = s.leagueRepository.BatchCreateTiebreakPriorities(ctx, tx, priorities)
 		if err != nil {
 			return errors.Wrap(err)
+		}
+
+		if s.promotionService != nil {
+			if err := s.promotionService.TryExecuteForCompetition(ctx, tx, leagueID); err != nil {
+				return err
+			}
 		}
 
 		return nil

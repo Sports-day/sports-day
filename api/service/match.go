@@ -21,6 +21,7 @@ type Match struct {
 	locationRepository    repository.Location
 	competitionRepository repository.Competition
 	judgmentRepository    repository.Judgment
+	promotionService      *Promotion
 }
 
 func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repository.Team, locationRepository repository.Location, competitionRepository repository.Competition, judgmentRepository repository.Judgment) Match {
@@ -32,6 +33,10 @@ func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repo
 		competitionRepository: competitionRepository,
 		judgmentRepository:    judgmentRepository,
 	}
+}
+
+func (s *Match) SetPromotionService(promotionService *Promotion) {
+	s.promotionService = promotionService
 }
 
 func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_model.Match, error) {
@@ -166,6 +171,12 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 			return err
 		}
 
+		if s.promotionService != nil && input.Results != nil {
+			if err := s.promotionService.validateScoreModification(ctx, tx, id); err != nil {
+				return err
+			}
+		}
+
 		if input.Status != nil {
 			m.Status = string(*input.Status)
 		}
@@ -183,6 +194,12 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 				if _, err := s.matchRepository.UpdateMatchEntryScore(ctx, tx, id, result.TeamID, int(result.Score)); err != nil {
 					return errors.ErrUpdateMatchEntryScore
 				}
+			}
+		}
+
+		if s.promotionService != nil {
+			if err := s.promotionService.TryExecuteForCompetition(ctx, tx, updated.CompetitionID); err != nil {
+				return err
 			}
 		}
 

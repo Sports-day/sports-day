@@ -49,6 +49,12 @@ var (
 	ErrTiebreakPriorityEmpty = NewError("TIEBREAK_PRIORITY_EMPTY", "優先度を設定するチームを1つ以上指定してください")
 	ErrTiebreakPriorityDuplicateTeam = NewError("TIEBREAK_PRIORITY_DUPLICATE_TEAM", "同じチームが複数回指定されています。各チームは1回のみ指定できます")
 	ErrTiebreakPriorityDuplicateValue = NewError("TIEBREAK_PRIORITY_DUPLICATE_VALUE", "優先度の値が重複しています。各チームに異なる優先度を設定してください")
+	ErrPromotionRuleNotFound         = NewError("PROMOTION_RULE_NOT_FOUND", "進出ルールが見つかりません")
+	ErrSavePromotionRule             = NewError("PROMOTION_RULE_SAVE_FAILED", "進出ルールの保存に失敗しました")
+	ErrPromotionRuleInvalidRankSpec  = NewError("PROMOTION_RULE_INVALID_RANK_SPEC", "対象順位の指定が不正です")
+	ErrPromotionRuleLocked           = NewError("PROMOTION_RULE_LOCKED", "進出先にスコアが入力されているため、進出ルールを変更できません")
+	ErrScoreModificationLocked       = NewError("SCORE_MODIFICATION_LOCKED", "進出先の試合が動いているため、スコアを修正できません")
+	ErrManualEntryLocked             = NewError("MANUAL_ENTRY_LOCKED", "進出先の試合が動いているため、エントリーを追加できません")
 	/*
 		Authentication
 	*/

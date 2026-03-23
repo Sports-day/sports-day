@@ -422,17 +422,29 @@ func (r *mutationResolver) SetTiebreakPriorities(ctx context.Context, leagueID s
 
 // CreatePromotionRule is the resolver for the createPromotionRule field.
 func (r *mutationResolver) CreatePromotionRule(ctx context.Context, input model.CreatePromotionRuleInput) (*model.PromotionRule, error) {
-	panic("not implemented")
+	rule, err := r.PromotionService.CreateRule(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatPromotionRuleResponse(rule), nil
 }
 
 // UpdatePromotionRule is the resolver for the updatePromotionRule field.
 func (r *mutationResolver) UpdatePromotionRule(ctx context.Context, id string, input model.UpdatePromotionRuleInput) (*model.PromotionRule, error) {
-	panic("not implemented")
+	rule, err := r.PromotionService.UpdateRule(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatPromotionRuleResponse(rule), nil
 }
 
 // DeletePromotionRule is the resolver for the deletePromotionRule field.
 func (r *mutationResolver) DeletePromotionRule(ctx context.Context, id string) (*model.PromotionRule, error) {
-	panic("not implemented")
+	rule, err := r.PromotionService.DeleteRule(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatPromotionRuleResponse(rule), nil
 }
 
 // Users is the resolver for the users field.
@@ -741,7 +753,16 @@ func (r *queryResolver) TiebreakPriorities(ctx context.Context, leagueID string)
 
 // PromotionRules is the resolver for the promotionRules field.
 func (r *queryResolver) PromotionRules(ctx context.Context, competitionID string) ([]*model.PromotionRule, error) {
-	panic("not implemented")
+	rules, err := r.PromotionService.ListRulesByCompetitionID(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.PromotionRule, 0, len(rules))
+	for _, rule := range rules {
+		res = append(res, model.FormatPromotionRuleResponse(rule))
+	}
+	return res, nil
 }
 
 // Mutation returns MutationResolver implementation.
