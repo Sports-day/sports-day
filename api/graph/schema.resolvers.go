@@ -713,7 +713,7 @@ func (r *queryResolver) League(ctx context.Context, id string) (*model.League, e
 
 // LeagueStandings is the resolver for the leagueStandings field.
 func (r *queryResolver) LeagueStandings(ctx context.Context, leagueID string) ([]*model.ComputedStanding, error) {
-	panic("not implemented")
+	return r.LeagueService.ComputeStandings(ctx, leagueID)
 }
 
 // TiebreakPriorities is the resolver for the tiebreakPriorities field.

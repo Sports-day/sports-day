@@ -82,7 +82,6 @@ func main() {
 	judgmentRepository := repository.NewJudgment()
 	leagueRepository := repository.NewLeague()
 	rankingRuleRepository := repository.NewRankingRule()
-
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
