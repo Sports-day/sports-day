@@ -111,7 +111,7 @@ export default function TeamEdit() {
   const { type, sports } = useParams() as { type: string; sports: string };
 
   const [selectedMember, setSelectedMember] = useState<studentInformation[]>(
-    []
+    [],
   );
   const [searchName, setSearchName] = useState("");
   const router = useRouter();
@@ -127,7 +127,7 @@ export default function TeamEdit() {
 
   const sportSceneId = useMemo(() => {
     return Ids?.sportScenes?.find(
-      (d) => d.sport.id === sports && d.scene.id === type
+      (d) => d.sport.id === sports && d.scene.id === type,
     );
   }, [Ids, sports, type]);
   const { data: teamdata } = useQuery(GET_TEAM_COUNT, {
@@ -136,7 +136,7 @@ export default function TeamEdit() {
   });
 
   const sportSceneMember = Ids?.sportScenes?.filter(
-    (d) => d.scene?.id === type
+    (d) => d.scene?.id === type,
   );
 
   const selectedIds = selectedMember.map((s) => s.studentId);
@@ -156,7 +156,7 @@ export default function TeamEdit() {
   const AlreadyInAnyTeam = useMemo(() => {
     if (!sportSceneMember) return [];
     const all = sportSceneMember.flatMap((d) =>
-      d.entries?.flatMap((s) => s.team?.users ?? [])
+      d.entries?.flatMap((s) => s.team?.users ?? []),
     );
     return all.filter((user) => !myTeamUserIds.includes(user.id));
   }, [sportSceneMember, myTeamUserIds]);
@@ -220,7 +220,7 @@ export default function TeamEdit() {
   const removeStudent = async (studentId: string) => {
     if (teams) {
       setSelectedMember((prev) =>
-        prev.filter((s) => s.studentId !== studentId)
+        prev.filter((s) => s.studentId !== studentId),
       );
       await DeleteMember({
         variables: {
@@ -230,7 +230,7 @@ export default function TeamEdit() {
       });
     } else {
       setSelectedMember((prev) =>
-        prev.filter((s) => s.studentId !== studentId)
+        prev.filter((s) => s.studentId !== studentId),
       );
     }
   };
@@ -238,13 +238,13 @@ export default function TeamEdit() {
   return (
     <Box
       sx={{
-        m: "3vh",
-        pt: "3%",
+        m: 2,
+        pt: 2,
         height: "65vh",
         background: "#F4F5F9",
         borderRadius: "10px",
         display: "flex",
-        px: "6%",
+        px: 2,
       }}
     >
       <Grid container spacing={2} sx={{ height: "100%" }}>
@@ -334,12 +334,13 @@ export default function TeamEdit() {
                       background: "#7F8CD6",
                       color: "white",
                       width: "60%",
-                      my: "1vh",
+                      my: 2,
                       "&:hover": {
                         opacity: 0.8,
                         background: "#7F8CD6",
                       },
                     }}
+                    disabled={selectedMember.length === 0}
                     variant="contained"
                     onClick={async () => {
                       if (teams) {
@@ -368,8 +369,7 @@ export default function TeamEdit() {
               borderStyle: "solid",
               borderTopLeftRadius: "10px",
               borderBottomLeftRadius: "10px",
-              pb: "3%",
-              p: "1%",
+
               height: "100%",
               width: "100%",
               background: "none",
@@ -385,6 +385,7 @@ export default function TeamEdit() {
               sx={{
                 width: "80%",
                 height: "100%",
+                p: 2,
               }}
             >
               <TextField
@@ -396,7 +397,7 @@ export default function TeamEdit() {
                   background: "#F0F4FF",
                   color: "#808080",
                   borderRadius: "10px",
-                  my: "3%",
+                  mb: 2,
                 }}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
@@ -436,7 +437,7 @@ export default function TeamEdit() {
                             disable={selectedIds.includes(String(item.id))}
                             isInclude={
                               AlreadyInAnyTeam.some(
-                                (a) => a.id === String(item.id)
+                                (a) => a.id === String(item.id),
                               ) || selectedIds.includes(String(item.id))
                             }
                             remove={() => removeStudent(String(item.id))}

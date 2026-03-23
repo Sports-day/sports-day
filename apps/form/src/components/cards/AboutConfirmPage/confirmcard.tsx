@@ -1,7 +1,10 @@
 "use client";
 
-import { Card, Box, Typography, Grid, Stack } from "@mui/material";
+import { Card, Box, Typography, Grid, Stack, Button } from "@mui/material";
 import EditButton from "../../buttons/editbutton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckPopup_Confirm from "@/components/popups/checkpopup-comfirmpage";
+import { useState } from "react";
 
 type AllDataProps = {
   scenename: string;
@@ -22,6 +25,8 @@ export default function ConfirmCard({
   teamid,
   memberdata,
 }: AllDataProps) {
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
   return (
     <Card
       variant="outlined"
@@ -36,7 +41,7 @@ export default function ConfirmCard({
     >
       <Box
         sx={{
-          p: "3%",
+          p: 2,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -73,22 +78,55 @@ export default function ConfirmCard({
                   sx={{
                     borderColor: "#5B6DC6",
                     background: "none",
-                    m: "3%",
-                    p: "3%",
+                    m: 2,
+                    p: 2,
                   }}
                 >
                   <Stack
                     direction="row"
                     justifyContent="space-between"
                     alignItems="center"
-                    sx={{ mb: "1%" }}
+                    sx={{ mb: 2 }}
                   >
                     <Typography sx={{ color: "#5B6DC6" }}>{team}</Typography>
-                    <EditButton
-                      type={sceneid}
-                      sports={sportid}
-                      teams={teamid[index]}
-                    />
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      spacing={2}
+                    >
+                      <EditButton
+                        type={sceneid}
+                        sports={sportid}
+                        teams={teamid[index]}
+                      />
+                      <Button
+                        component="span"
+                        variant="contained"
+                        sx={{
+                          borderWidth: "2px",
+                          borderColor: "#E34013",
+                          background: "white",
+                          color: "#E34013",
+                          "&:hover": {
+                            borderWidth: "2px",
+                            borderColor: "#E34013",
+                            background: "white",
+                            color: "#E34013",
+                            background: "white",
+                            opacity: 0.8,
+                          },
+                        }}
+                        onClick={handleOpen}
+                      >
+                        <DeleteIcon />
+                        削除
+                      </Button>
+                      <CheckPopup_Confirm
+                        teamid={teamid[index]}
+                        open={open}
+                        setOpen={setOpen}
+                      />
+                    </Stack>
                   </Stack>
                   <Grid container>
                     {memberdata[index]

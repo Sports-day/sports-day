@@ -32,9 +32,13 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function CheckPopup({ teamid, open, setOpen }: CheckPopupProps) {
+export default function CheckPopup_Confirm({
+  teamid,
+  open,
+  setOpen,
+}: CheckPopupProps) {
   const [DeleteTeam] = useMutation(DELETE_TEAM, {
-    refetchQueries: ["GetSceneSport"],
+    refetchQueries: ["GetAllTeamdata"],
   });
 
   const handleClose = () => {

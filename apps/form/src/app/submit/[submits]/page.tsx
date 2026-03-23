@@ -4,6 +4,8 @@ import { Box, Typography, Stack } from "@mui/material";
 import Image from "next/image";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { motion } from "framer-motion";
+import CircularUnderLoad from "@/features/loading";
+import Error from "@/features/error";
 
 export default function Comp() {
   return (

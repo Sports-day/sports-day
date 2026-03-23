@@ -41,11 +41,11 @@ export default function Confricted() {
 
   const Data1 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[0]?.id
+      (e) => e.scene?.id === Scene?.scenes[0]?.id,
     ) || [];
   const Data2 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[1]?.id
+      (e) => e.scene?.id === Scene?.scenes[1]?.id,
     ) || [];
 
   const Scenename1 = Scene?.scenes[0]?.name;
@@ -53,11 +53,11 @@ export default function Confricted() {
 
   const SceneTeamUser1 =
     Data1?.flatMap((d) =>
-      d.entries?.flatMap((s) => s.team?.users?.map((u) => u.name))
+      d.entries?.flatMap((s) => s.team?.users?.map((u) => u.name)),
     ) || [];
   const SceneTeamUser2 =
     Data2?.flatMap((d) =>
-      d.entries?.flatMap((s) => s.team?.users?.map((u) => u.name))
+      d.entries?.flatMap((s) => s.team?.users?.map((u) => u.name)),
     ) || [];
 
   const nameCount1: Record<string, number> = {};
@@ -69,10 +69,10 @@ export default function Confricted() {
     nameCount2[name] = (nameCount2[name] || 0) + 1;
   });
   const confrictedUser1 = Object?.keys(nameCount1).filter(
-    (name) => nameCount1[name] > 1
+    (name) => nameCount1[name] > 1,
   );
   const confrictedUser2 = Object?.keys(nameCount2).filter(
-    (name) => nameCount2[name] > 1
+    (name) => nameCount2[name] > 1,
   );
 
   const AllSceneData: sceneInformation[] = [

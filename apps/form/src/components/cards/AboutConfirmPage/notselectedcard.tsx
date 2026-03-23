@@ -51,21 +51,21 @@ export default function NotSelected() {
 
   const Data1 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[0]?.id
+      (e) => e.scene?.id === Scene?.scenes[0]?.id,
     ) || [];
   const Data2 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[1]?.id
+      (e) => e.scene?.id === Scene?.scenes[1]?.id,
     ) || [];
 
   const Scenename1 = Scene?.scenes[0]?.name;
   const Scenename2 = Scene?.scenes[1]?.name;
 
   const SceneTeamUser1 = Data1?.flatMap((d) =>
-    d.entries?.flatMap((s) => s.team?.users?.map((u) => u.id) || [])
+    d.entries?.flatMap((s) => s.team?.users?.map((u) => u.id) || []),
   );
   const SceneTeamUser2 = Data2?.flatMap((d) =>
-    d.entries?.flatMap((s) => s.team?.users?.map((u) => u.id) || [])
+    d.entries?.flatMap((s) => s.team?.users?.map((u) => u.id) || []),
   );
 
   const AllUsers =
@@ -75,11 +75,11 @@ export default function NotSelected() {
     })) || [];
 
   const nonSelectedUser1 = AllUsers?.filter(
-    (user) => !SceneTeamUser1.includes(user.id)
+    (user) => !SceneTeamUser1.includes(user.id),
   );
 
   const nonSelectedUser2 = AllUsers?.filter(
-    (user) => !SceneTeamUser2.includes(user.id)
+    (user) => !SceneTeamUser2.includes(user.id),
   );
 
   const AllSceneData: sceneInformation[] = [
@@ -115,7 +115,6 @@ export default function NotSelected() {
           background: "none",
           width: "100%",
           height: "100%",
-          p: "3%",
         }}
       >
         <Stack
@@ -137,7 +136,7 @@ export default function NotSelected() {
               borderRadius: "10px",
               borderWidth: "1px",
               background: "none",
-
+              m: "3%",
               p: "3%",
             }}
           >

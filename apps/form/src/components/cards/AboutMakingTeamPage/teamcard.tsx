@@ -4,7 +4,6 @@ import { Card, Box, Typography, Stack, Button } from "@mui/material";
 import { useState } from "react";
 import CheckPopup from "../../popups/checkpopup";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 type teamMember = {
   name: string;

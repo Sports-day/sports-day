@@ -47,7 +47,7 @@ export default function MemberEdit() {
         direction="row"
         display="flex"
         justifyContent="center"
-        sx={{ m: "1%" }}
+        sx={{ m: 2 }}
       >
         <Instruction weather={weatherName} sportname={sportName} />
       </Stack>
