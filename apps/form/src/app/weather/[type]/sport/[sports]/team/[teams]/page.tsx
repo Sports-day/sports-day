@@ -38,8 +38,6 @@ export default function MemberEdit() {
   const weatherName = data?.scene?.name;
   const sportName = data?.sport?.name;
 
-  console.log(weatherName);
-  console.log(sportName);
   return (
     <Box sx={{ width: "100%", height: "100%" }}>
       <Header />
