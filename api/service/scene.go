@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	mysqlDriver "github.com/go-sql-driver/mysql"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
@@ -80,6 +82,14 @@ func (s *Scene) Delete(ctx context.Context, id string) (*db_model.Scene, error) 
 }
 
 func (s *Scene) CreateSportScene(ctx context.Context, input *model.CreateSportSceneInput) (*db_model.SportScene, error) {
+	exists, err := s.sceneRepo.ExistsSportScene(ctx, s.db, input.SportID, input.SceneID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if exists {
+		return nil, errors.ErrSportSceneAlreadyExists
+	}
+
 	sportScene := &db_model.SportScene{
 		ID:      ulid.Make(),
 		SportID: input.SportID,
@@ -87,6 +97,9 @@ func (s *Scene) CreateSportScene(ctx context.Context, input *model.CreateSportSc
 	}
 	created, err := s.sceneRepo.CreateSportScene(ctx, s.db, sportScene)
 	if err != nil {
+		if isDuplicateKeyError(err) {
+			return nil, errors.ErrSportSceneAlreadyExists.WithError(err)
+		}
 		return nil, errors.Wrap(err)
 	}
 	return created, nil
@@ -122,6 +135,14 @@ func (s *Scene) DeleteSportScene(ctx context.Context, id string) (*db_model.Spor
 }
 
 func (s *Scene) CreateSportEntry(ctx context.Context, input *model.CreateSportEntryInput) (*db_model.SportEntry, error) {
+	exists, err := s.sceneRepo.ExistsSportEntry(ctx, s.db, input.SportSceneID, input.TeamID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if exists {
+		return nil, errors.ErrSportEntryAlreadyExists
+	}
+
 	sportEntry := &db_model.SportEntry{
 		ID:           ulid.Make(),
 		SportSceneID: input.SportSceneID,
@@ -129,6 +150,9 @@ func (s *Scene) CreateSportEntry(ctx context.Context, input *model.CreateSportEn
 	}
 	created, err := s.sceneRepo.CreateSportEntry(ctx, s.db, sportEntry)
 	if err != nil {
+		if isDuplicateKeyError(err) {
+			return nil, errors.ErrSportEntryAlreadyExists.WithError(err)
+		}
 		return nil, errors.Wrap(err)
 	}
 	return created, nil
@@ -161,4 +185,48 @@ func (s *Scene) DeleteSportEntry(ctx context.Context, id string) (*db_model.Spor
 		return nil, errors.Wrap(err)
 	}
 	return sportEntry, nil
+}
+
+func (s *Scene) GetSportScenesMapByIDs(ctx context.Context, ids []string) (map[string]*db_model.SportScene, error) {
+	sportScenes, err := s.sceneRepo.BatchGetSportScenesByIDs(ctx, s.db, ids)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	sportSceneMap := make(map[string]*db_model.SportScene)
+	for _, sportScene := range sportScenes {
+		sportSceneMap[sportScene.ID] = sportScene
+	}
+	return sportSceneMap, nil
+}
+
+func (s *Scene) GetSportScenesMapBySportIDs(ctx context.Context, sportIDs []string) (map[string][]*db_model.SportScene, error) {
+	sportScenes, err := s.sceneRepo.BatchGetSportScenesBySportIDs(ctx, s.db, sportIDs)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	sportScenesMap := make(map[string][]*db_model.SportScene)
+	for _, sportScene := range sportScenes {
+		sportScenesMap[sportScene.SportID] = append(sportScenesMap[sportScene.SportID], sportScene)
+	}
+	return sportScenesMap, nil
+}
+
+func isDuplicateKeyError(err error) bool {
+	var mysqlErr *mysqlDriver.MySQLError
+	if errors.As(err, &mysqlErr) {
+		return mysqlErr.Number == 1062
+	}
+	return false
+}
+
+func (s *Scene) GetScenesMapByIDs(ctx context.Context, ids []string) (map[string]*db_model.Scene, error) {
+	scenes, err := s.sceneRepo.BatchGetScenesByIDs(ctx, s.db, ids)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	sceneMap := make(map[string]*db_model.Scene)
+	for _, sc := range scenes {
+		sceneMap[sc.ID] = sc
+	}
+	return sceneMap, nil
 }
