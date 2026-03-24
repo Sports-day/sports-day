@@ -1,7 +1,7 @@
 # 個人の環境変数を設定するファイル
 
 # Codex CLI (OpenAI API)
-# export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="sk-FXC1x8ppzLGX0CDmdW8LTg"
 
 # Anthropic API
 # export ANTHROPIC_API_KEY="sk-ant-..."
