@@ -1,5 +1,5 @@
 -- migrate:up
-CREATE TABLE sport_scene (
+CREATE TABLE sport_scenes (
     id VARCHAR(26) PRIMARY KEY,
     scene_id VARCHAR(26) NOT NULL COMMENT 'シーンID',
     sport_id VARCHAR(26) NOT NULL COMMENT 'スポーツID',
@@ -12,5 +12,5 @@ CREATE TABLE sport_scene (
   COLLATE = utf8mb4_bin;
 
 -- migrate:down
-DROP TABLE sport_scene;
+DROP TABLE sport_scenes;
 
