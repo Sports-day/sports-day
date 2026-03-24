@@ -25,4 +25,11 @@ type Scene interface {
 	FindSportEntryBySportSceneID(ctx context.Context, db *gorm.DB, sportSceneID string) ([]*db_model.SportEntry, error)
 	FindSportEntryByTeamID(ctx context.Context, db *gorm.DB, teamID string) ([]*db_model.SportEntry, error)
 	DeleteSportEntry(ctx context.Context, db *gorm.DB, id string) (*db_model.SportEntry, error)
+
+	BatchGetScenesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Scene, error)
+	BatchGetSportScenesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.SportScene, error)
+	BatchGetSportScenesBySportIDs(ctx context.Context, db *gorm.DB, sportIDs []string) ([]*db_model.SportScene, error)
+
+	ExistsSportScene(ctx context.Context, db *gorm.DB, sportID string, sceneID string) (bool, error)
+	ExistsSportEntry(ctx context.Context, db *gorm.DB, sportSceneID string, teamID string) (bool, error)
 }

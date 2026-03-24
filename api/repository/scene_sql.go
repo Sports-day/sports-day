@@ -39,7 +39,7 @@ func (r scene) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Sc
 
 func (r scene) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error) {
 	var scene db_model.Scene
-	if err := db.First(&scene, "id = ?", id).Error; err != nil {
+	if err := db.First(&scene, "id = ? AND is_deleted = ?", id, false).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrSceneNotFound
 		}
@@ -149,4 +149,44 @@ func (r scene) DeleteSportEntry(ctx context.Context, db *gorm.DB, id string) (*d
 		return nil, errors.Wrap(err)
 	}
 	return &sportEntry, nil
+}
+
+func (r scene) BatchGetScenesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Scene, error) {
+	var scenes []*db_model.Scene
+	if err := db.Where("id IN (?) AND is_deleted = ?", ids, false).Find(&scenes).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return scenes, nil
+}
+
+func (r scene) BatchGetSportScenesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.SportScene, error) {
+	var sportScenes []*db_model.SportScene
+	if err := db.Where("id IN (?)", ids).Find(&sportScenes).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportScenes, nil
+}
+
+func (r scene) BatchGetSportScenesBySportIDs(ctx context.Context, db *gorm.DB, sportIDs []string) ([]*db_model.SportScene, error) {
+	var sportScenes []*db_model.SportScene
+	if err := db.Where("sport_id IN (?)", sportIDs).Find(&sportScenes).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sportScenes, nil
+}
+
+func (r scene) ExistsSportScene(ctx context.Context, db *gorm.DB, sportID string, sceneID string) (bool, error) {
+	var count int64
+	if err := db.Model(&db_model.SportScene{}).Where("sport_id = ? AND scene_id = ?", sportID, sceneID).Count(&count).Error; err != nil {
+		return false, errors.Wrap(err)
+	}
+	return count > 0, nil
+}
+
+func (r scene) ExistsSportEntry(ctx context.Context, db *gorm.DB, sportSceneID string, teamID string) (bool, error) {
+	var count int64
+	if err := db.Model(&db_model.SportEntry{}).Where("sport_scene_id = ? AND team_id = ?", sportSceneID, teamID).Count(&count).Error; err != nil {
+		return false, errors.Wrap(err)
+	}
+	return count > 0, nil
 }

@@ -54,3 +54,11 @@ func (r sports) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.S
 	}
 	return &sport, nil
 }
+
+func (r sports) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Sport, error) {
+	var sports []*db_model.Sport
+	if err := db.Where("id IN (?)", ids).Find(&sports).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sports, nil
+}
