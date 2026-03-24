@@ -12,6 +12,8 @@ DELETE FROM group_users;
 DELETE FROM `groups`;
 DELETE FROM users;
 DELETE FROM information;
+DELETE FROM sport_entries;
+DELETE FROM sport_scenes;
 DELETE FROM scenes;
 DELETE FROM locations;
 DELETE FROM `sports`;
