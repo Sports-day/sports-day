@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -306,7 +307,7 @@ func (r *matchResolver) Judgment(ctx context.Context, obj *model.Match) (*model.
 
 // Scene is the resolver for the scene field.
 func (r *sportResolver) Scene(ctx context.Context, obj *model.Sport) ([]*model.SportScene, error) {
-	res, err := r.SceneService.FindSportSceneBySportID(ctx, obj.ID)
+	res, err := loader.LoadSportScenesBySport(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -323,11 +324,14 @@ func (r *sportResolver) Scene(ctx context.Context, obj *model.Sport) ([]*model.S
 
 // SportScene is the resolver for the sportScene field.
 func (r *sportEntryResolver) SportScene(ctx context.Context, obj *model.SportEntry) (*model.SportScene, error) {
-	s, err := r.SceneService.FindSportSceneByID(ctx, obj.SportSceneID)
+	rows, err := loader.LoadSportScenes(ctx, []string{obj.SportSceneID})
 	if err != nil {
 		return nil, err
 	}
-	// model.SportScene に変換して返す
+	if len(rows) == 0 || rows[0] == nil {
+		return nil, nil
+	}
+	s := rows[0]
 	return &model.SportScene{
 		ID:      s.ID,
 		SportID: s.SportID,
@@ -337,29 +341,38 @@ func (r *sportEntryResolver) SportScene(ctx context.Context, obj *model.SportEnt
 
 // Team is the resolver for the team field.
 func (r *sportEntryResolver) Team(ctx context.Context, obj *model.SportEntry) (*model.Team, error) {
-	t, err := r.TeamService.Get(ctx, obj.TeamID)
+	teams, err := loader.LoadTeams(ctx, []string{obj.TeamID})
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatTeamResponse(t), nil
+	if len(teams) == 0 || teams[0] == nil {
+		return nil, nil
+	}
+	return model.FormatTeamResponse(teams[0]), nil
 }
 
 // Sport is the resolver for the sport field.
 func (r *sportSceneResolver) Sport(ctx context.Context, obj *model.SportScene) (*model.Sport, error) {
-	s, err := r.SportService.Get(ctx, obj.SportID)
+	res, err := loader.LoadSports(ctx, []string{obj.SportID})
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatSportResponse(s), nil
+	if len(res) == 0 {
+		return nil, nil
+	}
+	return model.FormatSportResponse(res[0]), nil
 }
 
 // Scene is the resolver for the scene field.
 func (r *sportSceneResolver) Scene(ctx context.Context, obj *model.SportScene) (*model.Scene, error) {
-	s, err := r.SceneService.Get(ctx, obj.SceneID)
+	res, err := loader.LoadScenes(ctx, []string{obj.SceneID})
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatSceneResponse(s), nil
+	if len(res) == 0 {
+		return nil, nil
+	}
+	return model.FormatSceneResponse(res[0]), nil
 }
 
 // Team is the resolver for the team field.

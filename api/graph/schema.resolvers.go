@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -414,7 +415,9 @@ func (r *mutationResolver) CreateSportScene(ctx context.Context, input model.Cre
 		return nil, err
 	}
 	return &model.SportScene{
-		ID: res.ID,
+		ID:      res.ID,
+		SportID: res.SportID,
+		SceneID: res.SceneID,
 	}, nil
 }
 
@@ -425,7 +428,9 @@ func (r *mutationResolver) DeleteSportScene(ctx context.Context, id string) (*mo
 		return nil, err
 	}
 	return &model.SportScene{
-		ID: res.ID,
+		ID:      res.ID,
+		SportID: res.SportID,
+		SceneID: res.SceneID,
 	}, nil
 }
 
@@ -436,7 +441,9 @@ func (r *mutationResolver) CreateSportEntry(ctx context.Context, input model.Cre
 		return nil, err
 	}
 	return &model.SportEntry{
-		ID: res.ID,
+		ID:           res.ID,
+		SportSceneID: res.SportSceneID,
+		TeamID:       res.TeamID,
 	}, nil
 }
 
@@ -447,7 +454,9 @@ func (r *mutationResolver) DeleteSportEntry(ctx context.Context, id string) (*mo
 		return nil, err
 	}
 	return &model.SportEntry{
-		ID: res.ID,
+		ID:           res.ID,
+		SportSceneID: res.SportSceneID,
+		TeamID:       res.TeamID,
 	}, nil
 }
 
