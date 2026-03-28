@@ -38,10 +38,20 @@ func FormatSceneResponse(scene *db_model.Scene) *Scene {
 
 func FormatSportResponse(sport *db_model.Sport) *Sport {
 	return &Sport{
-		ID:     sport.ID,
-		Name:   sport.Name,
-		Weight: int32(sport.Weight),
+		ID:           sport.ID,
+		Name:         sport.Name,
+		Weight:       int32(sport.Weight),
+		RankingRules: []*RankingRule{},
 	}
+}
+
+func FormatSportWithRankingRulesResponse(sport *db_model.Sport, rules []*db_model.RankingRule) *Sport {
+	res := FormatSportResponse(sport)
+	res.RankingRules = make([]*RankingRule, len(rules))
+	for i, r := range rules {
+		res.RankingRules[i] = FormatRankingRuleResponse(r)
+	}
+	return res
 }
 
 func FormatTeamResponse(team *db_model.Team) *Team {
@@ -122,23 +132,29 @@ func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
 
 func FormatLeagueResponse(league *db_model.League, competition *db_model.Competition) *League {
 	return &League{
-		ID:              league.ID,
-		Name:            competition.Name,
-		CalculationType: CalculationType(league.CalculationType),
+		ID:   league.ID,
+		Name: competition.Name,
 	}
 }
 
-func FormatStandingResponse(standing *db_model.LeagueStanding) *Standing {
-	return &Standing{
-		ID:           standing.ID,
-		TeamID:       standing.TeamID,
-		Win:          int32(standing.Win),
-		Draw:         int32(standing.Draw),
-		Lose:         int32(standing.Lose),
-		GoalsFor:     int32(standing.GoalsFor),
-		GoalsAgainst: int32(standing.GoalsAgainst),
-		GoalDiff:     int32(standing.GoalDiff),
-		Points:       int32(standing.Points),
-		Rank:         int32(standing.Rank),
+func FormatPromotionRuleResponse(rule *db_model.PromotionRule, sourceComp *db_model.Competition, targetComp *db_model.Competition) *PromotionRule {
+	var slot *int32
+	if rule.Slot.Valid {
+		s := int32(rule.Slot.Int64)
+		slot = &s
+	}
+	return &PromotionRule{
+		ID:                rule.ID,
+		SourceCompetition: FormatCompetitionResponse(sourceComp),
+		TargetCompetition: FormatCompetitionResponse(targetComp),
+		RankSpec:          rule.RankSpec,
+		Slot:              slot,
+	}
+}
+
+func FormatRankingRuleResponse(rule *db_model.RankingRule) *RankingRule {
+	return &RankingRule{
+		ConditionKey: RankingConditionKey(rule.ConditionKey),
+		Priority:     int32(rule.Priority),
 	}
 }

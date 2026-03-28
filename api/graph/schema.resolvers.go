@@ -98,7 +98,11 @@ func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input mo
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatSportResponse(sport), nil
+	rules, err := r.SportService.GetRankingRules(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportWithRankingRulesResponse(sport, rules), nil
 }
 
 // CreateTeam is the resolver for the createTeam field.
@@ -394,18 +398,83 @@ func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, in
 	return res, nil
 }
 
-// CalculateLeagueStandings is the resolver for the calculateLeagueStandings field.
-func (r *mutationResolver) CalculateLeagueStandings(ctx context.Context, id string) ([]*model.Standing, error) {
-	standings, err := r.LeagueService.CalculateStandings(ctx, id)
+// SetRankingRules is the resolver for the setRankingRules field.
+func (r *mutationResolver) SetRankingRules(ctx context.Context, sportID string, rules []*model.RankingRuleInput) (*model.Sport, error) {
+	inputs := make([]model.RankingRuleInput, len(rules))
+	for i, r := range rules {
+		inputs[i] = *r
+	}
+	savedRules, err := r.SportService.SetRankingRules(ctx, sportID, inputs)
+	if err != nil {
+		return nil, err
+	}
+	sport, err := r.SportService.Get(ctx, sportID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportWithRankingRulesResponse(sport, savedRules), nil
+}
+
+// SetTiebreakPriorities is the resolver for the setTiebreakPriorities field.
+func (r *mutationResolver) SetTiebreakPriorities(ctx context.Context, leagueID string, priorities []*model.TiebreakPriorityInput) ([]*model.TiebreakPriority, error) {
+	inputs := make([]model.TiebreakPriorityInput, len(priorities))
+	for i, p := range priorities {
+		inputs[i] = *p
+	}
+	saved, err := r.LeagueService.SetTiebreakPriorities(ctx, leagueID, inputs)
 	if err != nil {
 		return nil, err
 	}
 
-	res := make([]*model.Standing, 0, len(standings))
-	for _, standing := range standings {
-		res = append(res, model.FormatStandingResponse(standing))
+	// Team を取得して TiebreakPriority レスポンスを構築
+	teamIDs := make([]string, len(saved))
+	for i, p := range saved {
+		teamIDs[i] = p.TeamID
+	}
+	teams, err := r.TeamService.GetTeamsMapByIDs(ctx, teamIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.TiebreakPriority, len(saved))
+	for i, p := range saved {
+		var team *model.Team
+		if t, ok := teams[p.TeamID]; ok {
+			team = model.FormatTeamResponse(t)
+		}
+		res[i] = &model.TiebreakPriority{
+			Team:     team,
+			Priority: int32(p.Priority),
+		}
 	}
 	return res, nil
+}
+
+// CreatePromotionRule is the resolver for the createPromotionRule field.
+func (r *mutationResolver) CreatePromotionRule(ctx context.Context, input model.CreatePromotionRuleInput) (*model.PromotionRule, error) {
+	rule, err := r.CompetitionService.CreateRule(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return r.formatPromotionRule(ctx, rule)
+}
+
+// UpdatePromotionRule is the resolver for the updatePromotionRule field.
+func (r *mutationResolver) UpdatePromotionRule(ctx context.Context, id string, input model.UpdatePromotionRuleInput) (*model.PromotionRule, error) {
+	rule, err := r.CompetitionService.UpdateRule(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	return r.formatPromotionRule(ctx, rule)
+}
+
+// DeletePromotionRule is the resolver for the deletePromotionRule field.
+func (r *mutationResolver) DeletePromotionRule(ctx context.Context, id string) (*model.PromotionRule, error) {
+	rule, err := r.CompetitionService.DeleteRule(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return r.formatPromotionRule(ctx, rule)
 }
 
 // Users is the resolver for the users field.
@@ -469,9 +538,14 @@ func (r *queryResolver) Sports(ctx context.Context) ([]*model.Sport, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	res := make([]*model.Sport, 0, len(sports))
 	for _, sport := range sports {
-		res = append(res, model.FormatSportResponse(sport))
+		rules, err := r.SportService.GetRankingRules(ctx, sport.ID)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, model.FormatSportWithRankingRulesResponse(sport, rules))
 	}
 	return res, nil
 }
@@ -482,7 +556,11 @@ func (r *queryResolver) Sport(ctx context.Context, id string) (*model.Sport, err
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatSportResponse(sport), nil
+	rules, err := r.SportService.GetRankingRules(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportWithRankingRulesResponse(sport, rules), nil
 }
 
 // Teams is the resolver for the teams field.
@@ -691,6 +769,33 @@ func (r *queryResolver) League(ctx context.Context, id string) (*model.League, e
 		return nil, err
 	}
 	return model.FormatLeagueResponse(league, competition), nil
+}
+
+// LeagueStandings is the resolver for the leagueStandings field.
+func (r *queryResolver) LeagueStandings(ctx context.Context, leagueID string) ([]*model.Standing, error) {
+	return r.LeagueService.ComputeStandings(ctx, leagueID)
+}
+
+// PromotionRules is the resolver for the promotionRules field.
+func (r *queryResolver) PromotionRules(ctx context.Context, sourceCompetitionID string) ([]*model.PromotionRule, error) {
+	rules, err := r.CompetitionService.ListRulesBySource(ctx, sourceCompetitionID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*model.PromotionRule, len(rules))
+	for i, rule := range rules {
+		formatted, err := r.formatPromotionRuleFromQuery(ctx, rule)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = formatted
+	}
+	return res, nil
+}
+
+// PromotionStatus is the resolver for the promotionStatus field.
+func (r *queryResolver) PromotionStatus(ctx context.Context, targetCompetitionID string) (*model.PromotionStatus, error) {
+	return r.CompetitionService.GetPromotionStatus(ctx, targetCompetitionID)
 }
 
 // Mutation returns MutationResolver implementation.
