@@ -50,6 +50,20 @@ var (
 	ErrPromotionRuleLocked     = NewError("PROMOTION_RULE_LOCKED", "進出先にスコアが入力済みのため進出ルールを変更できません")
 	ErrPromotionRuleInvalid    = NewError("PROMOTION_RULE_INVALID", "進出ルールが不正です")
 	ErrScoreModificationLocked = NewError("SCORE_MODIFICATION_LOCKED", "進出先の試合が稼働中のためスコアを修正できません")
+
+	ErrTournamentNotFound     = NewError("TOURNAMENT_NOT_FOUND", "トーナメントが見つかりません")
+	ErrTournamentSlotNotFound = NewError("TOURNAMENT_SLOT_NOT_FOUND", "トーナメントスロットが見つかりません")
+	ErrSaveTournament         = NewError("TOURNAMENT_SAVE_FAILED", "トーナメントの保存に失敗しました")
+	ErrSaveTournamentSlot     = NewError("TOURNAMENT_SLOT_SAVE_FAILED", "トーナメントスロットの保存に失敗しました")
+	ErrOptimisticLockFailed   = NewError("OPTIMISTIC_LOCK_FAILED", "楽観的ロックに失敗しました（既に更新済み）")
+
+	// トーナメント自動進行・スコア修正関連
+	ErrTournamentDrawForbidden           = NewError("TOURNAMENT_DRAW_FORBIDDEN", "トーナメントの試合では引き分けは許可されていません")
+	ErrTournamentWinnerRequired          = NewError("TOURNAMENT_WINNER_REQUIRED", "トーナメントの試合を完了するにはwinner_team_idが必要です")
+	ErrTournamentScoreModificationLocked = NewError("TOURNAMENT_SCORE_MODIFICATION_LOCKED", "後続の試合が進行中のためスコアを修正できません")
+	ErrInvalidSlotCount                  = NewError("INVALID_SLOT_COUNT", "試合に紐づくスロット数が不正です（2である必要があります）")
+	ErrMultipleFinalMatches              = NewError("MULTIPLE_FINAL_MATCHES", "ブラケット内に最終試合が正確に1つ存在しません")
+	ErrUnreachableSlotSource             = NewError("UNREACHABLE_SLOT_SOURCE", "ブラケット生成中に不正な状態が検出されました")
 	/*
 		Authentication
 	*/

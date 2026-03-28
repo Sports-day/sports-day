@@ -329,7 +329,7 @@ func (s *League) SetTiebreakPriorities(ctx context.Context, leagueID string, pri
 				return err
 			}
 			if allComplete {
-				if err := s.competitionService.TryPromoteFromLeague(ctx, tx, leagueID); err != nil {
+				if err := s.competitionService.TryPromote(ctx, tx, leagueID); err != nil {
 					return err
 				}
 			}

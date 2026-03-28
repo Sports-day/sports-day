@@ -137,6 +137,44 @@ func FormatLeagueResponse(league *db_model.League, competition *db_model.Competi
 	}
 }
 
+func FormatTournamentResponse(tournament *db_model.Tournament, state BracketState, progress float64) *Tournament {
+	var pm *PlacementMethod
+	if tournament.PlacementMethod.Valid {
+		p := PlacementMethod(tournament.PlacementMethod.String)
+		pm = &p
+	}
+	return &Tournament{
+		ID:              tournament.ID,
+		CompetitionID:   tournament.CompetitionID,
+		Name:            tournament.Name,
+		BracketType:     BracketType(tournament.BracketType),
+		PlacementMethod: pm,
+		DisplayOrder:    int32(tournament.DisplayOrder),
+		State:           state,
+		Progress:        progress,
+	}
+}
+
+func FormatTournamentSlotResponse(slot *db_model.TournamentSlot) *TournamentSlot {
+	var seedNumber *int32
+	if slot.SeedNumber.Valid {
+		s := int32(slot.SeedNumber.Int64)
+		seedNumber = &s
+	}
+	var sourceMatchID string
+	if slot.SourceMatchID.Valid {
+		sourceMatchID = slot.SourceMatchID.String
+	}
+	return &TournamentSlot{
+		ID:            slot.ID,
+		TournamentID:  slot.TournamentID,
+		MatchEntryID:  slot.MatchEntryID,
+		SourceType:    SlotSourceType(slot.SourceType),
+		SourceMatchID: sourceMatchID,
+		SeedNumber:    seedNumber,
+	}
+}
+
 func FormatPromotionRuleResponse(rule *db_model.PromotionRule, sourceComp *db_model.Competition, targetComp *db_model.Competition) *PromotionRule {
 	var slot *int32
 	if rule.Slot.Valid {

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"math/rand"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -20,6 +21,7 @@ type Competition struct {
 	leagueRepository      repository.League
 	matchRepository       repository.Match
 	sportsRepository      repository.Sports
+	tournamentService     *Tournament
 }
 
 func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, teamRepository repository.Team, leagueRepository repository.League, matchRepository repository.Match, sportsRepository repository.Sports) Competition {
@@ -31,6 +33,11 @@ func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, t
 		matchRepository:       matchRepository,
 		sportsRepository:      sportsRepository,
 	}
+}
+
+// SetTournamentService は循環依存を避けるためにセッター注入する。
+func (s *Competition) SetTournamentService(ts *Tournament) {
+	s.tournamentService = ts
 }
 
 func (s *Competition) Create(ctx context.Context, input *model.CreateCompetitionInput) (*db_model.Competition, error) {
@@ -184,6 +191,19 @@ func (s *Competition) CreateRule(ctx context.Context, input *model.CreatePromoti
 			return err
 		}
 
+		// ソースがトーナメントの場合: rank_spec がブラケット構造で一意に確定するか検証
+		if s.tournamentService != nil {
+			source, err := s.competitionRepository.Get(ctx, tx, input.SourceCompetitionID)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			if source.Type == "TOURNAMENT" {
+				if err := s.tournamentService.ValidateRankSpecForTournament(ctx, tx, input.SourceCompetitionID, input.RankSpec); err != nil {
+					return err
+				}
+			}
+		}
+
 		var slotVal sql.NullInt64
 		if input.Slot != nil {
 			slotVal = sql.NullInt64{Valid: true, Int64: int64(*input.Slot)}
@@ -239,6 +259,19 @@ func (s *Competition) UpdateRule(ctx context.Context, id string, input *model.Up
 		// slot 指定時は単体指定のみ許可
 		if rule.Slot.Valid && !IsSingleRank(rule.RankSpec) {
 			return errors.ErrPromotionRuleInvalid
+		}
+
+		// ソースがトーナメントの場合: rank_spec がブラケット構造で一意に確定するか検証
+		if s.tournamentService != nil {
+			source, err := s.competitionRepository.Get(ctx, tx, rule.SourceCompetitionID)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			if source.Type == "TOURNAMENT" {
+				if err := s.tournamentService.ValidateRankSpecForTournament(ctx, tx, rule.SourceCompetitionID, rule.RankSpec); err != nil {
+					return err
+				}
+			}
 		}
 
 		rule, err = s.competitionRepository.SavePromotionRule(ctx, tx, rule)
@@ -316,9 +349,16 @@ func (s *Competition) GetPromotionStatus(ctx context.Context, targetCompetitionI
 	}, nil
 }
 
-// TryPromoteFromLeague は子リーグの全試合完了時に進出処理を試行する。
-// 1トランザクション内で呼ばれることを前提とする。
-func (s *Competition) TryPromoteFromLeague(ctx context.Context, tx *gorm.DB, sourceCompetitionID string) error {
+// promotionRankEntry は進出処理用の順位エントリー（リーグ/トーナメント共通）
+type promotionRankEntry struct {
+	rank   int
+	teamID string
+	isTied bool
+}
+
+// TryPromote はソース competition の全試合完了時に進出処理を試行する。
+// リーグ・トーナメント両方に対応。1トランザクション内で呼ばれることを前提とする。
+func (s *Competition) TryPromote(ctx context.Context, tx *gorm.DB, sourceCompetitionID string) error {
 	// 1. 進出ルールを取得
 	rules, err := s.competitionRepository.ListBySourceCompetitionID(ctx, tx, sourceCompetitionID)
 	if err != nil {
@@ -328,15 +368,37 @@ func (s *Competition) TryPromoteFromLeague(ctx context.Context, tx *gorm.DB, sou
 		return nil
 	}
 
-	// 2. リーグの順位を計算
-	standings, err := s.computeStandingsForPromotion(ctx, tx, sourceCompetitionID)
+	// 2. ソースの種別に応じて順位を取得
+	source, err := s.competitionRepository.Get(ctx, tx, sourceCompetitionID)
 	if err != nil {
 		return errors.Wrap(err)
 	}
 
+	var rankings []promotionRankEntry
+
+	switch source.Type {
+	case "LEAGUE":
+		standings, err := s.computeStandingsForPromotion(ctx, tx, sourceCompetitionID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		rankings = standingsToRankEntries(standings)
+	case "TOURNAMENT":
+		if s.tournamentService == nil {
+			return nil
+		}
+		tournamentRankings, err := s.tournamentService.ComputeTournamentRankingTx(ctx, tx, sourceCompetitionID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		rankings = tournamentRankingsToRankEntries(tournamentRankings)
+	default:
+		return nil
+	}
+
 	// 3. 各ルールについて進出処理
 	for _, rule := range rules {
-		if err := s.processOneRule(ctx, tx, rule, standings); err != nil {
+		if err := s.processOneRule(ctx, tx, rule, rankings); err != nil {
 			return err
 		}
 	}
@@ -344,29 +406,59 @@ func (s *Competition) TryPromoteFromLeague(ctx context.Context, tx *gorm.DB, sou
 	return nil
 }
 
+// standingsToRankEntries はリーグ順位を共通の進出用エントリーに変換する。
+func standingsToRankEntries(standings []*model.Standing) []promotionRankEntry {
+	entries := make([]promotionRankEntry, len(standings))
+	for i, st := range standings {
+		entries[i] = promotionRankEntry{
+			rank:   int(st.Rank),
+			teamID: st.TeamID,
+			isTied: false, // リーグは同率が processOneRule 側で判定される
+		}
+	}
+	return entries
+}
+
+// tournamentRankingsToRankEntries はトーナメント順位を共通の進出用エントリーに変換する。
+func tournamentRankingsToRankEntries(rankings []*model.TournamentRanking) []promotionRankEntry {
+	entries := make([]promotionRankEntry, len(rankings))
+	for i, r := range rankings {
+		entries[i] = promotionRankEntry{
+			rank:   int(r.Rank),
+			teamID: r.TeamID,
+			isTied: r.IsTied,
+		}
+	}
+	return entries
+}
+
 // processOneRule は1つの進出ルールを処理する。
-func (s *Competition) processOneRule(ctx context.Context, tx *gorm.DB, rule *db_model.PromotionRule, standings []*model.Standing) error {
+func (s *Competition) processOneRule(ctx context.Context, tx *gorm.DB, rule *db_model.PromotionRule, rankings []promotionRankEntry) error {
 	targetRanks, err := ParseRankSpec(rule.RankSpec)
 	if err != nil {
 		return errors.ErrPromotionRuleInvalid
 	}
 
 	// 進出対象の順位が確定しているかチェック
-	// 確定 = 対象順位に同順位（同じ Rank で複数チーム）が存在しない
-	rankToTeams := make(map[int32][]string)
-	for _, st := range standings {
-		rankToTeams[st.Rank] = append(rankToTeams[st.Rank], st.TeamID)
+	// 確定 = 対象順位に同順位（同じ Rank で複数チーム）が存在しない、かつ isTied=false
+	rankToTeams := make(map[int][]string)
+	rankIsTied := make(map[int]bool)
+	for _, r := range rankings {
+		rankToTeams[r.rank] = append(rankToTeams[r.rank], r.teamID)
+		if r.isTied {
+			rankIsTied[r.rank] = true
+		}
 	}
 
 	var teamsToPromote []string
 	for _, rank := range targetRanks {
-		teams := rankToTeams[int32(rank)]
+		teams := rankToTeams[rank]
 		if len(teams) == 0 {
 			// 対象順位のチームが存在しない（チーム数 < 順位数）
 			continue
 		}
-		if len(teams) > 1 {
-			// 同順位が残っている → 進出できない
+		if len(teams) > 1 || rankIsTied[rank] {
+			// 同順位が残っている or トーナメントで未確定 → 進出できない
 			return nil
 		}
 		teamsToPromote = append(teamsToPromote, teams[0])
@@ -403,7 +495,28 @@ func (s *Competition) processOneRule(ctx context.Context, tx *gorm.DB, rule *db_
 		return errors.Wrap(err)
 	}
 
-	// ステップ2: 期待チーム数到達チェック → 試合生成
+	// MANUAL配置: slot が指定されている場合、即座にSEEDスロットに配置
+	if rule.Slot.Valid && s.tournamentService != nil && len(newTeams) == 1 {
+		targetComp, err := s.competitionRepository.Get(ctx, tx, rule.TargetCompetitionID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		if targetComp.Type == "TOURNAMENT" {
+			mainTournament, err := s.tournamentService.GetMainByCompetitionIDTx(ctx, tx, rule.TargetCompetitionID)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			slot, err := s.tournamentService.GetSeedSlotTx(ctx, tx, mainTournament.ID, rule.Slot.Int64)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			if err := s.matchRepository.UpdateMatchEntryTeamID(ctx, tx, slot.MatchEntryID, newTeams[0]); err != nil {
+				return errors.Wrap(err)
+			}
+		}
+	}
+
+	// ステップ2: 期待チーム数到達チェック → 試合生成 or プリセットSEED配置
 	if err := s.tryGenerateMatches(ctx, tx, rule.TargetCompetitionID); err != nil {
 		return err
 	}
@@ -411,17 +524,13 @@ func (s *Competition) processOneRule(ctx context.Context, tx *gorm.DB, rule *db_
 	return nil
 }
 
-// tryGenerateMatches は期待チーム数に到達した場合にラウンドロビン試合を自動生成する。
-// リーグ→リーグの場合のみ試合生成を行う。
+// tryGenerateMatches は期待チーム数に到達した場合に試合生成またはSEED配置を行う。
+// 進出先がリーグの場合: ラウンドロビン試合生成
+// 進出先がトーナメントの場合: SEEDスロットへのチーム配置
 func (s *Competition) tryGenerateMatches(ctx context.Context, tx *gorm.DB, targetCompetitionID string) error {
 	targetComp, err := s.competitionRepository.Get(ctx, tx, targetCompetitionID)
 	if err != nil {
 		return errors.Wrap(err)
-	}
-
-	// リーグ→リーグの場合のみ試合自動生成
-	if targetComp.Type != "LEAGUE" {
-		return nil
 	}
 
 	expected, err := s.calcExpectedTeamCount(ctx, tx, targetCompetitionID)
@@ -438,6 +547,18 @@ func (s *Competition) tryGenerateMatches(ctx context.Context, tx *gorm.DB, targe
 		return nil
 	}
 
+	switch targetComp.Type {
+	case "LEAGUE":
+		return s.tryGenerateLeagueMatches(ctx, tx, targetCompetitionID, entries)
+	case "TOURNAMENT":
+		return s.tryPlaceSeedTeams(ctx, tx, targetCompetitionID, entries)
+	}
+
+	return nil
+}
+
+// tryGenerateLeagueMatches はリーグのラウンドロビン試合を自動生成する。
+func (s *Competition) tryGenerateLeagueMatches(ctx context.Context, tx *gorm.DB, targetCompetitionID string, entries []*db_model.CompetitionEntry) error {
 	// 既に試合があればスキップ
 	existingMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{targetCompetitionID})
 	if err != nil {
@@ -447,7 +568,6 @@ func (s *Competition) tryGenerateMatches(ctx context.Context, tx *gorm.DB, targe
 		return nil
 	}
 
-	// ラウンドロビン試合生成
 	teamIDs := make([]string, len(entries))
 	for i, e := range entries {
 		teamIDs[i] = e.TeamID
@@ -470,6 +590,188 @@ func (s *Competition) tryGenerateMatches(ctx context.Context, tx *gorm.DB, targe
 	}
 
 	return nil
+}
+
+// tryPlaceSeedTeams はトーナメントのSEEDスロットにチームを配置する。
+// placement_method に応じてスロット割当アルゴリズムを選択する。
+func (s *Competition) tryPlaceSeedTeams(ctx context.Context, tx *gorm.DB, targetCompetitionID string, entries []*db_model.CompetitionEntry) error {
+	if s.tournamentService == nil {
+		return nil
+	}
+
+	// MAINブラケットを取得
+	mainTournament, err := s.tournamentService.GetMainByCompetitionIDTx(ctx, tx, targetCompetitionID)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	// SEEDスロットを取得（seed_number 昇順）
+	seedSlots, err := s.tournamentService.ListSeedSlotsByTournamentIDTx(ctx, tx, mainTournament.ID)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	if len(seedSlots) == 0 {
+		return nil
+	}
+
+	// placement_method に応じたスロット割当を計算
+	placementMethod := "SEED_OPTIMIZED" // デフォルト
+	if mainTournament.PlacementMethod.Valid {
+		placementMethod = mainTournament.PlacementMethod.String
+	}
+
+	// MANUAL配置は processOneRule 側で個別に処理するためここではスキップ
+	if placementMethod == "MANUAL" {
+		return nil
+	}
+
+	// シード順のチームリストを構築: 進出ルールの rank_spec 順にチームを並べる
+	teamIDs, err := s.buildSeedOrderedTeams(ctx, tx, targetCompetitionID, entries)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	// seed_number → slot のマップ
+	seedSlotMap := make(map[int64]*db_model.TournamentSlot)
+	for _, slot := range seedSlots {
+		if slot.SeedNumber.Valid {
+			seedSlotMap[slot.SeedNumber.Int64] = slot
+		}
+	}
+
+	// プリセット配置: チームIDをseed_numberに対応付ける
+	seedAssignment := computeSeedAssignment(placementMethod, teamIDs)
+
+	// スロットに team_id を書き込み
+	for seedNum, teamID := range seedAssignment {
+		slot, ok := seedSlotMap[int64(seedNum)]
+		if !ok {
+			continue
+		}
+		if err := s.matchRepository.UpdateMatchEntryTeamID(ctx, tx, slot.MatchEntryID, teamID); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+
+	return nil
+}
+
+// buildSeedOrderedTeams は進出ルールの順序に従ってシード順のチームリストを構築する。
+// 各ルールの processOneRule で追加される順序（rank 昇順）がシード順になる。
+func (s *Competition) buildSeedOrderedTeams(ctx context.Context, tx *gorm.DB, targetCompetitionID string, entries []*db_model.CompetitionEntry) ([]string, error) {
+	rules, err := s.competitionRepository.ListByTargetCompetitionID(ctx, tx, targetCompetitionID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	entryTeams := make(map[string]bool)
+	for _, e := range entries {
+		entryTeams[e.TeamID] = true
+	}
+
+	var ordered []string
+	seen := make(map[string]bool)
+
+	for _, rule := range rules {
+		// ソースの順位を取得
+		source, err := s.competitionRepository.Get(ctx, tx, rule.SourceCompetitionID)
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+
+		var rankings []promotionRankEntry
+		switch source.Type {
+		case "LEAGUE":
+			standings, err := s.computeStandingsForPromotion(ctx, tx, rule.SourceCompetitionID)
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
+			rankings = standingsToRankEntries(standings)
+		case "TOURNAMENT":
+			if s.tournamentService == nil {
+				continue
+			}
+			tournamentRankings, err := s.tournamentService.ComputeTournamentRankingTx(ctx, tx, rule.SourceCompetitionID)
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
+			rankings = tournamentRankingsToRankEntries(tournamentRankings)
+		}
+
+		targetRanks, err := ParseRankSpec(rule.RankSpec)
+		if err != nil {
+			continue
+		}
+
+		rankToTeam := make(map[int]string)
+		for _, r := range rankings {
+			rankToTeam[r.rank] = r.teamID
+		}
+
+		for _, rank := range targetRanks {
+			tid, ok := rankToTeam[rank]
+			if !ok || !entryTeams[tid] || seen[tid] {
+				continue
+			}
+			ordered = append(ordered, tid)
+			seen[tid] = true
+		}
+	}
+
+	// 手動エントリー（進出ルール経由でないチーム）を末尾に追加
+	for _, e := range entries {
+		if !seen[e.TeamID] {
+			ordered = append(ordered, e.TeamID)
+			seen[e.TeamID] = true
+		}
+	}
+
+	return ordered, nil
+}
+
+// computeSeedAssignment は placement_method に応じて seed_number → teamID のマッピングを返す。
+// teamIDs はシード順（1位→末尾）で並んでいる前提。
+func computeSeedAssignment(placementMethod string, teamIDs []string) map[int]string {
+	result := make(map[int]string)
+	n := len(teamIDs)
+
+	switch placementMethod {
+	case "SEED_OPTIMIZED":
+		// 順位順にseed 1,2,3,...を割り当て
+		// ブラケット構造がTASK-009で「上位シード同士がブラケット終盤まで当たらない」よう
+		// 生成済みのため、順位→seed の素直な対応で最適配置になる。
+		// 結果として BALANCED と同一ロジックになるが、意味が異なる:
+		//   SEED_OPTIMIZED: ブラケット構造側で最適化済み → seed順=順位順
+		//   BALANCED: 上位と下位が序盤で対戦する対称配置 → seed順=順位順
+		for i, tid := range teamIDs {
+			result[i+1] = tid
+		}
+	case "BALANCED":
+		// 上位と下位が序盤で対戦する対称配置: seed 1→slot 1, seed 2→slot 2, ...
+		// SEED_OPTIMIZED と同一ロジック（理由は上記コメント参照）
+		for i, tid := range teamIDs {
+			result[i+1] = tid
+		}
+	case "RANDOM":
+		// Fisher-Yates シャッフル
+		shuffled := make([]string, n)
+		copy(shuffled, teamIDs)
+		for i := n - 1; i > 0; i-- {
+			j := rand.Intn(i + 1)
+			shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+		}
+		for i, tid := range shuffled {
+			result[i+1] = tid
+		}
+	default:
+		// フォールバック: 順位順
+		for i, tid := range teamIDs {
+			result[i+1] = tid
+		}
+	}
+
+	return result
 }
 
 // calcExpectedTeamCount は進出先の期待チーム数を算出する。
@@ -582,49 +884,119 @@ func (s *Competition) ReconstructPromotions(ctx context.Context, tx *gorm.DB, so
 	}
 
 	for targetID := range targetIDs {
-		// 進出先の試合を削除（STANDBY / CANCELED のもののみ）
-		matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{targetID})
+		targetComp, err := s.competitionRepository.Get(ctx, tx, targetID)
 		if err != nil {
 			return errors.Wrap(err)
-		}
-		for _, m := range matches {
-			if m.Status == "FINISHED" || m.Status == "ONGOING" {
-				return errors.ErrScoreModificationLocked
-			}
-			if _, err := s.matchRepository.Delete(ctx, tx, m.ID); err != nil {
-				return errors.Wrap(err)
-			}
 		}
 
-		// このソースから進出したエントリーを削除
-		srcEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{sourceCompetitionID})
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		srcTeams := make(map[string]bool)
-		for _, e := range srcEntries {
-			srcTeams[e.TeamID] = true
-		}
-
-		targetEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{targetID})
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		var teamsToRemove []string
-		for _, e := range targetEntries {
-			if srcTeams[e.TeamID] {
-				teamsToRemove = append(teamsToRemove, e.TeamID)
+		if targetComp.Type == "TOURNAMENT" && s.tournamentService != nil {
+			// トーナメント進出先: SEEDスロットの team_id クリア + 後続巻き戻し
+			if err := s.reconstructTournamentTarget(ctx, tx, targetID, sourceCompetitionID); err != nil {
+				return err
 			}
-		}
-		if len(teamsToRemove) > 0 {
-			if _, err := s.competitionRepository.DeleteCompetitionEntries(ctx, tx, targetID, teamsToRemove); err != nil {
-				return errors.Wrap(err)
+		} else {
+			// リーグ進出先: 試合削除 + エントリー削除
+			if err := s.reconstructLeagueTarget(ctx, tx, targetID, sourceCompetitionID); err != nil {
+				return err
 			}
 		}
 	}
 
 	// 再度進出処理を試行
-	return s.TryPromoteFromLeague(ctx, tx, sourceCompetitionID)
+	return s.TryPromote(ctx, tx, sourceCompetitionID)
+}
+
+// reconstructLeagueTarget はリーグ進出先の再構成を行う。
+func (s *Competition) reconstructLeagueTarget(ctx context.Context, tx *gorm.DB, targetID string, sourceCompetitionID string) error {
+	// 進出先の試合を削除（STANDBY / CANCELED のもののみ）
+	matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{targetID})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	for _, m := range matches {
+		if m.Status == "FINISHED" || m.Status == "ONGOING" {
+			return errors.ErrScoreModificationLocked
+		}
+		if _, err := s.matchRepository.Delete(ctx, tx, m.ID); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+
+	return s.removeAutoPromotedEntries(ctx, tx, targetID, sourceCompetitionID)
+}
+
+// reconstructTournamentTarget はトーナメント進出先の再構成を行う。
+// ブラケット構造は変更せず、SEEDスロットの team_id クリア + 後続巻き戻し。
+func (s *Competition) reconstructTournamentTarget(ctx context.Context, tx *gorm.DB, targetID string, sourceCompetitionID string) error {
+	// 進出先の全試合がSTANDBY/CANCELEDであることを確認
+	matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{targetID})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	for _, m := range matches {
+		if m.Status == "FINISHED" || m.Status == "ONGOING" {
+			return errors.ErrScoreModificationLocked
+		}
+	}
+
+	// MAINブラケットのSEEDスロットの team_id をクリアし、後続スロットを巻き戻す
+	mainTournament, err := s.tournamentService.GetMainByCompetitionIDTx(ctx, tx, targetID)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	seedSlots, err := s.tournamentService.ListSeedSlotsByTournamentIDTx(ctx, tx, mainTournament.ID)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	for _, slot := range seedSlots {
+		// SEEDスロットの match_entry.team_id をクリア
+		entry, err := s.matchRepository.GetMatchEntryByID(ctx, tx, slot.MatchEntryID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		if entry.TeamID.Valid {
+			if err := s.matchRepository.ClearMatchEntryTeamID(ctx, tx, slot.MatchEntryID); err != nil {
+				return errors.Wrap(err)
+			}
+			// そのエントリーが属するmatchを起点にrollbackFromMatchを呼ぶ
+			if err := s.tournamentService.RollbackFromMatch(ctx, tx, entry.MatchID); err != nil {
+				return errors.Wrap(err)
+			}
+		}
+	}
+
+	return s.removeAutoPromotedEntries(ctx, tx, targetID, sourceCompetitionID)
+}
+
+// removeAutoPromotedEntries はソースから自動進出したエントリーを削除する。
+func (s *Competition) removeAutoPromotedEntries(ctx context.Context, tx *gorm.DB, targetID string, sourceCompetitionID string) error {
+	srcEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{sourceCompetitionID})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	srcTeams := make(map[string]bool)
+	for _, e := range srcEntries {
+		srcTeams[e.TeamID] = true
+	}
+
+	targetEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{targetID})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	var teamsToRemove []string
+	for _, e := range targetEntries {
+		if srcTeams[e.TeamID] {
+			teamsToRemove = append(teamsToRemove, e.TeamID)
+		}
+	}
+	if len(teamsToRemove) > 0 {
+		if _, err := s.competitionRepository.DeleteCompetitionEntries(ctx, tx, targetID, teamsToRemove); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+	return nil
 }
 
 // computeStandingsForPromotion は進出処理のために順位を計算する。
