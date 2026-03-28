@@ -42,7 +42,8 @@ type Competition {
   type: CompetitionType!
   teams: [Team!]!
   matches: [Match!]!
-  league: League!
+  league: League
+  tournaments: [Tournament!]!
 }
 
 type Location {
@@ -137,6 +138,59 @@ type Sport {
 type Scene {
   id: ID!
   name: String!
+}
+
+enum BracketType {
+  MAIN
+  SUB
+}
+
+enum PlacementMethod {
+  SEED_OPTIMIZED
+  BALANCED
+  RANDOM
+  MANUAL
+}
+
+enum SlotSourceType {
+  SEED
+  MATCH_WINNER
+  MATCH_LOSER
+}
+
+enum BracketState {
+  BUILDING
+  READY
+  IN_PROGRESS
+  COMPLETED
+}
+
+type Tournament {
+  id: ID!
+  competition: Competition!
+  name: String!
+  bracketType: BracketType!
+  placementMethod: PlacementMethod
+  displayOrder: Int!
+  state: BracketState!
+  progress: Float!
+  matches: [Match!]!
+  slots: [TournamentSlot!]!
+}
+
+type TournamentSlot {
+  id: ID!
+  tournament: Tournament!
+  matchEntry: MatchEntry!
+  sourceType: SlotSourceType!
+  sourceMatch: Match
+  seedNumber: Int
+}
+
+type TournamentRanking {
+  rank: Int!
+  team: Team!
+  isTied: Boolean!
 }
 
 type PromotionRule {

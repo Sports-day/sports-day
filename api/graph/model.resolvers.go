@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -44,17 +45,38 @@ func (r *competitionResolver) Matches(ctx context.Context, obj *model.Competitio
 
 // League is the resolver for the league field.
 func (r *competitionResolver) League(ctx context.Context, obj *model.Competition) (*model.League, error) {
-	league, err := loader.LoadLeagues(ctx, []string{obj.ID})
+	leagues, err := loader.LoadLeagues(ctx, []string{obj.ID})
+	if err != nil {
+		return nil, err
+	}
+	if len(leagues) == 0 || leagues[0] == nil {
+		return nil, nil // トーナメント型 Competition
+	}
+
+	competitions, err := loader.LoadCompetitions(ctx, []string{obj.ID})
 	if err != nil {
 		return nil, err
 	}
 
-	competition, err := loader.LoadCompetitions(ctx, []string{obj.ID})
+	return model.FormatLeagueResponse(leagues[0], competitions[0]), nil
+}
+
+// Tournaments is the resolver for the tournaments field.
+func (r *competitionResolver) Tournaments(ctx context.Context, obj *model.Competition) ([]*model.Tournament, error) {
+	tournaments, err := loader.LoadTournamentsByCompetition(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
-
-	return model.FormatLeagueResponse(league[0], competition[0]), nil
+	result := make([]*model.Tournament, len(tournaments))
+	for i, t := range tournaments {
+		state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
+		if err != nil {
+			state = model.BracketStateBuilding
+			progress = 0
+		}
+		result[i] = model.FormatTournamentResponse(t, state, progress)
+	}
+	return result, nil
 }
 
 // Teams is the resolver for the teams field.
@@ -427,6 +449,94 @@ func (r *teamResolver) Leagues(ctx context.Context, obj *model.Team) ([]*model.L
 	return res, nil
 }
 
+// Competition is the resolver for the competition field.
+func (r *tournamentResolver) Competition(ctx context.Context, obj *model.Tournament) (*model.Competition, error) {
+	competitions, err := loader.LoadCompetitions(ctx, []string{obj.CompetitionID})
+	if err != nil {
+		return nil, err
+	}
+	if len(competitions) == 0 || competitions[0] == nil {
+		return nil, nil
+	}
+	return model.FormatCompetitionResponse(competitions[0]), nil
+}
+
+// Matches is the resolver for the matches field.
+func (r *tournamentResolver) Matches(ctx context.Context, obj *model.Tournament) ([]*model.Match, error) {
+	matches, err := loader.LoadMatchesByTournament(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(matches, func(m *db_model.Match) *model.Match {
+		return model.FormatMatchResponse(m)
+	}), nil
+}
+
+// Slots is the resolver for the slots field.
+func (r *tournamentResolver) Slots(ctx context.Context, obj *model.Tournament) ([]*model.TournamentSlot, error) {
+	slots, err := loader.LoadSlotsByTournament(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(slots, func(sl *db_model.TournamentSlot) *model.TournamentSlot {
+		return model.FormatTournamentSlotResponse(sl)
+	}), nil
+}
+
+// Team is the resolver for the team field.
+func (r *tournamentRankingResolver) Team(ctx context.Context, obj *model.TournamentRanking) (*model.Team, error) {
+	teams, err := loader.LoadTeams(ctx, []string{obj.TeamID})
+	if err != nil {
+		return nil, err
+	}
+	if len(teams) == 0 || teams[0] == nil {
+		return nil, fmt.Errorf("team not found: %s", obj.TeamID)
+	}
+	return model.FormatTeamResponse(teams[0]), nil
+}
+
+// Tournament is the resolver for the tournament field.
+func (r *tournamentSlotResolver) Tournament(ctx context.Context, obj *model.TournamentSlot) (*model.Tournament, error) {
+	tournaments, err := loader.LoadTournaments(ctx, []string{obj.TournamentID})
+	if err != nil {
+		return nil, err
+	}
+	if len(tournaments) == 0 || tournaments[0] == nil {
+		return nil, nil
+	}
+	t := tournaments[0]
+	state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
+	if err != nil {
+		state = model.BracketStateBuilding
+		progress = 0
+	}
+	return model.FormatTournamentResponse(t, state, progress), nil
+}
+
+// MatchEntry is the resolver for the matchEntry field.
+func (r *tournamentSlotResolver) MatchEntry(ctx context.Context, obj *model.TournamentSlot) (*model.MatchEntry, error) {
+	entry, err := r.TournamentService.GetMatchEntry(ctx, obj.MatchEntryID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchEntryResponse(entry), nil
+}
+
+// SourceMatch is the resolver for the sourceMatch field.
+func (r *tournamentSlotResolver) SourceMatch(ctx context.Context, obj *model.TournamentSlot) (*model.Match, error) {
+	if obj.SourceMatchID == "" {
+		return nil, nil
+	}
+	matches, err := loader.LoadMatches(ctx, []string{obj.SourceMatchID})
+	if err != nil {
+		return nil, err
+	}
+	if len(matches) == 0 || matches[0] == nil {
+		return nil, nil
+	}
+	return model.FormatMatchResponse(matches[0]), nil
+}
+
 // Groups is the resolver for the groups field.
 func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Group, error) {
 	groupUsers, err := loader.LoadUserGroups(ctx, obj.ID)
@@ -499,6 +609,17 @@ func (r *Resolver) Standing() StandingResolver { return &standingResolver{r} }
 // Team returns TeamResolver implementation.
 func (r *Resolver) Team() TeamResolver { return &teamResolver{r} }
 
+// Tournament returns TournamentResolver implementation.
+func (r *Resolver) Tournament() TournamentResolver { return &tournamentResolver{r} }
+
+// TournamentRanking returns TournamentRankingResolver implementation.
+func (r *Resolver) TournamentRanking() TournamentRankingResolver {
+	return &tournamentRankingResolver{r}
+}
+
+// TournamentSlot returns TournamentSlotResolver implementation.
+func (r *Resolver) TournamentSlot() TournamentSlotResolver { return &tournamentSlotResolver{r} }
+
 // User returns UserResolver implementation.
 func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
@@ -510,4 +631,7 @@ type locationResolver struct{ *Resolver }
 type matchResolver struct{ *Resolver }
 type standingResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
+type tournamentResolver struct{ *Resolver }
+type tournamentRankingResolver struct{ *Resolver }
+type tournamentSlotResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

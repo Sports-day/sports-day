@@ -22,6 +22,7 @@ type Match struct {
 	competitionRepository repository.Competition
 	judgmentRepository    repository.Judgment
 	competitionService    *Competition
+	tournamentService     *Tournament
 }
 
 func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repository.Team, locationRepository repository.Location, competitionRepository repository.Competition, judgmentRepository repository.Judgment) Match {
@@ -38,6 +39,11 @@ func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repo
 // SetCompetitionService は循環依存を避けるためにセッター注入する。
 func (s *Match) SetCompetitionService(cs *Competition) {
 	s.competitionService = cs
+}
+
+// SetTournamentService は循環依存を避けるためにセッター注入する。
+func (s *Match) SetTournamentService(ts *Tournament) {
+	s.tournamentService = ts
 }
 
 func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_model.Match, error) {
@@ -172,9 +178,37 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 			return err
 		}
 
-		// スコア修正制限チェック: 進出先の試合が稼働中なら修正不可
+		// competition.type でトーナメント判定
+		isTournament := false
+		if s.tournamentService != nil {
+			t, err := s.tournamentService.IsTournamentMatch(ctx, tx, m.CompetitionID)
+			if err != nil {
+				return err
+			}
+			isTournament = t
+		}
+
+		// スコア修正制限チェック: 進出先の試合が稼働中なら修正不可（リーグ・トーナメント共通）
 		if s.competitionService != nil && input.Results != nil {
 			if err := s.competitionService.CheckScoreModificationAllowed(ctx, tx, m.CompetitionID); err != nil {
+				return err
+			}
+		}
+
+		// トーナメント固有: グラフ探索によるスコア修正制限
+		if isTournament && s.tournamentService != nil && input.Results != nil {
+			if err := s.tournamentService.CanModifyScore(ctx, tx, id); err != nil {
+				return err
+			}
+			// 修正可能なら巻き戻し
+			if err := s.tournamentService.RollbackFromMatch(ctx, tx, id); err != nil {
+				return err
+			}
+		}
+
+		// トーナメント固有: 引き分け禁止バリデーション（DB保存前に input の値で判定）
+		if isTournament && s.tournamentService != nil {
+			if err := s.tournamentService.ValidateNoDrawForTournament(ctx, tx, id, input.Status, input.WinnerTeamID, input.Results); err != nil {
 				return err
 			}
 		}
@@ -201,15 +235,30 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 
 		match = updated
 
-		// 副作用: 全試合完了なら進出処理をトリガー
-		if s.competitionService != nil && updated.Status == "FINISHED" {
-			allComplete, err := s.competitionService.IsAllMatchesComplete(ctx, tx, updated.CompetitionID)
-			if err != nil {
-				return err
-			}
-			if allComplete {
-				if err := s.competitionService.TryPromoteFromLeague(ctx, tx, updated.CompetitionID); err != nil {
+		// 副作用: FINISHED 時の処理
+		if updated.Status == "FINISHED" {
+			if isTournament && s.tournamentService != nil && updated.WinnerTeamID.Valid {
+				// トーナメント試合: 自動進行
+				if err := s.tournamentService.ProgressMatch(ctx, tx, id, updated.WinnerTeamID.String); err != nil {
 					return err
+				}
+
+				// 進出トリガー: 全試合完了 or 部分完了（rank_spec確定分）
+				if s.competitionService != nil {
+					if err := s.competitionService.TryPromote(ctx, tx, updated.CompetitionID); err != nil {
+						return err
+					}
+				}
+			} else if !isTournament && s.competitionService != nil {
+				// リーグ試合: 既存の進出処理
+				allComplete, err := s.competitionService.IsAllMatchesComplete(ctx, tx, updated.CompetitionID)
+				if err != nil {
+					return err
+				}
+				if allComplete {
+					if err := s.competitionService.TryPromote(ctx, tx, updated.CompetitionID); err != nil {
+						return err
+					}
 				}
 			}
 		}

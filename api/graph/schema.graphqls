@@ -165,6 +165,66 @@ input TiebreakPriorityInput {
   priority: Int!
 }
 
+"""ブラケット自動生成"""
+input GenerateBracketInput {
+  competitionId: ID!
+  teamCount: Int!
+  hasThirdPlaceMatch: Boolean
+  hasFifthToEighthPlayoff: Boolean
+  placementMethod: PlacementMethod
+}
+
+"""SUBブラケット手動追加"""
+input CreateTournamentInput {
+  competitionId: ID!
+  name: String!
+  bracketType: BracketType!
+  placementMethod: PlacementMethod
+  displayOrder: Int
+}
+
+"""ブラケット内試合追加（6レコードセット作成: Match + 2 MatchEntry + 2 TournamentSlot + 1 Judgment）"""
+input CreateTournamentMatchInput {
+  tournamentId: ID!
+  slot1: SlotInput!
+  slot2: SlotInput!
+  time: String
+  judgment: JudgmentEntry
+}
+
+"""スロットのソース指定"""
+input SlotInput {
+  sourceType: SlotSourceType!
+  sourceMatchId: ID
+  seedNumber: Int
+}
+
+"""スロット接続変更"""
+input UpdateSlotConnectionInput {
+  slotId: ID!
+  sourceType: SlotSourceType!
+  sourceMatchId: ID
+  seedNumber: Int
+}
+
+"""seed_number 振り直し"""
+input SeedNumberInput {
+  slotId: ID!
+  seedNumber: Int!
+}
+
+"""不戦勝宣言"""
+input DeclareForfeitInput {
+  matchId: ID!
+  winnerTeamId: ID!
+}
+
+"""SEEDスロットへのチーム手動配置"""
+input AssignSeedTeamInput {
+  slotId: ID!
+  teamId: ID
+}
+
 input CreatePromotionRuleInput {
   sourceCompetitionId: ID!
   targetCompetitionId: ID!
@@ -249,6 +309,18 @@ type Query {
   進出先の期待チーム数と現在のエントリー数を取得する
   """
   promotionStatus(targetCompetitionId: ID!): PromotionStatus!
+  """
+  ブラケット単体取得
+  """
+  tournament(id: ID!): Tournament!
+  """
+  competition内の全ブラケット取得
+  """
+  tournaments(competitionId: ID!): [Tournament!]!
+  """
+  トーナメント順位（全ブラケット統合）
+  """
+  tournamentRanking(competitionId: ID!): [TournamentRanking!]!
 }
 
 type Mutation {
@@ -380,4 +452,44 @@ type Mutation {
   進出ルールを削除する
   """
   deletePromotionRule(id: ID!): PromotionRule!
+  """
+  ブラケット自動生成（MAIN + オプショナルSUB）
+  """
+  generateBracket(input: GenerateBracketInput!): [Tournament!]!
+  """
+  SUBブラケット手動追加
+  """
+  createTournament(input: CreateTournamentInput!): Tournament!
+  """
+  ブラケット削除（SUBのみ。MAIN削除不可）
+  """
+  deleteTournament(id: ID!): Tournament!
+  """
+  ブラケット内試合追加（6レコードセット作成）
+  """
+  createTournamentMatch(input: CreateTournamentMatchInput!): Match!
+  """
+  ブラケット内試合削除
+  """
+  deleteTournamentMatch(matchId: ID!): Match!
+  """
+  スロット接続変更
+  """
+  updateSlotConnection(input: UpdateSlotConnectionInput!): TournamentSlot!
+  """
+  seed_number 振り直し
+  """
+  updateSeedNumbers(tournamentId: ID!, seeds: [SeedNumberInput!]!): [TournamentSlot!]!
+  """
+  トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持）
+  """
+  resetTournamentBrackets(competitionId: ID!): Competition!
+  """
+  不戦勝を宣言する（試合を FINISHED にし、勝者を設定して自動進行をトリガーする）
+  """
+  declareForfeit(input: DeclareForfeitInput!): Match!
+  """
+  SEEDスロットへのチーム手動配置（teamId=null でクリア）
+  """
+  assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot!
 }
