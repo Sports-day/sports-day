@@ -21,7 +21,7 @@ type Match struct {
 	locationRepository    repository.Location
 	competitionRepository repository.Competition
 	judgmentRepository    repository.Judgment
-	promotionService      *Promotion
+	competitionService    *Competition
 }
 
 func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repository.Team, locationRepository repository.Location, competitionRepository repository.Competition, judgmentRepository repository.Judgment) Match {
@@ -35,9 +35,9 @@ func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repo
 	}
 }
 
-// SetPromotionService は循環依存を避けるためにセッター注入する。
-func (s *Match) SetPromotionService(ps *Promotion) {
-	s.promotionService = ps
+// SetCompetitionService は循環依存を避けるためにセッター注入する。
+func (s *Match) SetCompetitionService(cs *Competition) {
+	s.competitionService = cs
 }
 
 func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_model.Match, error) {
@@ -173,8 +173,8 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 		}
 
 		// スコア修正制限チェック: 進出先の試合が稼働中なら修正不可
-		if s.promotionService != nil && input.Results != nil {
-			if err := s.promotionService.CheckScoreModificationAllowed(ctx, tx, m.CompetitionID); err != nil {
+		if s.competitionService != nil && input.Results != nil {
+			if err := s.competitionService.CheckScoreModificationAllowed(ctx, tx, m.CompetitionID); err != nil {
 				return err
 			}
 		}
@@ -202,13 +202,13 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 		match = updated
 
 		// 副作用: 全試合完了なら進出処理をトリガー
-		if s.promotionService != nil && updated.Status == "FINISHED" {
-			allComplete, err := s.promotionService.IsAllMatchesComplete(ctx, tx, updated.CompetitionID)
+		if s.competitionService != nil && updated.Status == "FINISHED" {
+			allComplete, err := s.competitionService.IsAllMatchesComplete(ctx, tx, updated.CompetitionID)
 			if err != nil {
 				return err
 			}
 			if allComplete {
-				if err := s.promotionService.TryPromoteFromLeague(ctx, tx, updated.CompetitionID); err != nil {
+				if err := s.competitionService.TryPromoteFromLeague(ctx, tx, updated.CompetitionID); err != nil {
 					return err
 				}
 			}

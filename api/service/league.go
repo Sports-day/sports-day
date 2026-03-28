@@ -23,7 +23,6 @@ type League struct {
 	competitionRepository repository.Competition
 	competitionService    *Competition
 	sportsRepository      repository.Sports
-	promotionService      *Promotion
 }
 
 func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, sportsRepository repository.Sports) League {
@@ -37,9 +36,10 @@ func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository 
 	}
 }
 
-// SetPromotionService は循環依存を避けるためにセッター注入する。
-func (s *League) SetPromotionService(ps *Promotion) {
-	s.promotionService = ps
+// SetCompetitionService は循環依存を避けるためにセッター注入する。
+// NewLeague で渡された competitionService を上書きする（循環依存回避のため後から注入）。
+func (s *League) SetCompetitionService(cs *Competition) {
+	s.competitionService = cs
 }
 
 func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*db_model.League, error) {
@@ -323,13 +323,13 @@ func (s *League) SetTiebreakPriorities(ctx context.Context, leagueID string, pri
 		}
 
 		// 副作用: タイブレーク優先度の入力後に進出処理をトリガー
-		if s.promotionService != nil {
-			allComplete, err := s.promotionService.IsAllMatchesComplete(ctx, tx, leagueID)
+		if s.competitionService != nil {
+			allComplete, err := s.competitionService.IsAllMatchesComplete(ctx, tx, leagueID)
 			if err != nil {
 				return err
 			}
 			if allComplete {
-				if err := s.promotionService.TryPromoteFromLeague(ctx, tx, leagueID); err != nil {
+				if err := s.competitionService.TryPromoteFromLeague(ctx, tx, leagueID); err != nil {
 					return err
 				}
 			}

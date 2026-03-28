@@ -19,4 +19,10 @@ type Competition interface {
 	BatchGetCompetitionEntriesByTeamIDs(ctx context.Context, db *gorm.DB, teamIds []string) ([]*db_model.CompetitionEntry, error)
 	BatchGetCompetitionEntriesByCompetitionIDs(ctx context.Context, db *gorm.DB, competitionIds []string) ([]*db_model.CompetitionEntry, error)
 	BatchGetByLocationIDs(ctx context.Context, db *gorm.DB, locationIDs []string) ([]*db_model.Competition, error)
+	// Promotion rule methods
+	GetPromotionRule(ctx context.Context, db *gorm.DB, id string) (*db_model.PromotionRule, error)
+	SavePromotionRule(ctx context.Context, db *gorm.DB, rule *db_model.PromotionRule) (*db_model.PromotionRule, error)
+	DeletePromotionRule(ctx context.Context, db *gorm.DB, id string) (*db_model.PromotionRule, error)
+	ListBySourceCompetitionID(ctx context.Context, db *gorm.DB, sourceCompetitionID string) ([]*db_model.PromotionRule, error)
+	ListByTargetCompetitionID(ctx context.Context, db *gorm.DB, targetCompetitionID string) ([]*db_model.PromotionRule, error)
 }

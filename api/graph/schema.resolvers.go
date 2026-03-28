@@ -452,7 +452,7 @@ func (r *mutationResolver) SetTiebreakPriorities(ctx context.Context, leagueID s
 
 // CreatePromotionRule is the resolver for the createPromotionRule field.
 func (r *mutationResolver) CreatePromotionRule(ctx context.Context, input model.CreatePromotionRuleInput) (*model.PromotionRule, error) {
-	rule, err := r.PromotionService.CreateRule(ctx, &input)
+	rule, err := r.CompetitionService.CreateRule(ctx, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func (r *mutationResolver) CreatePromotionRule(ctx context.Context, input model.
 
 // UpdatePromotionRule is the resolver for the updatePromotionRule field.
 func (r *mutationResolver) UpdatePromotionRule(ctx context.Context, id string, input model.UpdatePromotionRuleInput) (*model.PromotionRule, error) {
-	rule, err := r.PromotionService.UpdateRule(ctx, id, &input)
+	rule, err := r.CompetitionService.UpdateRule(ctx, id, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +470,7 @@ func (r *mutationResolver) UpdatePromotionRule(ctx context.Context, id string, i
 
 // DeletePromotionRule is the resolver for the deletePromotionRule field.
 func (r *mutationResolver) DeletePromotionRule(ctx context.Context, id string) (*model.PromotionRule, error) {
-	rule, err := r.PromotionService.DeleteRule(ctx, id)
+	rule, err := r.CompetitionService.DeleteRule(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -778,7 +778,7 @@ func (r *queryResolver) LeagueStandings(ctx context.Context, leagueID string) ([
 
 // PromotionRules is the resolver for the promotionRules field.
 func (r *queryResolver) PromotionRules(ctx context.Context, sourceCompetitionID string) ([]*model.PromotionRule, error) {
-	rules, err := r.PromotionService.ListRulesBySource(ctx, sourceCompetitionID)
+	rules, err := r.CompetitionService.ListRulesBySource(ctx, sourceCompetitionID)
 	if err != nil {
 		return nil, err
 	}
@@ -795,7 +795,7 @@ func (r *queryResolver) PromotionRules(ctx context.Context, sourceCompetitionID 
 
 // PromotionStatus is the resolver for the promotionStatus field.
 func (r *queryResolver) PromotionStatus(ctx context.Context, targetCompetitionID string) (*model.PromotionStatus, error) {
-	return r.PromotionService.GetPromotionStatus(ctx, targetCompetitionID)
+	return r.CompetitionService.GetPromotionStatus(ctx, targetCompetitionID)
 }
 
 // Mutation returns MutationResolver implementation.
