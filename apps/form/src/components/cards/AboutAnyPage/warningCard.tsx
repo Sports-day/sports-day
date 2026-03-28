@@ -1,6 +1,6 @@
 "use client";
 
-import { Toolbar, Card, Typography, Button, Box } from "@mui/material";
+import { Card, Typography, Button, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import WarningIcon from "@mui/icons-material/Warning";
 import { useState } from "react";
@@ -19,7 +19,7 @@ export default function Warning({ warncomment }: warnProps) {
       sx={{
         display: "flex",
         justifyContent: "center",
-        my: "1%",
+        my: (theme) => theme.spacing(2),
         width: "100%",
         height: "100%",
       }}
@@ -30,13 +30,21 @@ export default function Warning({ warncomment }: warnProps) {
           sx={{
             borderColor: "#A27B1D",
             background: "#FDF5DE",
-            width: "60%",
+            width: "100%",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", m: "1%" }}>
-            <WarningIcon sx={{ color: "#A27B1D", mr: "3%" }} />
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <WarningIcon
+              sx={{
+                color: "#A27B1D",
+                mr: (theme) => theme.spacing(2),
+                ml: (theme) => theme.spacing(2),
+              }}
+            />
             <Typography
               sx={{
+                fontWeight: "medium",
+                fontSize: "16px",
                 color: "#A27B1D",
                 justifyContent: "flex-start",
                 flexGrow: 1,

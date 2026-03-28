@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Stack } from "@mui/material";
 import Header from "@/components/header/header";
 import Warning from "@/components/cards/AboutAnyPage/warningCard";
@@ -10,7 +12,7 @@ export default function Confirm() {
       <Header />
       <Stack
         direction="column"
-        sx={{ height: "100%", width: "100%", p: "3vh" }}
+        sx={{ height: "100%", width: "100%", px: "50px" }}
       >
         <Warning warncomment="全員が正しくチームに登録されているかを確認してください"></Warning>
         <ConfirmPage />

@@ -1,14 +1,12 @@
 "use client";
 
-import * as React from "react";
 import {
   Card,
   CardActionArea,
   Typography,
   Button,
   Tooltip,
-  Stack,
-  Box,
+  useTheme,
 } from "@mui/material";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import BlockIcon from "@mui/icons-material/Block";
@@ -17,7 +15,6 @@ import { motion } from "framer-motion";
 type MembersCardProps = {
   studentid?: string;
   studentname?: string;
-  type?: string;
   addstudent?: (studentid: string) => void;
   fixed?: boolean;
   isInclude?: boolean;
@@ -34,12 +31,13 @@ export default function MembersCard({
   remove,
   disable,
 }: MembersCardProps) {
+  const theme = useTheme();
   const handleClick = () => {
     if (fixed) {
       return;
     }
 
-    if (addstudent) {
+    if (addstudent && studentid) {
       addstudent(studentid);
     }
   };
@@ -54,7 +52,7 @@ export default function MembersCard({
       >
         <Card
           sx={{
-            background: "#6D7AE0",
+            background: theme.palette.card.main,
             borderRadius: "10px",
             width: "100%",
             height: "100%",
@@ -62,10 +60,16 @@ export default function MembersCard({
             alignItems: "center",
             justifyContent: "space-between",
             color: "white",
-            p: "3%",
+            p: theme.spacing(0.5),
           }}
         >
-          <Typography>{studentname}</Typography>
+          <Typography
+            sx={(theme) => ({
+              ...theme.typography.bottonFont1,
+            })}
+          >
+            {studentname}
+          </Typography>
 
           <Button
             onClick={(e) => {
@@ -93,11 +97,17 @@ export default function MembersCard({
           alignItems: "center",
           justifyContent: "center",
           color: "white",
-          p: "3%",
+          p: theme.spacing(0.5),
         }}
       >
         <BlockIcon sx={{ color: "white", position: "absolute", left: 11 }} />
-        <Typography>{studentname}</Typography>
+        <Typography
+          sx={(theme) => ({
+            ...theme.typography.bottonFont1,
+          })}
+        >
+          {studentname}
+        </Typography>
       </Card>
     );
   }
@@ -132,10 +142,16 @@ export default function MembersCard({
                 alignItems: "center",
                 justifyContent: "center",
                 color: "white",
-                p: "3%",
+                p: theme.spacing(0.5),
               }}
             >
-              <Typography>{studentname}</Typography>
+              <Typography
+                sx={(theme) => ({
+                  ...theme.typography.bottonFont1,
+                })}
+              >
+                {studentname}
+              </Typography>
             </Card>
           </Tooltip>
         </CardActionArea>
@@ -153,7 +169,7 @@ export default function MembersCard({
       >
         <Card
           sx={{
-            background: "#6D7AE0",
+            background: theme.palette.card.main,
             borderRadius: "10px",
             width: "100%",
             height: "100%",
@@ -161,10 +177,16 @@ export default function MembersCard({
             alignItems: "center",
             justifyContent: "center",
             color: "white",
-            p: "3%",
+            p: theme.spacing(0.5),
           }}
         >
-          <Typography>{studentname}</Typography>
+          <Typography
+            sx={(theme) => ({
+              ...theme.typography.bottonFont1,
+            })}
+          >
+            {studentname}
+          </Typography>
         </Card>
       </CardActionArea>
     </motion.div>

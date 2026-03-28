@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Box, Typography, Stack, Button } from "@mui/material";
+import { Card, Box, Typography, Stack, Button, useTheme } from "@mui/material";
 import { useState } from "react";
 import CheckPopup from "../../popups/checkpopup";
 import Link from "next/link";
@@ -26,7 +26,7 @@ export default function TeamCard({
 }: teamInformationProps) {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
-
+  const theme = useTheme();
   return (
     <Card
       variant="outlined"
@@ -34,14 +34,14 @@ export default function TeamCard({
         height: "55vh",
         width: "100%",
         borderRadius: "10px",
-        background: "#EFF0F8",
-        borderColor: "#5F6DC2",
-        borderWidth: "2px",
+        background: theme.palette.card.light,
+        borderColor: theme.palette.card.main,
+        borderWidth: "1px",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ pb: theme.spacing(1) }}>
         <Typography align="center">{teamname}</Typography>
       </Box>
 
@@ -49,19 +49,24 @@ export default function TeamCard({
         sx={{
           flexGrow: 1,
           overflowY: "auto",
-          px: 2,
         }}
       >
-        <Stack spacing={1}>
+        <Stack
+          spacing={1}
+          sx={{
+            mx: theme.spacing(1),
+          }}
+        >
           {member.map((item, index) => (
             <Card
               key={index}
               sx={{
-                p: "1%",
-                background: "#5F6DC2",
+                background: theme.palette.card.main,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                p: theme.spacing(1),
+                borderRadius: "10px",
               }}
             >
               <Typography sx={{ color: "white" }}>{item.name}</Typography>
@@ -72,9 +77,9 @@ export default function TeamCard({
 
       <Box
         sx={{
-          background: "#5F6DC2",
-          p: "3%",
-          mt: "auto",
+          background: theme.palette.card.main,
+          p: theme.spacing(1),
+          width: "100%",
         }}
       >
         <Stack
@@ -82,7 +87,6 @@ export default function TeamCard({
           spacing={2}
           justifyContent="center"
           alignItems="center"
-          sx={{ width: "100%" }}
         >
           <Link
             href={`/weather/${type}/sport/${sports}/team/teamedit?teamid=${teamid}`}
@@ -92,8 +96,12 @@ export default function TeamCard({
               component="span"
               variant="contained"
               sx={{
-                background: "#6D7AE080",
-                "&:hover": { background: "#6D7AE080" },
+                borderRadius: "10px",
+                background: theme.palette.button.light,
+                "&:hover": {
+                  borderRadius: "10px",
+                  background: theme.palette.button.light,
+                },
               }}
             >
               編集
@@ -108,12 +116,13 @@ export default function TeamCard({
               borderColor: "#E4781A",
               background: "white",
               color: "#E4781A",
+              borderRadius: "10px",
               "&:hover": {
                 borderWidth: "2px",
                 borderColor: "#E4781A",
                 background: "white",
                 color: "#E4781A",
-                background: "white",
+                borderRadius: "10px",
                 opacity: 0.8,
               },
             }}

@@ -5,14 +5,10 @@ import {
   Container,
   Stack,
   Typography,
-  SvgIcon,
 } from "@mui/material";
-// import Mark from "public/mark.svg"
-import { BiErrorAlt } from "react-icons/bi";
-import * as React from "react";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useEffect } from "react";
 import { Metadata } from "next";
-import NextLink from "next/link";
 
 export const metadata: Metadata = {
   title: "SPORTSDAY : Error",
@@ -83,9 +79,7 @@ export default function Error({
                 エラーが発生しました
               </Typography>
               <Stack spacing={1} direction={"row"}>
-                <SvgIcon>
-                  <BiErrorAlt color={"#99a5d6"} />
-                </SvgIcon>
+                <ErrorOutlineIcon sx={{ color: "#99a5d6" }} />
                 <Typography fontSize={"16px"} color={"#99a5d6"}>
                   status code : see the console
                 </Typography>
@@ -93,7 +87,6 @@ export default function Error({
             </Stack>
             <Button
               href={"/"}
-              component={NextLink}
               sx={{
                 width: "100%",
                 height: "fit-content",

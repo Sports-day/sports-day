@@ -1,11 +1,15 @@
+"use client";
+
 import { Toolbar, Box } from "@mui/material";
 import Image from "next/image";
+import { useTheme } from "@mui/material/styles";
 
 export default function Header() {
+  const theme = useTheme();
   return (
     <Box
       style={{
-        background: "#3E4CB2",
+        background: theme.palette.background.default,
         width: "100%",
         height: "10%",
         position: "relative",

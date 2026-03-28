@@ -9,7 +9,6 @@ import { gql, useQuery } from "@apollo/client";
 import { useParams } from "next/navigation";
 import Instruction from "@/components/cards/AboutAnyPage/instructioncard";
 import CircularUnderLoad from "@/features/loading";
-import Error from "@/features/error";
 
 const SPORTDATA_GET = gql`
   query SportDataGet($sport_Id: ID!, $scene_Id: ID!) {
@@ -41,15 +40,17 @@ export default function MemberEdit() {
   return (
     <Box sx={{ width: "100%", height: "100%" }}>
       <Header />
-      <Stack
-        direction="row"
-        display="flex"
-        justifyContent="center"
-        sx={{ m: 2 }}
-      >
-        <Instruction weather={weatherName} sportname={sportName} />
-      </Stack>
-      <TeamEdit />
+      <Box sx={{ px: "50px" }}>
+        <Stack
+          direction="row"
+          display="flex"
+          justifyContent="left"
+          sx={{ my: "8px" }}
+        >
+          <Instruction weather={weatherName} sportname={sportName} />
+        </Stack>
+        <TeamEdit />
+      </Box>
       <SubFooter />
     </Box>
   );

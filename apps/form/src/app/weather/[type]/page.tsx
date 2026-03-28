@@ -10,7 +10,6 @@ import { gql, useQuery } from "@apollo/client";
 import { useParams } from "next/navigation";
 import CircularUnderLoad from "@/features/loading";
 import { motion } from "framer-motion";
-import Error from "@/features/error";
 
 const GET_SPORTS = gql`
   query GetSport($sceneId: ID!) {
@@ -42,7 +41,7 @@ export default function SportChoise() {
   return (
     <Box sx={{ width: "100%", height: "100%" }}>
       <Header />
-      <Box sx={{ width: "100%", height: "100%", p: "1%" }}>
+      <Box sx={{ width: "100%", height: "100%", px: "50px" }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -53,7 +52,7 @@ export default function SportChoise() {
           />
         </motion.div>
 
-        <Stack sx={{ height: "100%", width: "100%" }}>
+        <Stack spacing={2} sx={{ height: "100%", width: "100%" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

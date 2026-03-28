@@ -3,26 +3,32 @@
 import Link from "next/link";
 import Button from "@mui/material/Button";
 import { motion } from "framer-motion";
+import { useTheme, Typography } from "@mui/material";
 
 export default function SubmitButton() {
+  const theme = useTheme();
   return (
     <Link href={{ pathname: "/submit/finished" }} passHref>
       <motion.div whileTap={{ scale: 0.98 }}>
         <Button
           sx={{
-            color: "#5B6DC6",
-            background: "white",
+            background: theme.palette.button.veryLight,
             width: "100%",
             borderRadius: "10px",
             "&:hover": {
-              color: "#5B6DC6",
-              background: "white",
+              background: theme.palette.button.veryLight,
 
               opacity: 0.6,
             },
           }}
         >
-          提出
+          <Typography
+            sx={(theme) => ({
+              ...theme.typography.buttonFont2,
+            })}
+          >
+            提出
+          </Typography>
         </Button>
       </motion.div>
     </Link>

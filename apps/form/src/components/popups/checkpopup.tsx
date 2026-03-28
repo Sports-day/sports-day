@@ -1,8 +1,5 @@
 "use client";
 
-import Slide from "@mui/material/Slide";
-import { TransitionProps } from "@mui/material/transitions";
-import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -25,13 +22,6 @@ const DELETE_TEAM = gql`
   }
 `;
 
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & { children: React.ReactElement },
-  ref: React.Ref<unknown>,
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
 export default function CheckPopup({ teamid, open, setOpen }: CheckPopupProps) {
   const [DeleteTeam] = useMutation(DELETE_TEAM, {
     refetchQueries: ["GetSceneSport"],
@@ -53,12 +43,12 @@ export default function CheckPopup({ teamid, open, setOpen }: CheckPopupProps) {
     <Dialog
       open={open}
       onClose={handleClose}
-      TransitionComponent={Transition}
       PaperProps={{
         sx: {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          borderRadius: "10px",
         },
       }}
     >

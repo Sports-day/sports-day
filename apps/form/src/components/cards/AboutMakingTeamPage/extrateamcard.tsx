@@ -1,4 +1,12 @@
-import { Card, Typography, Stack, CardActionArea } from "@mui/material";
+"use client";
+
+import {
+  Card,
+  Typography,
+  Stack,
+  CardActionArea,
+  useTheme,
+} from "@mui/material";
 import Link from "next/link";
 
 export type informationProps = {
@@ -7,16 +15,17 @@ export type informationProps = {
 };
 
 export default function ExtraTeamCard({ sports, type }: informationProps) {
+  const theme = useTheme();
   return (
     <Link href={`/weather/${type}/sport/${sports}/team/makenewteam`} passHref>
       <Card
         variant="outlined"
         sx={{
-          height: "100%",
+          height: "55vh",
           borderRadius: "10px",
-          background: "#F4F5F9",
-          borderColor: "#5B6DC6",
-          borderWidth: "2px",
+          background: theme.palette.card.light,
+          borderColor: theme.palette.card.main,
+          borderWidth: "1px",
           component: "div",
           display: "flex",
           alignItems: "center",
@@ -29,10 +38,14 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: "50vh",
+              height: "55vh",
             }}
           >
-            <Typography>+チームを追加</Typography>
+            <Typography
+              sx={{ color: "#A49494", fontSize: "20px", fontWeight: "medium" }}
+            >
+              +チームを追加
+            </Typography>
           </Stack>
         </CardActionArea>
       </Card>

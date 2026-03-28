@@ -7,7 +7,6 @@ import Header from "@/components/header/header";
 import SubFooter from "@/components/footers/subfooter";
 import { gql, useQuery } from "@apollo/client";
 import CircularUnderLoad from "@/features/loading";
-import Error from "@/features/error";
 
 const SPORTDATA_GET = gql`
   query GetSport($sportId: ID!, $sceneId: ID!) {
@@ -27,7 +26,7 @@ export default function TeamEdit() {
     variables: { sportId: sports, sceneId: type },
   });
   if (loading) {
-    <CircularUnderLoad />;
+    return <CircularUnderLoad />;
   }
   if (error) {
     throw error;
@@ -38,12 +37,14 @@ export default function TeamEdit() {
   return (
     <Box sx={{ width: "100%", height: "100%" }}>
       <Header />
-      <MakingTeams
-        sports={sports as string}
-        type={type as string}
-        weather={weather}
-        sportname={sportname}
-      />
+      <Box sx={{ px: "50px" }}>
+        <MakingTeams
+          sports={sports as string}
+          type={type as string}
+          weather={weather}
+          sportname={sportname}
+        />
+      </Box>
 
       <SubFooter />
     </Box>

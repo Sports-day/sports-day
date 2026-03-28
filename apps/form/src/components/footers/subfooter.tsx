@@ -1,7 +1,10 @@
-import { Box, Typography } from "@mui/material";
+"use client";
+
+import { Box, useTheme } from "@mui/material";
 import BackButton from "../buttons/backbutton";
 
 export default function SubFooter() {
+  const theme = useTheme();
   return (
     <Box
       sx={{
@@ -9,7 +12,7 @@ export default function SubFooter() {
         bottom: 0,
         width: "100%",
         height: "60px",
-        background: "#3E4CB2",
+        background: theme.palette.background.default,
         color: "white",
         display: "flex",
         alignItems: "center",

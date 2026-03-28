@@ -41,38 +41,38 @@ export default function Confricted() {
 
   const Data1 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[0]?.id,
+      (e: any) => e.scene?.id === Scene?.scenes[0]?.id,
     ) || [];
   const Data2 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[1]?.id,
+      (e: any) => e.scene?.id === Scene?.scenes[1]?.id,
     ) || [];
 
   const Scenename1 = Scene?.scenes[0]?.name;
   const Scenename2 = Scene?.scenes[1]?.name;
 
   const SceneTeamUser1 =
-    Data1?.flatMap((d) =>
-      d.entries?.flatMap((s) => s.team?.users?.map((u) => u.name)),
+    Data1?.flatMap((d: any) =>
+      d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.name)),
     ) || [];
   const SceneTeamUser2 =
-    Data2?.flatMap((d) =>
-      d.entries?.flatMap((s) => s.team?.users?.map((u) => u.name)),
+    Data2?.flatMap((d: any) =>
+      d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.name)),
     ) || [];
 
   const nameCount1: Record<string, number> = {};
   const nameCount2: Record<string, number> = {};
-  SceneTeamUser1?.forEach((name) => {
+  SceneTeamUser1?.forEach((name: string) => {
     nameCount1[name] = (nameCount1[name] || 0) + 1;
   });
-  SceneTeamUser2?.forEach((name) => {
+  SceneTeamUser2?.forEach((name: string) => {
     nameCount2[name] = (nameCount2[name] || 0) + 1;
   });
   const confrictedUser1 = Object?.keys(nameCount1).filter(
-    (name) => nameCount1[name] > 1,
+    (name: string) => nameCount1[name] > 1,
   );
   const confrictedUser2 = Object?.keys(nameCount2).filter(
-    (name) => nameCount2[name] > 1,
+    (name: string) => nameCount2[name] > 1,
   );
 
   const AllSceneData: sceneInformation[] = [
@@ -89,7 +89,7 @@ export default function Confricted() {
   return (
     <Box
       sx={{
-        borderColor: "#5B6DC6",
+        borderColor: (theme) => theme.palette.primary.main,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -101,7 +101,7 @@ export default function Confricted() {
       <Card
         variant="outlined"
         sx={{
-          borderColor: "#5B6DC6",
+          borderColor: (theme) => theme.palette.primary.main,
           borderRadius: "10px",
           borderWidth: "1px",
           background: "none",
@@ -124,7 +124,7 @@ export default function Confricted() {
             key={idx}
             variant="outlined"
             sx={{
-              borderColor: "#5B6DC6",
+              borderColor: (theme) => theme.palette.primary.main,
               borderRadius: "10px",
               borderWidth: "1px",
               background: "none",
@@ -157,7 +157,7 @@ export default function Confricted() {
                   <Grid item lg={3} key={index}>
                     <Card
                       sx={{
-                        background: "#5B6DC6",
+                        background: (theme) => theme.palette.primary.main,
                         borderRadius: "15px",
                         color: "white",
                         p: "3%",

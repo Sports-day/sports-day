@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, Typography, Stack, CardActionArea } from "@mui/material";
+import {
+  Card,
+  Typography,
+  Stack,
+  CardActionArea,
+  useTheme,
+} from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -18,6 +24,7 @@ export default function SportCard({
   type,
   hasTeam,
 }: SportCardProps) {
+  const theme = useTheme();
   return (
     <Link href={`/weather/${type}/sport/${sportId}`} passHref>
       <motion.div
@@ -26,8 +33,8 @@ export default function SportCard({
       >
         <Card
           style={{
-            background: "#5F6DC2",
-            height: "20vh",
+            background: theme.palette.card.main,
+            height: "100%",
             borderRadius: "20px",
           }}
           component="div"
@@ -39,11 +46,17 @@ export default function SportCard({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "20vh",
+                height: "17vh",
               }}
             >
               {hasTeam && <CheckCircleIcon sx={{ color: "#3cff00ff" }} />}
-              <Typography color="white">{name}</Typography>
+              <Typography
+                sx={(theme) => ({
+                  ...theme.typography.secondFont,
+                })}
+              >
+                {name}
+              </Typography>
             </Stack>
           </CardActionArea>
         </Card>

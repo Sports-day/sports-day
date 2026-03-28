@@ -4,14 +4,14 @@ import { Box, Typography, Stack } from "@mui/material";
 import Image from "next/image";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { motion } from "framer-motion";
-import CircularUnderLoad from "@/features/loading";
-import Error from "@/features/error";
+import { useTheme } from "@mui/material/styles";
 
 export default function Comp() {
+  const submitBackground = useTheme().palette.background.default;
   return (
     <Box
       sx={{
-        background: "#3E4CB2",
+        background: submitBackground,
         width: "100%",
         minHeight: "100vh",
         display: "flex",
@@ -22,7 +22,7 @@ export default function Comp() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         style={{
-          background: "#3E4CB2",
+          background: submitBackground,
           width: "100%",
           minHeight: "100vh",
           display: "flex",

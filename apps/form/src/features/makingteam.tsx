@@ -1,6 +1,6 @@
 "use client";
 
-import { Typography, Box, Grid, Stack } from "@mui/material";
+import { Typography, Box, Grid, Stack, useTheme } from "@mui/material";
 import ExtraTeamCard from "@/components/cards/AboutMakingTeamPage/extrateamcard";
 import TeamCard from "@/components/cards/AboutMakingTeamPage/teamcard";
 import Instruction from "@/components/cards/AboutAnyPage/instructioncard";
@@ -44,6 +44,7 @@ export default function MakingTeams({
   sportname,
   weather,
 }: MakingProps) {
+  const theme = useTheme();
   const { data, loading } = useQuery(GET_SCENE_SPORT);
   const teams =
     data?.sportScenes?.filter(
@@ -57,15 +58,15 @@ export default function MakingTeams({
   const selectedTeams = teams.flatMap((d) => d.entries.map((s) => s.team));
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack sx={{ height: "77vh", overflow: "hidden" }}>
+    <Box sx={{ height: "77vh", width: "100%" }}>
+      <Stack sx={{ height: "100%", overflow: "hidden" }}>
         <Box
           sx={{
             flex: "0 0 auto",
-            mb: 2,
+            my: theme.spacing(1),
             width: "100%",
             display: "flex",
-            justifyContent: "center",
+            justifyContent: "left",
           }}
         >
           <Instruction sportname={sportname} weather={weather} />
@@ -74,22 +75,26 @@ export default function MakingTeams({
         <Box
           sx={{
             flex: 1,
-
-            background: "#e1e4f6",
+            px: theme.spacing(4),
+            py: theme.spacing(1),
+            background: theme.palette.card.light,
             borderRadius: "10px",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
           }}
         >
-          <Typography sx={{ color: "#2F3C8C", mt: 2, mx: 2 }}>
+          <Typography
+            sx={(theme) => ({
+              ...theme.typography.buttonFont2,
+            })}
+          >
             作成したチーム一覧
           </Typography>
           <Box
             sx={{
               flex: 1,
               overflowY: "auto",
-              m: 2,
             }}
           >
             <motion.div
@@ -104,7 +109,7 @@ export default function MakingTeams({
                 container
                 spacing={2}
                 alignItems="flex-start"
-                justifyContent="center"
+                justifyContent="left"
               >
                 {selectedTeams
                   ?.slice()

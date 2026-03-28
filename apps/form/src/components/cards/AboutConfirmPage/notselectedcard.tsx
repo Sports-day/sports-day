@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, Box, Typography, Grid, Stack } from "@mui/material";
+import { Card, Box, Typography, Grid, Stack, useTheme } from "@mui/material";
 import { gql, useQuery } from "@apollo/client";
 
 type sceneInformation = {
   scenename: string;
-  nonselected: string[];
+  nonselected: { id: string; name: string }[];
 };
 
 const GET_SCENE_ID = gql`
@@ -45,41 +45,44 @@ const GET_ALL_USERS = gql`
 `;
 
 export default function NotSelected() {
+  const theme = useTheme();
   const { data: Scene } = useQuery(GET_SCENE_ID);
   const { data: SceneData } = useQuery(GET_SCENE_USERS);
   const { data: AllUser } = useQuery(GET_ALL_USERS);
 
   const Data1 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[0]?.id,
+      (e: any) => e.scene?.id === Scene?.scenes[0]?.id,
     ) || [];
   const Data2 =
     SceneData?.sportScenes?.filter(
-      (e) => e.scene?.id === Scene?.scenes[1]?.id,
+      (e: any) => e.scene?.id === Scene?.scenes[1]?.id,
     ) || [];
 
   const Scenename1 = Scene?.scenes[0]?.name;
   const Scenename2 = Scene?.scenes[1]?.name;
 
-  const SceneTeamUser1 = Data1?.flatMap((d) =>
-    d.entries?.flatMap((s) => s.team?.users?.map((u) => u.id) || []),
+  const SceneTeamUser1 = Data1?.flatMap((d: any) =>
+    d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.id) || []),
   );
-  const SceneTeamUser2 = Data2?.flatMap((d) =>
-    d.entries?.flatMap((s) => s.team?.users?.map((u) => u.id) || []),
+  const SceneTeamUser2 = Data2?.flatMap((d: any) =>
+    d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.id) || []),
   );
 
   const AllUsers =
-    AllUser?.users?.map((d) => ({
+    AllUser?.users?.map((d: any) => ({
       id: d.id?.trim(),
       name: d.name?.trim(),
     })) || [];
 
   const nonSelectedUser1 = AllUsers?.filter(
-    (user) => !SceneTeamUser1.includes(user.id),
+    (user: { id: string; name: string }) =>
+      !(SceneTeamUser1 ?? []).includes(user.id),
   );
 
   const nonSelectedUser2 = AllUsers?.filter(
-    (user) => !SceneTeamUser2.includes(user.id),
+    (user: { id: string; name: string }) =>
+      !(SceneTeamUser2 ?? []).includes(user.id),
   );
 
   const AllSceneData: sceneInformation[] = [
@@ -96,7 +99,7 @@ export default function NotSelected() {
   return (
     <Box
       sx={{
-        borderColor: "#5B6DC6",
+        borderColor: theme.palette.card.main,
 
         display: "flex",
         alignItems: "center",
@@ -109,7 +112,7 @@ export default function NotSelected() {
       <Card
         variant="outlined"
         sx={{
-          borderColor: "#5B6DC6",
+          borderColor: theme.palette.card.main,
           borderRadius: "10px",
           borderWidth: "1px",
           background: "none",
@@ -132,7 +135,7 @@ export default function NotSelected() {
             key={idx}
             variant="outlined"
             sx={{
-              borderColor: "#5B6DC6",
+              borderColor: theme.palette.card.main,
               borderRadius: "10px",
               borderWidth: "1px",
               background: "none",
@@ -165,7 +168,7 @@ export default function NotSelected() {
                   <Grid item lg={3} xl={3} key={index}>
                     <Card
                       sx={{
-                        background: "#5B6DC6",
+                        background: theme.palette.card.main,
                         borderRadius: "15px",
                         color: "white",
                         p: "3%",

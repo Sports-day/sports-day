@@ -1,6 +1,14 @@
 "use client";
 
-import { Card, Box, Typography, Grid, Stack, Button } from "@mui/material";
+import {
+  Card,
+  Box,
+  Typography,
+  Grid,
+  Stack,
+  Button,
+  useTheme,
+} from "@mui/material";
 import EditButton from "../../buttons/editbutton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckPopup_Confirm from "@/components/popups/checkpopup-comfirmpage";
@@ -13,7 +21,7 @@ type AllDataProps = {
   sportid: string;
   teamname: string[];
   teamid: string[];
-  memberdata: [][];
+  memberdata: string[][];
 };
 
 export default function ConfirmCard({
@@ -25,6 +33,7 @@ export default function ConfirmCard({
   teamid,
   memberdata,
 }: AllDataProps) {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   return (
@@ -32,7 +41,7 @@ export default function ConfirmCard({
       variant="outlined"
       sx={{
         background: "none",
-        borderColor: "#5B6DC6",
+        borderColor: theme.palette.card.main,
         borderRadius: "10px",
 
         width: "100%",
@@ -41,7 +50,7 @@ export default function ConfirmCard({
     >
       <Box
         sx={{
-          p: 2,
+          p: theme.spacing(2),
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -76,23 +85,29 @@ export default function ConfirmCard({
                   variant="outlined"
                   key={team}
                   sx={{
-                    borderColor: "#5B6DC6",
+                    borderColor: theme.palette.card.main,
                     background: "none",
-                    m: 2,
-                    p: 2,
+                    m: theme.spacing(2),
+                    p: theme.spacing(2),
                   }}
                 >
                   <Stack
                     direction="row"
                     justifyContent="space-between"
                     alignItems="center"
-                    sx={{ mb: 2 }}
+                    sx={{ mb: theme.spacing(2) }}
                   >
-                    <Typography sx={{ color: "#5B6DC6" }}>{team}</Typography>
+                    <Typography
+                      sx={(theme) => ({
+                        ...theme.typography.bottonFont2,
+                      })}
+                    >
+                      {team}
+                    </Typography>
                     <Stack
                       direction="row"
                       justifyContent="space-between"
-                      spacing={2}
+                      spacing={theme.spacing(2)}
                     >
                       <EditButton
                         type={sceneid}
@@ -112,7 +127,6 @@ export default function ConfirmCard({
                             borderColor: "#E34013",
                             background: "white",
                             color: "#E34013",
-                            background: "white",
                             opacity: 0.8,
                           },
                         }}
@@ -136,7 +150,7 @@ export default function ConfirmCard({
                         <Grid item lg={3} key={idx}>
                           <Card
                             sx={{
-                              background: "#5B6DC6",
+                              background: theme.palette.card.main,
                               borderRadius: "15px",
                               color: "white",
                               p: "3%",

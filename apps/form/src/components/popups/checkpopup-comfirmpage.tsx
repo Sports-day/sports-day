@@ -1,8 +1,5 @@
 "use client";
 
-import Slide from "@mui/material/Slide";
-import { TransitionProps } from "@mui/material/transitions";
-import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -24,13 +21,6 @@ const DELETE_TEAM = gql`
     deleteTeam(id: $deleteTeamId)
   }
 `;
-
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & { children: React.ReactElement },
-  ref: React.Ref<unknown>,
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 
 export default function CheckPopup_Confirm({
   teamid,
@@ -57,7 +47,6 @@ export default function CheckPopup_Confirm({
     <Dialog
       open={open}
       onClose={handleClose}
-      TransitionComponent={Transition}
       PaperProps={{
         sx: {
           display: "flex",

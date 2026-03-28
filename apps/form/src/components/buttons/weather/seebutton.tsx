@@ -1,4 +1,4 @@
-import { Stack, Button, Typography } from "@mui/material";
+import { Stack, Button, Typography, useTheme } from "@mui/material";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -10,6 +10,7 @@ export type weatherProps = {
 
 export default function SeeButtom({ type, name, id }: weatherProps) {
   const same = type === id;
+  const theme = useTheme();
   return (
     <Link href={`/weather/${type}`} passHref>
       <motion.div whileTap={{ scale: 0.97 }}>
@@ -18,31 +19,30 @@ export default function SeeButtom({ type, name, id }: weatherProps) {
           component="span"
           sx={{
             maxWidth: "100%",
-            borderColor: "#5F6DC2",
+            borderColor: theme.palette.button.main,
             borderRadius: "30px",
-            borderWidth: "2px",
+            borderWidth: "3px",
             background: "none",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            p: "1%",
-            m: "3%",
+            m: theme.spacing(0.5),
             ...(same && {
-              background: "#5F6DC2",
-              borderColor: "#5F6DC2",
+              background: theme.palette.button.main,
+              borderColor: theme.palette.button.main,
             }),
             "&:hover": same
               ? {
-                  background: "#5F6DC2",
-                  borderColor: "#5F6DC2",
+                  background: theme.palette.button.main,
+                  borderColor: theme.palette.button.main,
                   borderRadius: "30px",
-                  borderWidth: "2px",
+                  borderWidth: "3px",
                   opacity: 0.6,
                 }
               : {
-                  borderColor: "#5F6DC2",
+                  borderColor: theme.palette.button.main,
                   borderRadius: "30px",
-                  borderWidth: "2px",
+                  borderWidth: "3px",
                   background: "none",
                   opacity: 0.6,
                 },
@@ -54,7 +54,13 @@ export default function SeeButtom({ type, name, id }: weatherProps) {
             alignItems="center"
             justifyContent="center"
           >
-            <Typography sx={{ color: same ? "white" : "#5F6DC2" }}>
+            <Typography
+              sx={{
+                color: same
+                  ? theme.typography.buttonFont1.color
+                  : theme.typography.buttonFont2.color,
+              }}
+            >
               {name}
             </Typography>
           </Stack>

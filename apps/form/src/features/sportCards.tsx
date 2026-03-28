@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid, Box } from "@mui/material";
+import { Grid, Box, useTheme } from "@mui/material";
 import SportCard from "@/components/cards/AboutSportPage/sportcard";
 import { gql, useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
@@ -33,13 +33,15 @@ const GET_TEAMDATA = gql`
 `;
 
 export default function SportCards({ weather, type }: Props) {
+  const theme = useTheme();
+
   const { data } = useQuery(GET_TEAMDATA);
 
   const hasTeamMap = new Map<string, boolean>();
 
   weather.forEach((item) => {
     const entry = data?.sportScenes?.find(
-      (d) => d.sport?.id === item.id && d.scene?.id === type
+      (d) => d.sport?.id === item.id && d.scene?.id === type,
     );
     const users = entry?.entries?.flatMap((s) => s.team?.users ?? []) ?? [];
     hasTeamMap.set(item.id, users.length > 0);
@@ -49,10 +51,10 @@ export default function SportCards({ weather, type }: Props) {
     <Box
       sx={{
         height: "55vh",
-        background: "#e1e4f6",
+        background: theme.palette.card.light,
         borderRadius: "10px",
-        m: "1%",
-        p: "3%",
+
+        p: theme.spacing(4),
         display: "flex",
         flexDirection: "column",
         flexGrow: 1,
@@ -61,7 +63,7 @@ export default function SportCards({ weather, type }: Props) {
     >
       <Grid container spacing={2}>
         {weather.map((item, index) => (
-          <Grid item xs={6} md={4} lg={4} xl={3} key={item.id}>
+          <Grid item xs={6} md={4} lg={3} xl={3} key={item.id}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}

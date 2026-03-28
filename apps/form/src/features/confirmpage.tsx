@@ -1,10 +1,9 @@
 "use client";
 
-import { Box, Grid, Skeleton } from "@mui/material";
+import { Box, Grid, Skeleton, useTheme } from "@mui/material";
 import ConfirmCard from "@/components/cards/AboutConfirmPage/confirmcard";
 import Confricted from "@/components/cards/AboutConfirmPage/confrictedcard";
 import NotSelected from "@/components/cards/AboutConfirmPage/notselectedcard";
-import { motion } from "framer-motion";
 import { gql, useQuery } from "@apollo/client";
 
 const GET_ALLTEAMDATA = gql`
@@ -32,22 +31,35 @@ const GET_ALLTEAMDATA = gql`
 `;
 
 export default function ConfirmPage() {
+  const theme = useTheme();
   const { data, loading } = useQuery(GET_ALLTEAMDATA);
 
-  const allData = data?.sportScenes?.map((d) => ({
+  const allData:
+    | {
+        sceneName: string;
+        sceneId: string;
+        sportName: string;
+        sportId: string;
+        teamName: string[];
+        teamId: string[];
+        memberData: string[][];
+      }[]
+    | undefined = data?.sportScenes?.map((d: any) => ({
     sceneName: d.scene?.name,
     sceneId: d.scene?.id,
     sportName: d.sport?.name,
     sportId: d.sport?.id,
-    teamName: d.entries?.map((s) => s.team?.name),
-    teamId: d.entries?.map((s) => s.team?.id),
-    memberData: d.entries?.map((s) => s.team?.users?.map((u) => u.name)),
+    teamName: d.entries?.map((s: any) => s.team?.name),
+    teamId: d.entries?.map((s: any) => s.team?.id),
+    memberData: d.entries?.map((s: any) =>
+      s.team?.users?.map((u: any) => u.name),
+    ),
   }));
 
   return (
     <Box
       sx={{
-        background: "#F4F5F9",
+        background: theme.palette.card.light,
         width: "100%",
         height: "100%",
         display: "flex",
@@ -60,7 +72,7 @@ export default function ConfirmPage() {
           {Array.from({ length: 4 }).map((_, index) => (
             <Grid key={index} item md={6} lg={6} xl={6}>
               <Skeleton
-                variant="ractangular"
+                variant="rectangular"
                 animation="wave"
                 width="100%"
                 height={240}
@@ -78,7 +90,7 @@ export default function ConfirmPage() {
           sx={{
             width: "100%",
             height: "100%",
-            p: "3vh",
+            p: theme.spacing(4),
           }}
         >
           <Grid item lg={6}>

@@ -8,6 +8,7 @@ import {
   Stack,
   Button,
   Skeleton,
+  useTheme,
 } from "@mui/material";
 import MembersCard from "@/components/cards/AboutTeamEditPage/memberscard";
 import { useState } from "react";
@@ -16,7 +17,7 @@ import { Typography } from "@mui/material";
 import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useMemo, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 type studentInformation = {
   studentId: string;
@@ -108,6 +109,7 @@ const DELETE_MEMBER = gql`
 `;
 
 export default function TeamEdit() {
+  const theme = useTheme();
   const { type, sports } = useParams() as { type: string; sports: string };
 
   const [selectedMember, setSelectedMember] = useState<studentInformation[]>(
@@ -238,44 +240,44 @@ export default function TeamEdit() {
   return (
     <Box
       sx={{
-        m: 2,
-        pt: 2,
-        height: "65vh",
-        background: "#F4F5F9",
+        height: "70vh",
+        background: theme.palette.card.light,
         borderRadius: "10px",
         display: "flex",
-        px: 2,
+        px: theme.spacing(4),
+        py: theme.spacing(1),
       }}
     >
       <Grid container spacing={2} sx={{ height: "100%" }}>
-        <Grid item xs={6} md={4} lg={4} xl={3} sx={{ height: "100%" }}>
+        <Grid item md={3} lg={3} xl={1} sx={{ height: "100%" }}>
           <Stack sx={{ width: "100%", height: "100%" }}>
-            <Typography sx={{ color: "#5F6DC2" }}>
+            <Typography
+              sx={(theme) => ({
+                ...theme.typography.buttonFont2,
+              })}
+            >
               メンバーを選択してください
             </Typography>
             <Card
               variant="outlined"
               sx={{
-                borderColor: "#5B6DC6",
-                borderWidth: "2px",
+                borderColor: theme.palette.card.main,
+                borderWidth: "1px",
                 borderStyle: "solid",
                 borderRadius: "10px",
                 height: "100%",
                 background: "none",
                 display: "flex",
                 flexDirection: "column",
-                mt: "1%",
               }}
             >
               <Stack
                 direction="column"
                 flexWrap="nowrap"
-                spacing={2}
                 sx={{
                   flexGrow: 1,
                   overflowY: "auto",
                   overflowX: "hidden",
-                  p: "3%",
 
                   minHeight: 0,
                 }}
@@ -298,7 +300,10 @@ export default function TeamEdit() {
                   </Box>
                 ) : (
                   selectedMember.map((student, index) => (
-                    <Box key={index} sx={{ height: "20%" }}>
+                    <Box
+                      key={index}
+                      sx={{ height: "20%", p: theme.spacing(1) }}
+                    >
                       <MembersCard
                         studentname={student.studentName}
                         fixed={true}
@@ -312,7 +317,7 @@ export default function TeamEdit() {
               </Stack>
               <Box
                 sx={{
-                  background: "#5F6DC2",
+                  background: theme.palette.card.main,
 
                   display: "flex",
                   justifyContent: "center",
@@ -331,13 +336,13 @@ export default function TeamEdit() {
                 >
                   <Button
                     sx={{
-                      background: "#7F8CD6",
+                      background: theme.palette.button.light,
                       color: "white",
                       width: "60%",
-                      my: 2,
+                      my: theme.spacing(1),
                       "&:hover": {
                         opacity: 0.8,
-                        background: "#7F8CD6",
+                        background: theme.palette.button.light,
                       },
                     }}
                     disabled={selectedMember.length === 0}
@@ -360,12 +365,12 @@ export default function TeamEdit() {
             </Card>
           </Stack>
         </Grid>
-        <Grid item md={8} lg={8} sx={{ height: "100%" }}>
+        <Grid item md={9} lg={9} sx={{ height: "100%" }}>
           <Card
             variant="outlined"
             sx={{
-              borderColor: "#5B6DC6",
-              borderWidth: "2px",
+              borderColor: theme.palette.card.main,
+              borderWidth: "1px",
               borderStyle: "solid",
               borderTopLeftRadius: "10px",
               borderBottomLeftRadius: "10px",
@@ -383,9 +388,10 @@ export default function TeamEdit() {
           >
             <Stack
               sx={{
-                width: "80%",
+                width: "100%",
                 height: "100%",
-                p: 2,
+                px: theme.spacing(4),
+                pt: theme.spacing(2),
               }}
             >
               <TextField
@@ -393,11 +399,11 @@ export default function TeamEdit() {
                 label="...検索"
                 variant="outlined"
                 sx={{
-                  borderColor: "#91A3FF",
-                  background: "#F0F4FF",
+                  borderColor: theme.palette.card.main,
+                  background: theme.palette.card.light,
                   color: "#808080",
                   borderRadius: "10px",
-                  mb: 2,
+                  mb: theme.spacing(2),
                 }}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
@@ -405,17 +411,17 @@ export default function TeamEdit() {
               <Grid container spacing={2}>
                 {loading
                   ? Array.from({ length: 30 }).map((_, index) => (
-                      <Grid key={index} item md={6} lg={6} xl={6}>
+                      <Grid key={index} item md={3} lg={3} xl={3}>
                         <Skeleton
-                          variant="ractangular"
+                          variant="rectangular"
                           animation="wave"
-                          height={40}
+                          height="40px"
                           sx={{ borderRadius: "10px" }}
                         />
                       </Grid>
                     ))
                   : Filtered_User?.map((item, index) => (
-                      <Grid key={item.id} item md={6} lg={6} xl={6}>
+                      <Grid key={item.id} item md={3} lg={3} xl={3}>
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
