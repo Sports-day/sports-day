@@ -53,7 +53,7 @@ const NAV_ITEM_SX = (selected: boolean) => ({
     '&:hover': { backgroundColor: 'rgba(198, 200, 216, 0.7)', boxShadow: 'none' },
   },
   '& .MuiListItemText-primary': {
-    opacity: 1,
+    opacity: selected ? 0.4 : 1,
     fontWeight: selected ? 700 : 400,
   },
 })
@@ -131,7 +131,7 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
           <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onLogout}>
             <LogoutIcon sx={{ fontSize: 24 }} />
           </IconButton>
-          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }}>
+          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={() => window.open('https://github.com/Sports-day/sports-day-admin', '_blank')}>
             <GitHubIcon sx={{ fontSize: 24 }} />
           </IconButton>
           <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onHome}>

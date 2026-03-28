@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Box, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 
@@ -41,9 +42,40 @@ const PLAIN_BODY_SX = {
   mb: 1,
 }
 
+const ANIMATION_DURATION = 320
+
 export default function PrivacyPolicyPage({ onClose }: Props) {
+  const [closing, setClosing] = useState(false)
+
+  const handleClose = () => {
+    setClosing(true)
+    setTimeout(() => {
+      onClose()
+    }, ANIMATION_DURATION)
+  }
+
   return (
-    <Box sx={{ position: 'fixed', inset: 0, zIndex: 1300, display: 'flex', flexDirection: 'column', backgroundColor: '#E1E4F6' }}>
+    <Box
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1300,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#E1E4F6',
+        '@keyframes slideUp': {
+          from: { transform: 'translateY(100%)' },
+          to: { transform: 'translateY(0)' },
+        },
+        '@keyframes slideDown': {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(100%)' },
+        },
+        animation: closing
+          ? `slideDown ${ANIMATION_DURATION}ms ease-in forwards`
+          : `slideUp ${ANIMATION_DURATION}ms ease-out`,
+      }}
+    >
       {/* ヘッダー */}
       <Box
         sx={{
@@ -58,7 +90,7 @@ export default function PrivacyPolicyPage({ onClose }: Props) {
         }}
       >
         <Box
-          onClick={onClose}
+          onClick={handleClose}
           sx={{
             display: 'flex',
             alignItems: 'center',

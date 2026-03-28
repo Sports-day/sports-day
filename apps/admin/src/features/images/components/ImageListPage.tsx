@@ -14,11 +14,18 @@ import {
 import { useImages } from '../hooks/useImages'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 
-type Props = {
-  onCreateClick: () => void
+const CLICKABLE_CELL_SX = {
+  ...LIST_TABLE_CELL_SX,
+  cursor: 'pointer',
+  '&:hover': { textDecoration: 'underline' },
 }
 
-export function ImageListPage({ onCreateClick }: Props) {
+type Props = {
+  onCreateClick: () => void
+  onImageClick: (id: string) => void
+}
+
+export function ImageListPage({ onCreateClick, onImageClick }: Props) {
   const { data: images, loading, error } = useImages()
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
@@ -65,9 +72,9 @@ export function ImageListPage({ onCreateClick }: Props) {
                 ) : (
                   images.map((image) => (
                     <TableRow key={image.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{image.id}</TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{image.name}</TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{image.url}</TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onImageClick(image.id)}>{image.id}</TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onImageClick(image.id)}>{image.name}</TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onImageClick(image.id)}>{image.url}</TableCell>
                     </TableRow>
                   ))
                 )}
