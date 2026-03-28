@@ -38,18 +38,38 @@ export default function MemberEdit() {
   const sportName = data?.sport?.name;
 
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
+    <Box
+      sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}
+    >
       <Header />
-      <Box sx={{ px: "50px" }}>
+      <Box
+        sx={{
+          height: {
+            xs: "calc(100dvh - 64px - 72px)",
+            md: "calc(100dvh - 72px - 72px)",
+          },
+          px: { xs: 2, sm: 3, md: 6 },
+          pt: 1,
+          maxWidth: 1440,
+          mx: "auto",
+          width: "100%",
+          minHeight: 0,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Stack
           direction="row"
           display="flex"
           justifyContent="left"
-          sx={{ my: "8px" }}
+          sx={{ my: 1, flexShrink: 0 }}
         >
           <Instruction weather={weatherName} sportname={sportName} />
         </Stack>
-        <TeamEdit />
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <TeamEdit />
+        </Box>
       </Box>
       <SubFooter />
     </Box>

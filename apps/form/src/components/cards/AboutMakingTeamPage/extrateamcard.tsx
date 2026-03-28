@@ -21,7 +21,8 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
       <Card
         variant="outlined"
         sx={{
-          height: "55vh",
+          height: "100%",
+          minHeight: { xs: 180, md: 320 },
           borderRadius: "10px",
           background: theme.palette.card.light,
           borderColor: theme.palette.card.main,
@@ -38,7 +39,8 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: "55vh",
+              height: "100%",
+              minHeight: { xs: 180, md: 320 },
             }}
           >
             <Typography

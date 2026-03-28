@@ -39,9 +39,19 @@ export default function SportChoise() {
   const sportData = data?.scene.sports;
 
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
+    <Box sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       <Header />
-      <Box sx={{ width: "100%", height: "100%", px: "50px" }}>
+      <Box
+        sx={{
+          width: "100%",
+          flex: 1,
+          px: { xs: 2, sm: 3, md: 6 },
+          pb: { xs: 11, md: 12 },
+          pt: 1,
+          maxWidth: 1440,
+          mx: "auto",
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -52,7 +62,7 @@ export default function SportChoise() {
           />
         </motion.div>
 
-        <Stack spacing={2} sx={{ height: "100%", width: "100%" }}>
+        <Stack spacing={2} sx={{ height: "100%", width: "100%", minHeight: 0 }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

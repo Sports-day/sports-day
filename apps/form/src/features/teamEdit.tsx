@@ -129,7 +129,7 @@ export default function TeamEdit() {
 
   const sportSceneId = useMemo(() => {
     return Ids?.sportScenes?.find(
-      (d) => d.sport.id === sports && d.scene.id === type,
+      (d: any) => d.sport.id === sports && d.scene.id === type,
     );
   }, [Ids, sports, type]);
   const { data: teamdata } = useQuery(GET_TEAM_COUNT, {
@@ -138,34 +138,34 @@ export default function TeamEdit() {
   });
 
   const sportSceneMember = Ids?.sportScenes?.filter(
-    (d) => d.scene?.id === type,
+    (d: any) => d.scene?.id === type,
   );
 
   const selectedIds = selectedMember.map((s) => s.studentId);
-  const Teams = teamdata?.sportScene.entries.map((d) => d.team);
+  const Teams = teamdata?.sportScene.entries.map((d: any) => d.team);
   const TeamCount = Teams?.length ?? 0;
   const Filtered_User = useMemo(() => {
     if (!UserData?.users) return [];
-    return UserData.users.filter((u) => {
+    return UserData.users.filter((u: any) => {
       if (searchName === "") return true;
       return u.name.includes(searchName);
     });
   }, [UserData?.users, searchName]);
 
   const myTeamUserIds = useMemo(() => {
-    return TeamData?.team?.users?.map((u) => u.id) ?? [];
+    return TeamData?.team?.users?.map((u: any) => u.id) ?? [];
   }, [TeamData]);
   const AlreadyInAnyTeam = useMemo(() => {
     if (!sportSceneMember) return [];
-    const all = sportSceneMember.flatMap((d) =>
-      d.entries?.flatMap((s) => s.team?.users ?? []),
+    const all = sportSceneMember.flatMap((d: any) =>
+      d.entries?.flatMap((s: any) => s.team?.users ?? []),
     );
-    return all.filter((user) => !myTeamUserIds.includes(user.id));
+    return all.filter((user: any) => !myTeamUserIds.includes(user.id));
   }, [sportSceneMember, myTeamUserIds]);
 
   useEffect(() => {
     if (TeamData?.team?.users) {
-      const members = TeamData?.team?.users.map((t) => ({
+      const members = TeamData?.team?.users.map((t: any) => ({
         studentId: t.id,
         studentName: t.name,
       }));
@@ -240,17 +240,26 @@ export default function TeamEdit() {
   return (
     <Box
       sx={{
-        height: "70vh",
+        height: "100%",
+        minHeight: 0,
         background: theme.palette.card.light,
         borderRadius: "10px",
         display: "flex",
-        px: theme.spacing(4),
+        px: { xs: 2, md: 4 },
         py: theme.spacing(1),
+        overflow: { xs: "auto", md: "hidden" },
       }}
     >
-      <Grid container spacing={2} sx={{ height: "100%" }}>
-        <Grid item md={3} lg={3} xl={1} sx={{ height: "100%" }}>
-          <Stack sx={{ width: "100%", height: "100%" }}>
+      <Grid container spacing={2} sx={{ height: { xs: "auto", md: "100%" }, minHeight: 0 }}>
+        <Grid
+          item
+          xs={12}
+          md={4}
+          lg={3}
+          xl={3}
+          sx={{ height: { xs: "auto", md: "100%" }, display: "flex", minHeight: 0 }}
+        >
+          <Stack sx={{ width: "100%", height: "100%", minHeight: 0 }}>
             <Typography
               sx={(theme) => ({
                 ...theme.typography.buttonFont2,
@@ -269,6 +278,8 @@ export default function TeamEdit() {
                 background: "none",
                 display: "flex",
                 flexDirection: "column",
+                minHeight: 0,
+                overflow: "hidden",
               }}
             >
               <Stack
@@ -278,7 +289,6 @@ export default function TeamEdit() {
                   flexGrow: 1,
                   overflowY: "auto",
                   overflowX: "hidden",
-
                   minHeight: 0,
                 }}
               >
@@ -300,10 +310,7 @@ export default function TeamEdit() {
                   </Box>
                 ) : (
                   selectedMember.map((student, index) => (
-                    <Box
-                      key={index}
-                      sx={{ height: "20%", p: theme.spacing(1) }}
-                    >
+                    <Box key={index} sx={{ p: theme.spacing(1) }}>
                       <MembersCard
                         studentname={student.studentName}
                         fixed={true}
@@ -365,7 +372,13 @@ export default function TeamEdit() {
             </Card>
           </Stack>
         </Grid>
-        <Grid item md={9} lg={9} sx={{ height: "100%" }}>
+        <Grid
+          item
+          xs={12}
+          md={8}
+          lg={9}
+          sx={{ height: { xs: "auto", md: "100%" }, display: "flex", minHeight: 0 }}
+        >
           <Card
             variant="outlined"
             sx={{
@@ -379,19 +392,21 @@ export default function TeamEdit() {
               width: "100%",
               background: "none",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              alignItems: "stretch",
+              justifyContent: "flex-start",
               flexDirection: "column",
-              overflowY: "auto",
               flexGrow: 1,
+              minHeight: 0,
+              overflow: "hidden",
             }}
           >
             <Stack
               sx={{
                 width: "100%",
                 height: "100%",
-                px: theme.spacing(4),
+                px: { xs: 1, md: 4 },
                 pt: theme.spacing(2),
+                minHeight: 0,
               }}
             >
               <TextField
@@ -408,50 +423,68 @@ export default function TeamEdit() {
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
               />
-              <Grid container spacing={2}>
-                {loading
-                  ? Array.from({ length: 30 }).map((_, index) => (
-                      <Grid key={index} item md={3} lg={3} xl={3}>
-                        <Skeleton
-                          variant="rectangular"
-                          animation="wave"
-                          height="40px"
-                          sx={{ borderRadius: "10px" }}
-                        />
-                      </Grid>
-                    ))
-                  : Filtered_User?.map((item, index) => (
-                      <Grid key={item.id} item md={3} lg={3} xl={3}>
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{
-                            duration: 0.7,
-                            delay: index * 0.02,
-                          }}
+              <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0, pb: 1 }}>
+                <Grid container spacing={2}>
+                  {loading
+                    ? Array.from({ length: 30 }).map((_, index) => (
+                        <Grid
+                          key={index}
+                          item
+                          xs={6}
+                          sm={4}
+                          md={3}
+                          lg={3}
+                          xl={3}
                         >
-                          <MembersCard
-                            studentid={item.id}
-                            studentname={item.name}
-                            addstudent={() =>
-                              handleClick({
-                                studentId: String(item.id),
-                                studentName: item.name,
-                              })
-                            }
-                            disable={selectedIds.includes(String(item.id))}
-                            isInclude={
-                              AlreadyInAnyTeam.some(
-                                (a) => a.id === String(item.id),
-                              ) || selectedIds.includes(String(item.id))
-                            }
-                            remove={() => removeStudent(String(item.id))}
+                          <Skeleton
+                            variant="rectangular"
+                            animation="wave"
+                            height="40px"
+                            sx={{ borderRadius: "10px" }}
                           />
-                        </motion.div>
-                      </Grid>
-                    ))}
-              </Grid>
+                        </Grid>
+                      ))
+                    : Filtered_User?.map((item, index) => (
+                        <Grid
+                          key={item.id}
+                          item
+                          xs={6}
+                          sm={4}
+                          md={3}
+                          lg={3}
+                          xl={3}
+                        >
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{
+                              duration: 0.7,
+                              delay: index * 0.02,
+                            }}
+                          >
+                            <MembersCard
+                              studentid={item.id}
+                              studentname={item.name}
+                              addstudent={() =>
+                                handleClick({
+                                  studentId: String(item.id),
+                                  studentName: item.name,
+                                })
+                              }
+                              disable={selectedIds.includes(String(item.id))}
+                              isInclude={
+                                AlreadyInAnyTeam.some(
+                                  (a) => a.id === String(item.id),
+                                ) || selectedIds.includes(String(item.id))
+                              }
+                              remove={() => removeStudent(String(item.id))}
+                            />
+                          </motion.div>
+                        </Grid>
+                      ))}
+                </Grid>
+              </Box>
             </Stack>
           </Card>
         </Grid>

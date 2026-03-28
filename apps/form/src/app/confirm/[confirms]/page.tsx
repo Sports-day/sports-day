@@ -8,11 +8,18 @@ import LastFooter from "@/components/footers/lastfooter";
 
 export default function Confirm() {
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
+    <Box sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       <Header />
       <Stack
         direction="column"
-        sx={{ height: "100%", width: "100%", px: "50px" }}
+        sx={{
+          width: "100%",
+          flex: 1,
+          px: { xs: 2, sm: 3, md: 6 },
+          py: 1,
+          maxWidth: 1440,
+          mx: "auto",
+        }}
       >
         <Warning warncomment="全員が正しくチームに登録されているかを確認してください"></Warning>
         <ConfirmPage />

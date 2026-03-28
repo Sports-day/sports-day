@@ -116,17 +116,19 @@ export default function ConfirmCard({
                       />
                       <Button
                         component="span"
-                        variant="contained"
+                        variant="outlined"
                         sx={{
                           borderWidth: "2px",
                           borderColor: "#E34013",
                           background: "white",
                           color: "#E34013",
+                          borderRadius: "10px",
                           "&:hover": {
                             borderWidth: "2px",
                             borderColor: "#E34013",
                             background: "white",
                             color: "#E34013",
+                            borderRadius: "10px",
                             opacity: 0.8,
                           },
                         }}
@@ -142,25 +144,36 @@ export default function ConfirmCard({
                       />
                     </Stack>
                   </Stack>
-                  <Grid container>
+                  <Grid container spacing={1}>
                     {memberdata[index]
                       ?.slice()
                       .reverse()
                       .map((member, idx) => (
-                        <Grid item lg={3} key={idx}>
+                        <Grid item xs={6} sm={4} md={3} lg={3} key={idx}>
                           <Card
                             sx={{
                               background: theme.palette.card.main,
                               borderRadius: "15px",
                               color: "white",
-                              p: "3%",
-                              m: "2%",
-
+                              width: "100%",
+                              minHeight: 40,
+                              px: 1,
+                              py: 0.5,
                               display: "flex",
+                              alignItems: "center",
                               justifyContent: "center",
                             }}
                           >
-                            {member}
+                            <Typography
+                              noWrap
+                              sx={{
+                                color: "inherit",
+                                width: "100%",
+                                textAlign: "center",
+                              }}
+                            >
+                              {member}
+                            </Typography>
                           </Card>
                         </Grid>
                       ))}

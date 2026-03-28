@@ -35,9 +35,19 @@ export default function TeamEdit() {
   const weather = data?.scene.name;
 
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
+    <Box sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       <Header />
-      <Box sx={{ px: "50px" }}>
+      <Box
+        sx={{
+          px: { xs: 2, sm: 3, md: 6 },
+          pb: { xs: 11, md: 12 },
+          pt: 1,
+          maxWidth: 1440,
+          mx: "auto",
+          width: "100%",
+          flex: 1,
+        }}
+      >
         <MakingTeams
           sports={sports as string}
           type={type as string}

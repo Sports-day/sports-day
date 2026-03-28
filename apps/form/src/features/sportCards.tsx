@@ -41,20 +41,22 @@ export default function SportCards({ weather, type }: Props) {
 
   weather.forEach((item) => {
     const entry = data?.sportScenes?.find(
-      (d) => d.sport?.id === item.id && d.scene?.id === type,
+      (d: any) => d.sport?.id === item.id && d.scene?.id === type,
     );
-    const users = entry?.entries?.flatMap((s) => s.team?.users ?? []) ?? [];
+    const users =
+      entry?.entries?.flatMap((s: any) => s.team?.users ?? []) ?? [];
     hasTeamMap.set(item.id, users.length > 0);
   });
 
   return (
     <Box
       sx={{
-        height: "55vh",
+        minHeight: { xs: 320, md: 420 },
+        maxHeight: { xs: "none", md: "calc(100dvh - 320px)" },
         background: theme.palette.card.light,
         borderRadius: "10px",
 
-        p: theme.spacing(4),
+        p: { xs: 2, md: 4 },
         display: "flex",
         flexDirection: "column",
         flexGrow: 1,
@@ -63,7 +65,7 @@ export default function SportCards({ weather, type }: Props) {
     >
       <Grid container spacing={2}>
         {weather.map((item, index) => (
-          <Grid item xs={6} md={4} lg={3} xl={3} key={item.id}>
+          <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={item.id}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}

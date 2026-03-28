@@ -11,9 +11,10 @@ export default function SubmitButton() {
     <Link href={{ pathname: "/submit/finished" }} passHref>
       <motion.div whileTap={{ scale: 0.98 }}>
         <Button
+          component="span"
           sx={{
             background: theme.palette.button.veryLight,
-            width: "100%",
+            width: "80%",
             borderRadius: "10px",
             "&:hover": {
               background: theme.palette.button.veryLight,

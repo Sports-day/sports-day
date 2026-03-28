@@ -16,7 +16,7 @@ export default function BackButton() {
         sx={{
           background: theme.palette.button.light,
           borderRadius: "10px",
-          width: "100%",
+          width: "80%",
           "&:hover": {
             background: theme.palette.button.light,
             opacity: 0.6,

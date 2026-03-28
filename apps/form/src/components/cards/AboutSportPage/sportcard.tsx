@@ -42,11 +42,12 @@ export default function SportCard({
           <CardActionArea>
             <Stack
               direction="row"
-              style={{
+              sx={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "17vh",
+                minHeight: { xs: 88, sm: 104, md: 120 },
+                px: 1,
               }}
             >
               {hasTeam && <CheckCircleIcon sx={{ color: "#3cff00ff" }} />}

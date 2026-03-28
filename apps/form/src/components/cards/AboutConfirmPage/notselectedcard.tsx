@@ -158,6 +158,7 @@ export default function NotSelected() {
             ) : (
               <Grid
                 container
+                spacing={1}
                 sx={{
                   overscrollBehavior: "contain",
                   maxHeight: "114px",
@@ -165,19 +166,32 @@ export default function NotSelected() {
                 }}
               >
                 {item.nonselected?.map((user, index) => (
-                  <Grid item lg={3} xl={3} key={index}>
+                  <Grid item xs={6} sm={4} md={3} lg={3} xl={3} key={index}>
                     <Card
                       sx={{
                         background: theme.palette.card.main,
                         borderRadius: "15px",
                         color: "white",
-                        p: "3%",
-                        m: "3%",
+                        width: "100%",
+                        minHeight: 40,
+                        px: 1,
+                        py: 0.5,
+                        m: 0,
                         display: "flex",
+                        alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      {user.name}
+                      <Typography
+                        noWrap
+                        sx={{
+                          color: "inherit",
+                          width: "100%",
+                          textAlign: "center",
+                        }}
+                      >
+                        {user.name}
+                      </Typography>
                     </Card>
                   </Grid>
                 ))}

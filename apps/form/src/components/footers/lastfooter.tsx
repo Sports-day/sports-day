@@ -12,20 +12,21 @@ export default function LastFooter() {
         position: "relative",
         bottom: 0,
         width: "100%",
-        height: "60px",
+        minHeight: "72px",
         background: theme.palette.background.default,
         color: "white",
         display: "flex",
         alignItems: "center",
         justifyContent: "flex-end",
-        p: theme.spacing(1),
+        px: { xs: 2, md: 4 },
+        py: 1,
       }}
     >
-      <Grid container spacing={2} sx={{ justifyContent: "flex-end", mr: "6%" }}>
-        <Grid item lg={2}>
+      <Grid container sx={{ justifyContent: "flex-end" }}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
           <BackButton />
         </Grid>
-        <Grid item lg={2}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
           <SubmitButton />
         </Grid>
       </Grid>

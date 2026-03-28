@@ -8,17 +8,25 @@ export default function Header() {
   const theme = useTheme();
   return (
     <Box
-      style={{
+      sx={{
         background: theme.palette.background.default,
         width: "100%",
-        height: "10%",
-        position: "relative",
+        minHeight: { xs: 64, md: 72 },
+        position: "sticky",
+        top: 0,
+        zIndex: theme.zIndex.appBar,
+        display: "flex",
+        alignItems: "center",
       }}
     >
-      <Toolbar
-        style={{ justifyContent: "flex-start", width: "10%", height: "100%" }}
-      >
-        <Image src="/images/logo_form.png" alt="" width={400} height={20} />
+      <Toolbar sx={{ justifyContent: "flex-start", width: "100%", px: { xs: 2, md: 4 } }}>
+        <Image
+          src="/images/logo_form.png"
+          alt=""
+          width={400}
+          height={20}
+          style={{ width: "clamp(180px, 42vw, 360px)", height: "auto" }}
+        />
       </Toolbar>
     </Box>
   );

@@ -15,7 +15,7 @@ export default function GoFinal() {
           sx={{
             borderRadius: "10px",
             background: theme.palette.button.veryLight,
-            width: "100%",
+            width: "80%",
             "&:hover": {
               borderRadius: "10px",
               background: theme.palette.button.veryLight,

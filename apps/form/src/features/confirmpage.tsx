@@ -93,10 +93,10 @@ export default function ConfirmPage() {
             p: theme.spacing(4),
           }}
         >
-          <Grid item lg={6}>
+          <Grid item xs={6} lg={6} md={6} xl={6}>
             <NotSelected />
           </Grid>
-          <Grid item lg={6}>
+          <Grid item xs={6} lg={6} md={6} xl={6}>
             <Confricted />
           </Grid>
 

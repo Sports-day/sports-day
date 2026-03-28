@@ -31,7 +31,8 @@ export default function TeamCard({
     <Card
       variant="outlined"
       sx={{
-        height: "55vh",
+        height: "100%",
+        minHeight: { xs: 260, md: 320 },
         width: "100%",
         borderRadius: "10px",
         background: theme.palette.card.light,
@@ -52,7 +53,7 @@ export default function TeamCard({
         }}
       >
         <Stack
-          spacing={1}
+          spacing={theme.spacing(1)}
           sx={{
             mx: theme.spacing(1),
           }}
@@ -83,7 +84,7 @@ export default function TeamCard({
         }}
       >
         <Stack
-          direction="row"
+          direction={{ xs: "column", sm: "row" }}
           spacing={2}
           justifyContent="center"
           alignItems="center"

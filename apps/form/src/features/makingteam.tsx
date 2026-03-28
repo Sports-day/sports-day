@@ -48,17 +48,24 @@ export default function MakingTeams({
   const { data, loading } = useQuery(GET_SCENE_SPORT);
   const teams =
     data?.sportScenes?.filter(
-      (d) => d.sport.id === sports && d.scene.id === type,
+      (d: any) => d.sport.id === sports && d.scene.id === type,
     ) ?? [];
 
   if (loading) {
     return <CircularUnderLoad />;
   }
 
-  const selectedTeams = teams.flatMap((d) => d.entries.map((s) => s.team));
+  const selectedTeams = teams.flatMap((d: any) =>
+    d.entries.map((s: any) => s.team),
+  );
 
   return (
-    <Box sx={{ height: "77vh", width: "100%" }}>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: { xs: "auto", md: "calc(100dvh - 210px)" },
+      }}
+    >
       <Stack sx={{ height: "100%", overflow: "hidden" }}>
         <Box
           sx={{
@@ -75,7 +82,7 @@ export default function MakingTeams({
         <Box
           sx={{
             flex: 1,
-            px: theme.spacing(4),
+            px: { xs: 2, md: 4 },
             py: theme.spacing(1),
             background: theme.palette.card.light,
             borderRadius: "10px",
@@ -114,7 +121,7 @@ export default function MakingTeams({
                 {selectedTeams
                   ?.slice()
                   .reverse()
-                  .map((item) => (
+                  .map((item: any) => (
                     <Grid
                       key={item.id}
                       item
@@ -129,7 +136,7 @@ export default function MakingTeams({
                         teamname={item.name}
                         type={type}
                         sports={sports}
-                        member={item.users.map((n) => ({ name: n.name }))}
+                        member={item.users.map((n: any) => ({ name: n.name }))}
                       />
                     </Grid>
                   ))}
