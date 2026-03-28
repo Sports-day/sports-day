@@ -42,6 +42,7 @@
   },
   // register util aliases
   "postCreateCommand": "cat ${containerWorkspaceFolder}/.devcontainer/aliases.sh >> ~/.zshrc && bash ${containerWorkspaceFolder}/.devcontainer/init.sh",
+  "postStartCommand": "cd ${containerWorkspaceFolder}/apps/admin && yarn dev &",
   "customizations": {
     "vscode": {
       "settings": {

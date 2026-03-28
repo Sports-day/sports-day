@@ -1,2 +1,6 @@
 export { CompetitionListPage } from './components/CompetitionListPage'
+export { CompetitionCreatePage } from './components/CompetitionCreatePage'
+export { CompetitionDetailPage } from './components/CompetitionDetailPage'
+export { LeagueDetailPage } from './components/LeagueDetailPage'
+export { LeagueCreatePage } from './components/LeagueCreatePage'
 export type { Competition } from './types'
