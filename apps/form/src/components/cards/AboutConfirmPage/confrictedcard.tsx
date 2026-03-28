@@ -1,0 +1,194 @@
+"use client";
+
+import { Card, Box, Typography, Grid, Stack } from "@mui/material";
+import { gql, useQuery } from "@apollo/client";
+
+type sceneInformation = {
+  scenename: string;
+  confricted: string[];
+};
+
+const GET_SCENE_ID = gql`
+  query GetSceneId {
+    scenes {
+      id
+      name
+    }
+  }
+`;
+
+const GET_SCENE_USERS = gql`
+  query GetSceneUsers {
+    sportScenes {
+      scene {
+        id
+        name
+      }
+      entries {
+        team {
+          users {
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
+export default function Confricted() {
+  const { data: Scene } = useQuery(GET_SCENE_ID);
+  const { data: SceneData } = useQuery(GET_SCENE_USERS);
+
+  const Data1 =
+    SceneData?.sportScenes?.filter(
+      (e: any) => e.scene?.id === Scene?.scenes[0]?.id,
+    ) || [];
+  const Data2 =
+    SceneData?.sportScenes?.filter(
+      (e: any) => e.scene?.id === Scene?.scenes[1]?.id,
+    ) || [];
+
+  const Scenename1 = Scene?.scenes[0]?.name;
+  const Scenename2 = Scene?.scenes[1]?.name;
+
+  const SceneTeamUser1 =
+    Data1?.flatMap((d: any) =>
+      d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.name)),
+    ) || [];
+  const SceneTeamUser2 =
+    Data2?.flatMap((d: any) =>
+      d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.name)),
+    ) || [];
+
+  const nameCount1: Record<string, number> = {};
+  const nameCount2: Record<string, number> = {};
+  SceneTeamUser1?.forEach((name: string) => {
+    nameCount1[name] = (nameCount1[name] || 0) + 1;
+  });
+  SceneTeamUser2?.forEach((name: string) => {
+    nameCount2[name] = (nameCount2[name] || 0) + 1;
+  });
+  const confrictedUser1 = Object?.keys(nameCount1).filter(
+    (name: string) => nameCount1[name] > 1,
+  );
+  const confrictedUser2 = Object?.keys(nameCount2).filter(
+    (name: string) => nameCount2[name] > 1,
+  );
+
+  const AllSceneData: sceneInformation[] = [
+    {
+      scenename: Scenename1,
+      confricted: confrictedUser1,
+    },
+    {
+      scenename: Scenename2,
+      confricted: confrictedUser2,
+    },
+  ];
+
+  return (
+    <Box
+      sx={{
+        borderColor: (theme) => theme.palette.primary.main,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+      }}
+    >
+      <Card
+        variant="outlined"
+        sx={{
+          borderColor: (theme) => theme.palette.primary.main,
+          borderRadius: "10px",
+          borderWidth: "1px",
+          background: "none",
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        <Stack
+          sx={{
+            display: "flex",
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Typography sx={{ color: "#E34013" }}>重複</Typography>
+        </Stack>
+        {AllSceneData?.map((item, idx) => (
+          <Card
+            key={idx}
+            variant="outlined"
+            sx={{
+              borderColor: (theme) => theme.palette.primary.main,
+              borderRadius: "10px",
+              borderWidth: "1px",
+              background: "none",
+              m: "3%",
+              p: "3%",
+            }}
+          >
+            <Typography>{item.scenename}</Typography>
+            {item.confricted?.length === 0 ? (
+              <Stack
+                sx={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Typography>該当者はいません</Typography>
+              </Stack>
+            ) : (
+              <Grid
+                container
+                spacing={1}
+                sx={{
+                  overscrollBehavior: "contain",
+                  maxHeight: "114px",
+                  overflowY: "auto",
+                }}
+              >
+                {item.confricted?.map((user, index) => (
+                  <Grid item xs={6} sm={4} md={3} lg={3} key={index}>
+                    <Card
+                      sx={{
+                        background: (theme) => theme.palette.primary.main,
+                        borderRadius: "15px",
+                        color: "white",
+                        width: "100%",
+                        minHeight: 40,
+                        px: 1,
+                        py: 0.5,
+                        m: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Typography
+                        noWrap
+                        sx={{
+                          color: "inherit",
+                          width: "100%",
+                          textAlign: "center",
+                        }}
+                      >
+                        {user}
+                      </Typography>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Card>
+        ))}
+      </Card>
+    </Box>
+  );
+}

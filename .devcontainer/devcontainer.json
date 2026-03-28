@@ -1,8 +1,12 @@
 {
+  "containerEnv": {
+    "WATCHPACK_POLLING": "true"
+  },
   "name": "sports-day-devcontainer",
   "dockerComposeFile": "docker-compose.dev.yaml",
   "service": "app",
   "workspaceFolder": "/workspace",
+
   "features": {
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.24"

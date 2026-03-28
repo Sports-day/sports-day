@@ -1,0 +1,80 @@
+"use client";
+
+import { Box, Stack } from "@mui/material";
+import Warning from "@/components/cards/AboutAnyPage/warningCard";
+import SportCards from "@/features/sportCards";
+import WeatherCards from "@/features/weathercards";
+import MainFooter from "@/components/footers/mainfooter";
+import Header from "@/components/header/header";
+import { gql, useQuery } from "@apollo/client";
+import { useParams } from "next/navigation";
+import CircularUnderLoad from "@/features/loading";
+import { motion } from "framer-motion";
+
+const GET_SPORTS = gql`
+  query GetSport($sceneId: ID!) {
+    scene(id: $sceneId) {
+      name
+      sports {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export default function SportChoise() {
+  const { type } = useParams() as { type: string };
+  const { data, loading, error } = useQuery(GET_SPORTS, {
+    variables: { sceneId: type },
+  });
+
+  if (loading) {
+    return <CircularUnderLoad />;
+  }
+  if (error) {
+    throw error;
+  }
+  const weatherType = data?.scene.name;
+  const sportData = data?.scene.sports;
+
+  return (
+    <Box sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+      <Header />
+      <Box
+        sx={{
+          width: "100%",
+          flex: 1,
+          px: { xs: 2, sm: 3, md: 6 },
+          pb: { xs: 11, md: 12 },
+          pt: 1,
+          maxWidth: 1440,
+          mx: "auto",
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0 }}
+        >
+          <Warning
+            warncomment={`${weatherType}です.間違えがないように確認してください`}
+          />
+        </motion.div>
+
+        <Stack spacing={2} sx={{ height: "100%", width: "100%", minHeight: 0 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <WeatherCards id={type as string} />
+          </motion.div>
+
+          <SportCards weather={sportData} type={type as string} />
+        </Stack>
+      </Box>
+      <MainFooter />
+    </Box>
+  );
+}
