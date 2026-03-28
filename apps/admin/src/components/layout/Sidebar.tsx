@@ -1,4 +1,5 @@
-import { Box, Divider, IconButton, List, ListItemButton, ListItemText, Typography } from '@mui/material'
+import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemText, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { TOP_HEADER_HEIGHT } from './TopHeader'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import GroupsIcon from '@mui/icons-material/Groups'
 import PersonIcon from '@mui/icons-material/Person'
@@ -7,10 +8,10 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import LabelIcon from '@mui/icons-material/Label'
 import ImageIcon from '@mui/icons-material/Image'
 import PlayCircleIcon from '@mui/icons-material/PlayCircle'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CampaignIcon from '@mui/icons-material/Campaign'
 import LogoutIcon from '@mui/icons-material/Logout'
 import GitHubIcon from '@mui/icons-material/GitHub'
+import HomeIcon from '@mui/icons-material/Home'
 
 export const DRAWER_WIDTH = 250
 
@@ -31,70 +32,73 @@ const PREPARATION_ITEMS: NavItem[] = [
 ]
 
 const PROGRESS_ITEMS: NavItem[] = [
-  { key: 'active-matches', label: '進行中の試合', icon: <PlayCircleIcon fontSize="small" /> },
-  { key: 'finished-matches', label: '終了した試合', icon: <CheckCircleIcon fontSize="small" /> },
+  { key: 'active-matches', label: '試合', icon: <PlayCircleIcon fontSize="small" /> },
   { key: 'information', label: 'お知らせ', icon: <CampaignIcon fontSize="small" /> },
 ]
 
 const NAV_ITEM_SX = (selected: boolean) => ({
   borderRadius: 1,
-  mb: 0.5,
+  mb: 1,
   gap: 1.5,
-  width: '100%',
-  height: 50,
+  width: 220,
+  height: 45,
   px: 1.5,
-  backgroundColor: '#EFF0F8',
+  backgroundColor: 'rgba(233, 234, 242, 0.7)',
   border: 'none',
   boxShadow: 'none',
-  '&:hover': { backgroundColor: '#E5E6F0', boxShadow: 'none' },
+  '&:hover': { backgroundColor: 'rgba(223, 224, 236, 0.7)', boxShadow: 'none' },
   '&.Mui-selected': {
-    backgroundColor: '#C6C8D8',
+    backgroundColor: 'rgba(198, 200, 216, 0.7)',
     boxShadow: 'none',
-    '&:hover': { backgroundColor: '#C6C8D8', boxShadow: 'none' },
+    '&:hover': { backgroundColor: 'rgba(198, 200, 216, 0.7)', boxShadow: 'none' },
   },
   '& .MuiListItemText-primary': {
-    opacity: selected ? 0.4 : 1,
+    opacity: 1,
+    fontWeight: selected ? 700 : 400,
   },
 })
 
 type SidebarProps = {
   selected: string
   onSelect: (key: string) => void
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+  onLogout?: () => void
+  onHome?: () => void
 }
 
-export function Sidebar({ selected, onSelect }: SidebarProps) {
-  return (
+export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose, onLogout, onHome }: SidebarProps) {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+
+  const handleSelect = (key: string) => {
+    onSelect(key)
+    if (isMobile && onMobileClose) onMobileClose()
+  }
+
+  const content = (
     <Box
       sx={{
         width: DRAWER_WIDTH,
-        flexShrink: 0,
         backgroundColor: '#D9DCED',
-        borderRight: '1px solid #5F6DC2',
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-        top: 0,
+        height: isMobile ? '100%' : `calc(100% - ${TOP_HEADER_HEIGHT}px)`,
+        mt: isMobile ? 0 : `${TOP_HEADER_HEIGHT}px`,
+        overflow: 'hidden',
       }}
     >
-      <Box sx={{ px: 1, py: 2 }}>
-        <Typography sx={{ fontSize: '18px', fontWeight: 700, color: '#2F3C8C' }}>
-          Admin Panel
-        </Typography>
-      </Box>
-
       <Divider />
 
-      <Typography sx={{ px: 1, pt: 1.5, pb: 0.5, fontSize: '11px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
+      <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
         準備
       </Typography>
-      <List dense disablePadding sx={{ px: 1 }}>
+      <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {PREPARATION_ITEMS.map(({ key, label, icon }) => (
           <ListItemButton
             key={key}
             selected={selected === key}
-            onClick={() => onSelect(key)}
+            onClick={() => handleSelect(key)}
             sx={NAV_ITEM_SX(selected === key)}
           >
             <Box sx={{ color: '#4A5ABB', display: 'flex', alignItems: 'center' }}>{icon}</Box>
@@ -105,15 +109,15 @@ export function Sidebar({ selected, onSelect }: SidebarProps) {
 
       <Divider sx={{ mt: 1 }} />
 
-      <Typography sx={{ px: 1, pt: 1.5, pb: 0.5, fontSize: '11px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
+      <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
         進行
       </Typography>
-      <List dense disablePadding sx={{ px: 1 }}>
+      <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {PROGRESS_ITEMS.map(({ key, label, icon }) => (
           <ListItemButton
             key={key}
             selected={selected === key}
-            onClick={() => onSelect(key)}
+            onClick={() => handleSelect(key)}
             sx={NAV_ITEM_SX(selected === key)}
           >
             <Box sx={{ color: '#4A5ABB', display: 'flex', alignItems: 'center' }}>{icon}</Box>
@@ -122,14 +126,67 @@ export function Sidebar({ selected, onSelect }: SidebarProps) {
         ))}
       </List>
 
-      <Box sx={{ px: 1, pt: 0.5, display: 'flex', gap: 0.5 }}>
-        <IconButton size="small" sx={{ color: '#4A5ABB' }}>
-          <LogoutIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" sx={{ color: '#4A5ABB' }}>
-          <GitHubIcon fontSize="small" />
-        </IconButton>
+      <Box sx={{ mt: 2 }}>
+        <Box sx={{ px: 1, pt: 0.5, display: 'flex', gap: 3, justifyContent: 'center' }}>
+          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onLogout}>
+            <LogoutIcon sx={{ fontSize: 24 }} />
+          </IconButton>
+          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }}>
+            <GitHubIcon sx={{ fontSize: 24 }} />
+          </IconButton>
+          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onHome}>
+            <HomeIcon sx={{ fontSize: 24 }} />
+          </IconButton>
+        </Box>
+        <Box sx={{ px: 2, pt: 1.5, pb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography sx={{ fontSize: '10px', color: '#2F3C8C', opacity: 0.7 }}>
+            (C)2026
+          </Typography>
+          {/* 画像スペース */}
+        </Box>
       </Box>
     </Box>
+  )
+
+  if (isMobile) {
+    return (
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onMobileClose}
+        transitionDuration={0}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            backgroundColor: '#D9DCED',
+            borderRight: '1px solid #5F6DC2',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        {content}
+      </Drawer>
+    )
+  }
+
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: DRAWER_WIDTH,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: DRAWER_WIDTH,
+          boxSizing: 'border-box',
+          backgroundColor: '#D9DCED',
+          borderRight: '1px solid #5F6DC2',
+          overflow: 'hidden',
+        },
+      }}
+    >
+      {content}
+    </Drawer>
   )
 }
