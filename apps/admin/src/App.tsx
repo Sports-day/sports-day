@@ -1,38 +1,51 @@
-import { useState } from 'react'
-import { Box } from '@mui/material'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { TopHeader, TOP_HEADER_HEIGHT } from '@/components/layout/TopHeader'
-import LoginPage from '@/pages/LoginPage'
-import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage'
-import CompetitionsPage from '@/pages/CompetitionsPage'
-import TeamsPage from '@/pages/TeamsPage'
-import UsersPage from '@/pages/UsersPage'
-import LocationsPage from '@/pages/LocationsPage'
-import PermissionsPage from '@/pages/PermissionsPage'
-import TagsPage from '@/pages/TagsPage'
-import ImagesPage from '@/pages/ImagesPage'
-import ActiveMatchesPage from '@/pages/ActiveMatchesPage'
-import InformationPage from '@/pages/InformationPage'
+import { useState } from "react";
+import { Box } from "@mui/material";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { TopHeader, TOP_HEADER_HEIGHT } from "@/components/layout/TopHeader";
+import LoginPage from "@/pages/LoginPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import CompetitionsPage from "@/pages/CompetitionsPage";
+import TeamsPage from "@/pages/TeamsPage";
+import UsersPage from "@/pages/UsersPage";
+import LocationsPage from "@/pages/LocationsPage";
+import PermissionsPage from "@/pages/PermissionsPage";
+import TagsPage from "@/pages/TagsPage";
+import ImagesPage from "@/pages/ImagesPage";
+import ActiveMatchesPage from "@/pages/ActiveMatchesPage";
+import InformationPage from "@/pages/InformationPage";
 
 export default function App() {
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [showPrivacy, setShowPrivacy] = useState(false)
-  const [selected, setSelected] = useState('competitions')
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [selected, setSelected] = useState("competitions");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   if (!loggedIn) {
     return (
       <>
-        {showPrivacy && <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />}
-        <LoginPage onLogin={() => setLoggedIn(true)} onPrivacy={() => setShowPrivacy(true)} />
+        {showPrivacy && (
+          <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
+        )}
+        <LoginPage
+          onLogin={() => setLoggedIn(true)}
+          onPrivacy={() => setShowPrivacy(true)}
+        />
       </>
-    )
+    );
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: 'background.default' }}>
-      {showPrivacy && <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />}
-      <TopHeader onMobileMenuToggle={() => setMobileOpen(prev => !prev)} />
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: "background.default",
+      }}
+    >
+      {showPrivacy && (
+        <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
+      )}
+      <TopHeader onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
       <Sidebar
         selected={selected}
         onSelect={setSelected}
@@ -50,16 +63,16 @@ export default function App() {
           minWidth: 0,
         }}
       >
-        {selected === 'competitions' && <CompetitionsPage />}
-        {selected === 'teams' && <TeamsPage />}
-        {selected === 'users' && <UsersPage />}
-        {selected === 'locations' && <LocationsPage />}
-        {selected === 'permissions' && <PermissionsPage />}
-        {selected === 'tags' && <TagsPage />}
-        {selected === 'images' && <ImagesPage />}
-        {selected === 'active-matches' && <ActiveMatchesPage />}
-        {selected === 'information' && <InformationPage />}
+        {selected === "competitions" && <CompetitionsPage />}
+        {selected === "teams" && <TeamsPage />}
+        {selected === "users" && <UsersPage />}
+        {selected === "locations" && <LocationsPage />}
+        {selected === "permissions" && <PermissionsPage />}
+        {selected === "tags" && <TagsPage />}
+        {selected === "images" && <ImagesPage />}
+        {selected === "active-matches" && <ActiveMatchesPage />}
+        {selected === "information" && <InformationPage />}
       </Box>
     </Box>
-  )
+  );
 }
