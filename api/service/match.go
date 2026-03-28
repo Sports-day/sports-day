@@ -21,6 +21,7 @@ type Match struct {
 	locationRepository    repository.Location
 	competitionRepository repository.Competition
 	judgmentRepository    repository.Judgment
+	promotionService      *Promotion
 }
 
 func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repository.Team, locationRepository repository.Location, competitionRepository repository.Competition, judgmentRepository repository.Judgment) Match {
@@ -32,6 +33,11 @@ func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repo
 		competitionRepository: competitionRepository,
 		judgmentRepository:    judgmentRepository,
 	}
+}
+
+// SetPromotionService は循環依存を避けるためにセッター注入する。
+func (s *Match) SetPromotionService(ps *Promotion) {
+	s.promotionService = ps
 }
 
 func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_model.Match, error) {
@@ -166,6 +172,13 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 			return err
 		}
 
+		// スコア修正制限チェック: 進出先の試合が稼働中なら修正不可
+		if s.promotionService != nil && input.Results != nil {
+			if err := s.promotionService.CheckScoreModificationAllowed(ctx, tx, m.CompetitionID); err != nil {
+				return err
+			}
+		}
+
 		if input.Status != nil {
 			m.Status = string(*input.Status)
 		}
@@ -187,6 +200,20 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 		}
 
 		match = updated
+
+		// 副作用: 全試合完了なら進出処理をトリガー
+		if s.promotionService != nil && updated.Status == "FINISHED" {
+			allComplete, err := s.promotionService.IsAllMatchesComplete(ctx, tx, updated.CompetitionID)
+			if err != nil {
+				return err
+			}
+			if allComplete {
+				if err := s.promotionService.TryPromoteFromLeague(ctx, tx, updated.CompetitionID); err != nil {
+					return err
+				}
+			}
+		}
+
 		return nil
 	})
 

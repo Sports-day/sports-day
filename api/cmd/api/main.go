@@ -81,6 +81,7 @@ func main() {
 	matchRepository := repository.NewMatch()
 	judgmentRepository := repository.NewJudgment()
 	leagueRepository := repository.NewLeague()
+	promotionRepository := repository.NewPromotion()
 
 	// service
 	userService := service.NewUser(db, userRepository)
@@ -94,10 +95,13 @@ func main() {
 	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository)
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository)
-	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService)
+	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService, sportRepository)
+	promotionService := service.NewPromotion(db, promotionRepository, competitionRepository, matchRepository, leagueRepository, sportRepository)
+	leagueService.SetPromotionService(&promotionService)
+	matchService.SetPromotionService(&promotionService)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, promotionService)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})

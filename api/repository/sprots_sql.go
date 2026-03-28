@@ -54,3 +54,23 @@ func (r sports) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.S
 	}
 	return &sport, nil
 }
+
+func (r sports) ListRankingRules(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.RankingRule, error) {
+	var rules []*db_model.RankingRule
+	if err := db.Where("sport_id = ?", sportID).Order("priority ASC").Find(&rules).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return rules, nil
+}
+
+func (r sports) SetRankingRules(ctx context.Context, db *gorm.DB, sportID string, rules []*db_model.RankingRule) ([]*db_model.RankingRule, error) {
+	if err := db.Where("sport_id = ?", sportID).Delete(&db_model.RankingRule{}).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if len(rules) > 0 {
+		if err := db.Create(&rules).Error; err != nil {
+			return nil, errors.Wrap(err)
+		}
+	}
+	return rules, nil
+}

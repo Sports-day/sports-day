@@ -99,18 +99,6 @@ func (s *Competition) AddEntries(ctx context.Context, competitionId string, team
 			return errors.Wrap(err)
 		}
 
-		// リーグなら standings を作成/Upsert
-		if comp.Type == "LEAGUE" {
-			for _, teamID := range teamIds {
-				st := &db_model.LeagueStanding{
-					ID:     competitionId,
-					TeamID: teamID,
-				}
-				if _, err := s.leagueRepository.SaveStanding(ctx, tx, st); err != nil {
-					return errors.Wrap(err)
-				}
-			}
-		}
 		return nil
 	})
 

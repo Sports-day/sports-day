@@ -83,12 +83,6 @@ type Judgment {
   group: Group
 }
 
-enum CalculationType {
-  TOTAL_SCORE
-  DIFF_SCORE
-  WIN_SCORE
-}
-
 type Standing {
   id: ID!
   team: Team!
@@ -100,14 +94,13 @@ type Standing {
   goalsFor: Int!
   goalsAgainst: Int!
   goalDiff: Int!
+  matchesPlayed: Int!
 }
 
 type League {
   id: ID!
   name: String!
   teams: [Team!]!
-  calculationType: CalculationType!
-  standings: [Standing!]!
 }
 
 type Information {
@@ -116,13 +109,46 @@ type Information {
   content: String!
 }
 
+enum RankingConditionKey {
+  WIN_POINTS
+  GOAL_DIFF
+  TOTAL_GOALS
+  HEAD_TO_HEAD
+  ADMIN_DECISION
+}
+
+type RankingRule {
+  conditionKey: RankingConditionKey!
+  priority: Int!
+}
+
+type TiebreakPriority {
+  team: Team!
+  priority: Int!
+}
+
 type Sport {
   id: ID!
   name: String!
   weight: Int!
+  rankingRules: [RankingRule!]!
 }
 
 type Scene {
   id: ID!
   name: String!
+}
+
+type PromotionRule {
+  id: ID!
+  sourceCompetition: Competition!
+  targetCompetition: Competition!
+  rankSpec: String!
+  slot: Int
+}
+
+type PromotionStatus {
+  targetCompetitionId: ID!
+  expectedTeamCount: Int!
+  currentEntryCount: Int!
 }

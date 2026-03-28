@@ -151,49 +151,28 @@ func (r *judgmentResolver) Group(ctx context.Context, obj *model.Judgment) (*mod
 
 // Teams is the resolver for the teams field.
 func (r *leagueResolver) Teams(ctx context.Context, obj *model.League) ([]*model.Team, error) {
-	// リーグの順位表を取得
-	standings, err := loader.LoadLeagueStandings(ctx, obj.ID)
+	// 大会エントリーからチームを取得
+	entries, err := loader.LoadCompetitionEntries(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 順位表が空の場合は空のスライスを返す
-	if len(standings) == 0 {
+	if len(entries) == 0 {
 		return []*model.Team{}, nil
 	}
 
-	// 全てのTeamIDを収集
-	teamIds := slices.Map(standings, func(standing *db_model.LeagueStanding) string {
-		return standing.TeamID
+	teamIds := slices.Map(entries, func(entry *db_model.CompetitionEntry) string {
+		return entry.TeamID
 	})
 
-	// チーム情報を一括取得
 	teams, err := loader.LoadTeams(ctx, teamIds)
 	if err != nil {
 		return nil, err
 	}
 
-	// レスポンス形式に変換
 	return slices.Map(teams, func(team *db_model.Team) *model.Team {
 		return model.FormatTeamResponse(team)
 	}), nil
-}
-
-// Standings is the resolver for the standings field.
-func (r *leagueResolver) Standings(ctx context.Context, obj *model.League) ([]*model.Standing, error) {
-	// リーグの順位表を取得
-	standings, err := loader.LoadLeagueStandings(ctx, obj.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Standing形式に変換
-	res := make([]*model.Standing, 0, len(standings))
-	for _, standing := range standings {
-		res = append(res, model.FormatStandingResponse(standing))
-	}
-
-	return res, nil
 }
 
 // Matches is the resolver for the matches field.
@@ -394,48 +373,54 @@ func (r *teamResolver) Judgments(ctx context.Context, obj *model.Team) ([]*model
 
 // Leagues is the resolver for the leagues field.
 func (r *teamResolver) Leagues(ctx context.Context, obj *model.Team) ([]*model.League, error) {
-	// チームが参加しているリーグの順位表を取得
-	standings, err := loader.LoadTeamLeagues(ctx, obj.ID)
+	// チームが参加しているエントリーを取得
+	entries, err := loader.LoadEntryCompetitions(ctx, obj.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	// リーグIDを収集
-	leagueIds := slices.Map(standings, func(standing *db_model.LeagueStanding) string {
-		return standing.ID
+	// 大会IDを収集
+	compIds := slices.Map(entries, func(entry *db_model.CompetitionEntry) string {
+		return entry.CompetitionID
 	})
 
-	// 重複を除去
-	uniqueLeagueIds := make([]string, 0)
-	seen := make(map[string]bool)
-	for _, id := range leagueIds {
-		if !seen[id] {
-			uniqueLeagueIds = append(uniqueLeagueIds, id)
-			seen[id] = true
+	if len(compIds) == 0 {
+		return []*model.League{}, nil
+	}
+
+	// 大会情報を取得してLEAGUEのみフィルタ
+	competitions, err := loader.LoadCompetitions(ctx, compIds)
+	if err != nil {
+		return nil, err
+	}
+
+	var leagueCompIds []string
+	compMap := make(map[string]*db_model.Competition)
+	for _, c := range competitions {
+		if c != nil && c.Type == "LEAGUE" {
+			leagueCompIds = append(leagueCompIds, c.ID)
+			compMap[c.ID] = c
 		}
 	}
 
+	if len(leagueCompIds) == 0 {
+		return []*model.League{}, nil
+	}
+
 	// リーグ情報を取得
-	leagues, err := loader.LoadLeagues(ctx, uniqueLeagueIds)
+	leagues, err := loader.LoadLeagues(ctx, leagueCompIds)
 	if err != nil {
 		return nil, err
-	}
-
-	competitions, err := loader.LoadCompetitions(ctx, uniqueLeagueIds)
-	if err != nil {
-		return nil, err
-	}
-
-	compMap := make(map[string]*db_model.Competition, len(competitions))
-	for _, c := range competitions {
-		compMap[c.ID] = c
 	}
 
 	res := make([]*model.League, 0, len(leagues))
 	for _, lg := range leagues {
+		if lg == nil {
+			continue
+		}
 		comp, ok := compMap[lg.ID]
 		if !ok {
-			return nil, err
+			continue
 		}
 		res = append(res, model.FormatLeagueResponse(lg, comp))
 	}

@@ -140,11 +140,9 @@ input UpdateJudgmentInput {
 input CreateLeagueInput {
   name: String!
   defaultLocationId: ID
-  calculationType: CalculationType!
 }
 
 input UpdateLeagueRuleInput {
-	calculationType: CalculationType
 	winPt:  Int
   drawPt: Int
   losePt: Int
@@ -155,6 +153,28 @@ input GenerateRoundRobinInput {
   matchDuration: Int!
   breakDuration: Int!
   locationId: ID
+}
+
+input RankingRuleInput {
+  conditionKey: RankingConditionKey!
+  priority: Int!
+}
+
+input TiebreakPriorityInput {
+  teamId: ID!
+  priority: Int!
+}
+
+input CreatePromotionRuleInput {
+  sourceCompetitionId: ID!
+  targetCompetitionId: ID!
+  rankSpec: String!
+  slot: Int
+}
+
+input UpdatePromotionRuleInput {
+  rankSpec: String
+  slot: Int
 }
 
 type Query {
@@ -217,6 +237,18 @@ type Query {
   ID指定でリーグを取得する
   """
 	league(id: ID!): League!
+  """
+  リーグの順位表をリアルタイム計算で取得する
+  """
+  leagueStandings(leagueId: ID!): [Standing!]!
+  """
+  進出ルールを取得する（進出元の大会IDで絞り込み）
+  """
+  promotionRules(sourceCompetitionId: ID!): [PromotionRule!]!
+  """
+  進出先の期待チーム数と現在のエントリー数を取得する
+  """
+  promotionStatus(targetCompetitionId: ID!): PromotionStatus!
 }
 
 type Mutation {
@@ -329,7 +361,23 @@ type Mutation {
   """
   generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]!
   """
-  リーグの順位表を計算する
+  スポーツのランキングルールを設定する（全削除→再挿入）
   """
-  calculateLeagueStandings(id: ID!): [Standing!]!
+  setRankingRules(sportId: ID!, rules: [RankingRuleInput!]!): Sport!
+  """
+  リーグのタイブレーク優先度を設定する
+  """
+  setTiebreakPriorities(leagueId: ID!, priorities: [TiebreakPriorityInput!]!): [TiebreakPriority!]!
+  """
+  進出ルールを作成する
+  """
+  createPromotionRule(input: CreatePromotionRuleInput!): PromotionRule!
+  """
+  進出ルールを更新する
+  """
+  updatePromotionRule(id: ID!, input: UpdatePromotionRuleInput!): PromotionRule!
+  """
+  進出ルールを削除する
+  """
+  deletePromotionRule(id: ID!): PromotionRule!
 }

@@ -84,3 +84,51 @@ func (s *Sport) Delete(ctx context.Context, id string) (*db_model.Sport, error) 
 	}
 	return sport, nil
 }
+
+func (s *Sport) GetRankingRules(ctx context.Context, sportID string) ([]*db_model.RankingRule, error) {
+	rules, err := s.sportsRepository.ListRankingRules(ctx, s.db, sportID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return rules, nil
+}
+
+func (s *Sport) SetRankingRules(ctx context.Context, sportID string, rules []model.RankingRuleInput) ([]*db_model.RankingRule, error) {
+	if len(rules) == 0 {
+		return nil, errors.ErrRankingRuleInvalid
+	}
+
+	// priority 重複チェック
+	seen := make(map[int32]bool)
+	for _, r := range rules {
+		if seen[r.Priority] {
+			return nil, errors.ErrRankingRuleInvalid
+		}
+		seen[r.Priority] = true
+	}
+
+	// sport 存在確認
+	if _, err := s.sportsRepository.Get(ctx, s.db, sportID); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	dbRules := make([]*db_model.RankingRule, len(rules))
+	for i, r := range rules {
+		dbRules[i] = &db_model.RankingRule{
+			SportID:      sportID,
+			ConditionKey: string(r.ConditionKey),
+			Priority:     int(r.Priority),
+		}
+	}
+
+	var result []*db_model.RankingRule
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		var txErr error
+		result, txErr = s.sportsRepository.SetRankingRules(ctx, tx, sportID, dbRules)
+		return txErr
+	})
+	if err != nil {
+		return nil, errors.ErrSaveRankingRule
+	}
+	return result, nil
+}
