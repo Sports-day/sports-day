@@ -1,14 +1,24 @@
 import { useState } from 'react'
-import { ImageListPage, ImageCreatePage } from '@/features/images'
+import { ImageListPage, ImageCreatePage, ImageDetailPage } from '@/features/images'
 
-type View = 'list' | 'create'
+type View = 'list' | 'create' | 'detail'
 
 export default function ImagesPage() {
   const [view, setView] = useState<View>('list')
+  const [imageId, setImageId] = useState<string | null>(null)
 
   if (view === 'create') {
     return <ImageCreatePage onBack={() => setView('list')} />
   }
 
-  return <ImageListPage onCreateClick={() => setView('create')} />
+  if (view === 'detail' && imageId) {
+    return <ImageDetailPage imageId={imageId} onBack={() => setView('list')} />
+  }
+
+  return (
+    <ImageListPage
+      onCreateClick={() => setView('create')}
+      onImageClick={(id) => { setImageId(id); setView('detail') }}
+    />
+  )
 }

@@ -1,38 +1,45 @@
-import { Box, Button, Typography } from '@mui/material'
-import { useRef, useState } from 'react'
+import { Box, Button, TextField, Typography } from '@mui/material'
+import { useRef } from 'react'
+import { useImageCreate } from '../hooks/useImageCreate'
 import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
-import { useImages } from '../hooks/useImages'
+
+const INPUT_SX = {
+  mb: 2,
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: 'transparent',
+    '& fieldset': { borderColor: '#5B6DC6', borderWidth: '1px' },
+    '&:hover fieldset': { borderColor: '#5B6DC6' },
+    '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: '1px' },
+  },
+  '& .MuiInputBase-input': { color: '#2F3C8C', fontSize: '13px' },
+  '& .MuiInputLabel-root': { color: '#5B6DC6', fontSize: '13px' },
+  '& .MuiInputLabel-root.Mui-focused': { color: '#5B6DC6' },
+}
 
 type Props = {
   onBack: () => void
 }
 
 export function ImageCreatePage({ onBack }: Props) {
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [file, setFile] = useState<File | null>(null)
+  const { name, setName, url, setUrl, handleCreate } = useImageCreate()
   const inputRef = useRef<HTMLInputElement>(null)
-  const { addImage } = useImages()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0] ?? null
-    setFile(f)
-    setFileName(f ? f.name : null)
+    const file = e.target.files?.[0] ?? null
+    if (file) {
+      if (!name) setName(file.name)
+      setUrl(URL.createObjectURL(file))
+    }
   }
 
-  const handleUpload = () => {
-    if (file) {
-      const url = URL.createObjectURL(file)
-      addImage(file.name, url)
-    }
-    setFileName(null)
-    setFile(null)
-    if (inputRef.current) inputRef.current.value = ''
+  const onCreate = () => {
+    if (!name.trim()) return
+    handleCreate()
     onBack()
   }
 
   return (
     <Box>
-      {/* パンくずリスト */}
       <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
         <Typography
           component="span"
@@ -45,15 +52,29 @@ export function ImageCreatePage({ onBack }: Props) {
         <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>画像作成</Typography>
       </Box>
 
-      {/* カード */}
       <Box sx={{ background: CARD_GRADIENT, borderRadius: 2, p: 2 }}>
         <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
           画像作成
         </Typography>
 
-        {/* ファイル選択行 */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {/* hidden file input */}
+        <TextField
+          fullWidth
+          size="small"
+          label="名前*"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          sx={INPUT_SX}
+        />
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <TextField
+            fullWidth
+            size="small"
+            label="URL"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            sx={{ ...INPUT_SX, mb: 0, flexGrow: 1 }}
+          />
           <input
             ref={inputRef}
             type="file"
@@ -61,7 +82,6 @@ export function ImageCreatePage({ onBack }: Props) {
             style={{ display: 'none' }}
             onChange={handleFileChange}
           />
-
           <Button
             variant="outlined"
             size="small"
@@ -71,28 +91,28 @@ export function ImageCreatePage({ onBack }: Props) {
               borderColor: '#5B6DC6',
               fontSize: '13px',
               whiteSpace: 'nowrap',
+              flexShrink: 0,
               '&:hover': { backgroundColor: '#E8EAF6', borderColor: '#5B6DC6' },
             }}
           >
             ファイルを選択
           </Button>
+        </Box>
 
-          <Typography sx={{ fontSize: '13px', color: '#2F3C8C', minWidth: '120px' }}>
-            {fileName ?? '選択されていません'}
-          </Typography>
-
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="contained"
-            size="small"
-            onClick={handleUpload}
-            disabled={!fileName}
-            sx={{
-              ...SAVE_BUTTON_SX,
-              fontSize: '13px',
-              '&:disabled': { backgroundColor: '#B0B8E8', color: '#fff' },
-            }}
+            onClick={onCreate}
+            sx={{ ...SAVE_BUTTON_SX, fontSize: '13px' }}
           >
-            upload
+            作成
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={onBack}
+            sx={{ color: '#2F3C8C', borderColor: '#5B6DC6', height: '40px', fontSize: '13px', '&:hover': { backgroundColor: '#E8EAF6', borderColor: '#5B6DC6' } }}
+          >
+            キャンセル
           </Button>
         </Box>
       </Box>

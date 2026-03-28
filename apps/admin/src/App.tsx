@@ -1,18 +1,19 @@
-import { useState } from 'react'
-import { Box } from '@mui/material'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { TopHeader, TOP_HEADER_HEIGHT } from '@/components/layout/TopHeader'
-import LoginPage from '@/pages/LoginPage'
-import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage'
-import CompetitionsPage from '@/pages/CompetitionsPage'
-import TeamsPage from '@/pages/TeamsPage'
-import UsersPage from '@/pages/UsersPage'
-import LocationsPage from '@/pages/LocationsPage'
-import PermissionsPage from '@/pages/PermissionsPage'
-import TagsPage from '@/pages/TagsPage'
-import ImagesPage from '@/pages/ImagesPage'
-import ActiveMatchesPage from '@/pages/ActiveMatchesPage'
-import InformationPage from '@/pages/InformationPage'
+import { useState } from "react";
+import { Box } from "@mui/material";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { TopHeader, TOP_HEADER_HEIGHT } from "@/components/layout/TopHeader";
+import { PageTransition } from "@/components/layout/PageTransition";
+import LoginPage from "@/pages/LoginPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import CompetitionsPage from "@/pages/CompetitionsPage";
+import TeamsPage from "@/pages/TeamsPage";
+import UsersPage from "@/pages/UsersPage";
+import LocationsPage from "@/pages/LocationsPage";
+import PermissionsPage from "@/pages/PermissionsPage";
+import TagsPage from "@/pages/TagsPage";
+import ImagesPage from "@/pages/ImagesPage";
+import ActiveMatchesPage from "@/pages/ActiveMatchesPage";
+import InformationPage from "@/pages/InformationPage";
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -30,9 +31,18 @@ export default function App() {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: 'background.default' }}>
-      {showPrivacy && <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />}
-      <TopHeader onMobileMenuToggle={() => setMobileOpen(prev => !prev)} />
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        backgroundColor: "background.default",
+      }}
+    >
+      {showPrivacy && (
+        <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
+      )}
+      <TopHeader onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
       <Sidebar
         selected={selected}
         onSelect={setSelected}
@@ -48,17 +58,21 @@ export default function App() {
           mt: `${TOP_HEADER_HEIGHT}px`,
           p: { xs: 2, sm: 3 },
           minWidth: 0,
+          height: `calc(100vh - ${TOP_HEADER_HEIGHT}px)`,
+          overflowY: "auto",
         }}
       >
-        {selected === 'competitions' && <CompetitionsPage />}
-        {selected === 'teams' && <TeamsPage />}
-        {selected === 'users' && <UsersPage />}
-        {selected === 'locations' && <LocationsPage />}
-        {selected === 'permissions' && <PermissionsPage />}
-        {selected === 'tags' && <TagsPage />}
-        {selected === 'images' && <ImagesPage />}
-        {selected === 'active-matches' && <ActiveMatchesPage />}
-        {selected === 'information' && <InformationPage />}
+        <PageTransition key={selected}>
+          {selected === "competitions" && <CompetitionsPage />}
+          {selected === "teams" && <TeamsPage />}
+          {selected === "users" && <UsersPage />}
+          {selected === "locations" && <LocationsPage />}
+          {selected === "permissions" && <PermissionsPage />}
+          {selected === "tags" && <TagsPage />}
+          {selected === "images" && <ImagesPage />}
+          {selected === "active-matches" && <ActiveMatchesPage />}
+          {selected === "information" && <InformationPage />}
+        </PageTransition>
       </Box>
     </Box>
   )
