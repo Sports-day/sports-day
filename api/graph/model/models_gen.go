@@ -63,6 +63,10 @@ type CreatePromotionRuleInput struct {
 	Slot                *int32 `json:"slot,omitempty"`
 }
 
+type CreateRuleInput struct {
+	Rule string `json:"rule"`
+}
+
 type CreateSceneInput struct {
 	Name string `json:"name"`
 }
@@ -275,6 +279,10 @@ type UpdateMatchResultInput struct {
 type UpdatePromotionRuleInput struct {
 	RankSpec *string `json:"rankSpec,omitempty"`
 	Slot     *int32  `json:"slot,omitempty"`
+}
+
+type UpdateRuleInput struct {
+	Rule *string `json:"rule,omitempty"`
 }
 
 type UpdateSceneInput struct {
