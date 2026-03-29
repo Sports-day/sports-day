@@ -898,6 +898,9 @@ func (s *Tournament) CreateTournament(ctx context.Context, input *model.CreateTo
 			if err == nil {
 				return errors.ErrDuplicateMainBracket
 			}
+			if !errors.Is(err, errors.ErrTournamentNotFound) {
+				return err
+			}
 		}
 
 		var pm sql.NullString
@@ -1894,40 +1897,6 @@ func (s *Tournament) ValidateNoDrawForTournament(ctx context.Context, tx *gorm.D
 
 	if effectiveWinnerID == nil || *effectiveWinnerID == "" {
 		return errors.ErrTournamentWinnerRequired
-	}
-
-	// スコアが同点で winner_team_id が未指定の場合のバリデーション
-	// inputResults が nil の場合は DB 上の既存スコアで判定
-	if inputResults == nil {
-		entries, err := s.matchRepository.BatchGetMatchEntriesByMatchIDs(ctx, tx, []string{matchID})
-		if err != nil {
-			return err
-		}
-		if len(entries) >= 2 {
-			allSame := true
-			firstScore := entries[0].Score
-			for _, e := range entries[1:] {
-				if e.Score != firstScore {
-					allSame = false
-					break
-				}
-			}
-			if allSame && (effectiveWinnerID == nil || *effectiveWinnerID == "") {
-				return errors.ErrTournamentDrawForbidden
-			}
-		}
-	} else if len(inputResults) >= 2 {
-		allSame := true
-		firstScore := inputResults[0].Score
-		for _, r := range inputResults[1:] {
-			if r.Score != firstScore {
-				allSame = false
-				break
-			}
-		}
-		if allSame && (effectiveWinnerID == nil || *effectiveWinnerID == "") {
-			return errors.ErrTournamentDrawForbidden
-		}
 	}
 
 	return nil

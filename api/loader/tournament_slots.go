@@ -27,12 +27,9 @@ func newSlotsByTournamentLoader(svc service.Tournament) func(context.Context, []
 }
 
 func LoadSlotsByTournament(ctx context.Context, tournamentID string) ([]*db_model.TournamentSlot, error) {
-	rows, err := getLoaders(ctx).SlotsByTournamentLoader.LoadAll(ctx, []string{tournamentID})
+	rows, err := getLoaders(ctx).SlotsByTournamentLoader.Load(ctx, tournamentID)
 	if err != nil {
 		return nil, err
 	}
-	if len(rows) == 0 {
-		return []*db_model.TournamentSlot{}, nil
-	}
-	return rows[0], nil
+	return rows, nil
 }

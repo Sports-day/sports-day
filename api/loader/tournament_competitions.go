@@ -27,12 +27,9 @@ func newTournamentsByCompetitionLoader(svc service.Tournament) func(context.Cont
 }
 
 func LoadTournamentsByCompetition(ctx context.Context, competitionID string) ([]*db_model.Tournament, error) {
-	rows, err := getLoaders(ctx).TournamentsByCompetitionLoader.LoadAll(ctx, []string{competitionID})
+	rows, err := getLoaders(ctx).TournamentsByCompetitionLoader.Load(ctx, competitionID)
 	if err != nil {
 		return nil, err
 	}
-	if len(rows) == 0 {
-		return []*db_model.Tournament{}, nil
-	}
-	return rows[0], nil
+	return rows, nil
 }

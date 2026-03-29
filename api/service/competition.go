@@ -708,18 +708,23 @@ func (s *Competition) buildSeedOrderedTeams(ctx context.Context, tx *gorm.DB, ta
 			continue
 		}
 
-		rankToTeam := make(map[int]string)
+		rankToTeams := make(map[int][]string)
 		for _, r := range rankings {
-			rankToTeam[r.rank] = r.teamID
+			rankToTeams[r.rank] = append(rankToTeams[r.rank], r.teamID)
 		}
 
 		for _, rank := range targetRanks {
-			tid, ok := rankToTeam[rank]
-			if !ok || !entryTeams[tid] || seen[tid] {
+			tids, ok := rankToTeams[rank]
+			if !ok {
 				continue
 			}
-			ordered = append(ordered, tid)
-			seen[tid] = true
+			for _, tid := range tids {
+				if !entryTeams[tid] || seen[tid] {
+					continue
+				}
+				ordered = append(ordered, tid)
+				seen[tid] = true
+			}
 		}
 	}
 
