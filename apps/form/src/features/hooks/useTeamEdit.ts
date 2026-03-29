@@ -64,12 +64,14 @@ export function useTeamEdit() {
 
   const teams = searchParams?.get("teamid");
 
-  const { data: userData, loading } = useQuery<GetUsersData>(GET_USERS);
-  const { data: sportSceneData } = useQuery<GetSportSceneData>(GET_SPORTSCENE);
-  const { data: teamData } = useQuery<GetTeamData, GetTeamVars>(GET_TEAM, {
+  const { data: userData, loading: usersLoading } = useQuery<GetUsersData>(GET_USERS);
+  const { data: sportSceneData, loading: sportSceneLoading } =
+    useQuery<GetSportSceneData>(GET_SPORTSCENE);
+  const { data: teamData, loading: teamLoading } = useQuery<GetTeamData, GetTeamVars>(GET_TEAM, {
     variables: { teamId: teams ?? "" },
     skip: !teams,
   });
+  const loading = usersLoading || sportSceneLoading || (!!teams && teamLoading);
 
   const sportScene = useMemo(() => {
     return sportSceneData?.sportScenes?.find(

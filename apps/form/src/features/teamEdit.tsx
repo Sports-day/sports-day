@@ -6,7 +6,6 @@ import {
   TextField,
   Stack,
   Button,
-  Skeleton,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -14,6 +13,7 @@ import Grid from "@mui/material/Grid";
 import { motion } from "framer-motion";
 import MembersCard from "@/components/cards/AboutTeamEditPage/MembersCard";
 import { useTeamEdit } from "@/features/hooks/useTeamEdit";
+import CircularUnderLoad from "@/features/Loading";
 
 export default function TeamEdit() {
   const theme = useTheme();
@@ -30,6 +30,10 @@ export default function TeamEdit() {
     submit,
     isSubmitting,
   } = useTeamEdit();
+
+  if (loading) {
+    return <CircularUnderLoad />;
+  }
 
   return (
     <Box
@@ -227,50 +231,39 @@ export default function TeamEdit() {
                 />
                 <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0, pb: "8px" }}>
                   <Grid container spacing={"16px"}>
-                    {loading
-                      ? Array.from({ length: 30 }).map((_, index) => (
-                          <Grid key={index} size={{ xs: 6, sm: 4, md: 3, lg: 3, xl: 3 }}>
-                            <Skeleton
-                              variant="rectangular"
-                              animation="wave"
-                              height="40px"
-                              sx={{ borderRadius: "10px" }}
-                            />
-                          </Grid>
-                        ))
-                      : filteredUsers?.map((item, index) => (
-                          <Grid
-                            key={item.id}
-                            size={{ xs: 6, sm: 4, md: 3, lg: 3, xl: 3 }}
-                          >
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{
-                                duration: 0.7,
-                                delay: index * 0.02,
-                              }}
-                            >
-                              <MembersCard
-                                studentid={item.id}
-                                studentname={item.name}
-                                addstudent={() =>
-                                  addSelectedMember({
-                                    studentId: String(item.id),
-                                    studentName: item.name,
-                                  })
-                                }
-                                disable={selectedIds.includes(String(item.id))}
-                                isInclude={
-                                  alreadyInAnyTeam.some((a) => a.id === String(item.id)) ||
-                                  selectedIds.includes(String(item.id))
-                                }
-                                remove={() => removeStudent(String(item.id))}
-                              />
-                            </motion.div>
-                          </Grid>
-                        ))}
+                    {filteredUsers?.map((item, index) => (
+                      <Grid
+                        key={item.id}
+                        size={{ xs: 6, sm: 4, md: 3, lg: 3, xl: 3 }}
+                      >
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{
+                            duration: 0.7,
+                            delay: index * 0.02,
+                          }}
+                        >
+                          <MembersCard
+                            studentid={item.id}
+                            studentname={item.name}
+                            addstudent={() =>
+                              addSelectedMember({
+                                studentId: String(item.id),
+                                studentName: item.name,
+                              })
+                            }
+                            disable={selectedIds.includes(String(item.id))}
+                            isInclude={
+                              alreadyInAnyTeam.some((a) => a.id === String(item.id)) ||
+                              selectedIds.includes(String(item.id))
+                            }
+                            remove={() => removeStudent(String(item.id))}
+                          />
+                        </motion.div>
+                      </Grid>
+                    ))}
                   </Grid>
                 </Box>
               </Stack>

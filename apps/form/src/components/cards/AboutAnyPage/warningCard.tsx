@@ -64,7 +64,9 @@ export default function Warning({ warncomment }: warnProps) {
               {warncomment}
             </Typography>
             <Button onClick={handleClose} sx={{ ml: "auto" }}>
-              <Typography sx={{ color: "#A27B1D", fontSize: "20px", lineHeight: 1 }}>
+              <Typography
+                sx={{ color: "#A27B1D", fontSize: "20px", lineHeight: 1 }}
+              >
                 ×
               </Typography>
             </Button>
