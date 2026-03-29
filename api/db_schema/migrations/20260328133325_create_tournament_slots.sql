@@ -1,10 +1,10 @@
 -- migrate:up
 CREATE TABLE `tournament_slots` (
-  `id` VARCHAR(26) COLLATE utf8mb4_bin NOT NULL COMMENT 'ID',
-  `tournament_id` VARCHAR(26) COLLATE utf8mb4_bin NOT NULL COMMENT 'トーナメントID',
-  `match_entry_id` CHAR(26) COLLATE utf8mb4_bin NOT NULL COMMENT '試合エントリーID',
-  `source_type` VARCHAR(16) COLLATE utf8mb4_bin NOT NULL COMMENT 'ソース種別',
-  `source_match_id` VARCHAR(26) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'ソース試合ID',
+  `id` VARCHAR(26) NOT NULL COMMENT 'ID',
+  `tournament_id` VARCHAR(26) NOT NULL COMMENT 'トーナメントID',
+  `match_entry_id` CHAR(26) NOT NULL COMMENT '試合エントリーID',
+  `source_type` VARCHAR(16) NOT NULL COMMENT 'ソース種別',
+  `source_match_id` VARCHAR(26) DEFAULT NULL COMMENT 'ソース試合ID',
   `seed_number` INT DEFAULT NULL COMMENT 'シード番号',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

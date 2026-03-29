@@ -1,10 +1,10 @@
 -- migrate:up
 CREATE TABLE `tournaments` (
-  `id` VARCHAR(26) COLLATE utf8mb4_bin NOT NULL COMMENT 'ID',
-  `competition_id` VARCHAR(26) COLLATE utf8mb4_bin NOT NULL COMMENT '大会ID',
-  `name` VARCHAR(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'ブラケット名',
-  `bracket_type` VARCHAR(16) COLLATE utf8mb4_bin NOT NULL DEFAULT 'MAIN' COMMENT 'ブラケット種別',
-  `placement_method` VARCHAR(16) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '配置方式',
+  `id` VARCHAR(26) NOT NULL COMMENT 'ID',
+  `competition_id` VARCHAR(26) NOT NULL COMMENT '大会ID',
+  `name` VARCHAR(64) NOT NULL COMMENT 'ブラケット名',
+  `bracket_type` VARCHAR(16) NOT NULL DEFAULT 'MAIN' COMMENT 'ブラケット種別',
+  `placement_method` VARCHAR(16) DEFAULT NULL COMMENT '配置方式',
   `display_order` INT NOT NULL DEFAULT 1 COMMENT '表示順',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

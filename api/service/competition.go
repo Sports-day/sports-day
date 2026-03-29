@@ -197,7 +197,7 @@ func (s *Competition) CreateRule(ctx context.Context, input *model.CreatePromoti
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			if source.Type == "TOURNAMENT" {
+			if source.Type == string(model.CompetitionTypeTournament) {
 				if err := s.tournamentService.ValidateRankSpecForTournament(ctx, tx, input.SourceCompetitionID, input.RankSpec); err != nil {
 					return err
 				}
@@ -267,7 +267,7 @@ func (s *Competition) UpdateRule(ctx context.Context, id string, input *model.Up
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			if source.Type == "TOURNAMENT" {
+			if source.Type == string(model.CompetitionTypeTournament) {
 				if err := s.tournamentService.ValidateRankSpecForTournament(ctx, tx, rule.SourceCompetitionID, rule.RankSpec); err != nil {
 					return err
 				}
@@ -377,13 +377,13 @@ func (s *Competition) TryPromote(ctx context.Context, tx *gorm.DB, sourceCompeti
 	var rankings []promotionRankEntry
 
 	switch source.Type {
-	case "LEAGUE":
+	case string(model.CompetitionTypeLeague):
 		standings, err := s.computeStandingsForPromotion(ctx, tx, sourceCompetitionID)
 		if err != nil {
 			return errors.Wrap(err)
 		}
 		rankings = standingsToRankEntries(standings)
-	case "TOURNAMENT":
+	case string(model.CompetitionTypeTournament):
 		if s.tournamentService == nil {
 			return nil
 		}
@@ -501,7 +501,7 @@ func (s *Competition) processOneRule(ctx context.Context, tx *gorm.DB, rule *db_
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		if targetComp.Type == "TOURNAMENT" {
+		if targetComp.Type == string(model.CompetitionTypeTournament) {
 			mainTournament, err := s.tournamentService.GetMainByCompetitionIDTx(ctx, tx, rule.TargetCompetitionID)
 			if err != nil {
 				return errors.Wrap(err)
@@ -548,9 +548,9 @@ func (s *Competition) tryGenerateMatches(ctx context.Context, tx *gorm.DB, targe
 	}
 
 	switch targetComp.Type {
-	case "LEAGUE":
+	case string(model.CompetitionTypeLeague):
 		return s.tryGenerateLeagueMatches(ctx, tx, targetCompetitionID, entries)
-	case "TOURNAMENT":
+	case string(model.CompetitionTypeTournament):
 		return s.tryPlaceSeedTeams(ctx, tx, targetCompetitionID, entries)
 	}
 
@@ -577,7 +577,7 @@ func (s *Competition) tryGenerateLeagueMatches(ctx context.Context, tx *gorm.DB,
 	for _, matchup := range schedule {
 		m := &db_model.Match{
 			ID:            ulid.Make(),
-			Status:        "STANDBY",
+			Status:        string(model.MatchStatusStandby),
 			CompetitionID: targetCompetitionID,
 		}
 		saved, err := s.matchRepository.Save(ctx, tx, m)
@@ -672,31 +672,35 @@ func (s *Competition) buildSeedOrderedTeams(ctx context.Context, tx *gorm.DB, ta
 
 	var ordered []string
 	seen := make(map[string]bool)
+	sourceRankings := make(map[string][]promotionRankEntry)
 
 	for _, rule := range rules {
-		// ソースの順位を取得
-		source, err := s.competitionRepository.Get(ctx, tx, rule.SourceCompetitionID)
-		if err != nil {
-			return nil, errors.Wrap(err)
-		}
+		// キャッシュ済みの場合はDB呼び出しをスキップ
+		rankings, cached := sourceRankings[rule.SourceCompetitionID]
+		if !cached {
+			source, err := s.competitionRepository.Get(ctx, tx, rule.SourceCompetitionID)
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
 
-		var rankings []promotionRankEntry
-		switch source.Type {
-		case "LEAGUE":
-			standings, err := s.computeStandingsForPromotion(ctx, tx, rule.SourceCompetitionID)
-			if err != nil {
-				return nil, errors.Wrap(err)
+			switch source.Type {
+			case string(model.CompetitionTypeLeague):
+				standings, err := s.computeStandingsForPromotion(ctx, tx, rule.SourceCompetitionID)
+				if err != nil {
+					return nil, errors.Wrap(err)
+				}
+				rankings = standingsToRankEntries(standings)
+			case string(model.CompetitionTypeTournament):
+				if s.tournamentService == nil {
+					continue
+				}
+				tournamentRankings, err := s.tournamentService.ComputeTournamentRankingTx(ctx, tx, rule.SourceCompetitionID)
+				if err != nil {
+					return nil, errors.Wrap(err)
+				}
+				rankings = tournamentRankingsToRankEntries(tournamentRankings)
 			}
-			rankings = standingsToRankEntries(standings)
-		case "TOURNAMENT":
-			if s.tournamentService == nil {
-				continue
-			}
-			tournamentRankings, err := s.tournamentService.ComputeTournamentRankingTx(ctx, tx, rule.SourceCompetitionID)
-			if err != nil {
-				return nil, errors.Wrap(err)
-			}
-			rankings = tournamentRankingsToRankEntries(tournamentRankings)
+			sourceRankings[rule.SourceCompetitionID] = rankings
 		}
 
 		targetRanks, err := ParseRankSpec(rule.RankSpec)
@@ -737,19 +741,11 @@ func computeSeedAssignment(placementMethod string, teamIDs []string) map[int]str
 	n := len(teamIDs)
 
 	switch placementMethod {
-	case "SEED_OPTIMIZED":
-		// 順位順にseed 1,2,3,...を割り当て
-		// ブラケット構造がTASK-009で「上位シード同士がブラケット終盤まで当たらない」よう
-		// 生成済みのため、順位→seed の素直な対応で最適配置になる。
-		// 結果として BALANCED と同一ロジックになるが、意味が異なる:
-		//   SEED_OPTIMIZED: ブラケット構造側で最適化済み → seed順=順位順
-		//   BALANCED: 上位と下位が序盤で対戦する対称配置 → seed順=順位順
-		for i, tid := range teamIDs {
-			result[i+1] = tid
-		}
-	case "BALANCED":
-		// 上位と下位が序盤で対戦する対称配置: seed 1→slot 1, seed 2→slot 2, ...
-		// SEED_OPTIMIZED と同一ロジック（理由は上記コメント参照）
+	case "SEED_OPTIMIZED", "BALANCED":
+		// 順位順にseed 1,2,3,...を割り当て。
+		// SEED_OPTIMIZED: ブラケット構造側で最適化済み → seed順=順位順
+		// BALANCED: 上位と下位が序盤で対戦する対称配置 → seed順=順位順
+		// TODO: 将来的に BALANCED で独自の配置ロジックが必要になった場合は分離する
 		for i, tid := range teamIDs {
 			result[i+1] = tid
 		}
@@ -802,10 +798,14 @@ func (s *Competition) calcExpectedTeamCount(ctx context.Context, tx *gorm.DB, ta
 		return 0, errors.Wrap(err)
 	}
 
-	// 全進出元のチームを集約（重複排除）
+	// 全進出元のチームを一括取得（重複排除）
+	sourceCompIDs := make([]string, len(rules))
+	for i, rule := range rules {
+		sourceCompIDs[i] = rule.SourceCompetitionID
+	}
 	sourceTeams := make(map[string]bool)
-	for _, rule := range rules {
-		srcEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{rule.SourceCompetitionID})
+	if len(sourceCompIDs) > 0 {
+		srcEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, sourceCompIDs)
 		if err != nil {
 			return 0, errors.Wrap(err)
 		}
@@ -834,7 +834,7 @@ func (s *Competition) checkTargetNotScored(ctx context.Context, tx *gorm.DB, tar
 		return errors.Wrap(err)
 	}
 	for _, m := range matches {
-		if m.Status != "STANDBY" && m.Status != "CANCELED" {
+		if m.Status != string(model.MatchStatusStandby) && m.Status != string(model.MatchStatusCanceled) {
 			return errors.ErrPromotionRuleLocked
 		}
 	}
@@ -853,15 +853,17 @@ func (s *Competition) CheckScoreModificationAllowed(ctx context.Context, tx *gor
 		return nil
 	}
 
-	for _, rule := range rules {
-		matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{rule.TargetCompetitionID})
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		for _, m := range matches {
-			if m.Status != "STANDBY" && m.Status != "CANCELED" {
-				return errors.ErrScoreModificationLocked
-			}
+	targetCompIDs := make([]string, len(rules))
+	for i, rule := range rules {
+		targetCompIDs[i] = rule.TargetCompetitionID
+	}
+	matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, targetCompIDs)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	for _, m := range matches {
+		if m.Status != string(model.MatchStatusStandby) && m.Status != string(model.MatchStatusCanceled) {
+			return errors.ErrScoreModificationLocked
 		}
 	}
 	return nil
@@ -889,7 +891,7 @@ func (s *Competition) ReconstructPromotions(ctx context.Context, tx *gorm.DB, so
 			return errors.Wrap(err)
 		}
 
-		if targetComp.Type == "TOURNAMENT" && s.tournamentService != nil {
+		if targetComp.Type == string(model.CompetitionTypeTournament) && s.tournamentService != nil {
 			// トーナメント進出先: SEEDスロットの team_id クリア + 後続巻き戻し
 			if err := s.reconstructTournamentTarget(ctx, tx, targetID, sourceCompetitionID); err != nil {
 				return err
@@ -914,7 +916,7 @@ func (s *Competition) reconstructLeagueTarget(ctx context.Context, tx *gorm.DB, 
 		return errors.Wrap(err)
 	}
 	for _, m := range matches {
-		if m.Status == "FINISHED" || m.Status == "ONGOING" {
+		if m.Status == string(model.MatchStatusFinished) || m.Status == string(model.MatchStatusOngoing) {
 			return errors.ErrScoreModificationLocked
 		}
 		if _, err := s.matchRepository.Delete(ctx, tx, m.ID); err != nil {
@@ -934,7 +936,7 @@ func (s *Competition) reconstructTournamentTarget(ctx context.Context, tx *gorm.
 		return errors.Wrap(err)
 	}
 	for _, m := range matches {
-		if m.Status == "FINISHED" || m.Status == "ONGOING" {
+		if m.Status == string(model.MatchStatusFinished) || m.Status == string(model.MatchStatusOngoing) {
 			return errors.ErrScoreModificationLocked
 		}
 	}
@@ -1033,10 +1035,10 @@ func (s *Competition) computeStandingsForPromotion(ctx context.Context, tx *gorm
 	var matchIDs []string
 	allMatchesComplete := true
 	for _, match := range allMatches {
-		if match.Status == "FINISHED" {
+		if match.Status == string(model.MatchStatusFinished) {
 			finishedMatches = append(finishedMatches, match)
 			matchIDs = append(matchIDs, match.ID)
-		} else if match.Status != "CANCELED" {
+		} else if match.Status != string(model.MatchStatusCanceled) {
 			allMatchesComplete = false
 		}
 	}
@@ -1082,7 +1084,7 @@ func (s *Competition) IsAllMatchesComplete(ctx context.Context, tx *gorm.DB, com
 		return false, nil
 	}
 	for _, m := range allMatches {
-		if m.Status != "FINISHED" && m.Status != "CANCELED" {
+		if m.Status != string(model.MatchStatusFinished) && m.Status != string(model.MatchStatusCanceled) {
 			return false, nil
 		}
 	}

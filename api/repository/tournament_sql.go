@@ -187,3 +187,16 @@ func (r *tournamentRepository) ListSeedSlotsByTournamentID(ctx context.Context, 
 	}
 	return slots, nil
 }
+
+func (r *tournamentRepository) ListMatchesByTournamentIDs(ctx context.Context, db *gorm.DB, tournamentIDs []string) ([]*db_model.Match, error) {
+	var matches []*db_model.Match
+	if err := db.WithContext(ctx).
+		Distinct("matches.*").
+		Joins("JOIN match_entries ON match_entries.match_id = matches.id").
+		Joins("JOIN tournament_slots ON tournament_slots.match_entry_id = match_entries.id").
+		Where("tournament_slots.tournament_id IN ?", tournamentIDs).
+		Find(&matches).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return matches, nil
+}

@@ -41,18 +41,18 @@ func (s *Tournament) SetCompetitionService(cs *Competition) {
 	s.competitionService = cs
 }
 
-// --- エラー定義 ---
-
+// エラー定義は api/pkg/errors/error_code.go に統合済み。
+// 後方互換のためパッケージ変数を維持する。
 var (
-	ErrBracketAlreadyExists       = errors.NewError("BRACKET_ALREADY_EXISTS", "ブラケットが既に存在します。resetTournamentBracketsで削除してから再生成してください")
-	ErrMainBracketDeleteForbidden = errors.NewError("MAIN_BRACKET_DELETE_FORBIDDEN", "MAINブラケットは削除できません")
-	ErrDuplicateMainBracket       = errors.NewError("DUPLICATE_MAIN_BRACKET", "同一大会にMAINブラケットを2つ作成できません")
-	ErrTournamentHasScores        = errors.NewError("TOURNAMENT_HAS_SCORES", "試合にスコアが入っているためカスタマイズできません")
-	ErrDAGCycleDetected           = errors.NewError("DAG_CYCLE_DETECTED", "循環参照が検出されました")
-	ErrInvalidSourceMatch         = errors.NewError("INVALID_SOURCE_MATCH", "source_match_idが同一大会内の試合を参照していません")
-	ErrTeamCountTooSmall          = errors.NewError("TEAM_COUNT_TOO_SMALL", "チーム数は2以上である必要があります")
-	ErrNotTournamentCompetition   = errors.NewError("NOT_TOURNAMENT_COMPETITION", "トーナメント型の大会ではありません")
-	ErrTournamentMatchCreateOnly  = errors.NewError("TOURNAMENT_MATCH_CREATE_ONLY", "トーナメント型の大会にはcreateTournamentMatchを使用してください")
+	ErrBracketAlreadyExists       = errors.ErrBracketAlreadyExists
+	ErrMainBracketDeleteForbidden = errors.ErrMainBracketDeleteForbidden
+	ErrDuplicateMainBracket       = errors.ErrDuplicateMainBracket
+	ErrTournamentHasScores        = errors.ErrTournamentHasScores
+	ErrDAGCycleDetected           = errors.ErrDAGCycleDetected
+	ErrInvalidSourceMatch         = errors.ErrInvalidSourceMatch
+	ErrTeamCountTooSmall          = errors.ErrTeamCountTooSmall
+	ErrNotTournamentCompetition   = errors.ErrNotTournamentCompetition
+	ErrTournamentMatchCreateOnly  = errors.ErrTournamentMatchCreateOnly
 )
 
 // --- Query ---
@@ -119,7 +119,7 @@ func (s *Tournament) GetSlotsByMatchEntryIDs(ctx context.Context, matchEntryIDs 
 
 // GetMatchesByTournamentIDs は DataLoader 用
 func (s *Tournament) GetMatchesByTournamentIDs(ctx context.Context, tournamentIDs []string) (map[string][]*db_model.Match, error) {
-	matches, err := s.matchRepository.BatchGetMatchesByTournamentIDs(ctx, s.db, tournamentIDs)
+	matches, err := s.tournamentRepository.ListMatchesByTournamentIDs(ctx, s.db, tournamentIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (s *Tournament) ComputeBracketState(ctx context.Context, txDB *gorm.DB, tou
 		return model.BracketStateBuilding, 0, nil
 	}
 
-	matches, err := s.matchRepository.BatchGetMatchesByTournamentIDs(ctx, db, []string{tournamentID})
+	matches, err := s.tournamentRepository.ListMatchesByTournamentIDs(ctx, db, []string{tournamentID})
 	if err != nil {
 		return model.BracketStateBuilding, 0, err
 	}
@@ -253,7 +253,7 @@ func (s *Tournament) ComputeBracketState(ctx context.Context, txDB *gorm.DB, tou
 	// SEED スロットの team_id チェック
 	hasSeedWithoutTeam := false
 	for _, slot := range slots {
-		if slot.SourceType == "SEED" {
+		if slot.SourceType == string(model.SlotSourceTypeSeed) {
 			entry, ok := entryMap[slot.MatchEntryID]
 			if !ok || !entry.TeamID.Valid {
 				hasSeedWithoutTeam = true
@@ -267,10 +267,10 @@ func (s *Tournament) ComputeBracketState(ctx context.Context, txDB *gorm.DB, tou
 	finishedCount := 0
 	hasStarted := false
 	for _, m := range matches {
-		if m.Status == "FINISHED" {
+		if m.Status == string(model.MatchStatusFinished) {
 			finishedCount++
 			hasStarted = true
-		} else if m.Status == "ONGOING" {
+		} else if m.Status == string(model.MatchStatusOngoing) {
 			hasStarted = true
 		}
 	}
@@ -307,7 +307,7 @@ func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateB
 		if err != nil {
 			return err
 		}
-		if comp.Type != "TOURNAMENT" {
+		if comp.Type != string(model.CompetitionTypeTournament) {
 			return ErrNotTournamentCompetition
 		}
 
@@ -333,7 +333,7 @@ func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateB
 			ID:              ulid.Make(),
 			CompetitionID:   input.CompetitionID,
 			Name:            "メイン",
-			BracketType:     "MAIN",
+			BracketType:     string(model.BracketTypeMain),
 			PlacementMethod: pmStr,
 			DisplayOrder:    1,
 		}
@@ -350,22 +350,17 @@ func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateB
 
 		tournaments = append(tournaments, mainTournament)
 
-		// 3位決定戦
-		if input.HasThirdPlaceMatch != nil && *input.HasThirdPlaceMatch && input.TeamCount >= 4 {
-			subTournament, err := s.generateThirdPlaceMatch(ctx, tx, input.CompetitionID, mainTournament.ID, matchInfos)
-			if err != nil {
-				return err
+		// SUBブラケット生成
+		if input.SubBrackets != nil {
+			for i, sub := range input.SubBrackets {
+				subTournament, err := s.generateSubBracketFromSource(ctx, tx, input.CompetitionID, mainTournament.ID, matchInfos, sub, i+2)
+				if err != nil {
+					return err
+				}
+				if subTournament != nil {
+					tournaments = append(tournaments, subTournament)
+				}
 			}
-			tournaments = append(tournaments, subTournament)
-		}
-
-		// 5-8位決定戦
-		if input.HasFifthToEighthPlayoff != nil && *input.HasFifthToEighthPlayoff && input.TeamCount >= 8 {
-			subTournament, err := s.generateFifthToEighthPlayoff(ctx, tx, input.CompetitionID, mainTournament.ID, matchInfos)
-			if err != nil {
-				return err
-			}
-			tournaments = append(tournaments, subTournament)
 		}
 
 		return nil
@@ -384,36 +379,30 @@ type matchInfo struct {
 	position int // ラウンド内の位置 (0-indexed)
 }
 
-// generateMainBracketMatches はMAINブラケットの試合を生成する
+// generateMainBracketMatches はMAINブラケットの試合を生成する（バルクINSERT）
 func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB, tournament *db_model.Tournament, teamCount int32, competitionID string) ([]matchInfo, error) {
 	rounds := int(math.Ceil(math.Log2(float64(teamCount))))
 	bracketSize := 1 << rounds // 2^rounds
 	byeCount := bracketSize - int(teamCount)
 
-	// シード配置パターンを生成（1-indexed）
 	seedPositions := generateSeedPositions(bracketSize)
 
-	// BYEシードを特定（上位シードから）
 	byeSeeds := make(map[int]bool)
 	for i := 0; i < byeCount; i++ {
-		byeSeeds[i+1] = true // seed 1, 2, ... がBYE
+		byeSeeds[i+1] = true
 	}
 
-	// 各ラウンドの試合を作成
-	// ラウンド1（1回戦）から決勝に向かって作成
-	// ただし、決勝から逆算して試合間接続を設定する
-	// matchMap[round][position] = matchID
 	matchMap := make(map[int]map[int]string)
 
-	// 全matchInfoを収集
 	var allMatchInfos []matchInfo
+	var allMatches []*db_model.Match
+	var allEntries []*db_model.MatchEntry
+	var allSlots []*db_model.TournamentSlot
+	var allJudgments []*db_model.Judgment
 
-	// 1回戦: seedPositions に基づいて対戦を決定
-	// 各ポジションは bracketSize/2 のスロットペア
 	round1Matches := bracketSize / 2
 	matchMap[1] = make(map[int]string)
 
-	// まず、各1回戦スロットのシードペアを確認
 	round1Pairs := make([]slotPair, round1Matches)
 	for i := 0; i < round1Matches; i++ {
 		round1Pairs[i] = slotPair{
@@ -422,35 +411,44 @@ func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB
 		}
 	}
 
-	// BYEでない1回戦の試合だけ作成
+	// newMatchRecordSet はインメモリで6レコードセットを構築する
+	newMatchRecordSet := func(tournamentID, competitionID string) (*db_model.Match, *db_model.TournamentSlot, *db_model.TournamentSlot) {
+		match := &db_model.Match{
+			ID:            ulid.Make(),
+			Time:          time.Time{},
+			Status:        string(model.MatchStatusStandby),
+			CompetitionID: competitionID,
+		}
+		entry1 := &db_model.MatchEntry{ID: ulid.Make(), MatchID: match.ID, Score: 0}
+		entry2 := &db_model.MatchEntry{ID: ulid.Make(), MatchID: match.ID, Score: 0}
+		slot1 := &db_model.TournamentSlot{ID: ulid.Make(), TournamentID: tournamentID, MatchEntryID: entry1.ID, SourceType: string(model.SlotSourceTypeSeed)}
+		slot2 := &db_model.TournamentSlot{ID: ulid.Make(), TournamentID: tournamentID, MatchEntryID: entry2.ID, SourceType: string(model.SlotSourceTypeSeed)}
+		judgment := &db_model.Judgment{
+			ID:      match.ID,
+			Name:    pkggorm.ToNullString(nil),
+			UserID:  pkggorm.ToNullString(nil),
+			TeamID:  pkggorm.ToNullString(nil),
+			GroupID: pkggorm.ToNullString(nil),
+		}
+		allMatches = append(allMatches, match)
+		allEntries = append(allEntries, entry1, entry2)
+		allSlots = append(allSlots, slot1, slot2)
+		allJudgments = append(allJudgments, judgment)
+		return match, slot1, slot2
+	}
+
+	// 1回戦: BYEでない試合だけ作成
 	for i := 0; i < round1Matches; i++ {
 		pair := round1Pairs[i]
-		s1IsBye := byeSeeds[pair.seed1]
-		s2IsBye := byeSeeds[pair.seed2]
-
-		if s1IsBye && s2IsBye {
-			// 両方BYE → 試合なし（通常発生しない）
-			continue
-		}
-		if s1IsBye || s2IsBye {
-			// 片方BYE → 試合なし。BYEでない方が次ラウンドのSEEDスロットに配置
+		if byeSeeds[pair.seed1] || byeSeeds[pair.seed2] {
 			continue
 		}
 
-		// 両方実際のチーム → 試合を作成
-		match, slot1, slot2, err := s.createTournamentMatchRecord(ctx, tx, tournament.ID, competitionID)
-		if err != nil {
-			return nil, err
-		}
+		match, slot1, slot2 := newMatchRecordSet(tournament.ID, competitionID)
 		matchMap[1][i] = match.ID
 
-		// スロット設定: 両方 SEED
-		if err := s.setSlotSeed(ctx, tx, slot1, tournament.ID, int64(pair.seed1)); err != nil {
-			return nil, err
-		}
-		if err := s.setSlotSeed(ctx, tx, slot2, tournament.ID, int64(pair.seed2)); err != nil {
-			return nil, err
-		}
+		slot1.SeedNumber = sql.NullInt64{Valid: true, Int64: int64(pair.seed1)}
+		slot2.SeedNumber = sql.NullInt64{Valid: true, Int64: int64(pair.seed2)}
 
 		allMatchInfos = append(allMatchInfos, matchInfo{matchID: match.ID, round: 1, position: i})
 	}
@@ -461,76 +459,74 @@ func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB
 		matchMap[r] = make(map[int]string)
 
 		for pos := 0; pos < matchesInRound; pos++ {
-			match, slot1, slot2, err := s.createTournamentMatchRecord(ctx, tx, tournament.ID, competitionID)
-			if err != nil {
-				return nil, err
-			}
+			match, slot1, slot2 := newMatchRecordSet(tournament.ID, competitionID)
 			matchMap[r][pos] = match.ID
 			allMatchInfos = append(allMatchInfos, matchInfo{matchID: match.ID, round: r, position: pos})
 
-			// 前ラウンドの2つの位置
 			prevPos1 := pos * 2
 			prevPos2 := pos*2 + 1
 
-			// slot1: 前ラウンドの prevPos1 の勝者
-			if err := s.setSlotSource(ctx, tx, slot1, tournament.ID, r, prevPos1, matchMap, round1Pairs, byeSeeds, seedPositions, bracketSize); err != nil {
+			if err := setSlotSourceInMemory(slot1, r, prevPos1, matchMap, round1Pairs, byeSeeds); err != nil {
 				return nil, err
 			}
+			if err := setSlotSourceInMemory(slot2, r, prevPos2, matchMap, round1Pairs, byeSeeds); err != nil {
+				return nil, err
+			}
+		}
+	}
 
-			// slot2: 前ラウンドの prevPos2 の勝者
-			if err := s.setSlotSource(ctx, tx, slot2, tournament.ID, r, prevPos2, matchMap, round1Pairs, byeSeeds, seedPositions, bracketSize); err != nil {
-				return nil, err
-			}
+	// バルクINSERT
+	if len(allMatches) > 0 {
+		if err := tx.CreateInBatches(allMatches, 100).Error; err != nil {
+			return nil, errors.Wrap(err)
+		}
+	}
+	if len(allEntries) > 0 {
+		if err := tx.CreateInBatches(allEntries, 100).Error; err != nil {
+			return nil, errors.Wrap(err)
+		}
+	}
+	if len(allSlots) > 0 {
+		if err := tx.CreateInBatches(allSlots, 100).Error; err != nil {
+			return nil, errors.Wrap(err)
+		}
+	}
+	if len(allJudgments) > 0 {
+		if err := tx.CreateInBatches(allJudgments, 100).Error; err != nil {
+			return nil, errors.Wrap(err)
 		}
 	}
 
 	return allMatchInfos, nil
 }
 
-// setSlotSource はスロットのソースを前ラウンドの結果に基づいて設定する
-func (s *Tournament) setSlotSource(ctx context.Context, tx *gorm.DB, slot *db_model.TournamentSlot, tournamentID string, currentRound int, prevPos int, matchMap map[int]map[int]string, round1Pairs []slotPair, byeSeeds map[int]bool, seedPositions []int, bracketSize int) error {
+// setSlotSourceInMemory はスロットのソースをインメモリで設定する（DB呼び出しなし）
+func setSlotSourceInMemory(slot *db_model.TournamentSlot, currentRound int, prevPos int, matchMap map[int]map[int]string, round1Pairs []slotPair, byeSeeds map[int]bool) error {
 	prevRound := currentRound - 1
 
-	if prevRound == 0 {
-		// currentRound == 1 はこの関数では呼ばれない
-		return nil
-	}
-
-	// 前ラウンドの試合が存在するか
-	prevMatchID, prevMatchExists := matchMap[prevRound][prevPos]
-
 	if prevRound == 1 {
-		// 1回戦の場合、BYEチェック
 		pair := round1Pairs[prevPos]
-		s1IsBye := byeSeeds[pair.seed1]
-		s2IsBye := byeSeeds[pair.seed2]
-
-		if s1IsBye || s2IsBye {
-			// BYEのある組 → BYEでない方のシードを直接SEEDスロットとして配置
+		if byeSeeds[pair.seed1] || byeSeeds[pair.seed2] {
 			nonByeSeed := pair.seed1
-			if s1IsBye {
+			if byeSeeds[pair.seed1] {
 				nonByeSeed = pair.seed2
 			}
-			slot.SourceType = "SEED"
+			slot.SourceType = string(model.SlotSourceTypeSeed)
 			slot.SourceMatchID = sql.NullString{Valid: false}
 			slot.SeedNumber = sql.NullInt64{Valid: true, Int64: int64(nonByeSeed)}
-			_, err := s.tournamentRepository.SaveSlot(ctx, tx, slot)
-			return err
+			return nil
 		}
 	}
 
+	prevMatchID, prevMatchExists := matchMap[prevRound][prevPos]
 	if !prevMatchExists {
-		// 正常なブラケット生成では到達しないコードパス。
-		// BYE は round 1 で処理済みのため、round 2 以降で前の試合がない場合はデータ不整合。
 		return errors.ErrUnreachableSlotSource
 	}
 
-	// 前の試合が存在 → MATCH_WINNER
-	slot.SourceType = "MATCH_WINNER"
+	slot.SourceType = string(model.SlotSourceTypeMatchWinner)
 	slot.SourceMatchID = sql.NullString{Valid: true, String: prevMatchID}
 	slot.SeedNumber = sql.NullInt64{Valid: false}
-	_, err := s.tournamentRepository.SaveSlot(ctx, tx, slot)
-	return err
+	return nil
 }
 
 type slotPair struct {
@@ -538,22 +534,12 @@ type slotPair struct {
 	seed2 int
 }
 
-// setSlotSeed はスロットをSEEDタイプに設定する
-func (s *Tournament) setSlotSeed(ctx context.Context, tx *gorm.DB, slot *db_model.TournamentSlot, tournamentID string, seedNumber int64) error {
-	slot.SourceType = "SEED"
-	slot.SourceMatchID = sql.NullString{Valid: false}
-	slot.SeedNumber = sql.NullInt64{Valid: true, Int64: seedNumber}
-	_, err := s.tournamentRepository.SaveSlot(ctx, tx, slot)
-	return err
-}
-
-// createTournamentMatchRecord は6レコードセットを作成する
+// createTournamentMatchRecord は6レコードセットを作成する（AddMatch / カスタマイズ操作用）
 func (s *Tournament) createTournamentMatchRecord(ctx context.Context, tx *gorm.DB, tournamentID string, competitionID string) (*db_model.Match, *db_model.TournamentSlot, *db_model.TournamentSlot, error) {
-	// 1. Match
 	match := &db_model.Match{
 		ID:            ulid.Make(),
 		Time:          time.Time{},
-		Status:        "STANDBY",
+		Status:        string(model.MatchStatusStandby),
 		CompetitionID: competitionID,
 	}
 	match, err := s.matchRepository.Save(ctx, tx, match)
@@ -561,43 +547,33 @@ func (s *Tournament) createTournamentMatchRecord(ctx context.Context, tx *gorm.D
 		return nil, nil, nil, errors.ErrSaveMatch
 	}
 
-	// 2. MatchEntries (2つ, team_id = NULL)
-	entries, err := s.matchRepository.AddMatchEntries(ctx, tx, match.ID, []string{})
-	if err != nil || len(entries) < 2 {
-		// AddMatchEntries with empty teamIds won't create entries.
-		// Need to create them manually with null team_id
-		entry1ID := ulid.Make()
-		entry2ID := ulid.Make()
-
-		entry1 := &db_model.MatchEntry{
-			ID:      entry1ID,
-			MatchID: match.ID,
-			TeamID:  sql.NullString{Valid: false},
-			Score:   0,
-		}
-		entry2 := &db_model.MatchEntry{
-			ID:      entry2ID,
-			MatchID: match.ID,
-			TeamID:  sql.NullString{Valid: false},
-			Score:   0,
-		}
-
-		if err := tx.Save(entry1).Error; err != nil {
-			return nil, nil, nil, errors.Wrap(err)
-		}
-		if err := tx.Save(entry2).Error; err != nil {
-			return nil, nil, nil, errors.Wrap(err)
-		}
-
-		entries = []*db_model.MatchEntry{entry1, entry2}
+	entry1 := &db_model.MatchEntry{
+		ID:      ulid.Make(),
+		MatchID: match.ID,
+		TeamID:  sql.NullString{Valid: false},
+		Score:   0,
+	}
+	entry2 := &db_model.MatchEntry{
+		ID:      ulid.Make(),
+		MatchID: match.ID,
+		TeamID:  sql.NullString{Valid: false},
+		Score:   0,
 	}
 
-	// 3. TournamentSlots (2つ)
+	if err := tx.Save(entry1).Error; err != nil {
+		return nil, nil, nil, errors.Wrap(err)
+	}
+	if err := tx.Save(entry2).Error; err != nil {
+		return nil, nil, nil, errors.Wrap(err)
+	}
+
+	entries := []*db_model.MatchEntry{entry1, entry2}
+
 	slot1 := &db_model.TournamentSlot{
 		ID:           ulid.Make(),
 		TournamentID: tournamentID,
 		MatchEntryID: entries[0].ID,
-		SourceType:   "SEED", // デフォルト、後で変更される
+		SourceType:   string(model.SlotSourceTypeSeed),
 	}
 	slot1, err = s.tournamentRepository.SaveSlot(ctx, tx, slot1)
 	if err != nil {
@@ -608,14 +584,13 @@ func (s *Tournament) createTournamentMatchRecord(ctx context.Context, tx *gorm.D
 		ID:           ulid.Make(),
 		TournamentID: tournamentID,
 		MatchEntryID: entries[1].ID,
-		SourceType:   "SEED", // デフォルト、後で変更される
+		SourceType:   string(model.SlotSourceTypeSeed),
 	}
 	slot2, err = s.tournamentRepository.SaveSlot(ctx, tx, slot2)
 	if err != nil {
 		return nil, nil, nil, errors.ErrSaveTournamentSlot
 	}
 
-	// 4. Judgment
 	judgment := &db_model.Judgment{
 		ID:      match.ID,
 		Name:    pkggorm.ToNullString(nil),
@@ -655,6 +630,89 @@ func generateSeedPositions(bracketSize int) []int {
 	return positions
 }
 
+// --- SUBブラケット汎用生成 ---
+
+// generateSubBracketFromSource は sourceRound のラウンドの敗者を集めてSUBブラケットを生成する。
+// sourceRound は「決勝から何ラウンド前か」を表す（1 = 準決勝、2 = 準々決勝）。
+func (s *Tournament) generateSubBracketFromSource(ctx context.Context, tx *gorm.DB, competitionID string, mainTournamentID string, mainMatchInfos []matchInfo, sub *model.SubBracketInput, displayOrder int) (*db_model.Tournament, error) {
+	maxRound := 0
+	for _, mi := range mainMatchInfos {
+		if mi.round > maxRound {
+			maxRound = mi.round
+		}
+	}
+
+	targetRound := maxRound - int(sub.SourceRound)
+	if targetRound < 1 {
+		return nil, nil
+	}
+
+	sourceMatches := findMatchesByRound(mainMatchInfos, targetRound)
+	if len(sourceMatches) < 2 {
+		return nil, nil
+	}
+
+	// sourceMatches が2試合の場合 → 1試合のSUBブラケット（3位決定戦パターン）
+	if len(sourceMatches) == 2 {
+		return s.generateThirdPlaceMatch(ctx, tx, competitionID, mainTournamentID, mainMatchInfos)
+	}
+
+	// sourceMatches が4試合の場合 → 5-8位決定戦パターン
+	if len(sourceMatches) == 4 {
+		return s.generateFifthToEighthPlayoff(ctx, tx, competitionID, mainTournamentID, mainMatchInfos)
+	}
+
+	// それ以外: 汎用的に敗者でトーナメントを構成
+	subTournament := &db_model.Tournament{
+		ID:              ulid.Make(),
+		CompetitionID:   competitionID,
+		Name:            sub.Name,
+		BracketType:     string(model.BracketTypeSub),
+		PlacementMethod: sql.NullString{Valid: false},
+		DisplayOrder:    displayOrder,
+	}
+	subTournament, err := s.tournamentRepository.Save(ctx, tx, subTournament)
+	if err != nil {
+		return nil, errors.ErrSaveTournament
+	}
+
+	// ソースラウンドの敗者同士でペアを作る
+	for i := 0; i+1 < len(sourceMatches); i += 2 {
+		_, sl1, sl2, err := s.createTournamentMatchRecord(ctx, tx, subTournament.ID, competitionID)
+		if err != nil {
+			return nil, err
+		}
+		sl1.SourceType = string(model.SlotSourceTypeMatchLoser)
+		sl1.SourceMatchID = sql.NullString{Valid: true, String: sourceMatches[i].matchID}
+		sl1.SeedNumber = sql.NullInt64{Valid: false}
+		if _, err := s.tournamentRepository.SaveSlot(ctx, tx, sl1); err != nil {
+			return nil, err
+		}
+		sl2.SourceType = string(model.SlotSourceTypeMatchLoser)
+		sl2.SourceMatchID = sql.NullString{Valid: true, String: sourceMatches[i+1].matchID}
+		sl2.SeedNumber = sql.NullInt64{Valid: false}
+		if _, err := s.tournamentRepository.SaveSlot(ctx, tx, sl2); err != nil {
+			return nil, err
+		}
+	}
+
+	return subTournament, nil
+}
+
+// findMatchesByRound は指定ラウンドの試合を position 昇順で返す
+func findMatchesByRound(matchInfos []matchInfo, round int) []matchInfo {
+	var result []matchInfo
+	for _, mi := range matchInfos {
+		if mi.round == round {
+			result = append(result, mi)
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].position < result[j].position
+	})
+	return result
+}
+
 // --- 3位決定戦生成 ---
 
 func (s *Tournament) generateThirdPlaceMatch(ctx context.Context, tx *gorm.DB, competitionID string, mainTournamentID string, mainMatchInfos []matchInfo) (*db_model.Tournament, error) {
@@ -668,7 +726,7 @@ func (s *Tournament) generateThirdPlaceMatch(ctx context.Context, tx *gorm.DB, c
 		ID:              ulid.Make(),
 		CompetitionID:   competitionID,
 		Name:            "3位決定戦",
-		BracketType:     "SUB",
+		BracketType:     string(model.BracketTypeSub),
 		PlacementMethod: sql.NullString{Valid: false},
 		DisplayOrder:    2,
 	}
@@ -685,7 +743,7 @@ func (s *Tournament) generateThirdPlaceMatch(ctx context.Context, tx *gorm.DB, c
 	_ = match
 
 	// slot1: 準決勝1の敗者
-	slot1.SourceType = "MATCH_LOSER"
+	slot1.SourceType = string(model.SlotSourceTypeMatchLoser)
 	slot1.SourceMatchID = sql.NullString{Valid: true, String: semiFinalMatches[0].matchID}
 	slot1.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, slot1); err != nil {
@@ -693,7 +751,7 @@ func (s *Tournament) generateThirdPlaceMatch(ctx context.Context, tx *gorm.DB, c
 	}
 
 	// slot2: 準決勝2の敗者
-	slot2.SourceType = "MATCH_LOSER"
+	slot2.SourceType = string(model.SlotSourceTypeMatchLoser)
 	slot2.SourceMatchID = sql.NullString{Valid: true, String: semiFinalMatches[1].matchID}
 	slot2.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, slot2); err != nil {
@@ -716,7 +774,7 @@ func (s *Tournament) generateFifthToEighthPlayoff(ctx context.Context, tx *gorm.
 		ID:              ulid.Make(),
 		CompetitionID:   competitionID,
 		Name:            "5-8位決定戦",
-		BracketType:     "SUB",
+		BracketType:     string(model.BracketTypeSub),
 		PlacementMethod: sql.NullString{Valid: false},
 		DisplayOrder:    3,
 	}
@@ -730,13 +788,13 @@ func (s *Tournament) generateFifthToEighthPlayoff(ctx context.Context, tx *gorm.
 	if err != nil {
 		return nil, err
 	}
-	sf1Slot1.SourceType = "MATCH_LOSER"
+	sf1Slot1.SourceType = string(model.SlotSourceTypeMatchLoser)
 	sf1Slot1.SourceMatchID = sql.NullString{Valid: true, String: quarterFinalMatches[0].matchID}
 	sf1Slot1.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, sf1Slot1); err != nil {
 		return nil, err
 	}
-	sf1Slot2.SourceType = "MATCH_LOSER"
+	sf1Slot2.SourceType = string(model.SlotSourceTypeMatchLoser)
 	sf1Slot2.SourceMatchID = sql.NullString{Valid: true, String: quarterFinalMatches[1].matchID}
 	sf1Slot2.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, sf1Slot2); err != nil {
@@ -748,13 +806,13 @@ func (s *Tournament) generateFifthToEighthPlayoff(ctx context.Context, tx *gorm.
 	if err != nil {
 		return nil, err
 	}
-	sf2Slot1.SourceType = "MATCH_LOSER"
+	sf2Slot1.SourceType = string(model.SlotSourceTypeMatchLoser)
 	sf2Slot1.SourceMatchID = sql.NullString{Valid: true, String: quarterFinalMatches[2].matchID}
 	sf2Slot1.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, sf2Slot1); err != nil {
 		return nil, err
 	}
-	sf2Slot2.SourceType = "MATCH_LOSER"
+	sf2Slot2.SourceType = string(model.SlotSourceTypeMatchLoser)
 	sf2Slot2.SourceMatchID = sql.NullString{Valid: true, String: quarterFinalMatches[3].matchID}
 	sf2Slot2.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, sf2Slot2); err != nil {
@@ -766,13 +824,13 @@ func (s *Tournament) generateFifthToEighthPlayoff(ctx context.Context, tx *gorm.
 	if err != nil {
 		return nil, err
 	}
-	finalSlot1.SourceType = "MATCH_WINNER"
+	finalSlot1.SourceType = string(model.SlotSourceTypeMatchWinner)
 	finalSlot1.SourceMatchID = sql.NullString{Valid: true, String: sf1.ID}
 	finalSlot1.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, finalSlot1); err != nil {
 		return nil, err
 	}
-	finalSlot2.SourceType = "MATCH_WINNER"
+	finalSlot2.SourceType = string(model.SlotSourceTypeMatchWinner)
 	finalSlot2.SourceMatchID = sql.NullString{Valid: true, String: sf2.ID}
 	finalSlot2.SeedNumber = sql.NullInt64{Valid: false}
 	if _, err := s.tournamentRepository.SaveSlot(ctx, tx, finalSlot2); err != nil {
@@ -843,7 +901,7 @@ func (s *Tournament) CreateTournament(ctx context.Context, input *model.CreateTo
 		if err != nil {
 			return err
 		}
-		if comp.Type != "TOURNAMENT" {
+		if comp.Type != string(model.CompetitionTypeTournament) {
 			return ErrNotTournamentCompetition
 		}
 
@@ -887,6 +945,36 @@ func (s *Tournament) CreateTournament(ctx context.Context, input *model.CreateTo
 	return tournament, nil
 }
 
+func (s *Tournament) UpdateTournament(ctx context.Context, id string, input model.UpdateTournamentInput) (*db_model.Tournament, error) {
+	var tournament *db_model.Tournament
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		t, err := s.tournamentRepository.Get(ctx, tx, id)
+		if err != nil {
+			return err
+		}
+
+		if input.Name != nil {
+			t.Name = *input.Name
+		}
+		if input.DisplayOrder != nil {
+			t.DisplayOrder = int(*input.DisplayOrder)
+		}
+
+		t, err = s.tournamentRepository.Save(ctx, tx, t)
+		if err != nil {
+			return errors.ErrSaveTournament
+		}
+		tournament = t
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return tournament, nil
+}
+
 func (s *Tournament) DeleteTournament(ctx context.Context, id string) (*db_model.Tournament, error) {
 	var tournament *db_model.Tournament
 
@@ -896,7 +984,7 @@ func (s *Tournament) DeleteTournament(ctx context.Context, id string) (*db_model
 			return err
 		}
 
-		if t.BracketType == "MAIN" {
+		if t.BracketType == string(model.BracketTypeMain) {
 			return ErrMainBracketDeleteForbidden
 		}
 
@@ -966,7 +1054,7 @@ func (s *Tournament) CreateTournamentMatch(ctx context.Context, input *model.Cre
 		m := &db_model.Match{
 			ID:            ulid.Make(),
 			Time:          matchTime,
-			Status:        "STANDBY",
+			Status:        string(model.MatchStatusStandby),
 			CompetitionID: t.CompetitionID,
 		}
 		m, err = s.matchRepository.Save(ctx, tx, m)
@@ -1239,7 +1327,7 @@ func (s *Tournament) AssignSeedTeam(ctx context.Context, input *model.AssignSeed
 		}
 
 		// SEEDスロットのみ操作可能
-		if slot.SourceType != "SEED" {
+		if slot.SourceType != string(model.SlotSourceTypeSeed) {
 			return errors.ErrPromotionRuleInvalid
 		}
 
@@ -1350,7 +1438,7 @@ func (s *Tournament) ValidateBracketStructure(ctx context.Context, tx *gorm.DB, 
 	}
 
 	// ブラケット内の全試合を取得
-	matches, err := s.matchRepository.BatchGetMatchesByTournamentIDs(ctx, tx, []string{tournamentID})
+	matches, err := s.tournamentRepository.ListMatchesByTournamentIDs(ctx, tx, []string{tournamentID})
 	if err != nil {
 		return err
 	}
@@ -1394,7 +1482,7 @@ func (s *Tournament) ValidateBracketStructure(ctx context.Context, tx *gorm.DB, 
 	// MATCH_WINNER で参照されている試合 = 後続がある試合
 	sourcedMatches := make(map[string]bool)
 	for _, sl := range slots {
-		if sl.SourceType == "MATCH_WINNER" && sl.SourceMatchID.Valid {
+		if sl.SourceType == string(model.SlotSourceTypeMatchWinner) && sl.SourceMatchID.Valid {
 			sourcedMatches[sl.SourceMatchID.String] = true
 		}
 	}
@@ -1429,12 +1517,12 @@ func (s *Tournament) validateSourceMatch(ctx context.Context, tx *gorm.DB, slot 
 
 // checkNoScores はブラケット内の試合にスコアが入っていないことを確認する
 func (s *Tournament) checkNoScores(ctx context.Context, tx *gorm.DB, tournamentID string) error {
-	matches, err := s.matchRepository.BatchGetMatchesByTournamentIDs(ctx, tx, []string{tournamentID})
+	matches, err := s.tournamentRepository.ListMatchesByTournamentIDs(ctx, tx, []string{tournamentID})
 	if err != nil {
 		return err
 	}
 	for _, m := range matches {
-		if m.Status == "ONGOING" || m.Status == "FINISHED" {
+		if m.Status == string(model.MatchStatusOngoing) || m.Status == string(model.MatchStatusFinished) {
 			return ErrTournamentHasScores
 		}
 	}
@@ -1488,36 +1576,28 @@ func (s *Tournament) ValidateDAG(ctx context.Context, competitionID string) erro
 		return err
 	}
 
-	// 全スロットを取得
-	var allSlots []*db_model.TournamentSlot
-	for _, t := range tournaments {
-		slots, err := s.tournamentRepository.ListByTournamentID(ctx, s.db, t.ID)
-		if err != nil {
-			return err
-		}
-		allSlots = append(allSlots, slots...)
+	// tournament IDs を収集
+	tournamentIDs := make([]string, len(tournaments))
+	for i, t := range tournaments {
+		tournamentIDs[i] = t.ID
 	}
 
-	// entry_id → match_id のマップを構築
-	entryIDs := make([]string, len(allSlots))
-	for i, sl := range allSlots {
-		entryIDs[i] = sl.MatchEntryID
+	// 全スロットを一括取得
+	allSlots, err := s.tournamentRepository.BatchGetByTournamentIDs(ctx, s.db, tournamentIDs)
+	if err != nil {
+		return err
 	}
 
-	// match_entries を取得して entry_id → match_id を構築
-	var allMatchIDs []string
+	// 全試合を一括取得
+	allMatches, err := s.tournamentRepository.ListMatchesByTournamentIDs(ctx, s.db, tournamentIDs)
+	if err != nil {
+		return err
+	}
+	allMatchIDs := make([]string, len(allMatches))
 	matchIDSet := make(map[string]bool)
-	for _, t := range tournaments {
-		matches, err := s.matchRepository.BatchGetMatchesByTournamentIDs(ctx, s.db, []string{t.ID})
-		if err != nil {
-			return err
-		}
-		for _, m := range matches {
-			if !matchIDSet[m.ID] {
-				matchIDSet[m.ID] = true
-				allMatchIDs = append(allMatchIDs, m.ID)
-			}
-		}
+	for i, m := range allMatches {
+		allMatchIDs[i] = m.ID
+		matchIDSet[m.ID] = true
 	}
 
 	// source_match_id からグラフを構築
@@ -1586,7 +1666,7 @@ func (s *Tournament) CheckTournamentCompetition(ctx context.Context, competition
 	if err != nil {
 		return nil // competition が見つからない場合は他のバリデーションに任せる
 	}
-	if comp.Type == "TOURNAMENT" {
+	if comp.Type == string(model.CompetitionTypeTournament) {
 		return ErrTournamentMatchCreateOnly
 	}
 	return nil
@@ -1669,9 +1749,9 @@ func (s *Tournament) ProgressMatch(ctx context.Context, tx *gorm.DB, matchID str
 	for _, slot := range slots {
 		var teamID string
 		switch slot.SourceType {
-		case "MATCH_WINNER":
+		case string(model.SlotSourceTypeMatchWinner):
 			teamID = winnerTeamID
-		case "MATCH_LOSER":
+		case string(model.SlotSourceTypeMatchLoser):
 			teamID = loserTeamID
 		default:
 			continue
@@ -1689,100 +1769,126 @@ func (s *Tournament) ProgressMatch(ctx context.Context, tx *gorm.DB, matchID str
 	return nil
 }
 
-// CanModifyScore はトーナメント試合のスコア修正が可能かを再帰的に判定する。
-// 後続試合（ブラケット間含む）に ONGOING または FINISHED の試合があれば修正不可。
-func (s *Tournament) CanModifyScore(ctx context.Context, tx *gorm.DB, matchID string) error {
-	visited := make(map[string]bool)
-	return s.canModifyScoreRecursive(ctx, tx, matchID, visited)
+// matchGraph はブラケット全体のインメモリグラフ。
+// sourceMatchID → 後続の (slotMatchEntryID, dependentMatchID) リスト
+type matchGraph struct {
+	edges    map[string][]matchGraphEdge
+	matchMap map[string]*db_model.Match
 }
 
-func (s *Tournament) canModifyScoreRecursive(ctx context.Context, tx *gorm.DB, matchID string, visited map[string]bool) error {
+type matchGraphEdge struct {
+	slotMatchEntryID string
+	dependentMatchID string
+}
+
+// buildMatchGraph は competition 内の全ブラケットからインメモリグラフを構築する。
+func (s *Tournament) buildMatchGraph(ctx context.Context, tx *gorm.DB, competitionID string) (*matchGraph, error) {
+	bg, err := s.loadBracketGraph(ctx, tx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// entryID → matchID
+	entryToMatchID := bg.entryIDToMatchID
+
+	// source_match_id → edges
+	edges := make(map[string][]matchGraphEdge)
+	for _, slots := range bg.slotsByTournament {
+		for _, slot := range slots {
+			if slot.SourceMatchID.Valid {
+				depMatchID := entryToMatchID[slot.MatchEntryID]
+				if depMatchID != "" {
+					edges[slot.SourceMatchID.String] = append(edges[slot.SourceMatchID.String], matchGraphEdge{
+						slotMatchEntryID: slot.MatchEntryID,
+						dependentMatchID: depMatchID,
+					})
+				}
+			}
+		}
+	}
+
+	// matchMap を構築
+	matchMap := make(map[string]*db_model.Match)
+	for _, matches := range bg.matchesByTournament {
+		for _, m := range matches {
+			matchMap[m.ID] = m
+		}
+	}
+
+	return &matchGraph{edges: edges, matchMap: matchMap}, nil
+}
+
+// CanModifyScore はトーナメント試合のスコア修正が可能かを判定する。
+// 後続試合（ブラケット間含む）に ONGOING または FINISHED の試合があれば修正不可。
+func (s *Tournament) CanModifyScore(ctx context.Context, tx *gorm.DB, matchID string) error {
+	m, err := s.matchRepository.Get(ctx, tx, matchID)
+	if err != nil {
+		return err
+	}
+	mg, err := s.buildMatchGraph(ctx, tx, m.CompetitionID)
+	if err != nil {
+		return err
+	}
+	visited := make(map[string]bool)
+	return canModifyScoreWalk(mg, matchID, visited)
+}
+
+func canModifyScoreWalk(mg *matchGraph, matchID string, visited map[string]bool) error {
 	if visited[matchID] {
 		return nil
 	}
 	visited[matchID] = true
 
-	// この試合を source_match_id で参照している全スロットを取得
-	slots, err := s.tournamentRepository.ListBySourceMatchID(ctx, tx, matchID)
-	if err != nil {
-		return err
-	}
-
-	for _, slot := range slots {
-		// スロットに紐づく match_entry の試合を取得
-		entry, err := s.matchRepository.GetMatchEntryByID(ctx, tx, slot.MatchEntryID)
-		if err != nil {
-			return err
-		}
-
-		dependentMatch, err := s.matchRepository.Get(ctx, tx, entry.MatchID)
-		if err != nil {
-			return err
-		}
-
-		// 後続試合が ONGOING または FINISHED なら修正不可
-		if dependentMatch.Status == "ONGOING" || dependentMatch.Status == "FINISHED" {
+	for _, edge := range mg.edges[matchID] {
+		dep := mg.matchMap[edge.dependentMatchID]
+		if dep != nil && (dep.Status == string(model.MatchStatusOngoing) || dep.Status == string(model.MatchStatusFinished)) {
 			return errors.ErrTournamentScoreModificationLocked
 		}
-
-		// さらにその先も再帰的にチェック
-		if err := s.canModifyScoreRecursive(ctx, tx, dependentMatch.ID, visited); err != nil {
+		if err := canModifyScoreWalk(mg, edge.dependentMatchID, visited); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
 // RollbackFromMatch はスコア修正時に後続スロットのチーム配置を再帰的にクリアする。
 func (s *Tournament) RollbackFromMatch(ctx context.Context, tx *gorm.DB, matchID string) error {
+	m, err := s.matchRepository.Get(ctx, tx, matchID)
+	if err != nil {
+		return err
+	}
+	mg, err := s.buildMatchGraph(ctx, tx, m.CompetitionID)
+	if err != nil {
+		return err
+	}
 	visited := make(map[string]bool)
-	return s.rollbackRecursive(ctx, tx, matchID, visited)
+	return s.rollbackWalk(ctx, tx, mg, matchID, visited)
 }
 
-// rollbackRecursive は指定された試合を起点に、再帰的にチーム配置をクリアする。
-// 起点試合の winner_team_id もクリアする。呼び出し元（UpdateResult）で新しい値が再設定される前提。
-// ReconstructPromotions から呼ばれる場合も、起点試合の winner_team_id クリアは安全
-// （SEEDスロット起点でそのスロットが属する試合を指定するため）。
-func (s *Tournament) rollbackRecursive(ctx context.Context, tx *gorm.DB, matchID string, visited map[string]bool) error {
+// rollbackWalk は指定された試合を起点に、インメモリグラフを辿ってチーム配置をクリアする。
+// 起点試合の winner_team_id もクリアする。
+func (s *Tournament) rollbackWalk(ctx context.Context, tx *gorm.DB, mg *matchGraph, matchID string, visited map[string]bool) error {
 	if visited[matchID] {
 		return nil
 	}
 	visited[matchID] = true
 
-	// この試合の winner_team_id をクリア（起点試合を含む）
-	m, err := s.matchRepository.Get(ctx, tx, matchID)
-	if err != nil {
-		return err
-	}
-	if m.WinnerTeamID.Valid {
+	// この試合の winner_team_id をクリア
+	if m, ok := mg.matchMap[matchID]; ok && m.WinnerTeamID.Valid {
 		m.WinnerTeamID = sql.NullString{Valid: false}
 		if _, err := s.matchRepository.Save(ctx, tx, m); err != nil {
 			return err
 		}
 	}
 
-	// この試合を参照する全スロットの match_entry.team_id をクリア
-	slots, err := s.tournamentRepository.ListBySourceMatchID(ctx, tx, matchID)
-	if err != nil {
-		return err
-	}
-
-	for _, slot := range slots {
-		if err := s.matchRepository.ClearMatchEntryTeamID(ctx, tx, slot.MatchEntryID); err != nil {
+	for _, edge := range mg.edges[matchID] {
+		if err := s.matchRepository.ClearMatchEntryTeamID(ctx, tx, edge.slotMatchEntryID); err != nil {
 			return err
 		}
-
-		// 後続の試合も再帰的にクリア
-		entry, err := s.matchRepository.GetMatchEntryByID(ctx, tx, slot.MatchEntryID)
-		if err != nil {
-			return err
-		}
-		if err := s.rollbackRecursive(ctx, tx, entry.MatchID, visited); err != nil {
+		if err := s.rollbackWalk(ctx, tx, mg, edge.dependentMatchID, visited); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -1801,17 +1907,6 @@ func (s *Tournament) ValidateNoDrawForTournament(ctx context.Context, tx *gorm.D
 
 	if effectiveWinnerID == nil || *effectiveWinnerID == "" {
 		return errors.ErrTournamentWinnerRequired
-	}
-
-	// スコアが同点かチェック（inputResults が指定されている場合）
-	if len(inputResults) >= 2 && effectiveWinnerID != nil {
-		scores := make(map[int]int) // score → count
-		for _, r := range inputResults {
-			scores[int(r.Score)]++
-		}
-		// 全員同点で、手動 winner 指定がない場合はエラー
-		// ただし管理者が winner_team_id を明示指定している場合はOK（PK戦等）
-		// → winner_team_id は上で必須チェック済みなのでここでは追加チェック不要
 	}
 
 	// スコアが同点で winner_team_id が未指定の場合のバリデーション
@@ -1851,99 +1946,41 @@ func (s *Tournament) ValidateNoDrawForTournament(ctx context.Context, tx *gorm.D
 	return nil
 }
 
-// DeclareForfeit は不戦勝を宣言する。FINISHED + winner 設定 → 自動進行トリガー。
-func (s *Tournament) DeclareForfeit(ctx context.Context, matchID string, winnerTeamID string) (*db_model.Match, error) {
-	var match *db_model.Match
-
-	err := s.db.Transaction(func(tx *gorm.DB) error {
-		m, err := s.matchRepository.Get(ctx, tx, matchID)
-		if err != nil {
-			return err
-		}
-
-		// トーナメント試合かチェック
-		comp, err := s.competitionRepository.Get(ctx, tx, m.CompetitionID)
-		if err != nil {
-			return err
-		}
-		if comp.Type != "TOURNAMENT" {
-			return ErrNotTournamentCompetition
-		}
-
-		// スコア修正制限チェック
-		if err := s.CanModifyScore(ctx, tx, matchID); err != nil {
-			return err
-		}
-
-		// FINISHED + winner 設定
-		m.Status = "FINISHED"
-		m.WinnerTeamID = sql.NullString{Valid: true, String: winnerTeamID}
-
-		updated, err := s.matchRepository.Save(ctx, tx, m)
-		if err != nil {
-			return errors.ErrSaveMatch
-		}
-
-		// 自動進行
-		if err := s.ProgressMatch(ctx, tx, matchID, winnerTeamID); err != nil {
-			return err
-		}
-
-		// 進出トリガー: 全試合完了 or 部分完了（rank_spec確定分）
-		if s.competitionService != nil {
-			if err := s.competitionService.TryPromote(ctx, tx, updated.CompetitionID); err != nil {
-				return err
-			}
-		}
-
-		match = updated
-		return nil
-	})
-
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return match, nil
-}
-
 // IsTournamentMatch は competition.type で判定する。
 func (s *Tournament) IsTournamentMatch(ctx context.Context, tx *gorm.DB, competitionID string) (bool, error) {
 	comp, err := s.competitionRepository.Get(ctx, tx, competitionID)
 	if err != nil {
 		return false, err
 	}
-	return comp.Type == "TOURNAMENT", nil
+	return comp.Type == string(model.CompetitionTypeTournament), nil
 }
 
-// --- トーナメント順位導出 ---
+// --- ブラケットグラフ共通ヘルパー ---
 
-// ComputeTournamentRanking は competition 単位でトーナメント順位を導出する。
-func (s *Tournament) ComputeTournamentRanking(ctx context.Context, competitionID string) ([]*model.TournamentRanking, error) {
-	return s.computeTournamentRankingWithDB(ctx, s.db, competitionID)
+// bracketGraph はブラケット構造のデータ一式を保持する。
+type bracketGraph struct {
+	tournaments        []*db_model.Tournament
+	slotsByTournament  map[string][]*db_model.TournamentSlot
+	matchesByTournament map[string][]*db_model.Match
+	entriesByMatch     map[string][]*db_model.MatchEntry
+	entryIDToMatchID   map[string]string
 }
 
-// ComputeTournamentRankingTx はトランザクション内でトーナメント順位を導出する。
-func (s *Tournament) ComputeTournamentRankingTx(ctx context.Context, tx *gorm.DB, competitionID string) ([]*model.TournamentRanking, error) {
-	return s.computeTournamentRankingWithDB(ctx, tx, competitionID)
-}
-
-func (s *Tournament) computeTournamentRankingWithDB(ctx context.Context, db *gorm.DB, competitionID string) ([]*model.TournamentRanking, error) {
-	// 1. 全ブラケット取得
+// loadBracketGraph は competition 内の全ブラケット構造を一括取得する。
+func (s *Tournament) loadBracketGraph(ctx context.Context, db *gorm.DB, competitionID string) (*bracketGraph, error) {
 	tournaments, err := s.tournamentRepository.ListByCompetitionID(ctx, db, competitionID)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 	if len(tournaments) == 0 {
-		return []*model.TournamentRanking{}, nil
+		return &bracketGraph{tournaments: tournaments}, nil
 	}
 
-	// 2. tournament IDs 収集
 	tournamentIDs := make([]string, len(tournaments))
 	for i, t := range tournaments {
 		tournamentIDs[i] = t.ID
 	}
 
-	// 3. 全スロット取得
 	allSlots, err := s.tournamentRepository.BatchGetByTournamentIDs(ctx, db, tournamentIDs)
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -1953,13 +1990,11 @@ func (s *Tournament) computeTournamentRankingWithDB(ctx context.Context, db *gor
 		slotsByTournament[slot.TournamentID] = append(slotsByTournament[slot.TournamentID], slot)
 	}
 
-	// 4. 全試合取得
-	allMatches, err := s.matchRepository.BatchGetMatchesByTournamentIDs(ctx, db, tournamentIDs)
+	allMatches, err := s.tournamentRepository.ListMatchesByTournamentIDs(ctx, db, tournamentIDs)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	// 5. match_entry 取得
 	matchIDs := make([]string, len(allMatches))
 	for i, m := range allMatches {
 		matchIDs[i] = m.ID
@@ -1973,7 +2008,6 @@ func (s *Tournament) computeTournamentRankingWithDB(ctx context.Context, db *gor
 		}
 	}
 
-	// 6. マッピング構築
 	entryIDToMatchID := make(map[string]string)
 	for _, e := range allEntries {
 		entryIDToMatchID[e.ID] = e.MatchID
@@ -2008,8 +2042,37 @@ func (s *Tournament) computeTournamentRankingWithDB(ctx context.Context, db *gor
 		entriesByMatch[e.MatchID] = append(entriesByMatch[e.MatchID], e)
 	}
 
-	// 7. pure function で順位計算
-	return computeTournamentRanking(tournaments, slotsByTournament, matchesByTournament, entriesByMatch, entryIDToMatchID), nil
+	return &bracketGraph{
+		tournaments:        tournaments,
+		slotsByTournament:  slotsByTournament,
+		matchesByTournament: matchesByTournament,
+		entriesByMatch:     entriesByMatch,
+		entryIDToMatchID:   entryIDToMatchID,
+	}, nil
+}
+
+// --- トーナメント順位導出 ---
+
+// ComputeTournamentRanking は competition 単位でトーナメント順位を導出する。
+func (s *Tournament) ComputeTournamentRanking(ctx context.Context, competitionID string) ([]*model.TournamentRanking, error) {
+	return s.computeTournamentRankingWithDB(ctx, s.db, competitionID)
+}
+
+// ComputeTournamentRankingTx はトランザクション内でトーナメント順位を導出する。
+func (s *Tournament) ComputeTournamentRankingTx(ctx context.Context, tx *gorm.DB, competitionID string) ([]*model.TournamentRanking, error) {
+	return s.computeTournamentRankingWithDB(ctx, tx, competitionID)
+}
+
+func (s *Tournament) computeTournamentRankingWithDB(ctx context.Context, db *gorm.DB, competitionID string) ([]*model.TournamentRanking, error) {
+	bg, err := s.loadBracketGraph(ctx, db, competitionID)
+	if err != nil {
+		return nil, err
+	}
+	if len(bg.tournaments) == 0 {
+		return []*model.TournamentRanking{}, nil
+	}
+
+	return computeTournamentRanking(bg.tournaments, bg.slotsByTournament, bg.matchesByTournament, bg.entriesByMatch, bg.entryIDToMatchID), nil
 }
 
 // --- 順位導出 pure function ---
@@ -2032,7 +2095,7 @@ func computeTournamentRanking(
 	var mainTournament *db_model.Tournament
 	var subTournaments []*db_model.Tournament
 	for _, t := range tournaments {
-		if t.BracketType == "MAIN" {
+		if t.BracketType == string(model.BracketTypeMain) {
 			mainTournament = t
 		} else {
 			subTournaments = append(subTournaments, t)
@@ -2142,7 +2205,7 @@ func computeMatchDepths(
 	successorToSources := make(map[string][]string)
 
 	for _, slot := range slots {
-		if slot.SourceType == "MATCH_WINNER" && slot.SourceMatchID.Valid {
+		if slot.SourceType == string(model.SlotSourceTypeMatchWinner) && slot.SourceMatchID.Valid {
 			sourceMatchID := slot.SourceMatchID.String
 			successorMatchID := slotToMatchID[slot.MatchEntryID]
 			if successorMatchID != "" && matchIDSet[sourceMatchID] {
@@ -2196,7 +2259,7 @@ func computeBracketRanking(
 	var entries []rankEntry
 
 	for _, m := range matches {
-		if m.Status != "FINISHED" {
+		if m.Status != string(model.MatchStatusFinished) {
 			continue
 		}
 		if !m.WinnerTeamID.Valid {
@@ -2250,7 +2313,7 @@ func computeTiedRanks(
 	var mainTournament *db_model.Tournament
 	var subTournaments []*db_model.Tournament
 	for _, t := range tournaments {
-		if t.BracketType == "MAIN" {
+		if t.BracketType == string(model.BracketTypeMain) {
 			mainTournament = t
 		} else {
 			subTournaments = append(subTournaments, t)
@@ -2335,77 +2398,15 @@ func (s *Tournament) ValidateRankSpecForTournament(ctx context.Context, tx *gorm
 		return errors.ErrPromotionRuleInvalid
 	}
 
-	tournaments, err := s.tournamentRepository.ListByCompetitionID(ctx, tx, competitionID)
+	bg, err := s.loadBracketGraph(ctx, tx, competitionID)
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	if len(tournaments) == 0 {
+	if len(bg.tournaments) == 0 {
 		return nil // ブラケット未生成の場合はスキップ
 	}
 
-	tournamentIDs := make([]string, len(tournaments))
-	for i, t := range tournaments {
-		tournamentIDs[i] = t.ID
-	}
-
-	allSlots, err := s.tournamentRepository.BatchGetByTournamentIDs(ctx, tx, tournamentIDs)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	slotsByTournament := make(map[string][]*db_model.TournamentSlot)
-	for _, slot := range allSlots {
-		slotsByTournament[slot.TournamentID] = append(slotsByTournament[slot.TournamentID], slot)
-	}
-
-	allMatches, err := s.matchRepository.BatchGetMatchesByTournamentIDs(ctx, tx, tournamentIDs)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
-	matchIDs := make([]string, len(allMatches))
-	for i, m := range allMatches {
-		matchIDs[i] = m.ID
-	}
-
-	var allEntries []*db_model.MatchEntry
-	if len(matchIDs) > 0 {
-		allEntries, err = s.matchRepository.BatchGetMatchEntriesByMatchIDs(ctx, tx, matchIDs)
-		if err != nil {
-			return errors.Wrap(err)
-		}
-	}
-
-	entryIDToMatchID := make(map[string]string)
-	for _, e := range allEntries {
-		entryIDToMatchID[e.ID] = e.MatchID
-	}
-
-	entryToTournament := make(map[string]string)
-	for _, slot := range allSlots {
-		entryToTournament[slot.MatchEntryID] = slot.TournamentID
-	}
-
-	// match→tournament を O(n) で構築（computeTournamentRankingWithDB と同じパターン）
-	matchToTournament := make(map[string]string)
-	for entryID, tournamentID := range entryToTournament {
-		matchID := entryIDToMatchID[entryID]
-		if matchID != "" {
-			matchToTournament[matchID] = tournamentID
-		}
-	}
-
-	matchesByTournament := make(map[string][]*db_model.Match)
-	matchMap := make(map[string]*db_model.Match)
-	for _, m := range allMatches {
-		matchMap[m.ID] = m
-	}
-	for matchID, tournamentID := range matchToTournament {
-		if m, ok := matchMap[matchID]; ok {
-			matchesByTournament[tournamentID] = append(matchesByTournament[tournamentID], m)
-		}
-	}
-
-	tiedRanks := computeTiedRanks(tournaments, slotsByTournament, matchesByTournament, entryIDToMatchID)
+	tiedRanks := computeTiedRanks(bg.tournaments, bg.slotsByTournament, bg.matchesByTournament, bg.entryIDToMatchID)
 
 	for _, rank := range ranks {
 		if tiedRanks[rank] {
@@ -2422,7 +2423,7 @@ func (s *Tournament) ValidateRankSpecForTournament(ctx context.Context, tx *gorm
 func computeSubBaseRank(subSlots []*db_model.TournamentSlot, mainMatchDepths map[string]int) int {
 	minDepth := -1
 	for _, slot := range subSlots {
-		if slot.SourceType == "MATCH_LOSER" && slot.SourceMatchID.Valid {
+		if slot.SourceType == string(model.SlotSourceTypeMatchLoser) && slot.SourceMatchID.Valid {
 			if depth, ok := mainMatchDepths[slot.SourceMatchID.String]; ok {
 				if minDepth == -1 || depth < minDepth {
 					minDepth = depth

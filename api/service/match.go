@@ -189,14 +189,14 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 		}
 
 		// スコア修正制限チェック: 進出先の試合が稼働中なら修正不可（リーグ・トーナメント共通）
-		if s.competitionService != nil && input.Results != nil {
+		if s.competitionService != nil && (input.Results != nil || input.WinnerTeamID != nil) {
 			if err := s.competitionService.CheckScoreModificationAllowed(ctx, tx, m.CompetitionID); err != nil {
 				return err
 			}
 		}
 
 		// トーナメント固有: グラフ探索によるスコア修正制限
-		if isTournament && s.tournamentService != nil && input.Results != nil {
+		if isTournament && s.tournamentService != nil && (input.Results != nil || input.WinnerTeamID != nil) {
 			if err := s.tournamentService.CanModifyScore(ctx, tx, id); err != nil {
 				return err
 			}
@@ -236,7 +236,11 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 		match = updated
 
 		// 副作用: FINISHED 時の処理
-		if updated.Status == "FINISHED" {
+		if updated.Status == string(model.MatchStatusFinished) {
+			// トーナメント試合では winner 必須
+			if isTournament && !updated.WinnerTeamID.Valid {
+				return errors.ErrTournamentDrawForbidden
+			}
 			if isTournament && s.tournamentService != nil && updated.WinnerTeamID.Valid {
 				// トーナメント試合: 自動進行
 				if err := s.tournamentService.ProgressMatch(ctx, tx, id, updated.WinnerTeamID.String); err != nil {
@@ -345,6 +349,18 @@ func (s *Match) GetMatchEntriesMapByMatchIDs(ctx context.Context, matchIds []str
 		matchEntriesMap[matchEntry.MatchID] = append(matchEntriesMap[matchEntry.MatchID], matchEntry)
 	}
 	return matchEntriesMap, nil
+}
+
+func (s *Match) GetMatchEntriesMapByIDs(ctx context.Context, ids []string) (map[string]*db_model.MatchEntry, error) {
+	entries, err := s.matchRepository.BatchGetMatchEntriesByIDs(ctx, s.db, ids)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	result := make(map[string]*db_model.MatchEntry)
+	for _, entry := range entries {
+		result[entry.ID] = entry
+	}
+	return result, nil
 }
 
 func (s *Match) GetMatchEntriesMapByTeamIDs(ctx context.Context, teamIds []string) (map[string][]*db_model.MatchEntry, error) {

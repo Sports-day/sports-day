@@ -180,6 +180,14 @@ func (r *matchRepository) GetMatchEntryByID(ctx context.Context, db *gorm.DB, id
 	return &entry, nil
 }
 
+func (r *matchRepository) BatchGetMatchEntriesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.MatchEntry, error) {
+	var entries []*db_model.MatchEntry
+	if err := db.WithContext(ctx).Where("id IN ?", ids).Find(&entries).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return entries, nil
+}
+
 func (r *matchRepository) ClearMatchEntryTeamID(ctx context.Context, db *gorm.DB, matchEntryID string) error {
 	if err := db.WithContext(ctx).Model(&db_model.MatchEntry{}).
 		Where("id = ?", matchEntryID).
@@ -198,15 +206,4 @@ func (r *matchRepository) UpdateMatchEntryTeamID(ctx context.Context, db *gorm.D
 	return nil
 }
 
-func (r *matchRepository) BatchGetMatchesByTournamentIDs(ctx context.Context, db *gorm.DB, tournamentIDs []string) ([]*db_model.Match, error) {
-	var matches []*db_model.Match
-	if err := db.WithContext(ctx).
-		Distinct("matches.*").
-		Joins("JOIN match_entries ON match_entries.match_id = matches.id").
-		Joins("JOIN tournament_slots ON tournament_slots.match_entry_id = match_entries.id").
-		Where("tournament_slots.tournament_id IN ?", tournamentIDs).
-		Find(&matches).Error; err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return matches, nil
-}
+

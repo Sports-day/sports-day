@@ -64,6 +64,17 @@ var (
 	ErrInvalidSlotCount                  = NewError("INVALID_SLOT_COUNT", "試合に紐づくスロット数が不正です（2である必要があります）")
 	ErrMultipleFinalMatches              = NewError("MULTIPLE_FINAL_MATCHES", "ブラケット内に最終試合が正確に1つ存在しません")
 	ErrUnreachableSlotSource             = NewError("UNREACHABLE_SLOT_SOURCE", "ブラケット生成中に不正な状態が検出されました")
+
+	// トーナメントブラケット管理
+	ErrBracketAlreadyExists       = NewError("BRACKET_ALREADY_EXISTS", "ブラケットが既に存在します。resetTournamentBracketsで削除してから再生成してください")
+	ErrMainBracketDeleteForbidden = NewError("MAIN_BRACKET_DELETE_FORBIDDEN", "MAINブラケットは削除できません")
+	ErrDuplicateMainBracket       = NewError("DUPLICATE_MAIN_BRACKET", "同一大会にMAINブラケットを2つ作成できません")
+	ErrTournamentHasScores        = NewError("TOURNAMENT_HAS_SCORES", "試合にスコアが入っているためカスタマイズできません")
+	ErrDAGCycleDetected           = NewError("DAG_CYCLE_DETECTED", "循環参照が検出されました")
+	ErrInvalidSourceMatch         = NewError("INVALID_SOURCE_MATCH", "source_match_idが同一大会内の試合を参照していません")
+	ErrTeamCountTooSmall          = NewError("TEAM_COUNT_TOO_SMALL", "チーム数は2以上である必要があります")
+	ErrNotTournamentCompetition   = NewError("NOT_TOURNAMENT_COMPETITION", "トーナメント型の大会ではありません")
+	ErrTournamentMatchCreateOnly  = NewError("TOURNAMENT_MATCH_CREATE_ONLY", "トーナメント型の大会にはcreateTournamentMatchを使用してください")
 	/*
 		Authentication
 	*/

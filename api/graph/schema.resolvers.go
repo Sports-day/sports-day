@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -487,16 +486,7 @@ func (r *mutationResolver) GenerateBracket(ctx context.Context, input model.Gene
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*model.Tournament, len(tournaments))
-	for i, t := range tournaments {
-		state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
-		if err != nil {
-			state = model.BracketStateBuilding
-			progress = 0
-		}
-		result[i] = model.FormatTournamentResponse(t, state, progress)
-	}
-	return result, nil
+	return r.computeBracketStateForTournaments(ctx, tournaments)
 }
 
 // CreateTournament is the resolver for the createTournament field.
@@ -506,6 +496,15 @@ func (r *mutationResolver) CreateTournament(ctx context.Context, input model.Cre
 		return nil, err
 	}
 	return model.FormatTournamentResponse(tournament, model.BracketStateBuilding, 0), nil
+}
+
+// UpdateTournament is the resolver for the updateTournament field.
+func (r *mutationResolver) UpdateTournament(ctx context.Context, id string, input model.UpdateTournamentInput) (*model.Tournament, error) {
+	tournament, err := r.TournamentService.UpdateTournament(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return r.computeBracketStateForTournament(ctx, tournament)
 }
 
 // DeleteTournament is the resolver for the deleteTournament field.
@@ -564,15 +563,6 @@ func (r *mutationResolver) ResetTournamentBrackets(ctx context.Context, competit
 		return nil, err
 	}
 	return model.FormatCompetitionResponse(comp), nil
-}
-
-// DeclareForfeit is the resolver for the declareForfeit field.
-func (r *mutationResolver) DeclareForfeit(ctx context.Context, input model.DeclareForfeitInput) (*model.Match, error) {
-	match, err := r.TournamentService.DeclareForfeit(ctx, input.MatchID, input.WinnerTeamID)
-	if err != nil {
-		return nil, err
-	}
-	return model.FormatMatchResponse(match), nil
 }
 
 // AssignSeedTeam is the resolver for the assignSeedTeam field.
@@ -911,12 +901,7 @@ func (r *queryResolver) Tournament(ctx context.Context, id string) (*model.Tourn
 	if err != nil {
 		return nil, err
 	}
-	state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
-	if err != nil {
-		state = model.BracketStateBuilding
-		progress = 0
-	}
-	return model.FormatTournamentResponse(t, state, progress), nil
+	return r.computeBracketStateForTournament(ctx, t)
 }
 
 // Tournaments is the resolver for the tournaments field.
@@ -925,16 +910,7 @@ func (r *queryResolver) Tournaments(ctx context.Context, competitionID string) (
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*model.Tournament, len(tournaments))
-	for i, t := range tournaments {
-		state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
-		if err != nil {
-			state = model.BracketStateBuilding
-			progress = 0
-		}
-		result[i] = model.FormatTournamentResponse(t, state, progress)
-	}
-	return result, nil
+	return r.computeBracketStateForTournaments(ctx, tournaments)
 }
 
 // TournamentRanking is the resolver for the tournamentRanking field.

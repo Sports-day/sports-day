@@ -7,7 +7,6 @@ package graph
 import (
 	"context"
 	"fmt"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -67,16 +66,7 @@ func (r *competitionResolver) Tournaments(ctx context.Context, obj *model.Compet
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*model.Tournament, len(tournaments))
-	for i, t := range tournaments {
-		state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
-		if err != nil {
-			state = model.BracketStateBuilding
-			progress = 0
-		}
-		result[i] = model.FormatTournamentResponse(t, state, progress)
-	}
-	return result, nil
+	return r.computeBracketStateForTournaments(ctx, tournaments)
 }
 
 // Teams is the resolver for the teams field.
@@ -456,7 +446,7 @@ func (r *tournamentResolver) Competition(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, nil
+		return nil, fmt.Errorf("competition not found: %s", obj.CompetitionID)
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -502,22 +492,19 @@ func (r *tournamentSlotResolver) Tournament(ctx context.Context, obj *model.Tour
 		return nil, err
 	}
 	if len(tournaments) == 0 || tournaments[0] == nil {
-		return nil, nil
+		return nil, fmt.Errorf("tournament not found: %s", obj.TournamentID)
 	}
-	t := tournaments[0]
-	state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
-	if err != nil {
-		state = model.BracketStateBuilding
-		progress = 0
-	}
-	return model.FormatTournamentResponse(t, state, progress), nil
+	return r.computeBracketStateForTournament(ctx, tournaments[0])
 }
 
 // MatchEntry is the resolver for the matchEntry field.
 func (r *tournamentSlotResolver) MatchEntry(ctx context.Context, obj *model.TournamentSlot) (*model.MatchEntry, error) {
-	entry, err := r.TournamentService.GetMatchEntry(ctx, obj.MatchEntryID)
+	entry, err := loader.LoadMatchEntry(ctx, obj.MatchEntryID)
 	if err != nil {
 		return nil, err
+	}
+	if entry == nil {
+		return nil, nil
 	}
 	return model.FormatMatchEntryResponse(entry), nil
 }

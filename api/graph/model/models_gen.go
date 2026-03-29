@@ -86,7 +86,7 @@ type CreateTournamentInput struct {
 	DisplayOrder    *int32           `json:"displayOrder,omitempty"`
 }
 
-// ブラケット内試合追加（6レコードセット作成: Match + 2 MatchEntry + 2 TournamentSlot + 1 Judgment）
+// ブラケット内試合追加
 type CreateTournamentMatchInput struct {
 	TournamentID string         `json:"tournamentId"`
 	Slot1        *SlotInput     `json:"slot1"`
@@ -100,19 +100,12 @@ type CreateUserInput struct {
 	Email string `json:"email"`
 }
 
-// 不戦勝宣言
-type DeclareForfeitInput struct {
-	MatchID      string `json:"matchId"`
-	WinnerTeamID string `json:"winnerTeamId"`
-}
-
 // ブラケット自動生成
 type GenerateBracketInput struct {
-	CompetitionID           string           `json:"competitionId"`
-	TeamCount               int32            `json:"teamCount"`
-	HasThirdPlaceMatch      *bool            `json:"hasThirdPlaceMatch,omitempty"`
-	HasFifthToEighthPlayoff *bool            `json:"hasFifthToEighthPlayoff,omitempty"`
-	PlacementMethod         *PlacementMethod `json:"placementMethod,omitempty"`
+	CompetitionID   string             `json:"competitionId"`
+	TeamCount       int32              `json:"teamCount"`
+	SubBrackets     []*SubBracketInput `json:"subBrackets,omitempty"`
+	PlacementMethod *PlacementMethod   `json:"placementMethod,omitempty"`
 }
 
 type GenerateRoundRobinInput struct {
@@ -206,6 +199,12 @@ type Sport struct {
 	Name         string         `json:"name"`
 	Weight       int32          `json:"weight"`
 	RankingRules []*RankingRule `json:"rankingRules"`
+}
+
+// SUBブラケット定義（自動生成用）
+type SubBracketInput struct {
+	Name        string `json:"name"`
+	SourceRound int32  `json:"sourceRound"`
 }
 
 type TiebreakPriority struct {
@@ -303,6 +302,12 @@ type UpdateTeamInput struct {
 type UpdateTeamUsersInput struct {
 	AddUserIds    []string `json:"addUserIds,omitempty"`
 	RemoveUserIds []string `json:"removeUserIds,omitempty"`
+}
+
+// トーナメント（ブラケット）更新
+type UpdateTournamentInput struct {
+	Name         *string `json:"name,omitempty"`
+	DisplayOrder *int32  `json:"displayOrder,omitempty"`
 }
 
 type BracketState string
