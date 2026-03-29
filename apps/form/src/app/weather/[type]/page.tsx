@@ -35,8 +35,8 @@ export default function SportChoice() {
   if (error) {
     throw error;
   }
-  const weatherType = data?.scene.name;
-  const sportData = data?.scene.sports;
+  const weatherType = data?.scene?.name ?? "不明な種別";
+  const sportData = data?.scene?.sports ?? [];
 
   return (
     <Box sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>

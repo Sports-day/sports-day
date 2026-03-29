@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { Noto_Sans_JP } from "next/font/google";
 import AppProviders from "@/components/AppProviders";
@@ -11,6 +11,11 @@ const noto = Noto_Sans_JP({
 
 export const metadata: Metadata = {
   title: "SPORTSDAY FORM",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
