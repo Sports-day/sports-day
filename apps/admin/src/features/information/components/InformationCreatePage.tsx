@@ -1,7 +1,6 @@
-import { Box, Button, TextField, Typography } from '@mui/material'
-import { useState } from 'react'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
-import { useAnnouncements } from '../hooks/useAnnouncements'
+import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { useInformationCreate } from '../hooks/useInformationCreate'
 
 const INPUT_SX = {
   mb: 2,
@@ -21,29 +20,16 @@ type Props = {
 }
 
 export function InformationCreatePage({ onBack }: Props) {
-  const [name, setName] = useState('')
-  const [content, setContent] = useState('')
-  const { addAnnouncement } = useAnnouncements()
-
-  const handleCreate = () => {
-    if (!name.trim()) return
-    addAnnouncement(name, content)
-    onBack()
-  }
+  const { name, setName, content, setContent, handleCreate } = useInformationCreate(onBack)
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Typography
-          component="span"
-          onClick={onBack}
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-        >
+      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           お知らせ
-        </Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>/</Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>お知らせ作成</Typography>
-      </Box>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>お知らせ作成</Typography>
+      </Breadcrumbs>
 
       <Box sx={{ background: CARD_GRADIENT, borderRadius: 2, p: 2 }}>
         <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>

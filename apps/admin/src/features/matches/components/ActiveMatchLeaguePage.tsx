@@ -1,6 +1,7 @@
 import {
   Box,
   Breadcrumbs,
+  ButtonBase,
   Button,
   Card,
   CardContent,
@@ -14,15 +15,14 @@ import {
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
-import { useActiveMatchLeague } from '../hooks/useActiveMatchLeague'
+import { useActiveMatchLeague, statusLabel } from '../hooks/useActiveMatchLeague'
 import { useLeagueRegenerate } from '../hooks/useLeagueRegenerate'
 import { useBulkEdit } from '../hooks/useBulkEdit'
 import { useMatchEdit } from '../hooks/useMatchEdit'
 import { LeagueRegenerateOverlay } from './LeagueRegenerateOverlay'
 import { ActiveMatchBulkEditPage } from './ActiveMatchBulkEditPage'
 import { MatchEditPage } from './MatchEditPage'
-import type { ActiveTeam, ActiveMatch } from '../types'
-import { CARD_GRADIENT } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 // ─── 定数 ────────────────────────────────────────────────
 const CELL_BORDER = '1px solid #5B6DC6'
@@ -50,66 +50,6 @@ const SMALL_BTN_SX = {
   '&:hover': { backgroundColor: '#E5E6F0' },
 }
 
-// ─── 統計計算 ─────────────────────────────────────────────
-type TeamStats = {
-  points: number
-  goalsFor: number
-  goalsAgainst: number
-  matchesPlayed: number
-  winRate: number
-  totalGoalRate: number
-}
-
-function calcStats(team: ActiveTeam, matches: ActiveMatch[]): TeamStats {
-  let wins = 0, draws = 0, goalsFor = 0, goalsAgainst = 0, matchesPlayed = 0
-  matches.forEach((m) => {
-    const isHome = m.teamAId === team.id
-    const isAway = m.teamBId === team.id
-    if (!isHome && !isAway) return
-    if (m.status !== 'finished') return
-    matchesPlayed++
-    const myScore = isHome ? (m.scoreA ?? 0) : (m.scoreB ?? 0)
-    const oppScore = isHome ? (m.scoreB ?? 0) : (m.scoreA ?? 0)
-    goalsFor += myScore
-    goalsAgainst += oppScore
-    if (myScore > oppScore) wins++
-    else if (myScore === oppScore) draws++
-  })
-  const points = wins * 3 + draws
-  return {
-    points,
-    goalsFor,
-    goalsAgainst,
-    matchesPlayed,
-    winRate: matchesPlayed > 0 ? points / (matchesPlayed * 3) : 0,
-    totalGoalRate: matchesPlayed > 0 ? goalsFor / matchesPlayed : 0,
-  }
-}
-
-function calcRankLabel(team: ActiveTeam, allTeams: ActiveTeam[], statsMap: Map<string, TeamStats>): string {
-  const my = statsMap.get(team.id)!
-  const myDiff = my.goalsFor - my.goalsAgainst
-  let better = 0, tied = 0
-  allTeams.forEach((t) => {
-    if (t.id === team.id) return
-    const s = statsMap.get(t.id)!
-    const sDiff = s.goalsFor - s.goalsAgainst
-    if (s.points > my.points || (s.points === my.points && sDiff > myDiff) || (s.points === my.points && sDiff === myDiff && s.goalsFor > my.goalsFor)) {
-      better++
-    } else if (s.points === my.points && sDiff === myDiff && s.goalsFor === my.goalsFor) {
-      tied++
-    }
-  })
-  const rank = better + 1
-  return tied > 0 ? `同率${rank}位` : `${rank}位`
-}
-
-function statusLabel(status: ActiveMatch['status']): string {
-  if (status === 'finished') return '終了'
-  if (status === 'ongoing') return '進行中'
-  return '未登録'
-}
-
 // ─── コンポーネント ──────────────────────────────────────
 type Props = {
   competitionId: string
@@ -128,7 +68,7 @@ export function ActiveMatchLeaguePage({
   onBackToList,
   onBackToCompetition,
 }: Props) {
-  const { league, grid, allFinished } = useActiveMatchLeague(competitionId, leagueId)
+  const { league, grid, allFinished, statsMap, rankLabels } = useActiveMatchLeague(competitionId, leagueId)
   const regen = useLeagueRegenerate(competitionId, leagueId)
   const bulkEdit = useBulkEdit(competitionId, leagueId)
   const matchEdit = useMatchEdit()
@@ -176,7 +116,6 @@ export function ActiveMatchLeaguePage({
     )
   }
 
-  const statsMap = new Map(league.teams.map((t) => [t.id, calcStats(t, league.matches)]))
   const teamMap = new Map(league.teams.map((t) => [t.id, t]))
 
   // 試合編集ページ表示中
@@ -189,19 +128,22 @@ export function ActiveMatchLeaguePage({
           match={matchEdit.selectedMatch}
           teamA={tA}
           teamB={tB}
-          leagueName={leagueName}
-          competitionName={competitionName}
-          scoreA={matchEdit.scoreA}
-          scoreB={matchEdit.scoreB}
-          winner={matchEdit.winner}
-          matchStatus={matchEdit.matchStatus}
-          onScoreAChange={matchEdit.setScoreA}
-          onScoreBChange={matchEdit.setScoreB}
-          onWinnerChange={matchEdit.setWinner}
-          onMatchStatusChange={matchEdit.setMatchStatus}
-          onBack={matchEdit.closeMatch}
-          onBackToList={() => { matchEdit.closeMatch(); onBackToList() }}
-          onBackToCompetition={() => { matchEdit.closeMatch(); onBackToCompetition() }}
+          context={{ leagueName, competitionName }}
+          form={{
+            scoreA: matchEdit.scoreA,
+            scoreB: matchEdit.scoreB,
+            winner: matchEdit.winner,
+            matchStatus: matchEdit.matchStatus,
+            onScoreAChange: matchEdit.setScoreA,
+            onScoreBChange: matchEdit.setScoreB,
+            onWinnerChange: matchEdit.setWinner,
+            onMatchStatusChange: matchEdit.setMatchStatus,
+          }}
+          nav={{
+            onBack: matchEdit.closeMatch,
+            onBackToList: () => { matchEdit.closeMatch(); onBackToList() },
+            onBackToCompetition: () => { matchEdit.closeMatch(); onBackToCompetition() },
+          }}
           onReset={matchEdit.resetMatch}
           onSave={matchEdit.saveMatch}
         />
@@ -213,13 +155,13 @@ export function ActiveMatchLeaguePage({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }} onClick={onBackToList}>
+        <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }} onClick={onBackToCompetition}>
+        </ButtonBase>
+        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
           {competitionName}
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           {leagueName}
         </Typography>
       </Breadcrumbs>
@@ -271,7 +213,7 @@ export function ActiveMatchLeaguePage({
               <TableBody>
                 {league.teams.map((team, rowIdx) => {
                   const stats = statsMap.get(team.id)!
-                  const rankLbl = calcRankLabel(team, league.teams, statsMap)
+                  const rankLbl = rankLabels.get(team.id) ?? ''
                   return (
                     <TableRow key={team.id}>
                       {/* 行ヘッダー */}

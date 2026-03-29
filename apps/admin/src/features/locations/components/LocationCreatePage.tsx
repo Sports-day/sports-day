@@ -1,17 +1,6 @@
-import { Box, Breadcrumbs, Button, Card, CardContent, TextField, Typography } from '@mui/material'
+import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, TextField, Typography } from '@mui/material'
 import { useLocationCreate } from '../hooks/useLocationCreate'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
-
-const FIELD_SX = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: 'transparent',
-    borderRadius: '10px',
-    '& fieldset': { borderColor: '#5B6DC6', borderWidth: '1px' },
-    '&:hover fieldset': { borderColor: '#5B6DC6' },
-    '&.Mui-focused fieldset': { borderColor: '#5B6DC6' },
-  },
-  '& input::placeholder': { color: '#2F3C8C', opacity: 0.5 },
-}
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_CREATE_SX } from '@/styles/commonSx'
 
 type Props = {
   onBack: () => void
@@ -24,13 +13,10 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
   return (
     <Box>
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBack}
-        >
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           場所
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           場所作成
         </Typography>
       </Breadcrumbs>
@@ -48,7 +34,7 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
               onChange={handleChange('name')}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             />
 
             <TextField
@@ -57,7 +43,7 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
               onChange={handleChange('note')}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             />
 
             <Box sx={{ display: 'flex', gap: 1 }}>

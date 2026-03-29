@@ -1,7 +1,7 @@
-import { Box, Button, TextField, Typography } from '@mui/material'
-import { useRef } from 'react'
+import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
+import { useEffect, useRef } from 'react'
 import { useImageCreate } from '../hooks/useImageCreate'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const INPUT_SX = {
   mb: 2,
@@ -24,6 +24,14 @@ export function ImageCreatePage({ onBack }: Props) {
   const { name, setName, url, setUrl, handleCreate } = useImageCreate()
   const inputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    return () => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url)
+      }
+    }
+  }, [url])
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
     if (file) {
@@ -40,17 +48,12 @@ export function ImageCreatePage({ onBack }: Props) {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Typography
-          component="span"
-          onClick={onBack}
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-        >
+      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           画像
-        </Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>/</Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>画像作成</Typography>
-      </Box>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>画像作成</Typography>
+      </Breadcrumbs>
 
       <Box sx={{ background: CARD_GRADIENT, borderRadius: 2, p: 2 }}>
         <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>

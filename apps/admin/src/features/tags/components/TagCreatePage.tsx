@@ -1,6 +1,6 @@
-import { Box, Button, TextField, Typography } from '@mui/material'
+import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
 import { useTagCreate } from '../hooks/useTagCreate'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const INPUT_SX = {
   mb: 2,
@@ -30,17 +30,12 @@ export function TagCreatePage({ onBack }: Props) {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Typography
-          component="span"
-          onClick={onBack}
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-        >
+      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           タグ
-        </Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>/</Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>タグ作成</Typography>
-      </Box>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>タグ作成</Typography>
+      </Breadcrumbs>
 
       <Box sx={{ background: CARD_GRADIENT, borderRadius: 2, p: 2 }}>
         <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>

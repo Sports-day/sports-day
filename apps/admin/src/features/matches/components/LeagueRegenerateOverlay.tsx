@@ -1,6 +1,7 @@
 import {
   Box,
   Breadcrumbs,
+  ButtonBase,
   Button,
   Card,
   CardContent,
@@ -13,7 +14,7 @@ import {
 import CheckIcon from '@mui/icons-material/Check'
 import { MOCK_LOCATIONS } from '@/features/locations/mock'
 import { LeagueRegenerateConfirmDialog } from './LeagueRegenerateConfirmDialog'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 type Props = {
   competitionName: string
@@ -48,25 +49,16 @@ export function LeagueRegenerateOverlay({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToList}
-        >
+        <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
-        </Typography>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToCompetition}
-        >
+        </ButtonBase>
+        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
           {competitionName}
-        </Typography>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToLeague}
-        >
+        </ButtonBase>
+        <ButtonBase onClick={onBackToLeague} sx={BREADCRUMB_LINK_SX}>
           {leagueName}(ID:{leagueId})
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           リーグの試合を再生成
         </Typography>
       </Breadcrumbs>

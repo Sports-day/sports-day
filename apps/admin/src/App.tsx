@@ -1,19 +1,28 @@
-import { useState } from "react";
-import { Box } from "@mui/material";
+import { lazy, Suspense, useState } from "react";
+import { Box, CircularProgress } from "@mui/material";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopHeader, TOP_HEADER_HEIGHT } from "@/components/layout/TopHeader";
 import { PageTransition } from "@/components/layout/PageTransition";
-import LoginPage from "@/pages/LoginPage";
-import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
-import CompetitionsPage from "@/pages/CompetitionsPage";
-import TeamsPage from "@/pages/TeamsPage";
-import UsersPage from "@/pages/UsersPage";
-import LocationsPage from "@/pages/LocationsPage";
-import PermissionsPage from "@/pages/PermissionsPage";
-import TagsPage from "@/pages/TagsPage";
-import ImagesPage from "@/pages/ImagesPage";
-import ActiveMatchesPage from "@/pages/ActiveMatchesPage";
-import InformationPage from "@/pages/InformationPage";
+
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const PrivacyPolicyPage = lazy(() => import("@/pages/PrivacyPolicyPage"));
+const CompetitionsPage = lazy(() => import("@/pages/CompetitionsPage"));
+const TeamsPage = lazy(() => import("@/pages/TeamsPage"));
+const UsersPage = lazy(() => import("@/pages/UsersPage"));
+const LocationsPage = lazy(() => import("@/pages/LocationsPage"));
+const PermissionsPage = lazy(() => import("@/pages/PermissionsPage"));
+const TagsPage = lazy(() => import("@/pages/TagsPage"));
+const ImagesPage = lazy(() => import("@/pages/ImagesPage"));
+const ActiveMatchesPage = lazy(() => import("@/pages/ActiveMatchesPage"));
+const InformationPage = lazy(() => import("@/pages/InformationPage"));
+
+function PageFallback() {
+  return (
+    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+      <CircularProgress size={32} sx={{ color: "#5F6DC2" }} />
+    </Box>
+  );
+}
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -23,11 +32,16 @@ export default function App() {
 
   if (!loggedIn) {
     return (
-      <>
-        {showPrivacy && <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />}
-        <LoginPage onLogin={() => setLoggedIn(true)} onPrivacy={() => setShowPrivacy(true)} />
-      </>
-    )
+      <Suspense fallback={<PageFallback />}>
+        {showPrivacy && (
+          <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
+        )}
+        <LoginPage
+          onLogin={() => setLoggedIn(true)}
+          onPrivacy={() => setShowPrivacy(true)}
+        />
+      </Suspense>
+    );
   }
 
   return (
@@ -39,9 +53,11 @@ export default function App() {
         backgroundColor: "background.default",
       }}
     >
-      {showPrivacy && (
-        <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
-      )}
+      <Suspense fallback={null}>
+        {showPrivacy && (
+          <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
+        )}
+      </Suspense>
       <TopHeader onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
       <Sidebar
         selected={selected}
@@ -62,17 +78,19 @@ export default function App() {
           overflowY: "auto",
         }}
       >
-        <PageTransition key={selected}>
-          {selected === "competitions" && <CompetitionsPage />}
-          {selected === "teams" && <TeamsPage />}
-          {selected === "users" && <UsersPage />}
-          {selected === "locations" && <LocationsPage />}
-          {selected === "permissions" && <PermissionsPage />}
-          {selected === "tags" && <TagsPage />}
-          {selected === "images" && <ImagesPage />}
-          {selected === "active-matches" && <ActiveMatchesPage />}
-          {selected === "information" && <InformationPage />}
-        </PageTransition>
+        <Suspense fallback={<PageFallback />}>
+          <PageTransition key={selected}>
+            {selected === "competitions" && <CompetitionsPage />}
+            {selected === "teams" && <TeamsPage />}
+            {selected === "users" && <UsersPage />}
+            {selected === "locations" && <LocationsPage />}
+            {selected === "permissions" && <PermissionsPage />}
+            {selected === "tags" && <TagsPage />}
+            {selected === "images" && <ImagesPage />}
+            {selected === "active-matches" && <ActiveMatchesPage />}
+            {selected === "information" && <InformationPage />}
+          </PageTransition>
+        </Suspense>
       </Box>
     </Box>
   )

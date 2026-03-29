@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Box, Button, Card, CardContent, Typography } from '@mui/material'
 import GroupsIcon from '@mui/icons-material/Groups'
-import { MOCK_COMPETITIONS } from '@/features/competitions/mock'
+import { useCompetitions } from '@/features/competitions'
 import { ActiveMatchCompetitionPage } from './ActiveMatchCompetitionPage'
 import { ActiveMatchLeaguePage } from './ActiveMatchLeaguePage'
 import { CARD_GRADIENT } from '@/styles/commonSx'
@@ -19,6 +19,7 @@ type View =
 
 export function ActiveMatchesPage() {
   const [view, setView] = useState<View>({ type: 'list' })
+  const { data: competitions } = useCompetitions()
 
   if (view.type === 'competition') {
     return (
@@ -71,7 +72,7 @@ export function ActiveMatchesPage() {
           </Typography>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1 }}>
-            {MOCK_COMPETITIONS.map((competition) => (
+            {competitions.map((competition) => (
               <Button
                 key={competition.id}
                 variant="text"

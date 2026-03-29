@@ -3,20 +3,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
 import { useLocationDetail } from '../hooks/useLocationDetail'
 import type { Location } from '../types'
-import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '../../../styles/commonSx'
-
-const FIELD_SX = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: 'transparent',
-    '& fieldset': { borderColor: '#5B6DC6', borderWidth: '1px' },
-    '&:hover fieldset': { borderColor: '#5B6DC6' },
-    '&.Mui-focused fieldset': { borderColor: '#5B6DC6' },
-  },
-  '& .MuiInputBase-input': { color: '#2F3C8C', fontSize: '14px' },
-  '& .MuiInputLabel-root': { color: '#2F3C8C', opacity: 0.7 },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#2F3C8C', opacity: 1 },
-  '& .MuiInputLabel-shrink': { opacity: 1 },
-}
+import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, CARD_FIELD_SX } from '@/styles/commonSx'
 
 type Props = {
   location: Location
@@ -52,7 +39,7 @@ export function LocationDetailPage({ location, onBack, onSave, onDelete }: Props
               onChange={(e) => setName(e.target.value)}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_SX}
             />
 
             <TextField
@@ -61,7 +48,7 @@ export function LocationDetailPage({ location, onBack, onSave, onDelete }: Props
               onChange={(e) => setNote(e.target.value)}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_SX}
             />
 
             <Box sx={{ display: 'flex', gap: 1 }}>

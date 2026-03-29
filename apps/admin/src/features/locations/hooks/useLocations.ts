@@ -1,5 +1,6 @@
-import { MOCK_LOCATIONS } from '../mock'
+import { useLocationsStore } from './useLocationsStore'
 
 export function useLocations() {
-  return { data: MOCK_LOCATIONS, loading: false, error: null }
+  const { locations } = useLocationsStore()
+  return { data: locations, loading: false, error: null }
 }

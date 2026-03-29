@@ -31,7 +31,7 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
         <Typography sx={BREADCRUMB_CURRENT_SX}>{announcementName}</Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT, border: '1px solid #5B6DC6' }}>
+      <Card sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {announcementName}を編集

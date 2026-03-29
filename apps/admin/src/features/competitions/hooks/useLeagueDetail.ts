@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 import { MOCK_TEAMS } from '../../teams/mock'
 import { MOCK_LEAGUE_DETAILS } from '../mock'
@@ -37,6 +37,11 @@ export function useLeagueDetail(leagueId: string, leagueName: string) {
   const [entries, setEntries] = useState<LeagueEntry[]>(saved?.entries ?? INITIAL_ENTRIES)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
 
+  // 変更のたびに自動保存
+  useEffect(() => {
+    MOCK_LEAGUE_DETAILS[leagueId] = { ...form, entries }
+  }, [form, entries, leagueId])
+
   const handleChange = (field: keyof LeagueForm) => (e: ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
   }
@@ -57,10 +62,6 @@ export function useLeagueDetail(leagueId: string, leagueName: string) {
     setEntries(prev => [...prev, ...newEntries])
   }
 
-  const handleSave = () => {
-    MOCK_LEAGUE_DETAILS[leagueId] = { ...form, entries }
-  }
-
   return {
     form,
     entries,
@@ -70,7 +71,6 @@ export function useLeagueDetail(leagueId: string, leagueName: string) {
     handleOpenAddDialog,
     handleCloseAddDialog,
     handleAddEntries,
-    handleSave,
     loading: false,
     error: null,
   }

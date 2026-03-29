@@ -15,6 +15,8 @@ import HomeIcon from '@mui/icons-material/Home'
 
 export const DRAWER_WIDTH = 250
 
+const GITHUB_URL = 'https://github.com/Sports-day/sports-day-admin'
+
 type NavItem = {
   key: string
   label: string
@@ -53,7 +55,7 @@ const NAV_ITEM_SX = (selected: boolean) => ({
     '&:hover': { backgroundColor: 'rgba(198, 200, 216, 0.7)', boxShadow: 'none' },
   },
   '& .MuiListItemText-primary': {
-    opacity: selected ? 0.4 : 1,
+    opacity: selected ? 1 : 0.6,
     fontWeight: selected ? 700 : 400,
   },
 })
@@ -131,7 +133,7 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
           <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onLogout}>
             <LogoutIcon sx={{ fontSize: 24 }} />
           </IconButton>
-          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={() => window.open('https://github.com/Sports-day/sports-day-admin', '_blank')}>
+          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={() => window.open(GITHUB_URL, '_blank')}>
             <GitHubIcon sx={{ fontSize: 24 }} />
           </IconButton>
           <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onHome}>
@@ -160,8 +162,6 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
           '& .MuiDrawer-paper': {
             width: DRAWER_WIDTH,
             boxSizing: 'border-box',
-            backgroundColor: '#D9DCED',
-            borderRight: '1px solid #5F6DC2',
             overflow: 'hidden',
           },
         }}
@@ -180,8 +180,6 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
         '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
-          backgroundColor: '#D9DCED',
-          borderRight: '1px solid #5F6DC2',
           overflow: 'hidden',
         },
       }}

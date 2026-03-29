@@ -1,5 +1,7 @@
 import {
   Box,
+  Breadcrumbs,
+  ButtonBase,
   Button,
   Table,
   TableBody,
@@ -12,7 +14,7 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh'
 import CheckIcon from '@mui/icons-material/Check'
 import { useTeamBulkRename } from '../hooks/useTeamBulkRename'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const TABLE_HEAD_SX = {
   fontSize: '13px',
@@ -43,20 +45,14 @@ export function TeamBulkRenamePage({ onBack }: Props) {
 
   return (
     <Box>
-      {/* パンくずリスト */}
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Typography
-          component="span"
-          onClick={onBack}
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-        >
+      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           チーム
-        </Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>/</Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           チーム名の一括変更
         </Typography>
-      </Box>
+      </Breadcrumbs>
 
       {/* 1つのカードにすべてまとめる */}
       <Box

@@ -3,25 +3,20 @@ import {
   Box,
   Breadcrumbs,
   Button,
+  ButtonBase,
   Card,
   CardContent,
-  Collapse,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
   Typography,
 } from '@mui/material'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
-import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import type { ActiveMatch, ActiveTeam } from '../types'
-import { MOCK_ACTIVE_LEAGUES } from '../mock'
 import type { WinnerType, MatchStatusType } from '../hooks/useMatchEdit'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { MatchDetailsCard } from './MatchDetailsCard'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 // ─── 定数 ────────────────────────────────────────────────
 const SCORE_INPUT_SX = (bg: string) => ({
@@ -52,12 +47,12 @@ const TOGGLE_BTN_SX = (active: boolean, activeBg: string) => ({
 
 type ToastType = 'saved' | 'reverted' | null
 
-type Props = {
-  match: ActiveMatch
-  teamA: ActiveTeam
-  teamB: ActiveTeam
+type MatchContext = {
   leagueName: string
   competitionName: string
+}
+
+type ScoreForm = {
   scoreA: string
   scoreB: string
   winner: WinnerType
@@ -66,35 +61,33 @@ type Props = {
   onScoreBChange: (v: string) => void
   onWinnerChange: (v: WinnerType) => void
   onMatchStatusChange: (v: MatchStatusType) => void
+}
+
+type NavHandlers = {
   onBack: () => void
   onBackToList: () => void
   onBackToCompetition: () => void
+}
+
+type Props = {
+  match: ActiveMatch
+  teamA: ActiveTeam
+  teamB: ActiveTeam
+  context: MatchContext
+  form: ScoreForm
+  nav: NavHandlers
   onReset: () => void
   onSave: () => void
 }
 
-export function MatchEditPage({
-  match,
-  teamA,
-  teamB,
-  leagueName,
-  competitionName,
-  scoreA,
-  scoreB,
-  winner,
-  matchStatus,
-  onScoreAChange,
-  onScoreBChange,
-  onWinnerChange,
-  onMatchStatusChange,
-  onBack,
-  onBackToList,
-  onBackToCompetition,
-  onReset,
-}: Props) {
+export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset, onSave }: Props) {
+  const { leagueName, competitionName } = context
+  const { scoreA, scoreB, winner, matchStatus, onScoreAChange, onScoreBChange, onWinnerChange, onMatchStatusChange } = form
+  const { onBack, onBackToList, onBackToCompetition } = nav
   const [toast, setToast] = useState<ToastType>(null)
 
   const handleSave = () => {
+    onSave()
     setToast('saved')
   }
 
@@ -107,25 +100,16 @@ export function MatchEditPage({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToList}
-        >
+        <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
-        </Typography>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToCompetition}
-        >
+        </ButtonBase>
+        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
           {competitionName}
-        </Typography>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBack}
-        >
+        </ButtonBase>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           {leagueName}(ID:1)
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           試合(ID:{match.id})
         </Typography>
       </Breadcrumbs>
@@ -204,7 +188,7 @@ export function MatchEditPage({
                   { value: 'draw' as WinnerType, label: '引き分け' },
                   { value: 'teamB' as WinnerType, label: teamB.shortName },
                 ] as { value: WinnerType; label: string }[]).map((opt, i, arr) => (
-                  <Box
+                  <ButtonBase
                     key={opt.value}
                     onClick={() => onWinnerChange(winner === opt.value ? null : opt.value)}
                     sx={{
@@ -215,7 +199,7 @@ export function MatchEditPage({
                     }}
                   >
                     {opt.label}
-                  </Box>
+                  </ButtonBase>
                 ))}
               </Box>
             </Box>
@@ -232,7 +216,7 @@ export function MatchEditPage({
                   { value: 'ongoing' as MatchStatusType, label: '進行中' },
                   { value: 'finished' as MatchStatusType, label: '完了' },
                 ] as { value: MatchStatusType; label: string }[]).map((opt, i, arr) => (
-                  <Box
+                  <ButtonBase
                     key={opt.value}
                     onClick={() => onMatchStatusChange(matchStatus === opt.value ? null : opt.value)}
                     sx={{
@@ -243,7 +227,7 @@ export function MatchEditPage({
                     }}
                   >
                     {opt.label}
-                  </Box>
+                  </ButtonBase>
                 ))}
               </Box>
             </Box>
@@ -282,7 +266,7 @@ export function MatchEditPage({
       </Card>
 
       {/* ─── カード2: 試合の詳細設定 ─── */}
-      <DetailsCard match={match} />
+      <MatchDetailsCard match={match} />
 
       {/* ─── トースト通知 ─── */}
       {toast && (
@@ -343,199 +327,3 @@ export function MatchEditPage({
   )
 }
 
-// ─── カード2: 試合の詳細設定（アコーディオン） ────────────────
-const DETAIL_FIELD_SX = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: 'transparent',
-    '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-    '&:hover fieldset': { borderColor: '#5B6DC6' },
-    '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-  },
-  '& input, & textarea': { fontSize: '13px', color: '#2F3C8C' },
-}
-
-const DETAIL_LABEL_SX = { fontSize: '12px', fontWeight: 600, color: '#2F3C8C', mb: 0.5 }
-
-function DetailsCard({ match }: { match: ActiveMatch }) {
-  const [open, setOpen] = useState(false)
-  const [note, setNote] = useState(match.note ?? '')
-  const [referee, setReferee] = useState(match.referee ?? '')
-  const [location, setLocation] = useState(match.location ?? '1')
-  const [startTime, setStartTime] = useState(match.startTime ?? '2026-03-25T22:48')
-
-  const handleSave = () => {
-    for (const leagues of Object.values(MOCK_ACTIVE_LEAGUES)) {
-      for (const league of leagues) {
-        const m = league.matches.find((m) => m.id === match.id)
-        if (m) {
-          m.note = note
-          m.referee = referee
-          m.location = location
-          m.startTime = startTime
-        }
-      }
-    }
-    setOpen(false)
-  }
-
-  return (
-    <Card sx={{ background: CARD_GRADIENT }}>
-      <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        {/* ヘッダー */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
-            試合の詳細設定
-          </Typography>
-          {open && (
-            <IconButton size="small" onClick={() => setOpen(false)} sx={{ color: '#5B6DC6', '&:hover': { backgroundColor: '#E8EAF6' } }}>
-              <ExpandLessIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          )}
-        </Box>
-
-        {/* 編集するトグル（未展開時のみボタン表示） */}
-        {!open ? (
-          <Box
-            onClick={() => setOpen(true)}
-            sx={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              border: '1px solid #5B6DC6', borderRadius: 1, px: 1.5, py: 0.75,
-              cursor: 'pointer', backgroundColor: 'transparent',
-              '&:hover': { backgroundColor: '#E8EAF6' },
-            }}
-          >
-            <Typography sx={{ fontSize: '13px', color: '#2F3C8C', fontWeight: 500 }}>
-              編集する
-            </Typography>
-          </Box>
-        ) : (
-          <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C' }}>
-            編集する
-          </Typography>
-        )}
-
-        {/* 展開コンテンツ */}
-        <Collapse in={open} timeout={300}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {/* 補足 */}
-            <Box>
-              <Typography sx={DETAIL_LABEL_SX}>補足</Typography>
-              <TextField
-                size="small"
-                fullWidth
-                placeholder="補足情報を入力してください(任意)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                sx={{
-                  ...DETAIL_FIELD_SX,
-                  '& .MuiInputBase-input::placeholder': { color: '#2F3C8C', opacity: 0.6 },
-                }}
-              />
-            </Box>
-
-            {/* 審判 */}
-            <Box>
-              <Typography sx={DETAIL_LABEL_SX}>審判</Typography>
-              <Select
-                value={referee}
-                displayEmpty
-                size="small"
-                fullWidth
-                onChange={(e) => setReferee(e.target.value)}
-                renderValue={(val) => (
-                  <Typography sx={{ fontSize: '13px', color: val ? '#2F3C8C' : '#9e9e9e' }}>
-                    {val || '審判'}
-                  </Typography>
-                )}
-                sx={{
-                  backgroundColor: 'transparent',
-                  '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                  '&:hover fieldset': { borderColor: '#5B6DC6' },
-                  '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                }}
-              >
-                <MenuItem value=""><Typography sx={{ fontSize: '13px', color: '#9e9e9e' }}>審判</Typography></MenuItem>
-                <MenuItem value="r1"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>審判員 A</Typography></MenuItem>
-                <MenuItem value="r2"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>審判員 B</Typography></MenuItem>
-              </Select>
-            </Box>
-
-            {/* 試合の場所 */}
-            <Box>
-              <Typography sx={{ ...DETAIL_LABEL_SX, mb: 1.5 }}>試合の場所</Typography>
-              <FormControl size="small" fullWidth>
-                <InputLabel shrink sx={{ fontSize: '13px', color: '#2F3C8C' }}>場所</InputLabel>
-                <Select
-                  value={location}
-                  label="場所"
-                  notched
-                  size="small"
-                  fullWidth
-                  onChange={(e) => setLocation(e.target.value)}
-                  sx={{
-                    backgroundColor: 'transparent',
-                    '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                    '&:hover fieldset': { borderColor: '#5B6DC6' },
-                    '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                  }}
-                >
-                  <MenuItem value="1"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>1 - Soccer Field 1</Typography></MenuItem>
-                  <MenuItem value="2"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>2 - Soccer Field 2</Typography></MenuItem>
-                  <MenuItem value="3"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>3 - 体育館</Typography></MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            {/* 開始時刻 */}
-            <TextField
-              label="開始時刻"
-              type="datetime-local"
-              size="small"
-              fullWidth
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              sx={{
-                ...DETAIL_FIELD_SX,
-                '& .MuiInputLabel-root': { color: '#2F3C8C', fontSize: '13px' },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#2F3C8C' },
-              }}
-              InputLabelProps={{ shrink: true }}
-            />
-
-            {/* すべて元に戻す / 実行 */}
-            <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon sx={{ color: '#D71212' }} />}
-                onClick={() => {
-                  setNote(match.note ?? '')
-                  setReferee(match.referee ?? '')
-                  setLocation(match.location ?? '1')
-                  setStartTime(match.startTime ?? '2026-03-25T22:48')
-                }}
-                sx={{
-                  flex: 3,
-                  fontSize: '13px',
-                  color: '#D71212',
-                  borderColor: '#D71212',
-                  backgroundColor: 'transparent',
-                  '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
-                }}
-              >
-                すべて元に戻す
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<CheckIcon />}
-                onClick={handleSave}
-                sx={{ ...SAVE_BUTTON_SX, flex: 7, fontSize: '13px' }}
-              >
-                実行
-              </Button>
-            </Box>
-          </Box>
-        </Collapse>
-      </CardContent>
-    </Card>
-  )
-}

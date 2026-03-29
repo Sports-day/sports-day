@@ -17,7 +17,8 @@ import CheckIcon from '@mui/icons-material/Check'
 import AddIcon from '@mui/icons-material/Add'
 import { useLeagueDetail } from '../hooks/useLeagueDetail'
 import { AddEntryDialog } from './AddEntryDialog'
-import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '../../../styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_SX } from '@/styles/commonSx'
+import { TAG_OPTIONS } from '../constants'
 
 const MATCH_FORMAT_OPTIONS = [
   { value: 'sunny', label: '晴天時' },
@@ -33,25 +34,6 @@ const RESULT_JUDGMENT_OPTIONS = [
   { value: 'time', label: '時間制' },
 ]
 
-const TAG_OPTIONS = [
-  { value: 'sunny', label: '晴天時' },
-  { value: 'rainy', label: '雨天時' },
-  { value: 'indoor', label: '室内' },
-  { value: 'outdoor', label: '屋外' },
-]
-
-const FIELD_SX = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: 'transparent',
-    '& fieldset': { borderColor: '#5B6DC6', borderWidth: '1px' },
-    '&:hover fieldset': { borderColor: '#5B6DC6' },
-    '&.Mui-focused fieldset': { borderColor: '#5B6DC6' },
-  },
-  '& .MuiInputBase-input': { color: '#2F3C8C', fontSize: '14px' },
-  '& .MuiInputLabel-root': { color: '#2F3C8C', opacity: 0.7 },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#2F3C8C', opacity: 1 },
-  '& .MuiInputLabel-shrink': { opacity: 1 },
-}
 
 type Props = {
   leagueId: string
@@ -89,7 +71,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
       </Breadcrumbs>
 
       {/* 編集カード */}
-      <Card sx={{ background: CARD_GRADIENT, border: '1px solid #5B6DC6' }}>
+      <Card sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {leagueName}を編集
@@ -102,7 +84,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
               onChange={handleChange('name')}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_SX}
             />
             <TextField
               label="説明(任意)"
@@ -110,7 +92,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
               onChange={handleChange('description')}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_SX}
             />
             <TextField
               label="重み(0〜100)*"
@@ -120,7 +102,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
               fullWidth
               size="small"
               slotProps={{ htmlInput: { min: 0, max: 100 } }}
-              sx={FIELD_SX}
+              sx={CARD_FIELD_SX}
             />
             <TextField
               select
@@ -128,7 +110,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
               value={form.matchFormat}
               onChange={handleChange('matchFormat')}
               size="small"
-              sx={{ ...FIELD_SX, width: { xs: '100%', sm: '33%' } }}
+              sx={{ ...CARD_FIELD_SX, width: { xs: '100%', sm: '33%' } }}
             >
               {MATCH_FORMAT_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
@@ -140,7 +122,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
               value={form.resultJudgment}
               onChange={handleChange('resultJudgment')}
               size="small"
-              sx={{ ...FIELD_SX, width: { xs: '100%', sm: '33%' } }}
+              sx={{ ...CARD_FIELD_SX, width: { xs: '100%', sm: '33%' } }}
             >
               {RESULT_JUDGMENT_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
@@ -152,7 +134,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
               value={form.tag}
               onChange={handleChange('tag')}
               size="small"
-              sx={{ ...FIELD_SX, width: { xs: '100%', sm: '33%' } }}
+              sx={{ ...CARD_FIELD_SX, width: { xs: '100%', sm: '33%' } }}
             >
               {TAG_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>

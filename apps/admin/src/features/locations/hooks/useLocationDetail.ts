@@ -1,23 +1,19 @@
 import { useState } from 'react'
-import { MOCK_LOCATIONS } from '../mock'
+import { useLocationsStore } from './useLocationsStore'
 import type { Location } from '../types'
 
 export function useLocationDetail(location: Location, onSave: () => void, onDelete: () => void) {
+  const { updateLocation, deleteLocation } = useLocationsStore()
   const [name, setName] = useState(location.name)
   const [note, setNote] = useState(location.description)
 
   const handleSave = () => {
-    const target = MOCK_LOCATIONS.find(l => l.id === location.id)
-    if (target) {
-      target.name = name
-      target.description = note
-    }
+    updateLocation(location.id, { name, description: note })
     onSave()
   }
 
   const handleDelete = () => {
-    const index = MOCK_LOCATIONS.findIndex(l => l.id === location.id)
-    if (index !== -1) MOCK_LOCATIONS.splice(index, 1)
+    deleteLocation(location.id)
     onDelete()
   }
 

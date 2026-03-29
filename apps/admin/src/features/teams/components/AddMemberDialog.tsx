@@ -13,7 +13,7 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import { MOCK_SELECTABLE_USERS } from '../mock'
-import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, SAVE_BUTTON_SX } from '../../../styles/commonSx'
+import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 type Props = {
   open: boolean

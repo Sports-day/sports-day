@@ -1,11 +1,13 @@
 import {
   Box,
+  Breadcrumbs,
+  ButtonBase,
   Button,
   TextField,
   Typography,
 } from '@mui/material'
 import { useRoleCreate } from '../hooks/useRoleCreate'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const INPUT_SX = {
   mb: 2,
@@ -35,20 +37,14 @@ export function RoleCreatePage({ onBack }: Props) {
 
   return (
     <Box>
-      {/* パンくずリスト */}
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Typography
-          component="span"
-          onClick={onBack}
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-        >
+      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           権限
-        </Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>/</Typography>
-        <Typography component="span" sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           ロール作成
         </Typography>
-      </Box>
+      </Breadcrumbs>
 
       {/* カード */}
       <Box

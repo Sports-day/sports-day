@@ -2,6 +2,7 @@ import {
   Box,
   Breadcrumbs,
   Button,
+  ButtonBase,
   Table,
   TableBody,
   TableCell,
@@ -25,7 +26,7 @@ import {
   BREADCRUMB_LINK_SX,
   BREADCRUMB_CURRENT_SX,
   CARD_GRADIENT,
-} from '../../../styles/commonSx'
+} from '@/styles/commonSx'
 
 type Props = {
   teamId: string
@@ -66,9 +67,9 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
     <Box>
       {/* パンくずリスト */}
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
-        <Typography sx={BREADCRUMB_LINK_SX} onClick={onBack}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           チーム
-        </Typography>
+        </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
           {teamName}
         </Typography>
@@ -127,19 +128,18 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {members.map((member, i) => (
-              <TableRow key={i}>
+            {members.map((member) => (
+              <TableRow key={member.studentId}>
                 <TableCell sx={CARD_TABLE_CELL_SX}>{member.studentId}</TableCell>
                 <TableCell sx={CARD_TABLE_CELL_SX}>{member.name}</TableCell>
                 <TableCell sx={CARD_TABLE_CELL_SX}>{member.gender}</TableCell>
                 <TableCell sx={CARD_TABLE_CELL_SX}>
-                  <Typography
-                    component="span"
+                  <ButtonBase
                     onClick={() => handleDeleteMember(i)}
-                    sx={{ fontSize: '13px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
+                    sx={{ fontSize: '13px', color: '#2F3C8C', '&:hover': { opacity: 0.7 } }}
                   >
                     削除
-                  </Typography>
+                  </ButtonBase>
                 </TableCell>
               </TableRow>
             ))}

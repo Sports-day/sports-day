@@ -12,9 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useAddEntryDialog } from '../hooks/useAddEntryDialog'
-import { MOCK_TEAMS } from '../../teams/mock'
-
-const AVAILABLE_TEAMS = MOCK_TEAMS.map(t => ({ id: t.id, name: t.name }))
+import { useTeams } from '@/features/teams'
 
 type Props = {
   open: boolean
@@ -25,7 +23,9 @@ type Props = {
 }
 
 export function AddEntryDialog({ open, leagueName, competitionName, onClose, onAdd }: Props) {
-  const { selected, allSelected, toggle, toggleAll, handleAdd } = useAddEntryDialog(AVAILABLE_TEAMS.map(t => t.id), onAdd)
+  const { data: teams } = useTeams()
+  const availableTeams = teams.map(t => ({ id: t.id, name: t.name }))
+  const { selected, allSelected, toggle, toggleAll, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
 
   return (
     <Dialog
@@ -93,7 +93,7 @@ export function AddEntryDialog({ open, leagueName, competitionName, onClose, onA
               </TableRow>
             </TableHead>
             <TableBody>
-              {AVAILABLE_TEAMS.length === 0 ? null : AVAILABLE_TEAMS.map(team => (
+              {availableTeams.length === 0 ? null : availableTeams.map(team => (
                 <TableRow
                   key={team.id}
                   hover
@@ -114,7 +114,7 @@ export function AddEntryDialog({ open, leagueName, competitionName, onClose, onA
             </TableBody>
           </Table>
 
-          {AVAILABLE_TEAMS.length === 0 && (
+          {availableTeams.length === 0 && (
             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Typography sx={{ fontSize: '14px', color: '#666' }}>チームがありません</Typography>
             </Box>

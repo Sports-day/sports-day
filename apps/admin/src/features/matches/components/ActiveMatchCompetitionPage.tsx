@@ -1,6 +1,6 @@
-import { Box, Breadcrumbs, Button, Card, CardContent, Typography } from '@mui/material'
+import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, Typography } from '@mui/material'
 import { MOCK_ACTIVE_LEAGUES } from '../mock'
-import { CARD_GRADIENT } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 const LEAGUE_BUTTON_SX = {
   backgroundColor: '#EFF0F8',
@@ -30,13 +30,10 @@ export function ActiveMatchCompetitionPage({ competitionId, competitionName, onB
   return (
     <Box>
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBack}
-        >
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           試合
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           {competitionName}
         </Typography>
       </Breadcrumbs>

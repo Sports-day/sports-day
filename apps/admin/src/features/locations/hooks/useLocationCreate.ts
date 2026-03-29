@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_LOCATIONS } from '../mock'
+import { useLocationsStore } from './useLocationsStore'
 
 type LocationCreateForm = {
   name: string
@@ -7,6 +7,7 @@ type LocationCreateForm = {
 }
 
 export function useLocationCreate(onSave: () => void) {
+  const { addLocation } = useLocationsStore()
   const [form, setForm] = useState<LocationCreateForm>({ name: '', note: '' })
 
   const handleChange = (field: keyof LocationCreateForm) => (
@@ -17,7 +18,7 @@ export function useLocationCreate(onSave: () => void) {
 
   const handleSubmit = () => {
     if (!form.name.trim()) return
-    MOCK_LOCATIONS.push({
+    addLocation({
       id: String(Date.now()),
       name: form.name,
       description: form.note,

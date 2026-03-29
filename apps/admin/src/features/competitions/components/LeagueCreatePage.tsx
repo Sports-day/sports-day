@@ -1,7 +1,8 @@
-import { Box, Breadcrumbs, Button, Card, CardContent, MenuItem, TextField, Typography } from '@mui/material'
+import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, MenuItem, TextField, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import { useLeagueCreate } from '../hooks/useLeagueCreate'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_CREATE_SX } from '@/styles/commonSx'
+import { TAG_OPTIONS } from '../constants'
 
 const FORMAT_OPTIONS = [
   { value: 'league', label: 'リーグ戦' },
@@ -15,25 +16,6 @@ const SCORING_OPTIONS = [
   { value: 'time', label: 'タイム制' },
 ]
 
-const TAG_OPTIONS = [
-  { value: 'sunny', label: '晴天時' },
-  { value: 'rainy', label: '雨天時' },
-  { value: 'indoor', label: '室内' },
-  { value: 'outdoor', label: '屋外' },
-]
-
-const FIELD_SX = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: 'transparent',
-    borderRadius: '10px',
-    '& fieldset': { borderColor: '#5B6DC6', borderWidth: '1px' },
-    '&:hover fieldset': { borderColor: '#5B6DC6' },
-    '&.Mui-focused fieldset': { borderColor: '#5B6DC6' },
-  },
-  '& input::placeholder': { color: '#2F3C8C', opacity: 0.5 },
-  '& .MuiInputLabel-root': { color: '#2F3C8C', opacity: 0.7 },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#2F3C8C' },
-}
 
 type Props = {
   competitionId: string
@@ -49,19 +31,13 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
   return (
     <Box>
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToList}
-        >
+        <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           競技
-        </Typography>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToDetail}
-        >
+        </ButtonBase>
+        <ButtonBase onClick={onBackToDetail} sx={BREADCRUMB_LINK_SX}>
           {competitionName}
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           リーグを作成
         </Typography>
       </Breadcrumbs>
@@ -79,7 +55,7 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
               onChange={handleChange('name')}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             />
 
             <TextField
@@ -88,7 +64,7 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
               onChange={handleChange('description')}
               fullWidth
               size="small"
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             />
 
             <TextField
@@ -99,7 +75,7 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
               fullWidth
               size="small"
               slotProps={{ htmlInput: { min: 0, max: 100 } }}
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             />
 
             <TextField
@@ -116,7 +92,7 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
                   return opt ? opt.label : String(value)
                 },
               }}
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             >
               {FORMAT_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
@@ -137,7 +113,7 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
                   return opt ? opt.label : String(value)
                 },
               }}
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             >
               {SCORING_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
@@ -158,7 +134,7 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
                   return opt ? opt.label : String(value)
                 },
               }}
-              sx={FIELD_SX}
+              sx={CARD_FIELD_CREATE_SX}
             >
               {TAG_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>

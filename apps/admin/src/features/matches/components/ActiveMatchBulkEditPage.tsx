@@ -1,6 +1,7 @@
 import {
   Box,
   Breadcrumbs,
+  ButtonBase,
   Button,
   Card,
   CardContent,
@@ -19,7 +20,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckIcon from '@mui/icons-material/Check'
 import { MOCK_LOCATIONS } from '@/features/locations/mock'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 import type { BulkEditRow } from '../hooks/useBulkEdit'
 
 const FIELD_SX = {
@@ -92,25 +93,16 @@ export function ActiveMatchBulkEditPage({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToList}
-        >
+        <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
-        </Typography>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBackToCompetition}
-        >
+        </ButtonBase>
+        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
           {competitionName}
-        </Typography>
-        <Typography
-          sx={{ fontSize: '16px', color: '#2F3C8C', cursor: 'pointer', '&:hover': { opacity: 0.7 } }}
-          onClick={onBack}
-        >
+        </ButtonBase>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           {leagueName}(ID:{leagueId})
-        </Typography>
-        <Typography sx={{ fontSize: '16px', color: '#2F3C8C' }}>
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
           試合一括編集
         </Typography>
       </Breadcrumbs>

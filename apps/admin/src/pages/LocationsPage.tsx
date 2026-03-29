@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { LocationListPage, LocationCreatePage, LocationDetailPage } from '@/features/locations'
-import { useLocations } from '@/features/locations/hooks/useLocations'
+import { LocationListPage, LocationCreatePage, LocationDetailPage, useLocations } from '@/features/locations'
 
 type View = 'list' | 'create' | 'detail'
 

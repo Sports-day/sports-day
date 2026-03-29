@@ -72,13 +72,16 @@ export function TeamListPage({ onExport, onBulkRename, onTeamClick }: Props) {
             </TableHead>
             <TableBody>
               {teams.map((team) => (
-                <TableRow key={team.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                  <TableCell sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }} onClick={() => onTeamClick(team.id)}>{team.id}</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }} onClick={() => onTeamClick(team.id)}>{team.name}</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }} onClick={() => onTeamClick(team.id)}>{team.class}</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }} onClick={() => onTeamClick(team.id)}>
-                    {team.tags.join(', ')}
-                  </TableCell>
+                <TableRow
+                  key={team.id}
+                  hover
+                  onClick={() => onTeamClick(team.id)}
+                  sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
+                >
+                  <TableCell sx={LIST_TABLE_CELL_SX}>{team.id}</TableCell>
+                  <TableCell sx={LIST_TABLE_CELL_SX}>{team.name}</TableCell>
+                  <TableCell sx={LIST_TABLE_CELL_SX}>{team.class}</TableCell>
+                  <TableCell sx={LIST_TABLE_CELL_SX}>{team.tags.join(', ')}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

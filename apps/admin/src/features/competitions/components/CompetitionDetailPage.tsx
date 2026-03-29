@@ -1,5 +1,5 @@
 import { Box, Breadcrumbs, Button, Card, CardContent, Typography } from '@mui/material'
-import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '../../../styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 import { MOCK_LEAGUES_BY_COMPETITION } from '../mock'
 
 const LEAGUE_BUTTON_SX = {
