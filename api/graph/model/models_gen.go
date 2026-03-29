@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+// SEEDスロットへのチーム手動配置
+type AssignSeedTeamInput struct {
+	SlotID string  `json:"slotId"`
+	TeamID *string `json:"teamId,omitempty"`
+}
+
 type AuthResponse struct {
 	Token string `json:"token"`
 	User  *User  `json:"user"`
@@ -71,9 +77,35 @@ type CreateTeamInput struct {
 	UserIds []string `json:"userIds"`
 }
 
+// SUBブラケット手動追加
+type CreateTournamentInput struct {
+	CompetitionID   string           `json:"competitionId"`
+	Name            string           `json:"name"`
+	BracketType     BracketType      `json:"bracketType"`
+	PlacementMethod *PlacementMethod `json:"placementMethod,omitempty"`
+	DisplayOrder    *int32           `json:"displayOrder,omitempty"`
+}
+
+// ブラケット内試合追加
+type CreateTournamentMatchInput struct {
+	TournamentID string         `json:"tournamentId"`
+	Slot1        *SlotInput     `json:"slot1"`
+	Slot2        *SlotInput     `json:"slot2"`
+	Time         *string        `json:"time,omitempty"`
+	Judgment     *JudgmentEntry `json:"judgment,omitempty"`
+}
+
 type CreateUserInput struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+// ブラケット自動生成
+type GenerateBracketInput struct {
+	CompetitionID   string             `json:"competitionId"`
+	TeamCount       int32              `json:"teamCount"`
+	SubBrackets     []*SubBracketInput `json:"subBrackets,omitempty"`
+	PlacementMethod *PlacementMethod   `json:"placementMethod,omitempty"`
 }
 
 type GenerateRoundRobinInput struct {
@@ -149,11 +181,30 @@ type Scene struct {
 	Name string `json:"name"`
 }
 
+// seed_number 振り直し
+type SeedNumberInput struct {
+	SlotID     string `json:"slotId"`
+	SeedNumber int32  `json:"seedNumber"`
+}
+
+// スロットのソース指定
+type SlotInput struct {
+	SourceType    SlotSourceType `json:"sourceType"`
+	SourceMatchID *string        `json:"sourceMatchId,omitempty"`
+	SeedNumber    *int32         `json:"seedNumber,omitempty"`
+}
+
 type Sport struct {
 	ID           string         `json:"id"`
 	Name         string         `json:"name"`
 	Weight       int32          `json:"weight"`
 	RankingRules []*RankingRule `json:"rankingRules"`
+}
+
+// SUBブラケット定義（自動生成用）
+type SubBracketInput struct {
+	Name        string `json:"name"`
+	SourceRound int32  `json:"sourceRound"`
 }
 
 type TiebreakPriority struct {
@@ -230,6 +281,14 @@ type UpdateSceneInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
+// スロット接続変更
+type UpdateSlotConnectionInput struct {
+	SlotID        string         `json:"slotId"`
+	SourceType    SlotSourceType `json:"sourceType"`
+	SourceMatchID *string        `json:"sourceMatchId,omitempty"`
+	SeedNumber    *int32         `json:"seedNumber,omitempty"`
+}
+
 type UpdateSportsInput struct {
 	Name   *string `json:"name,omitempty"`
 	Weight *int32  `json:"weight,omitempty"`
@@ -243,6 +302,98 @@ type UpdateTeamInput struct {
 type UpdateTeamUsersInput struct {
 	AddUserIds    []string `json:"addUserIds,omitempty"`
 	RemoveUserIds []string `json:"removeUserIds,omitempty"`
+}
+
+// トーナメント（ブラケット）更新
+type UpdateTournamentInput struct {
+	Name         *string `json:"name,omitempty"`
+	DisplayOrder *int32  `json:"displayOrder,omitempty"`
+}
+
+type BracketState string
+
+const (
+	BracketStateBuilding   BracketState = "BUILDING"
+	BracketStateReady      BracketState = "READY"
+	BracketStateInProgress BracketState = "IN_PROGRESS"
+	BracketStateCompleted  BracketState = "COMPLETED"
+)
+
+var AllBracketState = []BracketState{
+	BracketStateBuilding,
+	BracketStateReady,
+	BracketStateInProgress,
+	BracketStateCompleted,
+}
+
+func (e BracketState) IsValid() bool {
+	switch e {
+	case BracketStateBuilding, BracketStateReady, BracketStateInProgress, BracketStateCompleted:
+		return true
+	}
+	return false
+}
+
+func (e BracketState) String() string {
+	return string(e)
+}
+
+func (e *BracketState) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BracketState(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BracketState", str)
+	}
+	return nil
+}
+
+func (e BracketState) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type BracketType string
+
+const (
+	BracketTypeMain BracketType = "MAIN"
+	BracketTypeSub  BracketType = "SUB"
+)
+
+var AllBracketType = []BracketType{
+	BracketTypeMain,
+	BracketTypeSub,
+}
+
+func (e BracketType) IsValid() bool {
+	switch e {
+	case BracketTypeMain, BracketTypeSub:
+		return true
+	}
+	return false
+}
+
+func (e BracketType) String() string {
+	return string(e)
+}
+
+func (e *BracketType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BracketType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BracketType", str)
+	}
+	return nil
+}
+
+func (e BracketType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type CompetitionType string
@@ -331,6 +482,51 @@ func (e MatchStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type PlacementMethod string
+
+const (
+	PlacementMethodSeedOptimized PlacementMethod = "SEED_OPTIMIZED"
+	PlacementMethodBalanced      PlacementMethod = "BALANCED"
+	PlacementMethodRandom        PlacementMethod = "RANDOM"
+	PlacementMethodManual        PlacementMethod = "MANUAL"
+)
+
+var AllPlacementMethod = []PlacementMethod{
+	PlacementMethodSeedOptimized,
+	PlacementMethodBalanced,
+	PlacementMethodRandom,
+	PlacementMethodManual,
+}
+
+func (e PlacementMethod) IsValid() bool {
+	switch e {
+	case PlacementMethodSeedOptimized, PlacementMethodBalanced, PlacementMethodRandom, PlacementMethodManual:
+		return true
+	}
+	return false
+}
+
+func (e PlacementMethod) String() string {
+	return string(e)
+}
+
+func (e *PlacementMethod) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PlacementMethod(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PlacementMethod", str)
+	}
+	return nil
+}
+
+func (e PlacementMethod) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type RankingConditionKey string
 
 const (
@@ -375,5 +571,48 @@ func (e *RankingConditionKey) UnmarshalGQL(v any) error {
 }
 
 func (e RankingConditionKey) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type SlotSourceType string
+
+const (
+	SlotSourceTypeSeed        SlotSourceType = "SEED"
+	SlotSourceTypeMatchWinner SlotSourceType = "MATCH_WINNER"
+	SlotSourceTypeMatchLoser  SlotSourceType = "MATCH_LOSER"
+)
+
+var AllSlotSourceType = []SlotSourceType{
+	SlotSourceTypeSeed,
+	SlotSourceTypeMatchWinner,
+	SlotSourceTypeMatchLoser,
+}
+
+func (e SlotSourceType) IsValid() bool {
+	switch e {
+	case SlotSourceTypeSeed, SlotSourceTypeMatchWinner, SlotSourceTypeMatchLoser:
+		return true
+	}
+	return false
+}
+
+func (e SlotSourceType) String() string {
+	return string(e)
+}
+
+func (e *SlotSourceType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SlotSourceType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SlotSourceType", str)
+	}
+	return nil
+}
+
+func (e SlotSourceType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

@@ -1,6 +1,12 @@
 package graph
 
-import "sports-day/api/service"
+import (
+	"context"
+
+	"sports-day/api/db_model"
+	"sports-day/api/graph/model"
+	"sports-day/api/service"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -19,6 +25,30 @@ type Resolver struct {
 	MatchService       service.Match
 	JudgmentService    service.Judgment
 	LeagueService      service.League
+	TournamentService  service.Tournament
+}
+
+// computeBracketStateForTournament は Tournament に BracketState を付与してレスポンスを生成する。
+func (r *Resolver) computeBracketStateForTournament(ctx context.Context, t *db_model.Tournament) (*model.Tournament, error) {
+	state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
+	if err != nil {
+		state = model.BracketStateBuilding
+		progress = 0
+	}
+	return model.FormatTournamentResponse(t, state, progress), nil
+}
+
+// computeBracketStateForTournaments は複数の Tournament に BracketState を付与してレスポンスを生成する。
+func (r *Resolver) computeBracketStateForTournaments(ctx context.Context, tournaments []*db_model.Tournament) ([]*model.Tournament, error) {
+	result := make([]*model.Tournament, len(tournaments))
+	for i, t := range tournaments {
+		formatted, err := r.computeBracketStateForTournament(ctx, t)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = formatted
+	}
+	return result, nil
 }
 
 func NewResolver(
@@ -34,6 +64,7 @@ func NewResolver(
 	matchService service.Match,
 	judgmentService service.Judgment,
 	leagueService service.League,
+	tournamentService service.Tournament,
 ) *Resolver {
 	return &Resolver{
 		UserService:        userService,
@@ -48,5 +79,6 @@ func NewResolver(
 		MatchService:       matchService,
 		JudgmentService:    judgmentService,
 		LeagueService:      leagueService,
+		TournamentService:  tournamentService,
 	}
 }

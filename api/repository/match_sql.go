@@ -155,3 +155,55 @@ func (r *matchRepository) BatchGetMatchesByLocationIDs(ctx context.Context, db *
 	}
 	return matches, nil
 }
+
+func (r *matchRepository) UpdateMatchEntryTeamIDOptimistic(ctx context.Context, db *gorm.DB, matchEntryID string, teamID string) error {
+	result := db.WithContext(ctx).Model(&db_model.MatchEntry{}).
+		Where("id = ? AND team_id IS NULL", matchEntryID).
+		Update("team_id", teamID)
+	if result.Error != nil {
+		return errors.Wrap(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errors.ErrSlotAlreadyAssigned
+	}
+	return nil
+}
+
+func (r *matchRepository) GetMatchEntryByID(ctx context.Context, db *gorm.DB, id string) (*db_model.MatchEntry, error) {
+	var entry db_model.MatchEntry
+	if err := db.WithContext(ctx).First(&entry, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrMatchNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+	return &entry, nil
+}
+
+func (r *matchRepository) BatchGetMatchEntriesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.MatchEntry, error) {
+	var entries []*db_model.MatchEntry
+	if err := db.WithContext(ctx).Where("id IN ?", ids).Find(&entries).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return entries, nil
+}
+
+func (r *matchRepository) ClearMatchEntryTeamID(ctx context.Context, db *gorm.DB, matchEntryID string) error {
+	if err := db.WithContext(ctx).Model(&db_model.MatchEntry{}).
+		Where("id = ?", matchEntryID).
+		Update("team_id", nil).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (r *matchRepository) UpdateMatchEntryTeamID(ctx context.Context, db *gorm.DB, matchEntryID string, teamID string) error {
+	if err := db.WithContext(ctx).Model(&db_model.MatchEntry{}).
+		Where("id = ?", matchEntryID).
+		Update("team_id", teamID).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+

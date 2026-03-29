@@ -81,6 +81,7 @@ func main() {
 	matchRepository := repository.NewMatch()
 	judgmentRepository := repository.NewJudgment()
 	leagueRepository := repository.NewLeague()
+	tournamentRepository := repository.NewTournament()
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
@@ -94,11 +95,15 @@ func main() {
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository)
 	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService, sportRepository)
+	tournamentService := service.NewTournament(db, tournamentRepository, matchRepository, competitionRepository, judgmentRepository)
 	leagueService.SetCompetitionService(&competitionService)
 	matchService.SetCompetitionService(&competitionService)
+	matchService.SetTournamentService(&tournamentService)
+	tournamentService.SetCompetitionService(&competitionService)
+	competitionService.SetTournamentService(&tournamentService)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})
@@ -114,7 +119,7 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService))
 
 	address := fmt.Sprintf("%s:%d", env.Get().Server.Host, env.Get().Server.Port)
 

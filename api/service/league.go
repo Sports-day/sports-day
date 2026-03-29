@@ -52,7 +52,7 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 		competition := &db_model.Competition{
 			ID:   competitionID,
 			Name: input.Name,
-			Type: "LEAGUE",
+			Type: string(model.CompetitionTypeLeague),
 		}
 
 		if err := tx.Save(competition).Error; err != nil {
@@ -199,7 +199,7 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 			m := &db_model.Match{
 				ID:            ulid.Make(),
 				Time:          matchTime,
-				Status:        "STANDBY",
+				Status:        string(model.MatchStatusStandby),
 				CompetitionID: competitionID,
 				LocationID:    locationID,
 			}
@@ -329,7 +329,7 @@ func (s *League) SetTiebreakPriorities(ctx context.Context, leagueID string, pri
 				return err
 			}
 			if allComplete {
-				if err := s.competitionService.TryPromoteFromLeague(ctx, tx, leagueID); err != nil {
+				if err := s.competitionService.TryPromote(ctx, tx, leagueID); err != nil {
 					return err
 				}
 			}
@@ -348,13 +348,16 @@ func (s *League) GetTiebreakPriorities(ctx context.Context, leagueID string) ([]
 }
 
 func (s *League) ComputeStandings(ctx context.Context, leagueID string) ([]*model.Standing, error) {
+	// leagueID は competitionID と同一（League は Competition の子エンティティ）
+	competitionID := leagueID
+
 	// 1. リーグとコンペティションを取得
 	league, err := s.leagueRepository.Get(ctx, s.db, leagueID)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	comp, err := s.competitionRepository.Get(ctx, s.db, leagueID)
+	comp, err := s.competitionRepository.Get(ctx, s.db, competitionID)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -369,13 +372,13 @@ func (s *League) ComputeStandings(ctx context.Context, leagueID string) ([]*mode
 	}
 
 	// 3. 参加チーム取得
-	competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, s.db, []string{leagueID})
+	competitionEntries, err := s.competitionRepository.BatchGetCompetitionEntriesByCompetitionIDs(ctx, s.db, []string{competitionID})
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
 	// 4. 全試合取得
-	allMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, s.db, []string{leagueID})
+	allMatches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, s.db, []string{competitionID})
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -385,10 +388,10 @@ func (s *League) ComputeStandings(ctx context.Context, leagueID string) ([]*mode
 	var matchIDs []string
 	allMatchesComplete := true
 	for _, match := range allMatches {
-		if match.Status == "FINISHED" {
+		if match.Status == string(model.MatchStatusFinished) {
 			finishedMatches = append(finishedMatches, match)
 			matchIDs = append(matchIDs, match.ID)
-		} else if match.Status != "CANCELED" {
+		} else if match.Status != string(model.MatchStatusCanceled) {
 			allMatchesComplete = false
 		}
 	}

@@ -50,6 +50,31 @@ var (
 	ErrPromotionRuleLocked     = NewError("PROMOTION_RULE_LOCKED", "進出先にスコアが入力済みのため進出ルールを変更できません")
 	ErrPromotionRuleInvalid    = NewError("PROMOTION_RULE_INVALID", "進出ルールが不正です")
 	ErrScoreModificationLocked = NewError("SCORE_MODIFICATION_LOCKED", "進出先の試合が稼働中のためスコアを修正できません")
+
+	ErrTournamentNotFound     = NewError("TOURNAMENT_NOT_FOUND", "トーナメントが見つかりません")
+	ErrTournamentSlotNotFound = NewError("TOURNAMENT_SLOT_NOT_FOUND", "トーナメントスロットが見つかりません")
+	ErrSaveTournament         = NewError("TOURNAMENT_SAVE_FAILED", "トーナメントの保存に失敗しました")
+	ErrSaveTournamentSlot     = NewError("TOURNAMENT_SLOT_SAVE_FAILED", "トーナメントスロットの保存に失敗しました")
+	ErrSlotAlreadyAssigned    = NewError("SLOT_ALREADY_ASSIGNED", "スロットには既にチームが割り当てられています")
+
+	// トーナメント自動進行・スコア修正関連
+	ErrTournamentDrawForbidden           = NewError("TOURNAMENT_DRAW_FORBIDDEN", "トーナメントの試合では引き分けは許可されていません")
+	ErrTournamentWinnerRequired          = NewError("TOURNAMENT_WINNER_REQUIRED", "トーナメントの試合を完了するにはwinner_team_idが必要です")
+	ErrTournamentScoreModificationLocked = NewError("TOURNAMENT_SCORE_MODIFICATION_LOCKED", "後続の試合が進行中のためスコアを修正できません")
+	ErrInvalidSlotCount                  = NewError("INVALID_SLOT_COUNT", "試合に紐づくスロット数が不正です（2である必要があります）")
+	ErrMultipleFinalMatches              = NewError("MULTIPLE_FINAL_MATCHES", "ブラケット内に最終試合が正確に1つ存在しません")
+	ErrUnreachableSlotSource             = NewError("UNREACHABLE_SLOT_SOURCE", "ブラケット生成中に不正な状態が検出されました")
+
+	// トーナメントブラケット管理
+	ErrBracketAlreadyExists       = NewError("BRACKET_ALREADY_EXISTS", "ブラケットが既に存在します。resetTournamentBracketsで削除してから再生成してください")
+	ErrMainBracketDeleteForbidden = NewError("MAIN_BRACKET_DELETE_FORBIDDEN", "MAINブラケットは削除できません")
+	ErrDuplicateMainBracket       = NewError("DUPLICATE_MAIN_BRACKET", "同一大会にMAINブラケットを2つ作成できません")
+	ErrTournamentHasScores        = NewError("TOURNAMENT_HAS_SCORES", "試合にスコアが入っているためカスタマイズできません")
+	ErrDAGCycleDetected           = NewError("DAG_CYCLE_DETECTED", "循環参照が検出されました")
+	ErrInvalidSourceMatch         = NewError("INVALID_SOURCE_MATCH", "source_match_idが同一大会内の試合を参照していません")
+	ErrTeamCountTooSmall          = NewError("TEAM_COUNT_TOO_SMALL", "チーム数は2以上である必要があります")
+	ErrNotTournamentCompetition   = NewError("NOT_TOURNAMENT_COMPETITION", "トーナメント型の大会ではありません")
+	ErrTournamentMatchCreateOnly  = NewError("TOURNAMENT_MATCH_CREATE_ONLY", "トーナメント型の大会にはcreateTournamentMatchを使用してください")
 	/*
 		Authentication
 	*/

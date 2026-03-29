@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -278,6 +277,10 @@ func (r *mutationResolver) DeleteCompetitionEntries(ctx context.Context, id stri
 
 // CreateMatch is the resolver for the createMatch field.
 func (r *mutationResolver) CreateMatch(ctx context.Context, input model.CreateMatchInput) (*model.Match, error) {
+	// トーナメント型 Competition へのガード
+	if err := r.TournamentService.CheckTournamentCompetition(ctx, input.CompetitionID); err != nil {
+		return nil, err
+	}
 	match, err := r.MatchService.Create(ctx, &input)
 	if err != nil {
 		return nil, err
@@ -475,6 +478,100 @@ func (r *mutationResolver) DeletePromotionRule(ctx context.Context, id string) (
 		return nil, err
 	}
 	return r.formatPromotionRule(ctx, rule)
+}
+
+// GenerateBracket is the resolver for the generateBracket field.
+func (r *mutationResolver) GenerateBracket(ctx context.Context, input model.GenerateBracketInput) ([]*model.Tournament, error) {
+	tournaments, err := r.TournamentService.GenerateBracket(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return r.computeBracketStateForTournaments(ctx, tournaments)
+}
+
+// CreateTournament is the resolver for the createTournament field.
+func (r *mutationResolver) CreateTournament(ctx context.Context, input model.CreateTournamentInput) (*model.Tournament, error) {
+	tournament, err := r.TournamentService.CreateTournament(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTournamentResponse(tournament, model.BracketStateBuilding, 0), nil
+}
+
+// UpdateTournament is the resolver for the updateTournament field.
+func (r *mutationResolver) UpdateTournament(ctx context.Context, id string, input model.UpdateTournamentInput) (*model.Tournament, error) {
+	tournament, err := r.TournamentService.UpdateTournament(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return r.computeBracketStateForTournament(ctx, tournament)
+}
+
+// DeleteTournament is the resolver for the deleteTournament field.
+func (r *mutationResolver) DeleteTournament(ctx context.Context, id string) (*model.Tournament, error) {
+	tournament, err := r.TournamentService.DeleteTournament(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTournamentResponse(tournament, model.BracketStateBuilding, 0), nil
+}
+
+// CreateTournamentMatch is the resolver for the createTournamentMatch field.
+func (r *mutationResolver) CreateTournamentMatch(ctx context.Context, input model.CreateTournamentMatchInput) (*model.Match, error) {
+	match, err := r.TournamentService.CreateTournamentMatch(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
+// DeleteTournamentMatch is the resolver for the deleteTournamentMatch field.
+func (r *mutationResolver) DeleteTournamentMatch(ctx context.Context, matchID string) (*model.Match, error) {
+	match, err := r.TournamentService.DeleteTournamentMatch(ctx, matchID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
+// UpdateSlotConnection is the resolver for the updateSlotConnection field.
+func (r *mutationResolver) UpdateSlotConnection(ctx context.Context, input model.UpdateSlotConnectionInput) (*model.TournamentSlot, error) {
+	slot, err := r.TournamentService.UpdateSlotConnection(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTournamentSlotResponse(slot), nil
+}
+
+// UpdateSeedNumbers is the resolver for the updateSeedNumbers field.
+func (r *mutationResolver) UpdateSeedNumbers(ctx context.Context, tournamentID string, seeds []*model.SeedNumberInput) ([]*model.TournamentSlot, error) {
+	slots, err := r.TournamentService.UpdateSeedNumbers(ctx, tournamentID, seeds)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.TournamentSlot, len(slots))
+	for i, sl := range slots {
+		result[i] = model.FormatTournamentSlotResponse(sl)
+	}
+	return result, nil
+}
+
+// ResetTournamentBrackets is the resolver for the resetTournamentBrackets field.
+func (r *mutationResolver) ResetTournamentBrackets(ctx context.Context, competitionID string) (*model.Competition, error) {
+	comp, err := r.TournamentService.ResetTournamentBrackets(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatCompetitionResponse(comp), nil
+}
+
+// AssignSeedTeam is the resolver for the assignSeedTeam field.
+func (r *mutationResolver) AssignSeedTeam(ctx context.Context, input model.AssignSeedTeamInput) (*model.TournamentSlot, error) {
+	slot, err := r.TournamentService.AssignSeedTeam(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatTournamentSlotResponse(slot), nil
 }
 
 // Users is the resolver for the users field.
@@ -796,6 +893,29 @@ func (r *queryResolver) PromotionRules(ctx context.Context, sourceCompetitionID 
 // PromotionStatus is the resolver for the promotionStatus field.
 func (r *queryResolver) PromotionStatus(ctx context.Context, targetCompetitionID string) (*model.PromotionStatus, error) {
 	return r.CompetitionService.GetPromotionStatus(ctx, targetCompetitionID)
+}
+
+// Tournament is the resolver for the tournament field.
+func (r *queryResolver) Tournament(ctx context.Context, id string) (*model.Tournament, error) {
+	t, err := r.TournamentService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return r.computeBracketStateForTournament(ctx, t)
+}
+
+// Tournaments is the resolver for the tournaments field.
+func (r *queryResolver) Tournaments(ctx context.Context, competitionID string) ([]*model.Tournament, error) {
+	tournaments, err := r.TournamentService.ListByCompetitionID(ctx, competitionID)
+	if err != nil {
+		return nil, err
+	}
+	return r.computeBracketStateForTournaments(ctx, tournaments)
+}
+
+// TournamentRanking is the resolver for the tournamentRanking field.
+func (r *queryResolver) TournamentRanking(ctx context.Context, competitionID string) ([]*model.TournamentRanking, error) {
+	return r.TournamentService.ComputeTournamentRanking(ctx, competitionID)
 }
 
 // Mutation returns MutationResolver implementation.

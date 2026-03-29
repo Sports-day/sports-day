@@ -50,12 +50,38 @@ type League struct {
 	Name string `json:"name"`
 }
 
+type Tournament struct {
+	ID              string           `json:"id"`
+	CompetitionID   string           `json:"competitionId"`
+	Name            string           `json:"name"`
+	BracketType     BracketType      `json:"bracketType"`
+	PlacementMethod *PlacementMethod `json:"placementMethod,omitempty"`
+	DisplayOrder    int32            `json:"displayOrder"`
+	State           BracketState     `json:"state"`
+	Progress        float64          `json:"progress"`
+}
+
+type TournamentSlot struct {
+	ID            string         `json:"id"`
+	TournamentID  string         `json:"tournamentId"`
+	MatchEntryID  string         `json:"matchEntryId"`
+	SourceType    SlotSourceType `json:"sourceType"`
+	SourceMatchID string         `json:"sourceMatchId"`
+	SeedNumber    *int32         `json:"seedNumber,omitempty"`
+}
+
 type PromotionRuleModel struct {
 	ID                  string `json:"id"`
 	SourceCompetitionID string `json:"sourceCompetitionId"`
 	TargetCompetitionID string `json:"targetCompetitionId"`
 	RankSpec            string `json:"rankSpec"`
 	Slot                *int32 `json:"slot,omitempty"`
+}
+
+type TournamentRanking struct {
+	Rank   int32  `json:"rank"`
+	TeamID string `json:"teamId"`
+	IsTied bool   `json:"isTied"`
 }
 
 type Standing struct {

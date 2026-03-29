@@ -21,4 +21,9 @@ type Match interface {
 	BatchGetMatchEntriesByMatchIDs(ctx context.Context, db *gorm.DB, matchIds []string) ([]*db_model.MatchEntry, error)
 	BatchGetMatchesByCompetitionIDs(ctx context.Context, db *gorm.DB, competitionIds []string) ([]*db_model.Match, error)
 	BatchGetMatchesByLocationIDs(ctx context.Context, db *gorm.DB, locationIds []string) ([]*db_model.Match, error)
+	UpdateMatchEntryTeamIDOptimistic(ctx context.Context, db *gorm.DB, matchEntryID string, teamID string) error
+	GetMatchEntryByID(ctx context.Context, db *gorm.DB, id string) (*db_model.MatchEntry, error)
+	BatchGetMatchEntriesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.MatchEntry, error)
+	ClearMatchEntryTeamID(ctx context.Context, db *gorm.DB, matchEntryID string) error
+	UpdateMatchEntryTeamID(ctx context.Context, db *gorm.DB, matchEntryID string, teamID string) error
 }
