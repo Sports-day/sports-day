@@ -2,9 +2,9 @@
 
 import { Box, Skeleton, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import ConfirmCard from "@/components/cards/AboutConfirmPage/confirmcard";
-import Confricted from "@/components/cards/AboutConfirmPage/confrictedcard";
-import NotSelected from "@/components/cards/AboutConfirmPage/notselectedcard";
+import ConfirmCard from "@/components/cards/AboutConfirmPage/ConfirmCard";
+import Conflicted from "@/components/cards/AboutConfirmPage/ConflictedCard";
+import NotSelected from "@/components/cards/AboutConfirmPage/NotSelectedCard";
 import { gql, useQuery } from "@apollo/client";
 
 const GET_ALLTEAMDATA = gql`
@@ -75,7 +75,13 @@ export default function ConfirmPage() {
         <Grid
           container
           spacing={"32px"}
-          sx={{ width: "100%", height: "100%", p: "32px", overflowY: "auto", alignContent: "flex-start" }}
+          sx={{
+            width: "100%",
+            height: "100%",
+            p: { xs: "16px", md: "32px" },
+            overflowY: "auto",
+            alignContent: "flex-start",
+          }}
         >
           {Array.from({ length: 4 }).map((_, index) => (
             <Grid key={index} size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
@@ -98,16 +104,16 @@ export default function ConfirmPage() {
           sx={{
             width: "100%",
             height: "100%",
-            p: "32px",
+            p: { xs: "16px", md: "32px" },
             overflowY: "auto",
             alignContent: "flex-start",
           }}
         >
-          <Grid size={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
+          <Grid size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
             <NotSelected />
           </Grid>
-          <Grid size={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
-            <Confricted />
+          <Grid size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
+            <Conflicted />
           </Grid>
 
           {allData?.map((item, index) => (

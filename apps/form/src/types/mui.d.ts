@@ -24,8 +24,7 @@ declare module "@mui/material/styles" {
     secondFont: React.CSSProperties;
     buttonFont1: React.CSSProperties;
     buttonFont2: React.CSSProperties;
-    bottonFont1: React.CSSProperties;
-    bottonFont2: React.CSSProperties;
+    buttonFont3: React.CSSProperties;
   }
 
   interface TypographyVariantsOptions {
@@ -33,7 +32,6 @@ declare module "@mui/material/styles" {
     secondFont?: React.CSSProperties;
     buttonFont1?: React.CSSProperties;
     buttonFont2?: React.CSSProperties;
-    bottonFont1?: React.CSSProperties;
-    bottonFont2?: React.CSSProperties;
+    buttonFont3?: React.CSSProperties;
   }
 }

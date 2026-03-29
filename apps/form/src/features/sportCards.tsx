@@ -2,7 +2,7 @@
 
 import { Box, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import SportCard from "@/components/cards/AboutSportPage/sportcard";
+import SportCard from "@/components/cards/AboutSportPage/SportCard";
 import { gql, useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 
@@ -74,7 +74,7 @@ export default function SportCards({ weather, type }: Props) {
                 duration: 0.5,
                 delay: index * 0.1,
               }}
-              sx={{ height: "100%", width: "100%" }}
+              style={{ height: "100%", width: "100%" }}
             >
               <SportCard
                 name={item.name}

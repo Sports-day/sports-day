@@ -1,8 +1,6 @@
 "use client";
 
 import { Card, Typography, Button, Box } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import WarningIcon from "@mui/icons-material/Warning";
 import { useState } from "react";
 
 type warnProps = {
@@ -34,14 +32,25 @@ export default function Warning({ warncomment }: warnProps) {
             width: "100%",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <WarningIcon
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: { xs: "flex-start", sm: "center" },
+              flexWrap: "wrap",
+              rowGap: "4px",
+            }}
+          >
+            <Typography
               sx={{
                 color: "#A27B1D",
                 mr: "16px",
                 ml: "16px",
+                fontSize: "20px",
+                lineHeight: 1,
               }}
-            />
+            >
+              !
+            </Typography>
             <Typography
               sx={{
                 fontWeight: "medium",
@@ -49,12 +58,15 @@ export default function Warning({ warncomment }: warnProps) {
                 color: "#A27B1D",
                 justifyContent: "flex-start",
                 flexGrow: 1,
+                minWidth: 0,
               }}
             >
               {warncomment}
             </Typography>
-            <Button onClick={handleClose}>
-              <CloseIcon sx={{ color: "#A27B1D" }} />
+            <Button onClick={handleClose} sx={{ ml: "auto" }}>
+              <Typography sx={{ color: "#A27B1D", fontSize: "20px", lineHeight: 1 }}>
+                ×
+              </Typography>
             </Button>
           </Box>
         </Card>

@@ -1,8 +1,7 @@
 "use client";
 import { Container, Button, AppBar, Box, Drawer } from "@mui/material";
 import React from "react";
-import CloseIcon from "@mui/icons-material/Close";
-import PrivacyPolicy from "@/components/layouts/privacyPolicy";
+import PrivacyPolicy from "@/components/layouts/PrivacyPolicy";
 import { useTheme } from "@mui/material/styles";
 
 export type PrivacyPolicyDrawerProps = {
@@ -40,8 +39,10 @@ export default function PrivacyPolicyDrawer(props: PrivacyPolicyDrawerProps) {
               color="inherit"
               onClick={toggleDrawer(false)}
               aria-label="close"
-              startIcon={<CloseIcon />}
             >
+              <Box component="span" sx={{ mr: 1, lineHeight: 1 }}>
+                ×
+              </Box>
               閉じる
             </Button>
           </Container>

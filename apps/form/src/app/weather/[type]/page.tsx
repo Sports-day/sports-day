@@ -1,14 +1,14 @@
 "use client";
 
 import { Box, Stack } from "@mui/material";
-import Warning from "@/components/cards/AboutAnyPage/warningCard";
-import SportCards from "@/features/sportCards";
-import WeatherCards from "@/features/weathercards";
-import MainFooter from "@/components/footers/mainfooter";
-import Header from "@/components/header/header";
+import Warning from "@/components/cards/AboutAnyPage/WarningCard";
+import SportCards from "@/features/SportCards";
+import WeatherCards from "@/features/WeatherCards";
+import MainFooter from "@/components/footers/MainFooter";
+import Header from "@/components/header/Header";
 import { gql, useQuery } from "@apollo/client";
 import { useParams } from "next/navigation";
-import CircularUnderLoad from "@/features/loading";
+import CircularUnderLoad from "@/features/Loading";
 import { motion } from "framer-motion";
 
 const GET_SPORTS = gql`
@@ -23,7 +23,7 @@ const GET_SPORTS = gql`
   }
 `;
 
-export default function SportChoise() {
+export default function SportChoice() {
   const { type } = useParams() as { type: string };
   const { data, loading, error } = useQuery(GET_SPORTS, {
     variables: { sceneId: type },

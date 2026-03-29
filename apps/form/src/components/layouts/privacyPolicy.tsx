@@ -1,7 +1,7 @@
 "use client";
 
 import {Stack, Divider, Typography, Card, Container} from "@mui/material";
-import WiderLogo from "@/components/layouts/logo/widerlogo";
+import WiderLogo from "@/components/layouts/logo/WiderLogo";
 
 const PrivacyPolicy = () => {
     return (
@@ -72,7 +72,7 @@ const PrivacyPolicy = () => {
                 <Stack direction={"row"} spacing={"8px"}>
                     <Typography
                         fontWeight={"600"}
-                        color={(theme) => theme.palette.button.light}
+                        sx={{ color: (theme) => theme.palette.button.light }}
                     >
                         (C)2024
                     </Typography>

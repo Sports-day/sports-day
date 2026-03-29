@@ -8,7 +8,7 @@ export type weatherProps = {
   id?: string;
 };
 
-export default function SeeButtom({ type, name, id }: weatherProps) {
+export default function SeeButton({ type, name, id }: weatherProps) {
   const same = type === id;
   const theme = useTheme();
   return (

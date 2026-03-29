@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Box,
   Card,
   CardActionArea,
   Typography,
@@ -8,8 +9,6 @@ import {
   Tooltip,
   useTheme,
 } from "@mui/material";
-import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
-import BlockIcon from "@mui/icons-material/Block";
 import { motion } from "framer-motion";
 
 type MembersCardProps = {
@@ -65,7 +64,7 @@ export default function MembersCard({
         >
           <Typography
             sx={(theme) => ({
-              ...theme.typography.bottonFont1,
+              ...theme.typography.buttonFont1,
             })}
           >
             {studentname}
@@ -77,7 +76,9 @@ export default function MembersCard({
               remove && remove();
             }}
           >
-            <CancelOutlinedIcon sx={{ color: "white" }} />
+            <Typography sx={{ color: "white", fontSize: "20px", lineHeight: 1 }}>
+              ×
+            </Typography>
           </Button>
         </Card>
       </motion.div>
@@ -100,10 +101,27 @@ export default function MembersCard({
           p: "8px",
         }}
       >
-        <BlockIcon sx={{ color: "white", position: "absolute", left: 11 }} />
+        <Box
+          sx={{
+            color: "white",
+            position: "absolute",
+            left: 11,
+            width: 16,
+            height: 16,
+            borderRadius: "50%",
+            border: "1.5px solid #fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "10px",
+            lineHeight: 1,
+          }}
+        >
+          /
+        </Box>
         <Typography
           sx={(theme) => ({
-            ...theme.typography.bottonFont1,
+            ...theme.typography.buttonFont1,
           })}
         >
           {studentname}
@@ -147,7 +165,7 @@ export default function MembersCard({
             >
               <Typography
                 sx={(theme) => ({
-                  ...theme.typography.bottonFont1,
+                  ...theme.typography.buttonFont1,
                 })}
               >
                 {studentname}
@@ -182,7 +200,7 @@ export default function MembersCard({
         >
           <Typography
             sx={(theme) => ({
-              ...theme.typography.bottonFont1,
+              ...theme.typography.buttonFont1,
             })}
           >
             {studentname}

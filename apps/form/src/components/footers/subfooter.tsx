@@ -2,7 +2,7 @@
 
 import { Box, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import BackButton from "../buttons/backbutton";
+import BackButton from "../buttons/BackButton";
 
 export default function SubFooter() {
   const theme = useTheme();

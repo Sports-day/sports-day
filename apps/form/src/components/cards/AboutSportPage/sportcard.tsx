@@ -1,13 +1,13 @@
 "use client";
 
 import {
+  Box,
   Card,
   Typography,
   Stack,
   CardActionArea,
   useTheme,
 } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -55,7 +55,26 @@ export default function SportCard({
                 px: "8px",
               }}
             >
-              {hasTeam && <CheckCircleIcon sx={{ color: "#ffffff" }} />}
+              {hasTeam && (
+                <Box
+                  sx={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: "50%",
+                    border: "1.5px solid #fff",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "11px",
+                    lineHeight: 1,
+                    mr: "6px",
+                    flexShrink: 0,
+                  }}
+                >
+                  ✓
+                </Box>
+              )}
               <Typography
                 sx={(theme) => ({
                   ...theme.typography.secondFont,

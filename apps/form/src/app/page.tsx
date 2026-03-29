@@ -5,8 +5,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { gql, useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
-import LinearWithValueLabel from "@/components/layouts/progressber";
-import PrivacyPolicyDrawer from "@/components/layouts/privacyPolicyDrawer";
+import LinearWithValueLabel from "@/components/layouts/ProgressBar";
+import PrivacyPolicyDrawer from "@/components/layouts/PrivacyPolicyDrawer";
 
 const GET_TYPE = gql`
   query GetType {
@@ -28,7 +28,7 @@ export default function Home() {
       <Box
         sx={{
           width: "100%",
-          minHeight: "100vh",
+          minHeight: "100dvh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -49,7 +49,7 @@ export default function Home() {
       sx={{
         background: theme.palette.background.default,
         width: "100%",
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex",
       }}
     >
@@ -59,7 +59,7 @@ export default function Home() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         style={{
           width: "100%",
-          minHeight: "100vh",
+          minHeight: "100dvh",
           display: "flex",
           justifyContent: "center",
         }}
@@ -70,20 +70,34 @@ export default function Home() {
             height: "100%",
             alignItems: "center",
             justifyContent: "center",
+            px: "16px",
+            py: "24px",
           }}
         >
-          <Image src="/images/logo_form.png" alt="" width={320} height={28} />
-          <Typography sx={{ color: "white", fontSize: "18px" }}>
+          <Image
+            src="/images/logo_form.png"
+            alt=""
+            width={320}
+            height={28}
+            style={{ width: "min(320px, 78vw)", height: "auto" }}
+          />
+          <Typography
+            sx={{
+              color: "white",
+              fontSize: { xs: "15px", sm: "18px" },
+              textAlign: "center",
+            }}
+          >
             球技大会のチーム登録プラットフォーム
           </Typography>
-          <br />
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
-          >
-            <Box sx={{ width: 320 }}>
+          <Box sx={{ width: "min(320px, 100%)", mt: "12px" }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+              style={{ width: "100%" }}
+            >
               <Button
                 variant="contained"
                 color="secondary"
@@ -113,17 +127,17 @@ export default function Home() {
                   回答へ進む
                 </Typography>
               </Button>
-            </Box>
-          </motion.div>
-          <Box sx={{ width: 320, mt: "16px" }}>
+            </motion.div>
+          </Box>
+          <Box sx={{ width: "min(320px, 100%)", mt: "16px" }}>
             <PrivacyPolicyDrawer>プライバシーポリシー</PrivacyPolicyDrawer>
           </Box>
 
-          <br />
-          <br />
-          <br />
-          <br />
-          <Stack spacing={"16px"} direction="row">
+          <Stack
+            spacing={"16px"}
+            direction="row"
+            sx={{ mt: { xs: "32px", md: "64px" } }}
+          >
             <Typography sx={{ color: "white", opacity: 0.5, fontSize: "20px" }}>
               (C)
             </Typography>
@@ -132,7 +146,11 @@ export default function Home() {
               alt=""
               width={160}
               height={130}
-              style={{ opacity: 0.5 }}
+              style={{
+                opacity: 0.5,
+                width: "min(160px, 44vw)",
+                height: "auto",
+              }}
             />
           </Stack>
         </Stack>

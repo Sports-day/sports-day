@@ -1,92 +1,23 @@
 "use client";
 
-import { Card, Box, Typography, Stack, useTheme } from "@mui/material";
+import { Box, Card, Stack, Typography, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { gql, useQuery } from "@apollo/client";
 
-type sceneInformation = {
+export type SceneStatusItem = {
   scenename: string;
-  confricted: string[];
+  users: string[];
 };
 
-const GET_SCENE_ID = gql`
-  query GetSceneId {
-    scenes {
-      id
-      name
-    }
-  }
-`;
+type SceneStatusCardLayoutProps = {
+  title: string;
+  items: SceneStatusItem[];
+};
 
-const GET_SCENE_USERS = gql`
-  query GetSceneUsers {
-    sportScenes {
-      scene {
-        id
-        name
-      }
-      entries {
-        team {
-          users {
-            name
-          }
-        }
-      }
-    }
-  }
-`;
-
-export default function Confricted() {
+export default function SceneStatusCardLayout({
+  title,
+  items,
+}: SceneStatusCardLayoutProps) {
   const theme = useTheme();
-  const { data: Scene } = useQuery(GET_SCENE_ID);
-  const { data: SceneData } = useQuery(GET_SCENE_USERS);
-
-  const Data1 =
-    SceneData?.sportScenes?.filter(
-      (e: any) => e.scene?.id === Scene?.scenes[0]?.id,
-    ) || [];
-  const Data2 =
-    SceneData?.sportScenes?.filter(
-      (e: any) => e.scene?.id === Scene?.scenes[1]?.id,
-    ) || [];
-
-  const Scenename1 = Scene?.scenes[0]?.name;
-  const Scenename2 = Scene?.scenes[1]?.name;
-
-  const SceneTeamUser1 =
-    Data1?.flatMap((d: any) =>
-      d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.name)),
-    ) || [];
-  const SceneTeamUser2 =
-    Data2?.flatMap((d: any) =>
-      d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.name)),
-    ) || [];
-
-  const nameCount1: Record<string, number> = {};
-  const nameCount2: Record<string, number> = {};
-  SceneTeamUser1?.forEach((name: string) => {
-    nameCount1[name] = (nameCount1[name] || 0) + 1;
-  });
-  SceneTeamUser2?.forEach((name: string) => {
-    nameCount2[name] = (nameCount2[name] || 0) + 1;
-  });
-  const confrictedUser1 = Object?.keys(nameCount1).filter(
-    (name: string) => nameCount1[name] > 1,
-  );
-  const confrictedUser2 = Object?.keys(nameCount2).filter(
-    (name: string) => nameCount2[name] > 1,
-  );
-
-  const AllSceneData: sceneInformation[] = [
-    {
-      scenename: Scenename1,
-      confricted: confrictedUser1,
-    },
-    {
-      scenename: Scenename2,
-      confricted: confrictedUser2,
-    },
-  ];
 
   return (
     <Card
@@ -110,7 +41,7 @@ export default function Confricted() {
           height: "100%",
         }}
       >
-        <Typography sx={{ color: "#E34013" }}>重複</Typography>
+        <Typography sx={{ color: "#E34013" }}>{title}</Typography>
         <Box
           sx={{
             background: "none",
@@ -118,9 +49,9 @@ export default function Confricted() {
             height: "100%",
           }}
         >
-          {AllSceneData?.map((item, idx) => (
+          {items.map((item, itemIndex) => (
             <Card
-              key={idx}
+              key={`${item.scenename}-${itemIndex}`}
               variant="outlined"
               sx={{
                 borderColor: theme.palette.card.main,
@@ -145,7 +76,7 @@ export default function Confricted() {
                   {item.scenename}
                 </Typography>
               </Stack>
-              {item.confricted?.length === 0 ? (
+              {item.users.length === 0 ? (
                 <Stack
                   sx={{
                     display: "flex",
@@ -158,10 +89,10 @@ export default function Confricted() {
                 </Stack>
               ) : (
                 <Grid container spacing={"8px"}>
-                  {item.confricted?.map((user, index) => (
+                  {item.users.map((user, userIndex) => (
                     <Grid
                       size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
-                      key={index}
+                      key={`${item.scenename}-${user}-${userIndex}`}
                     >
                       <Card
                         sx={{

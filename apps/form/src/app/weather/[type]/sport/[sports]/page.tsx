@@ -1,12 +1,12 @@
 "use client";
 
-import MakingTeams from "@/features/makingteam";
+import MakingTeams from "@/features/MakingTeams";
 import { useParams } from "next/navigation";
 import Box from "@mui/material/Box";
-import Header from "@/components/header/header";
-import SubFooter from "@/components/footers/subfooter";
+import Header from "@/components/header/Header";
+import SubFooter from "@/components/footers/SubFooter";
 import { gql, useQuery } from "@apollo/client";
-import CircularUnderLoad from "@/features/loading";
+import CircularUnderLoad from "@/features/Loading";
 
 const SPORTDATA_GET = gql`
   query GetSport($sportId: ID!, $sceneId: ID!) {

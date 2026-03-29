@@ -1,10 +1,10 @@
 "use client";
 
 import { Box, Stack } from "@mui/material";
-import Header from "@/components/header/header";
-import Warning from "@/components/cards/AboutAnyPage/warningCard";
-import ConfirmPage from "@/features/confirmpage";
-import LastFooter from "@/components/footers/lastfooter";
+import Header from "@/components/header/Header";
+import Warning from "@/components/cards/AboutAnyPage/WarningCard";
+import ConfirmPage from "@/features/ConfirmPage";
+import LastFooter from "@/components/footers/LastFooter";
 
 export default function Confirm() {
   return (

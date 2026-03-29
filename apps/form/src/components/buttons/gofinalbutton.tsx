@@ -8,7 +8,7 @@ import { useTheme, Typography } from "@mui/material";
 export default function GoFinal() {
   const theme = useTheme();
   return (
-    <Link href={{ pathname: "/confirm/finalconfirm" }} passHref>
+    <Link href={{ pathname: "/confirm" }} passHref>
       <motion.div whileTap={{ scale: 0.98 }}>
         <Button
           component="span"

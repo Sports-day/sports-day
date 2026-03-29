@@ -2,8 +2,8 @@
 
 import { Box, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import SubmitButton from "../buttons/submitbutton";
-import BackButton from "../buttons/backbutton";
+import SubmitButton from "../buttons/SubmitButton";
+import BackButton from "../buttons/BackButton";
 
 export default function LastFooter() {
   const theme = useTheme();

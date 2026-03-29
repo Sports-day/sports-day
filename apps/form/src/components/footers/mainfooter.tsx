@@ -2,7 +2,7 @@
 
 import { Box, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import GoFinal from "../buttons/gofinalbutton";
+import GoFinal from "../buttons/GoFinalButton";
 
 export default function MainFooter() {
   const theme = useTheme();

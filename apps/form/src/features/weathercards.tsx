@@ -2,12 +2,21 @@
 
 import { Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import SeeButton from "@/components/buttons/weather/seebutton";
-import CircularUnderLoad from "./loading";
+import SeeButton from "@/components/buttons/weather/SeeButton";
+import CircularUnderLoad from "./Loading";
 import { gql, useQuery } from "@apollo/client";
 
 type weatherProps = {
   id: string;
+};
+
+type SceneNode = {
+  id: string;
+  name: string;
+};
+
+type GetWeatherData = {
+  scenes: SceneNode[];
 };
 
 export const GET_WEATHER = gql`
@@ -20,13 +29,13 @@ export const GET_WEATHER = gql`
 `;
 
 export default function WeatherCards({ id }: weatherProps) {
-  const { data, loading, error } = useQuery(GET_WEATHER);
+  const { data, loading, error } = useQuery<GetWeatherData>(GET_WEATHER);
   if (loading) return <CircularUnderLoad />;
   if (error) return <div>error</div>;
   const weather = data?.scenes.map((d) => ({
     id: d.id,
     name: d.name,
-  }));
+  })) ?? [];
 
   return (
     <Box sx={{ width: "100%" }}>

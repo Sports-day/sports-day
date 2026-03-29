@@ -9,9 +9,8 @@ import {
   useTheme,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import EditButton from "../../buttons/editbutton";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CheckPopup_Confirm from "@/components/popups/checkpopup-comfirmpage";
+import EditButton from "../../buttons/EditButton";
+import CheckPopup_Confirm from "@/components/popups/CheckPopupConfirmPage";
 import { useState } from "react";
 
 type AllDataProps = {
@@ -34,8 +33,16 @@ export default function ConfirmCard({
   memberdata,
 }: AllDataProps) {
   const theme = useTheme();
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
+  const [openTeamId, setOpenTeamId] = useState<string | null>(null);
+
+  const teamRows = teamname
+    .map((name, index) => ({
+      teamName: name,
+      teamId: teamid[index],
+      members: memberdata[index] ?? [],
+    }))
+    .reverse();
+
   return (
     <Card
       variant="outlined"
@@ -82,13 +89,10 @@ export default function ConfirmCard({
               </Typography>
             </Stack>
           ) : (
-            teamname
-              .slice()
-              .reverse()
-              .map((team, index) => (
+            teamRows.map((row) => (
                 <Card
                   variant="outlined"
-                  key={team}
+                  key={row.teamId ?? row.teamName}
                   sx={{
                     borderColor: theme.palette.card.main,
                     background: "none",
@@ -109,13 +113,13 @@ export default function ConfirmCard({
                         flexGrow: 1,
                       })}
                     >
-                      {team}
+                      {row.teamName}
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={"8px"}>
                       <EditButton
                         type={sceneid}
                         sports={sportid}
-                        teams={teamid[index]}
+                        teams={row.teamId}
                       />
                       <Button
                         component="span"
@@ -139,20 +143,26 @@ export default function ConfirmCard({
                             opacity: 0.8,
                           },
                         }}
-                        onClick={handleOpen}
+                        onClick={() => setOpenTeamId(row.teamId)}
                       >
-                        <DeleteIcon />
+                        <Typography sx={{ fontSize: "16px", lineHeight: 1 }}>
+                          ×
+                        </Typography>
                         削除
                       </Button>
                       <CheckPopup_Confirm
-                        teamid={teamid[index]}
-                        open={open}
-                        setOpen={setOpen}
+                        teamid={row.teamId}
+                        open={openTeamId === row.teamId}
+                        setOpen={(open) => {
+                          if (!open) {
+                            setOpenTeamId(null);
+                          }
+                        }}
                       />
                     </Stack>
                   </Stack>
                   <Grid container spacing={"8px"}>
-                    {memberdata[index]
+                    {row.members
                       ?.slice()
                       .reverse()
                       .map((member, idx) => (

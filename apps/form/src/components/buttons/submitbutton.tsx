@@ -8,7 +8,7 @@ import { useTheme, Typography } from "@mui/material";
 export default function SubmitButton() {
   const theme = useTheme();
   return (
-    <Link href={{ pathname: "/submit/finished" }} passHref>
+    <Link href={{ pathname: "/submit" }} passHref>
       <motion.div whileTap={{ scale: 0.98 }}>
         <Button
           component="span"

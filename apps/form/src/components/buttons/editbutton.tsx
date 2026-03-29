@@ -1,6 +1,5 @@
 "use client";
 
-import EditIcon from "@mui/icons-material/Edit";
 import Link from "next/link";
 import { Typography, useTheme, Button } from "@mui/material";
 
@@ -33,7 +32,16 @@ export default function EditButton({ type, sports, teams }: Props) {
           },
         }}
       >
-        <EditIcon sx={{ color: theme.typography.buttonFont1.color }} />
+        <Typography
+          sx={{
+            color: theme.typography.buttonFont1.color,
+            fontSize: "14px",
+            lineHeight: 1,
+            mr: "4px",
+          }}
+        >
+          ✎
+        </Typography>
         <Typography
           sx={(theme) => ({
             ...theme.typography.buttonFont1,

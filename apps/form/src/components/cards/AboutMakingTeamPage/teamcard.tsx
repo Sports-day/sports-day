@@ -2,7 +2,7 @@
 
 import { Card, Box, Typography, Stack, Button, useTheme } from "@mui/material";
 import { useState } from "react";
-import CheckPopup from "../../popups/checkpopup";
+import CheckPopup from "../../popups/CheckPopup";
 import Link from "next/link";
 
 type teamMember = {
