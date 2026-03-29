@@ -41,19 +41,6 @@ func (s *Tournament) SetCompetitionService(cs *Competition) {
 	s.competitionService = cs
 }
 
-// エラー定義は api/pkg/errors/error_code.go に統合済み。
-// 後方互換のためパッケージ変数を維持する。
-var (
-	ErrBracketAlreadyExists       = errors.ErrBracketAlreadyExists
-	ErrMainBracketDeleteForbidden = errors.ErrMainBracketDeleteForbidden
-	ErrDuplicateMainBracket       = errors.ErrDuplicateMainBracket
-	ErrTournamentHasScores        = errors.ErrTournamentHasScores
-	ErrDAGCycleDetected           = errors.ErrDAGCycleDetected
-	ErrInvalidSourceMatch         = errors.ErrInvalidSourceMatch
-	ErrTeamCountTooSmall          = errors.ErrTeamCountTooSmall
-	ErrNotTournamentCompetition   = errors.ErrNotTournamentCompetition
-	ErrTournamentMatchCreateOnly  = errors.ErrTournamentMatchCreateOnly
-)
 
 // --- Query ---
 
@@ -296,7 +283,7 @@ func (s *Tournament) ComputeBracketState(ctx context.Context, txDB *gorm.DB, tou
 
 func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateBracketInput) ([]*db_model.Tournament, error) {
 	if input.TeamCount < 2 {
-		return nil, ErrTeamCountTooSmall
+		return nil, errors.ErrTeamCountTooSmall
 	}
 
 	var tournaments []*db_model.Tournament
@@ -308,7 +295,7 @@ func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateB
 			return err
 		}
 		if comp.Type != string(model.CompetitionTypeTournament) {
-			return ErrNotTournamentCompetition
+			return errors.ErrNotTournamentCompetition
 		}
 
 		// 二重生成防止
@@ -317,7 +304,7 @@ func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateB
 			return err
 		}
 		if len(existing) > 0 {
-			return ErrBracketAlreadyExists
+			return errors.ErrBracketAlreadyExists
 		}
 
 		// placement_method
@@ -902,14 +889,14 @@ func (s *Tournament) CreateTournament(ctx context.Context, input *model.CreateTo
 			return err
 		}
 		if comp.Type != string(model.CompetitionTypeTournament) {
-			return ErrNotTournamentCompetition
+			return errors.ErrNotTournamentCompetition
 		}
 
 		// MAIN重複チェック
 		if input.BracketType == model.BracketTypeMain {
 			_, err := s.tournamentRepository.GetMainByCompetitionID(ctx, tx, input.CompetitionID)
 			if err == nil {
-				return ErrDuplicateMainBracket
+				return errors.ErrDuplicateMainBracket
 			}
 		}
 
@@ -985,7 +972,7 @@ func (s *Tournament) DeleteTournament(ctx context.Context, id string) (*db_model
 		}
 
 		if t.BracketType == string(model.BracketTypeMain) {
-			return ErrMainBracketDeleteForbidden
+			return errors.ErrMainBracketDeleteForbidden
 		}
 
 		// 所属する試合の match_ids を収集
@@ -1510,7 +1497,7 @@ func (s *Tournament) validateSourceMatch(ctx context.Context, tx *gorm.DB, slot 
 		return err
 	}
 	if match.CompetitionID != competitionID {
-		return ErrInvalidSourceMatch
+		return errors.ErrInvalidSourceMatch
 	}
 	return nil
 }
@@ -1523,7 +1510,7 @@ func (s *Tournament) checkNoScores(ctx context.Context, tx *gorm.DB, tournamentI
 	}
 	for _, m := range matches {
 		if m.Status == string(model.MatchStatusOngoing) || m.Status == string(model.MatchStatusFinished) {
-			return ErrTournamentHasScores
+			return errors.ErrTournamentHasScores
 		}
 	}
 	return nil
@@ -1655,7 +1642,7 @@ func (s *Tournament) ValidateDAG(ctx context.Context, competitionID string) erro
 	}
 
 	if hasCycle {
-		return ErrDAGCycleDetected
+		return errors.ErrDAGCycleDetected
 	}
 	return nil
 }
@@ -1667,7 +1654,7 @@ func (s *Tournament) CheckTournamentCompetition(ctx context.Context, competition
 		return nil // competition が見つからない場合は他のバリデーションに任せる
 	}
 	if comp.Type == string(model.CompetitionTypeTournament) {
-		return ErrTournamentMatchCreateOnly
+		return errors.ErrTournamentMatchCreateOnly
 	}
 	return nil
 }
