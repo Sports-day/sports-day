@@ -55,7 +55,7 @@ var (
 	ErrTournamentSlotNotFound = NewError("TOURNAMENT_SLOT_NOT_FOUND", "トーナメントスロットが見つかりません")
 	ErrSaveTournament         = NewError("TOURNAMENT_SAVE_FAILED", "トーナメントの保存に失敗しました")
 	ErrSaveTournamentSlot     = NewError("TOURNAMENT_SLOT_SAVE_FAILED", "トーナメントスロットの保存に失敗しました")
-	ErrOptimisticLockFailed   = NewError("OPTIMISTIC_LOCK_FAILED", "楽観的ロックに失敗しました（既に更新済み）")
+	ErrSlotAlreadyAssigned    = NewError("SLOT_ALREADY_ASSIGNED", "スロットには既にチームが割り当てられています")
 
 	// トーナメント自動進行・スコア修正関連
 	ErrTournamentDrawForbidden           = NewError("TOURNAMENT_DRAW_FORBIDDEN", "トーナメントの試合では引き分けは許可されていません")

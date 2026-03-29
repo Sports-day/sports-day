@@ -164,7 +164,7 @@ func (r *matchRepository) UpdateMatchEntryTeamIDOptimistic(ctx context.Context, 
 		return errors.Wrap(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return errors.ErrOptimisticLockFailed
+		return errors.ErrSlotAlreadyAssigned
 	}
 	return nil
 }
