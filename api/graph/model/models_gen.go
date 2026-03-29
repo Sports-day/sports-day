@@ -64,7 +64,8 @@ type CreatePromotionRuleInput struct {
 }
 
 type CreateRuleInput struct {
-	Rule string `json:"rule"`
+	Rule    string  `json:"rule"`
+	SportID *string `json:"sportId,omitempty"`
 }
 
 type CreateSceneInput struct {
@@ -203,6 +204,7 @@ type Sport struct {
 	Name         string         `json:"name"`
 	Weight       int32          `json:"weight"`
 	RankingRules []*RankingRule `json:"rankingRules"`
+	Rules        []*Rule        `json:"rules"`
 }
 
 // SUBブラケット定義（自動生成用）
@@ -282,7 +284,8 @@ type UpdatePromotionRuleInput struct {
 }
 
 type UpdateRuleInput struct {
-	Rule *string `json:"rule,omitempty"`
+	Rule    *string `json:"rule,omitempty"`
+	SportID *string `json:"sportId,omitempty"`
 }
 
 type UpdateSceneInput struct {

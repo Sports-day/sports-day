@@ -42,14 +42,19 @@ func FormatSportResponse(sport *db_model.Sport) *Sport {
 		Name:         sport.Name,
 		Weight:       int32(sport.Weight),
 		RankingRules: []*RankingRule{},
+		Rules:        []*Rule{},
 	}
 }
 
-func FormatSportWithRankingRulesResponse(sport *db_model.Sport, rules []*db_model.RankingRule) *Sport {
+func FormatSportWithRankingRulesResponse(sport *db_model.Sport, rankingRules []*db_model.RankingRule, rules []*db_model.Rule) *Sport {
 	res := FormatSportResponse(sport)
-	res.RankingRules = make([]*RankingRule, len(rules))
-	for i, r := range rules {
+	res.RankingRules = make([]*RankingRule, len(rankingRules))
+	for i, r := range rankingRules {
 		res.RankingRules[i] = FormatRankingRuleResponse(r)
+	}
+	res.Rules = make([]*Rule, len(rules))
+	for i, r := range rules {
+		res.Rules[i] = FormatRuleResponse(r)
 	}
 	return res
 }
@@ -198,8 +203,13 @@ func FormatRankingRuleResponse(rule *db_model.RankingRule) *RankingRule {
 }
 
 func FormatRuleResponse(rule *db_model.Rule) *Rule {
+	var sportID string
+	if rule.SportID.Valid {
+		sportID = rule.SportID.String
+	}
 	return &Rule{
-		ID:   rule.ID,
-		Rule: rule.Rule,
+		ID:      rule.ID,
+		Rule:    rule.Rule,
+		SportID: sportID,
 	}
 }

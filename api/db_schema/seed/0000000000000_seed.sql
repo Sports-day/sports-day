@@ -416,8 +416,8 @@ VALUES
   -- ライジングB: 0勝0敗（0得点0失点、得失点差0）→ 0ポイント
   ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '01JSB1ZQK0A2X6JQK1Q2X6JQX', 0, 0, 0, 0, 0, 0, 1);
 
-INSERT INTO rules (id, rule)
-VALUES  ('01K1EAXE40D5JVD3B7DZRQ8M2R', '危険行為は禁止されています。');
+INSERT INTO rules (id, rule, sport_id)
+VALUES  ('01K1EAXE40D5JVD3B7DZRQ8M2R', '危険行為は禁止されています。', '01JS96Z963A6RT2C563DCSSCQN');
 
 -- migrate:down
 DELETE FROM league_standings;

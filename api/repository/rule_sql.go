@@ -48,3 +48,27 @@ func (r rule) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Rul
 	}
 	return &rule, nil
 }
+
+func (r rule) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Rule, error) {
+	var rules []*db_model.Rule
+	if err := db.Where("id IN ?", ids).Find(&rules).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return rules, nil
+}
+
+func (r rule) ListBySportID(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.Rule, error) {
+	var rules []*db_model.Rule
+	if err := db.Where("sport_id = ?", sportID).Find(&rules).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return rules, nil
+}
+
+func (r rule) ListBySportIDs(ctx context.Context, db *gorm.DB, sportIDs []string) ([]*db_model.Rule, error) {
+	var rules []*db_model.Rule
+	if err := db.Where("sport_id IN ?", sportIDs).Find(&rules).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return rules, nil
+}

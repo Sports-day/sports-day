@@ -133,6 +133,7 @@ type Sport {
   name: String!
   weight: Int!
   rankingRules: [RankingRule!]!
+  rules: [Rule!]!
 }
 
 type Scene {
@@ -210,4 +211,5 @@ type PromotionStatus {
 type Rule {
   id: ID
   rule: String!
+  sport: Sport
 }

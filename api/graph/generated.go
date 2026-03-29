@@ -47,6 +47,7 @@ type ResolverRoot interface {
 	Match() MatchResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Rule() RuleResolver
 	Standing() StandingResolver
 	Team() TeamResolver
 	Tournament() TournamentResolver
@@ -239,8 +240,9 @@ type ComplexityRoot struct {
 	}
 
 	Rule struct {
-		ID   func(childComplexity int) int
-		Rule func(childComplexity int) int
+		ID    func(childComplexity int) int
+		Rule  func(childComplexity int) int
+		Sport func(childComplexity int) int
 	}
 
 	Scene struct {
@@ -252,6 +254,7 @@ type ComplexityRoot struct {
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
 		RankingRules func(childComplexity int) int
+		Rules        func(childComplexity int) int
 		Weight       func(childComplexity int) int
 	}
 
@@ -443,6 +446,9 @@ type QueryResolver interface {
 	TournamentRanking(ctx context.Context, competitionID string) ([]*model.TournamentRanking, error)
 	Rule(ctx context.Context, id string) (*model.Rule, error)
 	Rules(ctx context.Context) ([]*model.Rule, error)
+}
+type RuleResolver interface {
+	Sport(ctx context.Context, obj *model.Rule) (*model.Sport, error)
 }
 type StandingResolver interface {
 	Team(ctx context.Context, obj *model.Standing) (*model.Team, error)
@@ -1843,6 +1849,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Rule.Rule(childComplexity), true
 
+	case "Rule.sport":
+		if e.complexity.Rule.Sport == nil {
+			break
+		}
+
+		return e.complexity.Rule.Sport(childComplexity), true
+
 	case "Scene.id":
 		if e.complexity.Scene.ID == nil {
 			break
@@ -1877,6 +1890,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Sport.RankingRules(childComplexity), true
+
+	case "Sport.rules":
+		if e.complexity.Sport.Rules == nil {
+			break
+		}
+
+		return e.complexity.Sport.Rules(childComplexity), true
 
 	case "Sport.weight":
 		if e.complexity.Sport.Weight == nil {
@@ -7161,6 +7181,8 @@ func (ec *executionContext) fieldContext_Mutation_createSports(ctx context.Conte
 				return ec.fieldContext_Sport_weight(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
+			case "rules":
+				return ec.fieldContext_Sport_rules(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -7226,6 +7248,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteSports(ctx context.Conte
 				return ec.fieldContext_Sport_weight(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
+			case "rules":
+				return ec.fieldContext_Sport_rules(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -7291,6 +7315,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSports(ctx context.Conte
 				return ec.fieldContext_Sport_weight(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
+			case "rules":
+				return ec.fieldContext_Sport_rules(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -9331,6 +9357,8 @@ func (ec *executionContext) fieldContext_Mutation_setRankingRules(ctx context.Co
 				return ec.fieldContext_Sport_weight(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
+			case "rules":
+				return ec.fieldContext_Sport_rules(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -10386,6 +10414,8 @@ func (ec *executionContext) fieldContext_Mutation_createRule(ctx context.Context
 				return ec.fieldContext_Rule_id(ctx, field)
 			case "rule":
 				return ec.fieldContext_Rule_rule(ctx, field)
+			case "sport":
+				return ec.fieldContext_Rule_sport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
 		},
@@ -10447,6 +10477,8 @@ func (ec *executionContext) fieldContext_Mutation_updateRule(ctx context.Context
 				return ec.fieldContext_Rule_id(ctx, field)
 			case "rule":
 				return ec.fieldContext_Rule_rule(ctx, field)
+			case "sport":
+				return ec.fieldContext_Rule_sport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
 		},
@@ -10508,6 +10540,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteRule(ctx context.Context
 				return ec.fieldContext_Rule_id(ctx, field)
 			case "rule":
 				return ec.fieldContext_Rule_rule(ctx, field)
+			case "sport":
+				return ec.fieldContext_Rule_sport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
 		},
@@ -11262,6 +11296,8 @@ func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field g
 				return ec.fieldContext_Sport_weight(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
+			case "rules":
+				return ec.fieldContext_Sport_rules(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -11316,6 +11352,8 @@ func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field 
 				return ec.fieldContext_Sport_weight(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
+			case "rules":
+				return ec.fieldContext_Sport_rules(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -12783,6 +12821,8 @@ func (ec *executionContext) fieldContext_Query_rule(ctx context.Context, field g
 				return ec.fieldContext_Rule_id(ctx, field)
 			case "rule":
 				return ec.fieldContext_Rule_rule(ctx, field)
+			case "sport":
+				return ec.fieldContext_Rule_sport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
 		},
@@ -12844,6 +12884,8 @@ func (ec *executionContext) fieldContext_Query_rules(_ context.Context, field gr
 				return ec.fieldContext_Rule_id(ctx, field)
 			case "rule":
 				return ec.fieldContext_Rule_rule(ctx, field)
+			case "sport":
+				return ec.fieldContext_Rule_sport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
 		},
@@ -13155,6 +13197,59 @@ func (ec *executionContext) fieldContext_Rule_rule(_ context.Context, field grap
 	return fc, nil
 }
 
+func (ec *executionContext) _Rule_sport(ctx context.Context, field graphql.CollectedField, obj *model.Rule) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Rule_sport(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Rule().Sport(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Sport)
+	fc.Result = res
+	return ec.marshalOSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Rule_sport(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Rule",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Sport_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Sport_name(ctx, field)
+			case "weight":
+				return ec.fieldContext_Sport_weight(ctx, field)
+			case "rankingRules":
+				return ec.fieldContext_Sport_rankingRules(ctx, field)
+			case "rules":
+				return ec.fieldContext_Sport_rules(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Scene_id(ctx context.Context, field graphql.CollectedField, obj *model.Scene) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Scene_id(ctx, field)
 	if err != nil {
@@ -13420,6 +13515,58 @@ func (ec *executionContext) fieldContext_Sport_rankingRules(_ context.Context, f
 				return ec.fieldContext_RankingRule_priority(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RankingRule", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Sport_rules(ctx context.Context, field graphql.CollectedField, obj *model.Sport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sport_rules(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rules, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Rule)
+	fc.Result = res
+	return ec.marshalNRule2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRuleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Sport_rules(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Sport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Rule_id(ctx, field)
+			case "rule":
+				return ec.fieldContext_Rule_rule(ctx, field)
+			case "sport":
+				return ec.fieldContext_Rule_sport(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
 		},
 	}
 	return fc, nil
@@ -18004,7 +18151,7 @@ func (ec *executionContext) unmarshalInputCreateRuleInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"rule"}
+	fieldsInOrder := [...]string{"rule", "sportId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18018,6 +18165,13 @@ func (ec *executionContext) unmarshalInputCreateRuleInput(ctx context.Context, o
 				return it, err
 			}
 			it.Rule = data
+		case "sportId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sportId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SportID = data
 		}
 	}
 
@@ -19066,7 +19220,7 @@ func (ec *executionContext) unmarshalInputUpdateRuleInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"rule"}
+	fieldsInOrder := [...]string{"rule", "sportId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19080,6 +19234,13 @@ func (ec *executionContext) unmarshalInputUpdateRuleInput(ctx context.Context, o
 				return it, err
 			}
 			it.Rule = data
+		case "sportId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sportId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SportID = data
 		}
 	}
 
@@ -21644,8 +21805,41 @@ func (ec *executionContext) _Rule(ctx context.Context, sel ast.SelectionSet, obj
 		case "rule":
 			out.Values[i] = ec._Rule_rule(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "sport":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Rule_sport(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -21741,6 +21935,11 @@ func (ec *executionContext) _Sport(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "rankingRules":
 			out.Values[i] = ec._Sport_rankingRules(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rules":
+			out.Values[i] = ec._Sport_rules(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -23998,6 +24197,50 @@ func (ec *executionContext) marshalNRule2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmode
 	return ret
 }
 
+func (ec *executionContext) marshalNRule2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Rule) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRule2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRule(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNRule2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRule(ctx context.Context, sel ast.SelectionSet, v *model.Rule) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -25151,6 +25394,13 @@ func (ec *executionContext) marshalORule2ᚖsportsᚑdayᚋapiᚋgraphᚋmodel�
 		return graphql.Null
 	}
 	return ec._Rule(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v *model.Sport) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Sport(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v any) (string, error) {

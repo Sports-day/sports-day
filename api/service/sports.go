@@ -85,6 +85,18 @@ func (s *Sport) Delete(ctx context.Context, id string) (*db_model.Sport, error) 
 	return sport, nil
 }
 
+func (s *Sport) GetSportMapByIDs(ctx context.Context, ids []string) (map[string]*db_model.Sport, error) {
+	sports, err := s.sportsRepository.BatchGet(ctx, s.db, ids)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	sportMap := make(map[string]*db_model.Sport)
+	for _, sport := range sports {
+		sportMap[sport.ID] = sport
+	}
+	return sportMap, nil
+}
+
 func (s *Sport) GetRankingRules(ctx context.Context, sportID string) ([]*db_model.RankingRule, error) {
 	rules, err := s.sportsRepository.ListRankingRules(ctx, s.db, sportID)
 	if err != nil {

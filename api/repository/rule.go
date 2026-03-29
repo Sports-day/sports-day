@@ -17,4 +17,7 @@ type Rule interface {
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Rule, error)
 	Save(ctx context.Context, db *gorm.DB, rule *db_model.Rule) (*db_model.Rule, error)
 	Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Rule, error)
+	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Rule, error)
+	ListBySportID(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.Rule, error)
+	ListBySportIDs(ctx context.Context, db *gorm.DB, sportIDs []string) ([]*db_model.Rule, error)
 }

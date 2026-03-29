@@ -252,10 +252,12 @@ input UpdatePromotionRuleInput {
 
 input CreateRuleInput {
   rule: String!
+  sportId: ID
 }
 
 input UpdateRuleInput {
   rule: String
+  sportId: ID
 }
 
 type Query {

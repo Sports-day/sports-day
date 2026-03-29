@@ -99,6 +99,7 @@ type Standing struct {
 }
 
 type Rule struct {
-	ID   string `json:"id"`
-	Rule string `json:"rule"`
+	ID      string `json:"id"`
+	Rule    string `json:"rule"`
+	SportID string `json:"sportId"`
 }
