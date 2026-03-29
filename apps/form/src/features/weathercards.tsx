@@ -1,6 +1,7 @@
 "use client";
 
-import { Grid, Box } from "@mui/material";
+import { Box } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import SeeButton from "@/components/buttons/weather/seebutton";
 import CircularUnderLoad from "./loading";
 import { gql, useQuery } from "@apollo/client";
@@ -31,7 +32,7 @@ export default function WeatherCards({ id }: weatherProps) {
     <Box sx={{ width: "100%" }}>
       <Grid container direction="row" spacing={"8px"}>
         {weather.map((item) => (
-          <Grid item xs={12} sm={4} md={2} lg={1} key={item.id}>
+          <Grid size={{ xs: 12, sm: 4, md: 2, lg: 1 }} key={item.id}>
             <SeeButton type={item.id} name={item.name} id={id} />
           </Grid>
         ))}

@@ -19,12 +19,18 @@ export default function Header() {
         alignItems: "center",
       }}
     >
-      <Toolbar sx={{ justifyContent: "flex-start", width: "100%", px: { xs: "16px", md: "32px" } }}>
+      <Toolbar
+        sx={{
+          justifyContent: "flex-start",
+          width: "100%",
+          px: { xs: "16px", md: "32px" },
+        }}
+      >
         <Image
           src="/images/logo_form.png"
           alt=""
-          width={400}
-          height={20}
+          width={300}
+          height={15}
           style={{ width: "clamp(180px, 42vw, 360px)", height: "auto" }}
         />
       </Toolbar>

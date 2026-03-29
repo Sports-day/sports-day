@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, Box, Typography, Grid, Stack, useTheme } from "@mui/material";
+import { Card, Box, Typography, Stack, useTheme } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import { gql, useQuery } from "@apollo/client";
 
 type sceneInformation = {
@@ -158,7 +159,10 @@ export default function Confricted() {
               ) : (
                 <Grid container spacing={"8px"}>
                   {item.confricted?.map((user, index) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                    <Grid
+                      size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                      key={index}
+                    >
                       <Card
                         sx={{
                           background: theme.palette.card.main,

@@ -1,6 +1,6 @@
 {
   "containerEnv": {
-    "WATCHPACK_POLLING": "true"
+    "WATCHPACK_POLLING": "false"
   },
   "name": "sports-day-devcontainer",
   "dockerComposeFile": "docker-compose.dev.yaml",

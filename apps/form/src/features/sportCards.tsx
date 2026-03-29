@@ -1,6 +1,7 @@
 "use client";
 
-import { Grid, Box, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import SportCard from "@/components/cards/AboutSportPage/sportcard";
 import { gql, useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
@@ -65,7 +66,7 @@ export default function SportCards({ weather, type }: Props) {
     >
       <Grid container spacing={"16px"}>
         {weather.map((item, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={item.id}>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 3 }} key={item.id}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -73,6 +74,7 @@ export default function SportCards({ weather, type }: Props) {
                 duration: 0.5,
                 delay: index * 0.1,
               }}
+              sx={{ height: "100%", width: "100%" }}
             >
               <SportCard
                 name={item.name}

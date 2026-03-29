@@ -27,4 +27,10 @@ COPY middleware.ts .
 
 EXPOSE 3000
 
-CMD yarn build && yarn start
+# Container volume mounts often miss fs events; polling keeps HMR stable.
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+# Default to dev server for local development.
+# Set NODE_ENV=production to use build/start behavior.
+CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then yarn build && yarn start; else yarn dev -H 0.0.0.0 -p 3000; fi"]

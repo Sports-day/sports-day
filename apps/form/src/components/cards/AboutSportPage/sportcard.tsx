@@ -34,7 +34,6 @@ export default function SportCard({
       <motion.div
         whileHover={{ scale: 1.03 }}
         transition={{ type: "spring", stiffness: 150 }}
-        style={{ width: "100%" }}
       >
         <Card
           sx={{

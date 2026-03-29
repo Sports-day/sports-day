@@ -1,6 +1,7 @@
 "use client";
 
-import { Typography, Box, Grid, Stack, useTheme } from "@mui/material";
+import { Typography, Box, Stack, useTheme } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import ExtraTeamCard from "@/components/cards/AboutMakingTeamPage/extrateamcard";
 import TeamCard from "@/components/cards/AboutMakingTeamPage/teamcard";
 import Instruction from "@/components/cards/AboutAnyPage/instructioncard";
@@ -127,12 +128,7 @@ export default function MakingTeams({
                   .map((item: any) => (
                     <Grid
                       key={item.id}
-                      item
-                      xs={12}
-                      sm={6}
-                      md={4}
-                      lg={3}
-                      xl={2}
+                      size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}
                     >
                       <TeamCard
                         teamid={item.id}
@@ -143,7 +139,7 @@ export default function MakingTeams({
                       />
                     </Grid>
                   ))}
-                <Grid item xs={12} sm={6} md={4} lg={3} xl={2}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}>
                   <ExtraTeamCard sports={sports} type={type} />
                 </Grid>
               </Grid>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Grid, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import SubmitButton from "../buttons/submitbutton";
 import BackButton from "../buttons/backbutton";
 
@@ -22,11 +23,14 @@ export default function LastFooter() {
         py: "8px",
       }}
     >
-      <Grid container spacing={2} sx={{ justifyContent: "flex-end" }}>
-        <Grid item xs={6} sm={4} md={3} lg={2}>
+      <Grid
+        container
+        sx={{ justifyContent: "flex-end", width: "100%", columnGap: "16px", rowGap: "8px" }}
+      >
+        <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
           <BackButton />
         </Grid>
-        <Grid item xs={6} sm={4} md={3} lg={2}>
+        <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
           <SubmitButton />
         </Grid>
       </Grid>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Grid, Skeleton, useTheme } from "@mui/material";
+import { Box, Skeleton, useTheme } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import ConfirmCard from "@/components/cards/AboutConfirmPage/confirmcard";
 import Confricted from "@/components/cards/AboutConfirmPage/confrictedcard";
 import NotSelected from "@/components/cards/AboutConfirmPage/notselectedcard";
@@ -62,15 +63,22 @@ export default function ConfirmPage() {
         background: theme.palette.card.light,
         width: "100%",
         height: "100%",
+        flex: 1,
+        minHeight: 0,
+        overflow: "hidden",
         display: "flex",
         justifyContent: "center",
         borderRadius: "10px",
       }}
     >
       {loading ? (
-        <Grid container spacing={"32px"} sx={{ p: "32px" }}>
+        <Grid
+          container
+          spacing={"32px"}
+          sx={{ width: "100%", height: "100%", p: "32px", overflowY: "auto", alignContent: "flex-start" }}
+        >
           {Array.from({ length: 4 }).map((_, index) => (
-            <Grid key={index} item md={6} lg={6} xl={6}>
+            <Grid key={index} size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
               <Skeleton
                 variant="rectangular"
                 animation="wave"
@@ -91,17 +99,23 @@ export default function ConfirmPage() {
             width: "100%",
             height: "100%",
             p: "32px",
+            overflowY: "auto",
+            alignContent: "flex-start",
           }}
         >
-          <Grid item xs={6} lg={6} md={6} xl={6}>
+          <Grid size={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
             <NotSelected />
           </Grid>
-          <Grid item xs={6} lg={6} md={6} xl={6}>
+          <Grid size={{ xs: 6, md: 6, lg: 6, xl: 6 }}>
             <Confricted />
           </Grid>
 
           {allData?.map((item, index) => (
-            <Grid key={index} item xs={12} md={6} lg={6} xl={6} flexGrow={1}>
+            <Grid
+              key={index}
+              size={{ xs: 12, md: 6, lg: 6, xl: 6 }}
+              flexGrow={1}
+            >
               <ConfirmCard
                 scenename={item.sceneName}
                 sceneid={item.sceneId}

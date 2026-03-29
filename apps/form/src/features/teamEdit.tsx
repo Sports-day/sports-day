@@ -2,7 +2,6 @@
 
 import {
   Box,
-  Grid,
   Card,
   TextField,
   Stack,
@@ -10,6 +9,7 @@ import {
   Skeleton,
   useTheme,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import MembersCard from "@/components/cards/AboutTeamEditPage/memberscard";
 import { useState } from "react";
 import { gql, useMutation, useQuery } from "@apollo/client";
@@ -240,7 +240,9 @@ export default function TeamEdit() {
   return (
     <Box
       sx={{
-        height: "90%",
+        width: "100%",
+        height: "100%",
+        flex: 1,
         minHeight: 0,
         background: theme.palette.card.light,
         borderRadius: "10px",
@@ -256,11 +258,7 @@ export default function TeamEdit() {
         sx={{ height: { xs: "auto", md: "100%" }, minHeight: 0 }}
       >
         <Grid
-          item
-          xs={12}
-          md={4}
-          lg={3}
-          xl={3}
+          size={{ xs: 12, md: 4, lg: 3, xl: 3 }}
           sx={{
             height: { xs: "auto", md: "100%" },
             display: "flex",
@@ -388,10 +386,7 @@ export default function TeamEdit() {
           </Stack>
         </Grid>
         <Grid
-          item
-          xs={12}
-          md={8}
-          lg={9}
+          size={{ xs: 12, md: 8, lg: 9 }}
           sx={{
             height: { xs: "auto", md: "100%" },
             display: "flex",
@@ -453,12 +448,7 @@ export default function TeamEdit() {
                       ? Array.from({ length: 30 }).map((_, index) => (
                           <Grid
                             key={index}
-                            item
-                            xs={6}
-                            sm={4}
-                            md={3}
-                            lg={3}
-                            xl={3}
+                            size={{ xs: 6, sm: 4, md: 3, lg: 3, xl: 3 }}
                           >
                             <Skeleton
                               variant="rectangular"
@@ -471,12 +461,7 @@ export default function TeamEdit() {
                       : Filtered_User?.map((item, index) => (
                           <Grid
                             key={item.id}
-                            item
-                            xs={6}
-                            sm={4}
-                            md={3}
-                            lg={3}
-                            xl={3}
+                            size={{ xs: 6, sm: 4, md: 3, lg: 3, xl: 3 }}
                           >
                             <motion.div
                               initial={{ opacity: 0 }}

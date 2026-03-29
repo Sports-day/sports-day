@@ -4,11 +4,11 @@ import {
   Card,
   Box,
   Typography,
-  Grid,
   Stack,
   Button,
   useTheme,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import EditButton from "../../buttons/editbutton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckPopup_Confirm from "@/components/popups/checkpopup-comfirmpage";
@@ -156,7 +156,10 @@ export default function ConfirmCard({
                       ?.slice()
                       .reverse()
                       .map((member, idx) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={idx}>
+                        <Grid
+                          size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                          key={idx}
+                        >
                           <Card
                             sx={{
                               background: theme.palette.card.main,
