@@ -62,16 +62,20 @@ export function useTeamEdit() {
   const [searchName, setSearchName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const teams = searchParams?.get("teamid");
+  const teamId = searchParams?.get("teamid")?.trim() ?? "";
+  const hasTeamId = teamId.length > 0;
 
   const { data: userData, loading: usersLoading } = useQuery<GetUsersData>(GET_USERS);
   const { data: sportSceneData, loading: sportSceneLoading } =
     useQuery<GetSportSceneData>(GET_SPORTSCENE);
-  const { data: teamData, loading: teamLoading } = useQuery<GetTeamData, GetTeamVars>(GET_TEAM, {
-    variables: { teamId: teams ?? "" },
-    skip: !teams,
-  });
-  const loading = usersLoading || sportSceneLoading || (!!teams && teamLoading);
+  const teamQueryOptions = hasTeamId
+    ? { variables: { teamId } }
+    : { skip: true };
+  const { data: teamData, loading: teamLoading } = useQuery<GetTeamData, GetTeamVars>(
+    GET_TEAM,
+    teamQueryOptions,
+  );
+  const loading = usersLoading || sportSceneLoading || (hasTeamId && teamLoading);
 
   const sportScene = useMemo(() => {
     return sportSceneData?.sportScenes?.find(
@@ -165,10 +169,10 @@ export function useTeamEdit() {
   };
 
   const removeStudent = async (studentId: string) => {
-    if (teams) {
+    if (hasTeamId) {
       await deleteMemberMutation({
         variables: {
-          teamId: teams,
+          teamId,
           userIds: [studentId],
         },
       });
@@ -187,8 +191,8 @@ export function useTeamEdit() {
     setIsSubmitting(true);
 
     try {
-      if (teams) {
-        await addTeamMember(teams, selectedIds);
+      if (hasTeamId) {
+        await addTeamMember(teamId, selectedIds);
       } else {
         if (!sportScene?.id) return;
         const newTeamId = await createTeam();
