@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, useTheme } from "@mui/material";
+import { Box, Grid, useTheme } from "@mui/material";
 import GoFinal from "../buttons/gofinalbutton";
 
 export default function MainFooter() {
@@ -18,14 +18,16 @@ export default function MainFooter() {
         display: "flex",
         alignItems: "center",
         justifyContent: "flex-end",
-        px: { xs: 2, md: 4 },
-        py: 1,
+        px: { xs: "16px", md: "32px" },
+        py: "8px",
         zIndex: theme.zIndex.appBar,
       }}
     >
-      <Box sx={{ width: { xs: "100%", sm: 280, md: 320 }, maxWidth: "100%" }}>
-        <GoFinal />
-      </Box>
+      <Grid container spacing={"16px"} sx={{ justifyContent: "flex-end" }}>
+        <Grid item xs={12} sm={4} md={3} lg={2}>
+          <GoFinal />
+        </Grid>
+      </Grid>
     </Box>
   );
 }

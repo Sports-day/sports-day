@@ -14,11 +14,14 @@ export default function SubmitButton() {
           component="span"
           sx={{
             background: theme.palette.button.veryLight,
-            width: "80%",
+            width: "100%",
+            p: "4px",
             borderRadius: "10px",
             "&:hover": {
               background: theme.palette.button.veryLight,
-
+              width: "100%",
+              p: "4px",
+              borderRadius: "10px",
               opacity: 0.6,
             },
           }}

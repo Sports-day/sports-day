@@ -15,8 +15,8 @@ export default function Confirm() {
         sx={{
           width: "100%",
           flex: 1,
-          px: { xs: 2, sm: 3, md: 6 },
-          py: 1,
+          px: { xs: "16px", sm: "32px", md: "50px" },
+          py: "8px",
           maxWidth: 1440,
           mx: "auto",
         }}

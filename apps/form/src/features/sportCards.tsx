@@ -56,14 +56,14 @@ export default function SportCards({ weather, type }: Props) {
         background: theme.palette.card.light,
         borderRadius: "10px",
 
-        p: { xs: 2, md: 4 },
+        p: { xs: "16px", md: "32px" },
         display: "flex",
         flexDirection: "column",
         flexGrow: 1,
         overflowY: "auto",
       }}
     >
-      <Grid container spacing={2}>
+      <Grid container spacing={"16px"}>
         {weather.map((item, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={item.id}>
             <motion.div

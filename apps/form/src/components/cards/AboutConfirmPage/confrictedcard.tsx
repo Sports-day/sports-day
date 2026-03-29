@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Box, Typography, Grid, Stack } from "@mui/material";
+import { Card, Box, Typography, Grid, Stack, useTheme } from "@mui/material";
 import { gql, useQuery } from "@apollo/client";
 
 type sceneInformation = {
@@ -36,6 +36,7 @@ const GET_SCENE_USERS = gql`
 `;
 
 export default function Confricted() {
+  const theme = useTheme();
   const { data: Scene } = useQuery(GET_SCENE_ID);
   const { data: SceneData } = useQuery(GET_SCENE_USERS);
 
@@ -87,108 +88,111 @@ export default function Confricted() {
   ];
 
   return (
-    <Box
+    <Card
+      variant="outlined"
       sx={{
-        borderColor: (theme) => theme.palette.primary.main,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
+        borderColor: theme.palette.card.main,
+        borderRadius: "10px",
+        background: "none",
         width: "100%",
         height: "100%",
       }}
     >
-      <Card
-        variant="outlined"
+      <Box
         sx={{
-          borderColor: (theme) => theme.palette.primary.main,
-          borderRadius: "10px",
-          borderWidth: "1px",
-          background: "none",
+          p: "16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
           width: "100%",
           height: "100%",
         }}
       >
-        <Stack
+        <Typography sx={{ color: "#E34013" }}>重複</Typography>
+        <Box
           sx={{
-            display: "flex",
+            background: "none",
             width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
+            height: "100%",
           }}
         >
-          <Typography sx={{ color: "#E34013" }}>重複</Typography>
-        </Stack>
-        {AllSceneData?.map((item, idx) => (
-          <Card
-            key={idx}
-            variant="outlined"
-            sx={{
-              borderColor: (theme) => theme.palette.primary.main,
-              borderRadius: "10px",
-              borderWidth: "1px",
-              background: "none",
-              m: "3%",
-              p: "3%",
-            }}
-          >
-            <Typography>{item.scenename}</Typography>
-            {item.confricted?.length === 0 ? (
+          {AllSceneData?.map((item, idx) => (
+            <Card
+              key={idx}
+              variant="outlined"
+              sx={{
+                borderColor: theme.palette.card.main,
+                background: "none",
+                m: "16px",
+                p: "16px",
+              }}
+            >
               <Stack
-                sx={{
-                  display: "flex",
-                  width: "100%",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={"16px"}
+                sx={{ mb: "16px", width: "100%" }}
               >
-                <Typography>該当者はいません</Typography>
+                <Typography
+                  sx={(theme) => ({
+                    ...theme.typography.buttonFont2,
+                    flexGrow: 1,
+                  })}
+                >
+                  {item.scenename}
+                </Typography>
               </Stack>
-            ) : (
-              <Grid
-                container
-                spacing={1}
-                sx={{
-                  overscrollBehavior: "contain",
-                  maxHeight: "114px",
-                  overflowY: "auto",
-                }}
-              >
-                {item.confricted?.map((user, index) => (
-                  <Grid item xs={6} sm={4} md={3} lg={3} key={index}>
-                    <Card
-                      sx={{
-                        background: (theme) => theme.palette.primary.main,
-                        borderRadius: "15px",
-                        color: "white",
-                        width: "100%",
-                        minHeight: 40,
-                        px: 1,
-                        py: 0.5,
-                        m: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Typography
-                        noWrap
+              {item.confricted?.length === 0 ? (
+                <Stack
+                  sx={{
+                    display: "flex",
+                    width: "100%",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography>該当者はいません</Typography>
+                </Stack>
+              ) : (
+                <Grid container spacing={"8px"}>
+                  {item.confricted?.map((user, index) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                      <Card
                         sx={{
-                          color: "inherit",
+                          background: theme.palette.card.main,
+                          borderRadius: "15px",
+                          color: "white",
                           width: "100%",
-                          textAlign: "center",
+                          minHeight: 40,
+                          px: "8px",
+                          py: "8px",
+                          m: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
-                        {user}
-                      </Typography>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Card>
-        ))}
-      </Card>
-    </Box>
+                        <Typography
+                          noWrap
+                          sx={{
+                            color: "inherit",
+                            width: "100%",
+                            textAlign: "center",
+                          }}
+                        >
+                          {user}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Card>
+          ))}
+        </Box>
+      </Box>
+    </Card>
   );
 }

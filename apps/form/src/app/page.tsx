@@ -32,7 +32,7 @@ export default function Home() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          px: 2,
+          px: "16px",
         }}
       >
         <LinearWithValueLabel />
@@ -115,7 +115,7 @@ export default function Home() {
               </Button>
             </Box>
           </motion.div>
-          <Box sx={{ width: 320, mt: 1.5 }}>
+          <Box sx={{ width: 320, mt: "16px" }}>
             <PrivacyPolicyDrawer>プライバシーポリシー</PrivacyPolicyDrawer>
           </Box>
 
@@ -123,7 +123,7 @@ export default function Home() {
           <br />
           <br />
           <br />
-          <Stack spacing={2} direction="row">
+          <Stack spacing={"16px"} direction="row">
             <Typography sx={{ color: "white", opacity: 0.5, fontSize: "20px" }}>
               (C)
             </Typography>

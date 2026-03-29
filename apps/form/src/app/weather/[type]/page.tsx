@@ -45,9 +45,9 @@ export default function SportChoise() {
         sx={{
           width: "100%",
           flex: 1,
-          px: { xs: 2, sm: 3, md: 6 },
-          pb: { xs: 11, md: 12 },
-          pt: 1,
+          px: { xs: "16px", sm: "32px", md: "50px" },
+          pb: { xs: "32px", md: "50px" },
+          pt: "8px",
           maxWidth: 1440,
           mx: "auto",
         }}
@@ -62,7 +62,7 @@ export default function SportChoise() {
           />
         </motion.div>
 
-        <Stack spacing={2} sx={{ height: "100%", width: "100%", minHeight: 0 }}>
+        <Stack spacing={"16px"} sx={{ height: "100%", width: "100%", minHeight: 0 }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

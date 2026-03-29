@@ -10,7 +10,7 @@ export default function CircularUnderLoad() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        p: "20%",
+        p: "50px",
       }}
     >
       <CircularProgress disableShrink />

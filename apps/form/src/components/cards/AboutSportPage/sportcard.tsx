@@ -26,20 +26,26 @@ export default function SportCard({
 }: SportCardProps) {
   const theme = useTheme();
   return (
-    <Link href={`/weather/${type}/sport/${sportId}`} passHref>
+    <Link
+      href={`/weather/${type}/sport/${sportId}`}
+      passHref
+      style={{ display: "block", width: "100%" }}
+    >
       <motion.div
         whileHover={{ scale: 1.03 }}
         transition={{ type: "spring", stiffness: 150 }}
+        style={{ width: "100%" }}
       >
         <Card
-          style={{
+          sx={{
             background: theme.palette.card.main,
             height: "100%",
-            borderRadius: "20px",
+            width: "100%",
+            borderRadius: "10px",
           }}
           component="div"
         >
-          <CardActionArea>
+          <CardActionArea sx={{ width: "100%", height: "100%" }}>
             <Stack
               direction="row"
               sx={{
@@ -47,10 +53,10 @@ export default function SportCard({
                 alignItems: "center",
                 justifyContent: "center",
                 minHeight: { xs: 88, sm: 104, md: 120 },
-                px: 1,
+                px: "8px",
               }}
             >
-              {hasTeam && <CheckCircleIcon sx={{ color: "#3cff00ff" }} />}
+              {hasTeam && <CheckCircleIcon sx={{ color: "#ffffff" }} />}
               <Typography
                 sx={(theme) => ({
                   ...theme.typography.secondFont,

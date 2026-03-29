@@ -43,13 +43,13 @@ export default function Error({
             alignItems={"center"}
             width={"100%"}
             height={"100vh"}
-            spacing={5}
+            spacing={"50px"}
           >
             <Stack
               direction={"column"}
               justifyContent={"center"}
               alignItems={"center"}
-              spacing={1}
+              spacing={"8px"}
             >
               <Typography fontSize={"30px"} color={"#fff"}>
                 (Ｔ＿Ｔ)
@@ -59,7 +59,7 @@ export default function Error({
               direction={"column"}
               justifyContent={"center"}
               alignItems={"center"}
-              spacing={1}
+              spacing={"8px"}
               p={5}
               width={"100%"}
               sx={{
@@ -78,7 +78,7 @@ export default function Error({
               <Typography fontSize={"16px"} color={"#99a5d6"}>
                 エラーが発生しました
               </Typography>
-              <Stack spacing={1} direction={"row"}>
+              <Stack spacing={"8px"} direction={"row"}>
                 <ErrorOutlineIcon sx={{ color: "#99a5d6" }} />
                 <Typography fontSize={"16px"} color={"#99a5d6"}>
                   status code : see the console
@@ -90,7 +90,7 @@ export default function Error({
               sx={{
                 width: "100%",
                 height: "fit-content",
-                padding: "20px",
+                padding: "16px",
                 backgroundColor: "#fff",
                 border: "1px solid #fff",
                 borderRadius: "15px",
@@ -101,7 +101,7 @@ export default function Error({
                 direction={"row"}
                 justifyContent={"center"}
                 alignItems={"center"}
-                spacing={2}
+                spacing={"16px"}
               >
                 <Typography sx={{ color: "#5664e3", fontSize: "16px" }}>
                   トップに戻る

@@ -37,5 +37,10 @@ export const theme = createTheme({
       fontWeight: "medium",
       color: "#5B6DC6",
     },
+    buttonFont3: {
+      fontSize: "14px",
+      fontWeight: "medium",
+      color: "#000000",
+    },
   },
 });

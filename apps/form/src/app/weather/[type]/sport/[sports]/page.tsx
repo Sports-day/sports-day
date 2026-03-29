@@ -39,9 +39,9 @@ export default function TeamEdit() {
       <Header />
       <Box
         sx={{
-          px: { xs: 2, sm: 3, md: 6 },
-          pb: { xs: 11, md: 12 },
-          pt: 1,
+          px: { xs: "16px", sm: "32px", md: "50px" },
+          pb: { xs: "32px", md: "50px" },
+          pt: "8px",
           maxWidth: 1440,
           mx: "auto",
           width: "100%",

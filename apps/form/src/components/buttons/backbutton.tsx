@@ -12,13 +12,16 @@ export default function BackButton() {
     <motion.div whileTap={{ scale: 0.98 }}>
       <Button
         onClick={() => router.back()}
-        variant="contained"
         sx={{
-          background: theme.palette.button.light,
+          background: theme.palette.button.main,
           borderRadius: "10px",
-          width: "80%",
+          width: "100%",
+          p: "4px",
           "&:hover": {
-            background: theme.palette.button.light,
+            background: theme.palette.button.main,
+            borderRadius: "10px",
+            width: "100%",
+            p: "4px",
             opacity: 0.6,
           },
         }}

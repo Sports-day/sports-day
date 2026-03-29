@@ -49,6 +49,11 @@ export default function CheckPopup({ teamid, open, setOpen }: CheckPopupProps) {
           justifyContent: "center",
           alignItems: "center",
           borderRadius: "10px",
+          width: "100%",
+          height: "100%",
+          maxWidth: 400,
+          maxHeight: 200,
+          p: "16px",
         },
       }}
     >
@@ -56,17 +61,47 @@ export default function CheckPopup({ teamid, open, setOpen }: CheckPopupProps) {
       <DialogContent>
         <Typography>本当に削除しますか?</Typography>
       </DialogContent>
-      <DialogActions sx={{ display: "flex", justifyContent: "center" }}>
+      <DialogActions
+        sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+      >
         <Button
-          variant="contained"
           onClick={async () => {
             handleClose();
             await handleDelete(teamid);
           }}
+          sx={{
+            width: "100%",
+            p: "4px",
+            borderRadius: "10px",
+            background: "#E4781A",
+            color: "#ffffff",
+            "&:hover": {
+              background: "#E4781A",
+              color: "#ffffff",
+              borderRadius: "10px",
+              opacity: 0.8,
+            },
+          }}
         >
           削除
         </Button>
-        <Button variant="contained" onClick={handleClose}>
+        <Button
+          variant="outlined"
+          onClick={handleClose}
+          sx={{
+            width: "100%",
+            p: "4px",
+            borderRadius: "10px",
+            borderColor: "#D9D9D9",
+            color: "#000000",
+            "&:hover": {
+              borderColor: "#D9D9D9",
+              color: "#000000",
+              borderRadius: "10px",
+              opacity: 0.8,
+            },
+          }}
+        >
           キャンセル
         </Button>
       </DialogActions>

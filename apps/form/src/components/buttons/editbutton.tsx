@@ -19,18 +19,21 @@ export default function EditButton({ type, sports, teams }: Props) {
     >
       <Button
         component="span"
-        variant="contained"
         sx={{
           borderRadius: "10px",
+          p: "4px",
+          width: "100%",
           background: theme.palette.button.light,
           "&:hover": {
             borderRadius: "10px",
+            p: "4px",
+            width: "100%",
             background: theme.palette.button.light,
             opacity: 0.8,
           },
         }}
       >
-        <EditIcon />
+        <EditIcon sx={{ color: theme.typography.buttonFont1.color }} />
         <Typography
           sx={(theme) => ({
             ...theme.typography.buttonFont1,

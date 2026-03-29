@@ -17,16 +17,19 @@ export default function SeeButtom({ type, name, id }: weatherProps) {
         <Button
           variant="outlined"
           component="span"
+          size="small"
           sx={{
             maxWidth: "100%",
+            minWidth: "auto",
+            minHeight: "32px",
             borderColor: theme.palette.button.main,
             borderRadius: "30px",
-            borderWidth: "3px",
+            borderWidth: "2px",
             background: "none",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            m: theme.spacing(0.5),
+
             ...(same && {
               background: theme.palette.button.main,
               borderColor: theme.palette.button.main,
@@ -36,13 +39,13 @@ export default function SeeButtom({ type, name, id }: weatherProps) {
                   background: theme.palette.button.main,
                   borderColor: theme.palette.button.main,
                   borderRadius: "30px",
-                  borderWidth: "3px",
+                  borderWidth: "2px",
                   opacity: 0.6,
                 }
               : {
                   borderColor: theme.palette.button.main,
                   borderRadius: "30px",
-                  borderWidth: "3px",
+                  borderWidth: "2px",
                   background: "none",
                   opacity: 0.6,
                 },

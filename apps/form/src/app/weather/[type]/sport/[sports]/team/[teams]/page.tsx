@@ -48,8 +48,8 @@ export default function MemberEdit() {
             xs: "calc(100dvh - 64px - 72px)",
             md: "calc(100dvh - 72px - 72px)",
           },
-          px: { xs: 2, sm: 3, md: 6 },
-          pt: 1,
+          px: { xs: "16px", sm: "32px", md: "50px" },
+          pt: "8px",
           maxWidth: 1440,
           mx: "auto",
           width: "100%",
@@ -63,7 +63,7 @@ export default function MemberEdit() {
           direction="row"
           display="flex"
           justifyContent="left"
-          sx={{ my: 1, flexShrink: 0 }}
+          sx={{ my: "8px", flexShrink: 0 }}
         >
           <Instruction weather={weatherName} sportname={sportName} />
         </Stack>

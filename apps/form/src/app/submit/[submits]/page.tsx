@@ -47,7 +47,7 @@ export default function Comp() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
           >
-            <Stack spacing={3} direction="row">
+            <Stack spacing={"32px"} direction="row">
               <CheckCircleOutlineIcon
                 sx={{ color: "white", fontSize: "35px" }}
               />
@@ -60,7 +60,7 @@ export default function Comp() {
           <br />
           <br />
           <br />
-          <Stack spacing={2} direction="row">
+          <Stack spacing={"16px"} direction="row">
             <Typography sx={{ color: "white", opacity: 0.5, fontSize: "20px" }}>
               (C)
             </Typography>

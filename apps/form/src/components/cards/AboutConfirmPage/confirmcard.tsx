@@ -50,7 +50,7 @@ export default function ConfirmCard({
     >
       <Box
         sx={{
-          p: theme.spacing(2),
+          p: "16px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -59,7 +59,12 @@ export default function ConfirmCard({
           height: "100%",
         }}
       >
-        <Typography>
+        <Typography
+          sx={(theme) => ({
+            ...theme.typography.buttonFont3,
+            flexGrow: 1,
+          })}
+        >
           {scenename}
           {sportname}
         </Typography>
@@ -87,28 +92,26 @@ export default function ConfirmCard({
                   sx={{
                     borderColor: theme.palette.card.main,
                     background: "none",
-                    m: theme.spacing(2),
-                    p: theme.spacing(2),
+                    m: "16px",
+                    p: "16px",
                   }}
                 >
                   <Stack
                     direction="row"
-                    justifyContent="space-between"
                     alignItems="center"
-                    sx={{ mb: theme.spacing(2) }}
+                    justifyContent="space-between"
+                    spacing={"16px"}
+                    sx={{ mb: "16px", width: "100%" }}
                   >
                     <Typography
                       sx={(theme) => ({
-                        ...theme.typography.bottonFont2,
+                        ...theme.typography.buttonFont2,
+                        flexGrow: 1,
                       })}
                     >
                       {team}
                     </Typography>
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      spacing={theme.spacing(2)}
-                    >
+                    <Stack direction="row" alignItems="center" spacing={"8px"}>
                       <EditButton
                         type={sceneid}
                         sports={sportid}
@@ -119,16 +122,20 @@ export default function ConfirmCard({
                         variant="outlined"
                         sx={{
                           borderWidth: "2px",
-                          borderColor: "#E34013",
+                          borderColor: "#E4781A",
                           background: "white",
-                          color: "#E34013",
+                          color: "#E4781A",
                           borderRadius: "10px",
+                          p: "4px",
+                          width: "auto",
                           "&:hover": {
                             borderWidth: "2px",
-                            borderColor: "#E34013",
+                            borderColor: "#E4781A",
                             background: "white",
-                            color: "#E34013",
+                            color: "#E4781A",
                             borderRadius: "10px",
+                            p: "4px",
+                            width: "auto",
                             opacity: 0.8,
                           },
                         }}
@@ -144,12 +151,12 @@ export default function ConfirmCard({
                       />
                     </Stack>
                   </Stack>
-                  <Grid container spacing={1}>
+                  <Grid container spacing={"8px"}>
                     {memberdata[index]
                       ?.slice()
                       .reverse()
                       .map((member, idx) => (
-                        <Grid item xs={6} sm={4} md={3} lg={3} key={idx}>
+                        <Grid item xs={12} sm={6} md={4} lg={3} key={idx}>
                           <Card
                             sx={{
                               background: theme.palette.card.main,
@@ -157,8 +164,8 @@ export default function ConfirmCard({
                               color: "white",
                               width: "100%",
                               minHeight: 40,
-                              px: 1,
-                              py: 0.5,
+                              px: "8px",
+                              py: "8px",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",

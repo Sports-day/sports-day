@@ -68,7 +68,7 @@ export default function ConfirmPage() {
       }}
     >
       {loading ? (
-        <Grid container spacing={3} sx={{ p: "3%" }}>
+        <Grid container spacing={"32px"} sx={{ p: "32px" }}>
           {Array.from({ length: 4 }).map((_, index) => (
             <Grid key={index} item md={6} lg={6} xl={6}>
               <Skeleton
@@ -84,13 +84,13 @@ export default function ConfirmPage() {
       ) : (
         <Grid
           container
-          spacing={3}
+          spacing={"32px"}
           justifyContent="center"
           direction="row"
           sx={{
             width: "100%",
             height: "100%",
-            p: theme.spacing(4),
+            p: "32px",
           }}
         >
           <Grid item xs={6} lg={6} md={6} xl={6}>
@@ -101,7 +101,7 @@ export default function ConfirmPage() {
           </Grid>
 
           {allData?.map((item, index) => (
-            <Grid key={index} item xs={12} md={6} lg={6} xl={4} flexGrow={1}>
+            <Grid key={index} item xs={12} md={6} lg={6} xl={6} flexGrow={1}>
               <ConfirmCard
                 scenename={item.sceneName}
                 sceneid={item.sceneId}

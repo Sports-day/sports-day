@@ -29,9 +29,9 @@ export default function WeatherCards({ id }: weatherProps) {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Grid container direction="row" spacing={1}>
+      <Grid container direction="row" spacing={"8px"}>
         {weather.map((item) => (
-          <Grid item xs={6} sm={4} md={3} lg={2} key={item.id}>
+          <Grid item xs={12} sm={4} md={2} lg={1} key={item.id}>
             <SeeButton type={item.id} name={item.name} id={id} />
           </Grid>
         ))}

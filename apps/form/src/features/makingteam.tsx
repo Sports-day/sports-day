@@ -63,6 +63,7 @@ export default function MakingTeams({
     <Box
       sx={{
         width: "100%",
+        height: "100%",
         minHeight: { xs: "auto", md: "calc(100dvh - 210px)" },
       }}
     >
@@ -70,7 +71,7 @@ export default function MakingTeams({
         <Box
           sx={{
             flex: "0 0 auto",
-            my: theme.spacing(1),
+            my: "8px",
             width: "100%",
             display: "flex",
             justifyContent: "left",
@@ -82,13 +83,15 @@ export default function MakingTeams({
         <Box
           sx={{
             flex: 1,
-            px: { xs: 2, md: 4 },
-            py: theme.spacing(1),
+            minHeight: { xs: 320, md: 420 },
+            maxHeight: { xs: "none", md: "calc(100dvh - 320px)" },
+            px: { xs: "16px", md: "32px" },
+            py: { xs: "8px", md: "16px" },
             background: theme.palette.card.light,
             borderRadius: "10px",
             display: "flex",
             flexDirection: "column",
-            overflow: "hidden",
+            overflowY: "auto",
           }}
         >
           <Typography
@@ -101,7 +104,7 @@ export default function MakingTeams({
           <Box
             sx={{
               flex: 1,
-              overflowY: "auto",
+              minHeight: 0,
             }}
           >
             <motion.div
@@ -114,7 +117,7 @@ export default function MakingTeams({
             >
               <Grid
                 container
-                spacing={2}
+                spacing={"16px"}
                 alignItems="flex-start"
                 justifyContent="left"
               >

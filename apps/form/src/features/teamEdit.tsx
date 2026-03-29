@@ -240,24 +240,32 @@ export default function TeamEdit() {
   return (
     <Box
       sx={{
-        height: "100%",
+        height: "90%",
         minHeight: 0,
         background: theme.palette.card.light,
         borderRadius: "10px",
         display: "flex",
-        px: { xs: 2, md: 4 },
-        py: theme.spacing(1),
+        px: { xs: "16px", md: "32px" },
+        py: { xs: "8px", md: "16px" },
         overflow: { xs: "auto", md: "hidden" },
       }}
     >
-      <Grid container spacing={2} sx={{ height: { xs: "auto", md: "100%" }, minHeight: 0 }}>
+      <Grid
+        container
+        spacing={"16px"}
+        sx={{ height: { xs: "auto", md: "100%" }, minHeight: 0 }}
+      >
         <Grid
           item
           xs={12}
           md={4}
           lg={3}
           xl={3}
-          sx={{ height: { xs: "auto", md: "100%" }, display: "flex", minHeight: 0 }}
+          sx={{
+            height: { xs: "auto", md: "100%" },
+            display: "flex",
+            minHeight: 0,
+          }}
         >
           <Stack sx={{ width: "100%", height: "100%", minHeight: 0 }}>
             <Typography
@@ -274,10 +282,11 @@ export default function TeamEdit() {
                 borderWidth: "1px",
                 borderStyle: "solid",
                 borderRadius: "10px",
-                height: "100%",
+                width: "100%",
                 background: "none",
                 display: "flex",
                 flexDirection: "column",
+                flex: 1,
                 minHeight: 0,
                 overflow: "hidden",
               }}
@@ -310,7 +319,7 @@ export default function TeamEdit() {
                   </Box>
                 ) : (
                   selectedMember.map((student, index) => (
-                    <Box key={index} sx={{ p: theme.spacing(1) }}>
+                    <Box key={index} sx={{ p: "8px" }}>
                       <MembersCard
                         studentname={student.studentName}
                         fixed={true}
@@ -346,10 +355,16 @@ export default function TeamEdit() {
                       background: theme.palette.button.light,
                       color: "white",
                       width: "60%",
-                      my: theme.spacing(1),
+                      my: "8px",
                       "&:hover": {
                         opacity: 0.8,
                         background: theme.palette.button.light,
+                        color: "white",
+                      },
+                      "&:disabled": {
+                        background: theme.palette.button.light,
+                        color: "white",
+                        opacity: 0.5,
                       },
                     }}
                     disabled={selectedMember.length === 0}
@@ -377,116 +392,126 @@ export default function TeamEdit() {
           xs={12}
           md={8}
           lg={9}
-          sx={{ height: { xs: "auto", md: "100%" }, display: "flex", minHeight: 0 }}
+          sx={{
+            height: { xs: "auto", md: "100%" },
+            display: "flex",
+            minHeight: 0,
+          }}
         >
-          <Card
-            variant="outlined"
-            sx={{
-              borderColor: theme.palette.card.main,
-              borderWidth: "1px",
-              borderStyle: "solid",
-              borderTopLeftRadius: "10px",
-              borderBottomLeftRadius: "10px",
-
-              height: "100%",
-              width: "100%",
-              background: "none",
-              display: "flex",
-              alignItems: "stretch",
-              justifyContent: "flex-start",
-              flexDirection: "column",
-              flexGrow: 1,
-              minHeight: 0,
-              overflow: "hidden",
-            }}
-          >
-            <Stack
+          <Stack sx={{ width: "100%", height: "100%", minHeight: 0 }}>
+            <Typography
+              sx={(theme) => ({
+                ...theme.typography.buttonFont2,
+              })}
+            >
+              メンバー一覧
+            </Typography>
+            <Card
+              variant="outlined"
               sx={{
+                borderColor: theme.palette.card.main,
+                borderWidth: "1px",
+                borderStyle: "solid",
+                borderRadius: "10px",
                 width: "100%",
-                height: "100%",
-                px: { xs: 1, md: 4 },
-                pt: theme.spacing(2),
+                background: "none",
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
                 minHeight: 0,
+                overflow: "hidden",
               }}
             >
-              <TextField
-                id="outlined-basic"
-                label="...検索"
-                variant="outlined"
+              <Stack
                 sx={{
-                  borderColor: theme.palette.card.main,
-                  background: theme.palette.card.light,
-                  color: "#808080",
-                  borderRadius: "10px",
-                  mb: theme.spacing(2),
+                  width: "100%",
+                  height: "100%",
+                  px: { xs: "8px", md: "32px" },
+                  pt: "16px",
+                  minHeight: 0,
                 }}
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-              />
-              <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0, pb: 1 }}>
-                <Grid container spacing={2}>
-                  {loading
-                    ? Array.from({ length: 30 }).map((_, index) => (
-                        <Grid
-                          key={index}
-                          item
-                          xs={6}
-                          sm={4}
-                          md={3}
-                          lg={3}
-                          xl={3}
-                        >
-                          <Skeleton
-                            variant="rectangular"
-                            animation="wave"
-                            height="40px"
-                            sx={{ borderRadius: "10px" }}
-                          />
-                        </Grid>
-                      ))
-                    : Filtered_User?.map((item, index) => (
-                        <Grid
-                          key={item.id}
-                          item
-                          xs={6}
-                          sm={4}
-                          md={3}
-                          lg={3}
-                          xl={3}
-                        >
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{
-                              duration: 0.7,
-                              delay: index * 0.02,
-                            }}
+              >
+                <TextField
+                  id="outlined-basic"
+                  label="...検索"
+                  variant="outlined"
+                  sx={{
+                    borderColor: theme.palette.card.main,
+                    background: theme.palette.card.light,
+                    color: "#808080",
+                    borderRadius: "10px",
+                    mb: "16px",
+                  }}
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                />
+                <Box
+                  sx={{ flex: 1, overflowY: "auto", minHeight: 0, pb: "8px" }}
+                >
+                  <Grid container spacing={"16px"}>
+                    {loading
+                      ? Array.from({ length: 30 }).map((_, index) => (
+                          <Grid
+                            key={index}
+                            item
+                            xs={6}
+                            sm={4}
+                            md={3}
+                            lg={3}
+                            xl={3}
                           >
-                            <MembersCard
-                              studentid={item.id}
-                              studentname={item.name}
-                              addstudent={() =>
-                                handleClick({
-                                  studentId: String(item.id),
-                                  studentName: item.name,
-                                })
-                              }
-                              disable={selectedIds.includes(String(item.id))}
-                              isInclude={
-                                AlreadyInAnyTeam.some(
-                                  (a) => a.id === String(item.id),
-                                ) || selectedIds.includes(String(item.id))
-                              }
-                              remove={() => removeStudent(String(item.id))}
+                            <Skeleton
+                              variant="rectangular"
+                              animation="wave"
+                              height="40px"
+                              sx={{ borderRadius: "10px" }}
                             />
-                          </motion.div>
-                        </Grid>
-                      ))}
-                </Grid>
-              </Box>
-            </Stack>
-          </Card>
+                          </Grid>
+                        ))
+                      : Filtered_User?.map((item, index) => (
+                          <Grid
+                            key={item.id}
+                            item
+                            xs={6}
+                            sm={4}
+                            md={3}
+                            lg={3}
+                            xl={3}
+                          >
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{
+                                duration: 0.7,
+                                delay: index * 0.02,
+                              }}
+                            >
+                              <MembersCard
+                                studentid={item.id}
+                                studentname={item.name}
+                                addstudent={() =>
+                                  handleClick({
+                                    studentId: String(item.id),
+                                    studentName: item.name,
+                                  })
+                                }
+                                disable={selectedIds.includes(String(item.id))}
+                                isInclude={
+                                  AlreadyInAnyTeam.some(
+                                    (a) => a.id === String(item.id),
+                                  ) || selectedIds.includes(String(item.id))
+                                }
+                                remove={() => removeStudent(String(item.id))}
+                              />
+                            </motion.div>
+                          </Grid>
+                        ))}
+                  </Grid>
+                </Box>
+              </Stack>
+            </Card>
+          </Stack>
         </Grid>
       </Grid>
     </Box>

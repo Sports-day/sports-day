@@ -19,7 +19,7 @@ export default function Warning({ warncomment }: warnProps) {
       sx={{
         display: "flex",
         justifyContent: "center",
-        my: (theme) => theme.spacing(2),
+        my: "16px",
         width: "100%",
         height: "100%",
       }}
@@ -28,6 +28,7 @@ export default function Warning({ warncomment }: warnProps) {
         <Card
           variant="outlined"
           sx={{
+            borderWidth: "2px",
             borderColor: "#A27B1D",
             background: "#FDF5DE",
             width: "100%",
@@ -37,8 +38,8 @@ export default function Warning({ warncomment }: warnProps) {
             <WarningIcon
               sx={{
                 color: "#A27B1D",
-                mr: (theme) => theme.spacing(2),
-                ml: (theme) => theme.spacing(2),
+                mr: "16px",
+                ml: "16px",
               }}
             />
             <Typography

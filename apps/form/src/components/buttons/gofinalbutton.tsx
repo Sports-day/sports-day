@@ -15,10 +15,13 @@ export default function GoFinal() {
           sx={{
             borderRadius: "10px",
             background: theme.palette.button.veryLight,
-            width: "80%",
+            width: "100%",
+            p: "4px",
             "&:hover": {
               borderRadius: "10px",
               background: theme.palette.button.veryLight,
+              width: "100%",
+              p: "4px",
               opacity: 0.8,
             },
           }}

@@ -60,7 +60,7 @@ export default function MembersCard({
             alignItems: "center",
             justifyContent: "space-between",
             color: "white",
-            p: theme.spacing(0.5),
+            p: "8px",
           }}
         >
           <Typography
@@ -97,7 +97,7 @@ export default function MembersCard({
           alignItems: "center",
           justifyContent: "center",
           color: "white",
-          p: theme.spacing(0.5),
+          p: "8px",
         }}
       >
         <BlockIcon sx={{ color: "white", position: "absolute", left: 11 }} />
@@ -142,7 +142,7 @@ export default function MembersCard({
                 alignItems: "center",
                 justifyContent: "center",
                 color: "white",
-                p: theme.spacing(0.5),
+                p: "8px",
               }}
             >
               <Typography
@@ -177,7 +177,7 @@ export default function MembersCard({
             alignItems: "center",
             justifyContent: "center",
             color: "white",
-            p: theme.spacing(0.5),
+            p: "8px",
           }}
         >
           <Typography

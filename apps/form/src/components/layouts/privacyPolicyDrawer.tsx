@@ -52,7 +52,7 @@ export default function PrivacyPolicyDrawer(props: PrivacyPolicyDrawerProps) {
           width: "100vw",
           height: "auto",
           overflow: "scrollable",
-          mt: theme.spacing(5),
+          mt: "50px",
           background: theme.palette.card.light,
         }}
         role="presentation"
