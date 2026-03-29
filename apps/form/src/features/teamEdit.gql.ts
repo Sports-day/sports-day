@@ -19,6 +19,14 @@ export const GET_SPORTSCENE = gql`
       scene {
         id
       }
+    }
+  }
+`;
+
+export const GET_SPORTSCENE_ENTRIES = gql`
+  query GetSportsceneEntries($sportSceneId: ID!) {
+    sportScene(id: $sportSceneId) {
+      id
       entries {
         team {
           id

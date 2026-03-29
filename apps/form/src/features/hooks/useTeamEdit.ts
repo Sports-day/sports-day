@@ -10,6 +10,7 @@ import {
   DELETE_MEMBER,
   DELETE_TEAM,
   GET_SPORTSCENE,
+  GET_SPORTSCENE_ENTRIES,
   GET_TEAM,
   GET_USERS,
 } from "@/features/teamEdit.gql";
@@ -33,7 +34,17 @@ type SportSceneNode = {
   id: string;
   sport: { id: string };
   scene: { id: string };
-  entries: { team: TeamNode }[];
+};
+
+type SportSceneEntriesData = {
+  sportScene: {
+    id: string;
+    entries: { team: TeamNode }[];
+  } | null;
+};
+
+type SportSceneEntriesVars = {
+  sportSceneId: string;
 };
 
 type GetUsersData = {
@@ -75,7 +86,6 @@ export function useTeamEdit() {
     GET_TEAM,
     teamQueryOptions,
   );
-  const loading = usersLoading || sportSceneLoading || (hasTeamId && teamLoading);
 
   const sportScene = useMemo(() => {
     return sportSceneData?.sportScenes?.find(
@@ -83,9 +93,16 @@ export function useTeamEdit() {
     );
   }, [sportSceneData, sports, type]);
 
-  const sportSceneMember = sportSceneData?.sportScenes?.filter(
-    (d) => d.scene?.id === type,
-  );
+  const sportSceneId = sportScene?.id ?? "";
+  const { data: sportSceneEntriesData, loading: sportSceneEntriesLoading } = useQuery<
+    SportSceneEntriesData,
+    SportSceneEntriesVars
+  >(GET_SPORTSCENE_ENTRIES, sportSceneId ? { variables: { sportSceneId } } : { skip: true });
+  const loading =
+    usersLoading ||
+    sportSceneLoading ||
+    sportSceneEntriesLoading ||
+    (hasTeamId && teamLoading);
 
   const teamMembersFromQuery = useMemo(() => {
     return (
@@ -98,7 +115,7 @@ export function useTeamEdit() {
 
   const selectedMember = localSelectedMember ?? teamMembersFromQuery;
   const selectedIds = selectedMember.map((s) => s.studentId);
-  const teamsInScene = sportScene?.entries?.map((d) => d.team);
+  const teamsInScene = sportSceneEntriesData?.sportScene?.entries?.map((d) => d.team);
   const teamCount = teamsInScene?.length ?? 0;
 
   const filteredUsers = useMemo(() => {
@@ -114,12 +131,11 @@ export function useTeamEdit() {
   }, [teamMembersFromQuery]);
 
   const alreadyInAnyTeam = useMemo(() => {
-    if (!sportSceneMember) return [];
-    const all = sportSceneMember.flatMap((d) =>
-      d.entries?.flatMap((s) => s.team?.users ?? []),
-    );
+    const all = sportSceneEntriesData?.sportScene?.entries?.flatMap(
+      (entry) => entry.team?.users ?? [],
+    ) ?? [];
     return all.filter((user) => !myTeamUserIds.includes(user.id));
-  }, [sportSceneMember, myTeamUserIds]);
+  }, [sportSceneEntriesData?.sportScene?.entries, myTeamUserIds]);
 
   const [addTeamMemberMutation] = useMutation(ADD_TEAM_MEMBER);
   const [createSportEntryMutation] = useMutation(CREATE_SPORT_ENTRY);
@@ -194,12 +210,12 @@ export function useTeamEdit() {
       if (hasTeamId) {
         await addTeamMember(teamId, selectedIds);
       } else {
-        if (!sportScene?.id) return;
+        if (!sportSceneId) return;
         const newTeamId = await createTeam();
         if (!newTeamId) return;
         createdTeamId = newTeamId;
         await addTeamMember(newTeamId, selectedIds);
-        await entryTeam(newTeamId, sportScene?.id);
+        await entryTeam(newTeamId, sportSceneId);
       }
       await apolloClient.refetchQueries({
         include: ["GetSceneSport", "GetSportscene"],
