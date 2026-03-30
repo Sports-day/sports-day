@@ -61,14 +61,14 @@ export default function Home() {
             alignItems: "center",
             justifyContent: "center",
             px: "16px",
-            py: "24px",
+            py: "16px",
           }}
         >
           <Image
             src="/images/logo_form.png"
             alt=""
-            width={400}
-            height={33}
+            width={380}
+            height={30}
             style={{ width: "min(380px, 78vw)", height: "auto" }}
           />
           <Typography
