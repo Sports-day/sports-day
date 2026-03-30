@@ -28,6 +28,8 @@ export default function SceneStatusCardLayout({
         background: "none",
         width: "100%",
         height: "100%",
+        minHeight: 0,
+        overflow: "hidden",
       }}
     >
       <Box
@@ -39,14 +41,18 @@ export default function SceneStatusCardLayout({
           flexDirection: "column",
           width: "100%",
           height: "100%",
+          minHeight: 0,
         }}
       >
-        <Typography sx={{ color: "#E34013" }}>{title}</Typography>
+        <Typography sx={{ color: "#FF0000" }}>{title}</Typography>
         <Box
           sx={{
             background: "none",
             width: "100%",
-            height: "100%",
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            scrollbarGutter: "stable",
           }}
         >
           {items.map((item, itemIndex) => (
@@ -88,41 +94,50 @@ export default function SceneStatusCardLayout({
                   <Typography>該当者はいません</Typography>
                 </Stack>
               ) : (
-                <Grid container spacing={"8px"}>
-                  {item.users.map((user, userIndex) => (
-                    <Grid
-                      size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
-                      key={`${item.scenename}-${user}-${userIndex}`}
-                    >
-                      <Card
-                        sx={{
-                          background: theme.palette.card.main,
-                          borderRadius: "15px",
-                          color: "white",
-                          width: "100%",
-                          minHeight: 40,
-                          px: "8px",
-                          py: "8px",
-                          m: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
+                <Box
+                  sx={{
+                    maxHeight: 220,
+                    overflowY: "auto",
+                    scrollbarGutter: "stable",
+                    pr: "8px",
+                  }}
+                >
+                  <Grid container spacing={"8px"}>
+                    {item.users.map((user, userIndex) => (
+                      <Grid
+                        size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                        key={`${item.scenename}-${user}-${userIndex}`}
                       >
-                        <Typography
-                          noWrap
+                        <Card
                           sx={{
-                            color: "inherit",
+                            background: theme.palette.card.main,
+                            borderRadius: "15px",
+                            color: "white",
                             width: "100%",
-                            textAlign: "center",
+                            minHeight: 40,
+                            px: "8px",
+                            py: "8px",
+                            m: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                         >
-                          {user}
-                        </Typography>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
+                          <Typography
+                            noWrap
+                            sx={{
+                              color: "inherit",
+                              width: "100%",
+                              textAlign: "center",
+                            }}
+                          >
+                            {user}
+                          </Typography>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
               )}
             </Card>
           ))}

@@ -24,6 +24,8 @@ export default function TeamEdit() {
 
   const { data, loading, error } = useQuery(SPORTDATA_GET, {
     variables: { sportId: sports, sceneId: type },
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
   });
   if (loading) {
     return <CircularUnderLoad />;
@@ -35,15 +37,20 @@ export default function TeamEdit() {
   const weather = data?.scene.name;
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Header />
       <Box
         sx={{
-          px: { xs: "16px", sm: "32px", md: "50px" },
-          pb: { xs: "32px", md: "50px" },
-          pt: "8px",
-          maxWidth: 1440,
-          mx: "auto",
+          px: "50px",
+
+          pt: "16px",
           width: "100%",
           flex: 1,
         }}

@@ -27,6 +27,8 @@ export default function SportChoice() {
   const { type } = useParams() as { type: string };
   const { data, loading, error } = useQuery(GET_SPORTS, {
     variables: { sceneId: type },
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
   });
 
   if (loading) {
@@ -39,17 +41,22 @@ export default function SportChoice() {
   const sportData = data?.scene?.sports ?? [];
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Header />
       <Box
         sx={{
           width: "100%",
           flex: 1,
-          px: { xs: "16px", sm: "32px", md: "50px" },
-          pb: { xs: "32px", md: "50px" },
-          pt: "8px",
-          maxWidth: 1440,
-          mx: "auto",
+          px: "50px",
+
+          pt: "16px",
         }}
       >
         <motion.div
@@ -62,7 +69,10 @@ export default function SportChoice() {
           />
         </motion.div>
 
-        <Stack spacing={"16px"} sx={{ height: "100%", width: "100%", minHeight: 0 }}>
+        <Stack
+          spacing={"16px"}
+          sx={{ height: "100%", width: "100%", minHeight: 0 }}
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

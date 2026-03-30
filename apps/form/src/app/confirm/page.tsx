@@ -23,10 +23,8 @@ export default function Confirm() {
           width: "100%",
           flex: 1,
           minHeight: 0,
-          px: { xs: "16px", sm: "32px", md: "50px" },
-          py: "8px",
-          maxWidth: 1440,
-          mx: "auto",
+          px: "50px",
+          py: "16px",
         }}
       >
         <Warning warncomment="全員が正しくチームに登録されているかを確認してください"></Warning>

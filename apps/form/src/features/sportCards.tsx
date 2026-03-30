@@ -57,7 +57,7 @@ export default function SportCards({ weather, type }: Props) {
         background: theme.palette.card.light,
         borderRadius: "10px",
 
-        p: { xs: "16px", md: "32px" },
+        p: "32px",
         display: "flex",
         flexDirection: "column",
         flexGrow: 1,

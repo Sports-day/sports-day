@@ -1,11 +1,12 @@
 "use client";
 
-import { Box, Skeleton, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import ConfirmCard from "@/components/cards/AboutConfirmPage/ConfirmCard";
 import Conflicted from "@/components/cards/AboutConfirmPage/ConflictedCard";
 import NotSelected from "@/components/cards/AboutConfirmPage/NotSelectedCard";
 import { gql, useQuery } from "@apollo/client";
+import CircularUnderLoad from "@/features/Loading";
 
 const GET_ALLTEAMDATA = gql`
   query GetAllTeamdata {
@@ -33,7 +34,10 @@ const GET_ALLTEAMDATA = gql`
 
 export default function ConfirmPage() {
   const theme = useTheme();
-  const { data, loading } = useQuery(GET_ALLTEAMDATA);
+  const { data, loading } = useQuery(GET_ALLTEAMDATA, {
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
+  });
 
   const allData:
     | {
@@ -57,6 +61,10 @@ export default function ConfirmPage() {
     ),
   }));
 
+  if (loading) {
+    return <CircularUnderLoad />;
+  }
+
   return (
     <Box
       sx={{
@@ -71,70 +79,45 @@ export default function ConfirmPage() {
         borderRadius: "10px",
       }}
     >
-      {loading ? (
-        <Grid
-          container
-          spacing={"32px"}
-          sx={{
-            width: "100%",
-            height: "100%",
-            p: { xs: "16px", md: "32px" },
-            overflowY: "auto",
-            alignContent: "flex-start",
-          }}
-        >
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Grid key={index} size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
-              <Skeleton
-                variant="rectangular"
-                animation="wave"
-                width="100%"
-                height={240}
-                sx={{ borderRadius: "10px" }}
-              />
-            </Grid>
-          ))}
+      <Grid
+        container
+        spacing={"32px"}
+        justifyContent="center"
+        direction="row"
+        sx={{
+          width: "100%",
+          height: "100%",
+          px: "32px",
+          py: "16px",
+          overflowY: "auto",
+          alignContent: "flex-start",
+        }}
+      >
+        <Grid size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
+          <NotSelected />
         </Grid>
-      ) : (
-        <Grid
-          container
-          spacing={"32px"}
-          justifyContent="center"
-          direction="row"
-          sx={{
-            width: "100%",
-            height: "100%",
-            p: { xs: "16px", md: "32px" },
-            overflowY: "auto",
-            alignContent: "flex-start",
-          }}
-        >
-          <Grid size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
-            <NotSelected />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
-            <Conflicted />
-          </Grid>
+        <Grid size={{ xs: 12, md: 6, lg: 6, xl: 6 }}>
+          <Conflicted />
+        </Grid>
 
-          {allData?.map((item, index) => (
-            <Grid
-              key={index}
-              size={{ xs: 12, md: 6, lg: 6, xl: 6 }}
-              flexGrow={1}
-            >
-              <ConfirmCard
-                scenename={item.sceneName}
-                sceneid={item.sceneId}
-                sportname={item.sportName}
-                sportid={item.sportId}
-                teamname={item.teamName}
-                teamid={item.teamId}
-                memberdata={item.memberData}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      )}
+        {allData?.map((item, index) => (
+          <Grid
+            key={index}
+            size={{ xs: 12, md: 6, lg: 6, xl: 6 }}
+            flexGrow={1}
+          >
+            <ConfirmCard
+              scenename={item.sceneName}
+              sceneid={item.sceneId}
+              sportname={item.sportName}
+              sportid={item.sportId}
+              teamname={item.teamName}
+              teamid={item.teamId}
+              memberdata={item.memberData}
+            />
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 }

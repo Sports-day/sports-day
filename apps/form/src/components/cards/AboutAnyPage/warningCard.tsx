@@ -17,7 +17,7 @@ export default function Warning({ warncomment }: warnProps) {
       sx={{
         display: "flex",
         justifyContent: "center",
-        my: "16px",
+        mb: "16px",
         width: "100%",
         height: "100%",
       }}

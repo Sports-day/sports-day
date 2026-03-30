@@ -220,6 +220,9 @@ export function useTeamEdit() {
       await apolloClient.refetchQueries({
         include: ["GetSceneSport", "GetSportscene"],
       });
+      apolloClient.cache.evict({ id: "ROOT_QUERY", fieldName: "sportScenes" });
+      apolloClient.cache.evict({ id: "ROOT_QUERY", fieldName: "sportScene" });
+      apolloClient.cache.gc();
       router.back();
     } catch (error) {
       if (createdTeamId) {

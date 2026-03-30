@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3002",
+    "dev:polling": "NEXT_FORCE_POLLING=true WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev -p 3002",
     "dev:turbo": "next dev --turbo",
     "build": "next build",
     "start": "next start",

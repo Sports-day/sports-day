@@ -31,8 +31,7 @@ export default function TeamCard({
     <Card
       variant="outlined"
       sx={{
-        height: "100%",
-        minHeight: { xs: 260, md: 320 },
+        height: { xs: 260, md: 320 },
         width: "100%",
         borderRadius: "10px",
         background: theme.palette.card.light,

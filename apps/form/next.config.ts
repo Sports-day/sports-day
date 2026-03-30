@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
   webpack(config) {
     if (shouldUsePolling) {
       config.watchOptions = {
-        ignored: [/node_modules/, /\.next/],
+        ignored: ["**/node_modules/**", "**/.next/**"],
         poll: 1000,
         aggregateTimeout: 300,
       };

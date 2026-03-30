@@ -17,12 +17,15 @@ export type informationProps = {
 export default function ExtraTeamCard({ sports, type }: informationProps) {
   const theme = useTheme();
   return (
-    <Link href={`/weather/${type}/sport/${sports}/team/makenewteam`} passHref>
+    <Link
+      href={`/weather/${type}/sport/${sports}/team/makenewteam`}
+      passHref
+      style={{ display: "block", width: "100%", height: "100%" }}
+    >
       <Card
         variant="outlined"
         sx={{
-          height: "100%",
-          minHeight: { xs: 180, md: 320 },
+          height: { xs: 260, md: 320 },
           borderRadius: "10px",
           background: theme.palette.card.light,
           borderColor: theme.palette.card.main,
@@ -34,14 +37,13 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
           px: "8px",
         }}
       >
-        <CardActionArea>
+        <CardActionArea sx={{ height: "100%" }}>
           <Stack
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
-              minHeight: { xs: 180, md: 320 },
             }}
           >
             <Typography

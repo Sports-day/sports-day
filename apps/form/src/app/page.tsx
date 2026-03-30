@@ -5,8 +5,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { gql, useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
-import LinearWithValueLabel from "@/components/layouts/ProgressBar";
 import PrivacyPolicyDrawer from "@/components/layouts/PrivacyPolicyDrawer";
+import CircularUnderLoad from "@/features/Loading";
 
 const GET_TYPE = gql`
   query GetType {
@@ -17,27 +17,17 @@ const GET_TYPE = gql`
 `;
 
 export default function Home() {
-  const { data, loading, error } = useQuery(GET_TYPE);
+  const { data, loading, error } = useQuery(GET_TYPE, {
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
+  });
   const router = useRouter();
   const theme = useTheme();
 
   const firstSceneId = data?.scenes?.[0]?.id;
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          width: "100%",
-          minHeight: "100dvh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          px: "16px",
-        }}
-      >
-        <LinearWithValueLabel />
-      </Box>
-    );
+    return <CircularUnderLoad />;
   }
 
   if (error) {

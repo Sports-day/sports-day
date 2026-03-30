@@ -25,6 +25,8 @@ export default function MemberEdit() {
   const { type, sports } = useParams() as { type: string; sports: string };
   const { data, loading, error } = useQuery(SPORTDATA_GET, {
     variables: { sport_Id: sports, scene_Id: type },
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
   });
 
   if (loading) {
@@ -39,7 +41,12 @@ export default function MemberEdit() {
 
   return (
     <Box
-      sx={{ width: "100%", minHeight: "100dvh", display: "flex", flexDirection: "column" }}
+      sx={{
+        width: "100%",
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
       <Header />
       <Box
@@ -48,10 +55,8 @@ export default function MemberEdit() {
             xs: "calc(100dvh - 64px - 72px)",
             md: "calc(100dvh - 72px - 72px)",
           },
-          px: { xs: "16px", sm: "32px", md: "50px" },
-          pt: "8px",
-          maxWidth: 1440,
-          mx: "auto",
+          px: "50px",
+          pt: "16px",
           width: "100%",
           minHeight: 0,
           overflow: "hidden",
@@ -63,7 +68,7 @@ export default function MemberEdit() {
           direction="row"
           display="flex"
           justifyContent="left"
-          sx={{ my: "8px", flexShrink: 0 }}
+          sx={{ mb: "8px", flexShrink: 0 }}
         >
           <Instruction weather={weatherName} sportname={sportName} />
         </Stack>

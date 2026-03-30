@@ -45,25 +45,37 @@ export default function TeamEdit() {
         background: theme.palette.card.light,
         borderRadius: "10px",
         display: "flex",
-        px: { xs: "16px", md: "32px" },
-        py: { xs: "8px", md: "16px" },
+        px: "32px",
+        pt: "16px",
+        pb: "32px",
         overflow: { xs: "auto", md: "hidden" },
       }}
     >
-      <Grid
-        container
-        spacing={"16px"}
-        sx={{ height: { xs: "auto", md: "100%" }, minHeight: 0 }}
+      <Box
+        sx={{
+          width: "100%",
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            md: "320px minmax(0, 1fr)",
+          },
+          gap: "16px",
+          height: { xs: "auto", md: "100%" },
+          minHeight: 0,
+          alignItems: "stretch",
+        }}
       >
-        <Grid
-          size={{ xs: 12, md: 4, lg: 3, xl: 3 }}
+        <Box
           sx={{
             height: { xs: "auto", md: "100%" },
             display: "flex",
             minHeight: 0,
+            minWidth: 0,
           }}
         >
-          <Stack sx={{ width: "100%", height: "100%", minHeight: 0 }}>
+          <Stack
+            sx={{ width: "100%", height: "100%", minHeight: 0, minWidth: 0 }}
+          >
             <Typography
               sx={(theme) => ({
                 ...theme.typography.buttonFont2,
@@ -92,8 +104,9 @@ export default function TeamEdit() {
                 flexWrap="nowrap"
                 sx={{
                   flexGrow: 1,
-                  overflowY: "auto",
+                  overflowY: "scroll",
                   overflowX: "hidden",
+                  scrollbarGutter: "stable",
                   minHeight: 0,
                 }}
               >
@@ -105,6 +118,7 @@ export default function TeamEdit() {
                       justifyContent: "center",
                       height: "100%",
                       width: "100%",
+                      p: "16px",
                     }}
                   >
                     <Typography sx={{ color: "#FF0000" }}>
@@ -172,17 +186,19 @@ export default function TeamEdit() {
               </Box>
             </Card>
           </Stack>
-        </Grid>
+        </Box>
 
-        <Grid
-          size={{ xs: 12, md: 8, lg: 9 }}
+        <Box
           sx={{
             height: { xs: "auto", md: "100%" },
             display: "flex",
             minHeight: 0,
+            minWidth: 0,
           }}
         >
-          <Stack sx={{ width: "100%", height: "100%", minHeight: 0 }}>
+          <Stack
+            sx={{ width: "100%", height: "100%", minHeight: 0, minWidth: 0 }}
+          >
             <Typography
               sx={(theme) => ({
                 ...theme.typography.buttonFont2,
@@ -203,6 +219,7 @@ export default function TeamEdit() {
                 flexDirection: "column",
                 flex: 1,
                 minHeight: 0,
+                minWidth: 0,
                 overflow: "hidden",
               }}
             >
@@ -210,7 +227,7 @@ export default function TeamEdit() {
                 sx={{
                   width: "100%",
                   height: "100%",
-                  px: { xs: "8px", md: "32px" },
+                  px: "32px",
                   pt: "16px",
                   minHeight: 0,
                 }}
@@ -218,23 +235,39 @@ export default function TeamEdit() {
                 <TextField
                   id="outlined-basic"
                   label="...検索"
+                  placeholder="検索"
                   variant="outlined"
+                  fullWidth
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                  }}
                   sx={{
                     borderColor: theme.palette.card.main,
                     background: theme.palette.card.light,
                     color: "#808080",
                     borderRadius: "10px",
+                    width: "100%",
                     mb: "16px",
                   }}
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
                 />
-                <Box sx={{ flex: 1, overflowY: "auto", minHeight: 0, pb: "8px" }}>
-                  <Grid container spacing={"16px"}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    overflowY: "scroll",
+                    scrollbarGutter: "stable",
+                    minHeight: 0,
+                    pb: "8px",
+                    pr: "8px",
+                  }}
+                >
+                  <Grid container spacing={"8px"}>
                     {filteredUsers?.map((item, index) => (
                       <Grid
                         key={item.id}
-                        size={{ xs: 6, sm: 4, md: 3, lg: 3, xl: 3 }}
+                        size={{ xs: 6, sm: 4, md: 4, lg: 3, xl: 2 }}
+                        sx={{ display: "flex", minWidth: 0 }}
                       >
                         <motion.div
                           initial={{ opacity: 0 }}
@@ -242,8 +275,9 @@ export default function TeamEdit() {
                           exit={{ opacity: 0 }}
                           transition={{
                             duration: 0.7,
-                            delay: index * 0.02,
+                            delay: index * 0.01,
                           }}
+                          style={{ width: "100%", height: "100%" }}
                         >
                           <MembersCard
                             studentid={item.id}
@@ -256,8 +290,9 @@ export default function TeamEdit() {
                             }
                             disable={selectedIds.includes(String(item.id))}
                             isInclude={
-                              alreadyInAnyTeam.some((a) => a.id === String(item.id)) ||
-                              selectedIds.includes(String(item.id))
+                              alreadyInAnyTeam.some(
+                                (a) => a.id === String(item.id),
+                              ) || selectedIds.includes(String(item.id))
                             }
                             remove={() => removeStudent(String(item.id))}
                           />
@@ -269,8 +304,8 @@ export default function TeamEdit() {
               </Stack>
             </Card>
           </Stack>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 }

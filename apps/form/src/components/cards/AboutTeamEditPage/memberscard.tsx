@@ -55,16 +55,24 @@ export default function MembersCard({
             borderRadius: "10px",
             width: "100%",
             height: "100%",
+            minHeight: 40,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             color: "white",
             p: "8px",
+            minWidth: 0,
+            overflow: "hidden",
           }}
         >
           <Typography
             sx={(theme) => ({
               ...theme.typography.buttonFont1,
+              flexGrow: 1,
+              minWidth: 0,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             })}
           >
             {studentname}
@@ -75,6 +83,7 @@ export default function MembersCard({
               e.stopPropagation();
               remove && remove();
             }}
+            sx={{ ml: "8px", minWidth: 28, p: "4px" }}
           >
             <Typography sx={{ color: "white", fontSize: "20px", lineHeight: 1 }}>
               ×
@@ -94,11 +103,14 @@ export default function MembersCard({
           position: "relative",
           width: "100%",
           height: "100%",
+          minHeight: 40,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "white",
           p: "8px",
+          minWidth: 0,
+          overflow: "hidden",
         }}
       >
         <Box
@@ -122,6 +134,10 @@ export default function MembersCard({
         <Typography
           sx={(theme) => ({
             ...theme.typography.buttonFont1,
+            minWidth: 0,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           })}
         >
           {studentname}
@@ -132,7 +148,7 @@ export default function MembersCard({
 
   if (isInclude && !disable) {
     return (
-      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 1 }}>
+      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 1 }} style={{ width: "100%" }}>
         <CardActionArea
           onClick={(e) => {
             e.stopPropagation();
@@ -156,16 +172,23 @@ export default function MembersCard({
                 borderRadius: "10px",
                 width: "100%",
                 height: "100%",
+                minHeight: 40,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 color: "white",
                 p: "8px",
+                minWidth: 0,
+                overflow: "hidden",
               }}
             >
               <Typography
                 sx={(theme) => ({
                   ...theme.typography.buttonFont1,
+                  minWidth: 0,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 })}
               >
                 {studentname}
@@ -178,7 +201,7 @@ export default function MembersCard({
   }
 
   return (
-    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 1 }}>
+    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 1 }} style={{ width: "100%" }}>
       <CardActionArea
         onClick={(e) => {
           e.stopPropagation();
@@ -191,16 +214,23 @@ export default function MembersCard({
             borderRadius: "10px",
             width: "100%",
             height: "100%",
+            minHeight: 40,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: "white",
             p: "8px",
+            minWidth: 0,
+            overflow: "hidden",
           }}
         >
           <Typography
             sx={(theme) => ({
               ...theme.typography.buttonFont1,
+              minWidth: 0,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             })}
           >
             {studentname}

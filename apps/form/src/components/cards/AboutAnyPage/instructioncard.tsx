@@ -10,7 +10,7 @@ type InstructionProps = {
 export default function Instruction({ weather, sportname }: InstructionProps) {
   return (
     <Box>
-      <Stack direction="row" spacing={"16px"}>
+      <Stack direction="row" spacing={"8px"}>
         <Typography
           sx={(theme) => ({
             ...theme.typography.firstFont,

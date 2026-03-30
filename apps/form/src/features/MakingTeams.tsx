@@ -72,7 +72,7 @@ export default function MakingTeams({
         <Box
           sx={{
             flex: "0 0 auto",
-            my: "8px",
+            mb: "16px",
             width: "100%",
             display: "flex",
             justifyContent: "left",
@@ -86,8 +86,9 @@ export default function MakingTeams({
             flex: 1,
             minHeight: { xs: 320, md: 420 },
             maxHeight: { xs: "none", md: "calc(100dvh - 320px)" },
-            px: { xs: "16px", md: "32px" },
-            py: { xs: "8px", md: "16px" },
+            px: "32px",
+            pt: "16px",
+            pb: "32px",
             background: theme.palette.card.light,
             borderRadius: "10px",
             display: "flex",

@@ -29,9 +29,9 @@ export default function Header() {
         <Image
           src="/images/logo_form.png"
           alt=""
-          width={300}
+          width={260}
           height={15}
-          style={{ width: "clamp(180px, 42vw, 360px)", height: "auto" }}
+          style={{ width: "clamp(150px, 34vw, 300px)", height: "auto" }}
         />
       </Toolbar>
     </Box>
