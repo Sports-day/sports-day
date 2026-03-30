@@ -41,6 +41,7 @@ export default function SportCard({
             height: "100%",
             width: "100%",
             borderRadius: "10px",
+            p: "4px",
           }}
           component="div"
         >

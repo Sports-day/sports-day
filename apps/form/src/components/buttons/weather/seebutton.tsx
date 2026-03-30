@@ -21,7 +21,7 @@ export default function SeeButton({ type, name, id }: weatherProps) {
           sx={{
             maxWidth: "100%",
             minWidth: "auto",
-            minHeight: "32px",
+            height: "100%",
             borderColor: theme.palette.button.main,
             borderRadius: "30px",
             borderWidth: "2px",
@@ -56,6 +56,7 @@ export default function SeeButton({ type, name, id }: weatherProps) {
             direction="row"
             alignItems="center"
             justifyContent="center"
+            sx={{ px: "4px", width: "100%" }}
           >
             <Typography
               sx={{
