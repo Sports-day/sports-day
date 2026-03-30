@@ -34,7 +34,6 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          px: "8px",
         }}
       >
         <CardActionArea sx={{ height: "100%" }}>
@@ -44,6 +43,7 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
+              px: "8px",
             }}
           >
             <Typography

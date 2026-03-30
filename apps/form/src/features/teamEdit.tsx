@@ -234,7 +234,6 @@ export default function TeamEdit() {
               >
                 <TextField
                   id="outlined-basic"
-                  label="...検索"
                   placeholder="検索"
                   variant="outlined"
                   fullWidth
