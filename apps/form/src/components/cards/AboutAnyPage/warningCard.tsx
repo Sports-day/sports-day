@@ -8,7 +8,7 @@ type warnProps = {
 };
 
 export default function Warning({ warncomment }: warnProps) {
-  const [visiable, setVisible] = useState(true);
+  const [visible, setVisible] = useState(true);
   const handleClose = () => {
     setVisible(false);
   };
@@ -19,10 +19,9 @@ export default function Warning({ warncomment }: warnProps) {
         justifyContent: "center",
         mb: "16px",
         width: "100%",
-        height: "100%",
       }}
     >
-      {visiable && (
+      {visible && (
         <Card
           variant="outlined"
           sx={{
@@ -64,7 +63,7 @@ export default function Warning({ warncomment }: warnProps) {
             >
               {warncomment}
             </Typography>
-            <Button onClick={handleClose} sx={{ ml: "auto" }}>
+            <Button aria-label="閉じる" onClick={handleClose} sx={{ ml: "auto" }}>
               <Typography
                 sx={{ color: "#A27B1D", fontSize: "20px", lineHeight: 1 }}
               >
