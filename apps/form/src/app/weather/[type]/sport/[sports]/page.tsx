@@ -33,8 +33,8 @@ export default function TeamEdit() {
   if (error) {
     throw error;
   }
-  const sportname = data?.sport.name;
-  const weather = data?.scene.name;
+  const sportname = data?.sport?.name;
+  const weather = data?.scene?.name;
 
   return (
     <Box

@@ -11,11 +11,13 @@ export type SceneStatusItem = {
 type SceneStatusCardLayoutProps = {
   title: string;
   items: SceneStatusItem[];
+  statusMessage?: string;
 };
 
 export default function SceneStatusCardLayout({
   title,
   items,
+  statusMessage,
 }: SceneStatusCardLayoutProps) {
   const theme = useTheme();
 
@@ -55,7 +57,20 @@ export default function SceneStatusCardLayout({
             scrollbarGutter: "stable",
           }}
         >
-          {items.map((item, itemIndex) => (
+          {statusMessage ? (
+            <Stack
+              sx={{
+                display: "flex",
+                width: "100%",
+                height: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Typography>{statusMessage}</Typography>
+            </Stack>
+          ) : (
+            items.map((item, itemIndex) => (
             <Card
               key={`${item.scenename}-${itemIndex}`}
               variant="outlined"
@@ -140,7 +155,8 @@ export default function SceneStatusCardLayout({
                 </Box>
               )}
             </Card>
-          ))}
+            ))
+          )}
         </Box>
       </Box>
     </Card>

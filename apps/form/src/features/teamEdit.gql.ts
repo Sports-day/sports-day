@@ -40,7 +40,7 @@ export const GET_SPORTSCENE_ENTRIES = gql`
 `;
 
 export const GET_TEAM = gql`
-  query SportScenes($teamId: ID!) {
+  query GetTeam($teamId: ID!) {
     team(id: $teamId) {
       users {
         id

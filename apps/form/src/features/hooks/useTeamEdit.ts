@@ -113,10 +113,18 @@ export function useTeamEdit() {
     );
   }, [teamData?.team?.users]);
 
-  const selectedMember = localSelectedMember ?? teamMembersFromQuery;
-  const selectedIds = selectedMember.map((s) => s.studentId);
-  const teamsInScene = sportSceneEntriesData?.sportScene?.entries?.map((d) => d.team);
-  const teamCount = teamsInScene?.length ?? 0;
+  const selectedMember = useMemo(
+    () => localSelectedMember ?? teamMembersFromQuery,
+    [localSelectedMember, teamMembersFromQuery],
+  );
+  const selectedIds = useMemo(
+    () => selectedMember.map((s) => s.studentId),
+    [selectedMember],
+  );
+  const teamCount = useMemo(
+    () => sportSceneEntriesData?.sportScene?.entries?.length ?? 0,
+    [sportSceneEntriesData?.sportScene?.entries],
+  );
 
   const filteredUsers = useMemo(() => {
     if (!userData?.users) return [];
@@ -131,10 +139,11 @@ export function useTeamEdit() {
   }, [teamMembersFromQuery]);
 
   const alreadyInAnyTeam = useMemo(() => {
+    const myTeamUserIdSet = new Set(myTeamUserIds);
     const all = sportSceneEntriesData?.sportScene?.entries?.flatMap(
       (entry) => entry.team?.users ?? [],
     ) ?? [];
-    return all.filter((user) => !myTeamUserIds.includes(user.id));
+    return all.filter((user) => !myTeamUserIdSet.has(user.id));
   }, [sportSceneEntriesData?.sportScene?.entries, myTeamUserIds]);
 
   const [addTeamMemberMutation] = useMutation(ADD_TEAM_MEMBER);
@@ -218,11 +227,14 @@ export function useTeamEdit() {
         await entryTeam(newTeamId, sportSceneId);
       }
       await apolloClient.refetchQueries({
-        include: ["GetSceneSport", "GetSportscene"],
+        include: [
+          GET_SPORTSCENE,
+          GET_SPORTSCENE_ENTRIES,
+          GET_TEAM,
+          "GetSceneSport",
+          "GetAllTeamdata",
+        ],
       });
-      apolloClient.cache.evict({ id: "ROOT_QUERY", fieldName: "sportScenes" });
-      apolloClient.cache.evict({ id: "ROOT_QUERY", fieldName: "sportScene" });
-      apolloClient.cache.gc();
       router.back();
     } catch (error) {
       if (createdTeamId) {

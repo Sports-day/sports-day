@@ -1,69 +1,64 @@
 "use client";
 
-import { gql, useQuery } from "@apollo/client";
+import { useMemo } from "react";
+import { ApolloError, useQuery } from "@apollo/client";
 import { SceneStatusItem } from "@/components/cards/AboutConfirmPage/SceneStatusCardLayout";
+import {
+  GET_ALL_USERS,
+  GET_SCENE_ID,
+  GET_SCENE_USERS,
+} from "@/components/cards/AboutConfirmPage/hooks/aboutConfirm.gql";
 
-const GET_SCENE_ID = gql`
-  query GetSceneId {
-    scenes {
-      id
-      name
-    }
-  }
-`;
+type HookResult = {
+  items: SceneStatusItem[];
+  loading: boolean;
+  error: ApolloError | null;
+};
 
-const GET_SCENE_USERS = gql`
-  query GetSceneUsers {
-    sportScenes {
-      scene {
-        id
+export function useNotSelectedScenes(): HookResult {
+  const { data: sceneData, loading: sceneLoading, error: sceneError } = useQuery(GET_SCENE_ID);
+  const { data: sportSceneData, loading: sportSceneLoading, error: sportSceneError } =
+    useQuery(GET_SCENE_USERS);
+  const { data: allUserData, loading: allUsersLoading, error: allUsersError } =
+    useQuery(GET_ALL_USERS);
+
+  const loading = sceneLoading || sportSceneLoading || allUsersLoading;
+  const error = sceneError || sportSceneError || allUsersError || null;
+
+  const items = useMemo(() => {
+    const allUsers =
+      allUserData?.users?.map((d: any) => ({
+        id: d.id?.trim(),
+        name: d.name?.trim(),
+      })) ?? [];
+    const scenes = sceneData?.scenes ?? [];
+    const sportScenes = sportSceneData?.sportScenes ?? [];
+
+    const sceneTeamUserIdMap = new Map<string, Set<string>>();
+    sportScenes.forEach((sportScene: any) => {
+      const sceneId = sportScene.scene?.id;
+      if (!sceneId) return;
+      const ids =
+        sportScene.entries?.flatMap((entry: any) =>
+          entry.team?.users?.map((user: any) => user.id?.trim()).filter(Boolean) ?? [],
+        ) ?? [];
+      if (!sceneTeamUserIdMap.has(sceneId)) {
+        sceneTeamUserIdMap.set(sceneId, new Set());
       }
-      entries {
-        team {
-          users {
-            id
-          }
-        }
-      }
-    }
-  }
-`;
+      const userSet = sceneTeamUserIdMap.get(sceneId);
+      ids.forEach((id: string) => userSet?.add(id));
+    });
 
-const GET_ALL_USERS = gql`
-  query GetAllUsers {
-    users {
-      id
-      name
-    }
-  }
-`;
+    return scenes.map((scene: any) => {
+      const assignedUserIds = sceneTeamUserIdMap.get(scene.id) ?? new Set<string>();
+      return {
+        scenename: scene.name,
+        users: allUsers
+          .filter((user: { id: string; name: string }) => !assignedUserIds.has(user.id))
+          .map((user: { id: string; name: string }) => user.name),
+      };
+    });
+  }, [allUserData?.users, sceneData?.scenes, sportSceneData?.sportScenes]);
 
-export function useNotSelectedScenes(): SceneStatusItem[] {
-  const { data: sceneData } = useQuery(GET_SCENE_ID);
-  const { data: sportSceneData } = useQuery(GET_SCENE_USERS);
-  const { data: allUserData } = useQuery(GET_ALL_USERS);
-
-  const allUsers =
-    allUserData?.users?.map((d: any) => ({
-      id: d.id?.trim(),
-      name: d.name?.trim(),
-    })) || [];
-
-  const scenes = sceneData?.scenes ?? [];
-
-  return scenes.map((scene: any) => {
-    const targetSportScenes =
-      sportSceneData?.sportScenes?.filter((e: any) => e.scene?.id === scene.id) || [];
-
-    const sceneTeamUserIds = targetSportScenes.flatMap((d: any) =>
-      d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.id) || []),
-    );
-
-    return {
-      scenename: scene.name,
-      users: allUsers
-        .filter((user: { id: string; name: string }) => !sceneTeamUserIds.includes(user.id))
-        .map((user: { id: string; name: string }) => user.name),
-    };
-  });
+  return { items, loading, error };
 }

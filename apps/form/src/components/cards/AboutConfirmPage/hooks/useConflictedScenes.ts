@@ -1,58 +1,57 @@
 "use client";
 
-import { gql, useQuery } from "@apollo/client";
+import { useMemo } from "react";
+import { ApolloError, useQuery } from "@apollo/client";
 import { SceneStatusItem } from "@/components/cards/AboutConfirmPage/SceneStatusCardLayout";
+import {
+  GET_SCENE_ID,
+  GET_SCENE_USERS,
+} from "@/components/cards/AboutConfirmPage/hooks/aboutConfirm.gql";
 
-const GET_SCENE_ID = gql`
-  query GetSceneId {
-    scenes {
-      id
-      name
-    }
-  }
-`;
+type HookResult = {
+  items: SceneStatusItem[];
+  loading: boolean;
+  error: ApolloError | null;
+};
 
-const GET_SCENE_USERS = gql`
-  query GetSceneUsers {
-    sportScenes {
-      scene {
-        id
+export function useConflictedScenes(): HookResult {
+  const { data: sceneData, loading: sceneLoading, error: sceneError } = useQuery(GET_SCENE_ID);
+  const { data: sportSceneData, loading: sportSceneLoading, error: sportSceneError } =
+    useQuery(GET_SCENE_USERS);
+
+  const loading = sceneLoading || sportSceneLoading;
+  const error = sceneError || sportSceneError || null;
+
+  const items = useMemo(() => {
+    const scenes = sceneData?.scenes ?? [];
+    const sportScenes = sportSceneData?.sportScenes ?? [];
+    const sceneUserNamesMap = new Map<string, string[]>();
+
+    sportScenes.forEach((sportScene: any) => {
+      const sceneId = sportScene.scene?.id;
+      if (!sceneId) return;
+      const names =
+        sportScene.entries?.flatMap((entry: any) =>
+          entry.team?.users?.map((user: any) => user.name?.trim()).filter(Boolean) ?? [],
+        ) ?? [];
+      if (!sceneUserNamesMap.has(sceneId)) {
+        sceneUserNamesMap.set(sceneId, []);
       }
-      entries {
-        team {
-          users {
-            name
-          }
-        }
-      }
-    }
-  }
-`;
-
-export function useConflictedScenes(): SceneStatusItem[] {
-  const { data: sceneData } = useQuery(GET_SCENE_ID);
-  const { data: sportSceneData } = useQuery(GET_SCENE_USERS);
-
-  const scenes = sceneData?.scenes ?? [];
-
-  return scenes.map((scene: any) => {
-    const targetSportScenes =
-      sportSceneData?.sportScenes?.filter((e: any) => e.scene?.id === scene.id) || [];
-
-    const sceneTeamUsers = targetSportScenes
-      .flatMap((d: any) =>
-        d.entries?.flatMap((s: any) => s.team?.users?.map((u: any) => u.name) || []),
-      )
-      .filter(Boolean);
-
-    const nameCount: Record<string, number> = {};
-    sceneTeamUsers.forEach((name: string) => {
-      nameCount[name] = (nameCount[name] || 0) + 1;
+      sceneUserNamesMap.get(sceneId)?.push(...names);
     });
 
-    return {
-      scenename: scene.name,
-      users: Object.keys(nameCount).filter((name: string) => nameCount[name] > 1),
-    };
-  });
+    return scenes.map((scene: any) => {
+      const sceneUserNames = sceneUserNamesMap.get(scene.id) ?? [];
+      const nameCount: Record<string, number> = {};
+      sceneUserNames.forEach((name: string) => {
+        nameCount[name] = (nameCount[name] || 0) + 1;
+      });
+      return {
+        scenename: scene.name,
+        users: Object.keys(nameCount).filter((name: string) => nameCount[name] > 1),
+      };
+    });
+  }, [sceneData?.scenes, sportSceneData?.sportScenes]);
+
+  return { items, loading, error };
 }
