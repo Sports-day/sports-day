@@ -55,3 +55,8 @@ api/db_schema/schema.sql
 
 .claude/settings.local.json
 .envrc
+
+# Temporary and redundant files
+/temp.md
+/logo_admin.png
+/スクリーンショット*.png
