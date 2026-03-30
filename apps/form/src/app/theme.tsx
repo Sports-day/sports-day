@@ -4,7 +4,7 @@ export const theme = createTheme({
   palette: {
     card: {
       main: "#5B6DC6",
-      light: "#F4F5F9",
+      light: "#EFF0F8",
     },
     background: {
       default: "linear-gradient(135deg,  #5D6EC6 0%, #3F4DB3 90%)",
@@ -19,18 +19,18 @@ export const theme = createTheme({
     firstFont: {
       fontSize: "30px",
       fontWeight: "medium",
-      color: "#000000",
+      color: "#2F3C8C",
     },
     secondFont: {
       fontSize: "16px",
       fontWeight: "medium",
-      color: "#E1E4F6",
+      color: "#EFF0F8",
     },
 
     buttonFont1: {
       fontSize: "14px",
       fontWeight: "medium",
-      color: "#E1E4F6",
+      color: "#EFF0F8",
     },
     buttonFont2: {
       fontSize: "14px",
@@ -40,7 +40,7 @@ export const theme = createTheme({
     buttonFont3: {
       fontSize: "14px",
       fontWeight: "medium",
-      color: "#000000",
+      color: "#2F3C8C",
     },
   },
 });

@@ -24,19 +24,35 @@ export default function SceneStatusCardLayout({
   return (
     <Card
       variant="outlined"
+      component="fieldset"
       sx={{
+        border: "1px solid",
+        background: "none",
+
         borderColor: theme.palette.card.main,
         borderRadius: "10px",
-        background: "none",
+
         width: "100%",
         height: "100%",
         minHeight: 0,
         overflow: "hidden",
       }}
     >
+      <Typography
+        component="legend"
+        sx={{
+          color: "#FF0000",
+          fontSize: "14px",
+          fontWeight: "medium",
+          px: "8px",
+        }}
+      >
+        {title}
+      </Typography>
       <Box
         sx={{
-          p: "16px",
+          px: "16px",
+          py: "8px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -46,7 +62,6 @@ export default function SceneStatusCardLayout({
           minHeight: 0,
         }}
       >
-        <Typography sx={{ color: "#FF0000" }}>{title}</Typography>
         <Box
           sx={{
             background: "none",
@@ -71,24 +86,22 @@ export default function SceneStatusCardLayout({
             </Stack>
           ) : (
             items.map((item, itemIndex) => (
-            <Card
-              key={`${item.scenename}-${itemIndex}`}
-              variant="outlined"
-              sx={{
-                borderColor: theme.palette.card.main,
-                background: "none",
-                m: "16px",
-                p: "16px",
-              }}
-            >
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                spacing={"16px"}
-                sx={{ mb: "16px", width: "100%" }}
+              <Card
+                key={`${item.scenename}-${itemIndex}`}
+                variant="outlined"
+                component="fieldset"
+                sx={{
+                  border: "1px solid",
+                  background: "none",
+
+                  borderColor: theme.palette.card.main,
+                  borderRadius: "10px",
+
+                  p: "16px",
+                }}
               >
                 <Typography
+                  component="legend"
                   sx={(theme) => ({
                     ...theme.typography.buttonFont2,
                     flexGrow: 1,
@@ -96,65 +109,65 @@ export default function SceneStatusCardLayout({
                 >
                   {item.scenename}
                 </Typography>
-              </Stack>
-              {item.users.length === 0 ? (
-                <Stack
-                  sx={{
-                    display: "flex",
-                    width: "100%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography>該当者はいません</Typography>
-                </Stack>
-              ) : (
-                <Box
-                  sx={{
-                    maxHeight: 220,
-                    overflowY: "auto",
-                    scrollbarGutter: "stable",
-                    pr: "8px",
-                  }}
-                >
-                  <Grid container spacing={"8px"}>
-                    {item.users.map((user, userIndex) => (
-                      <Grid
-                        size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
-                        key={`${item.scenename}-${user}-${userIndex}`}
-                      >
-                        <Card
-                          sx={{
-                            background: theme.palette.card.main,
-                            borderRadius: "15px",
-                            color: "white",
-                            width: "100%",
-                            minHeight: 40,
-                            px: "8px",
-                            py: "8px",
-                            m: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
+
+                {item.users.length === 0 ? (
+                  <Stack
+                    sx={{
+                      display: "flex",
+                      width: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography>該当者はいません</Typography>
+                  </Stack>
+                ) : (
+                  <Box
+                    sx={{
+                      maxHeight: 220,
+                      overflowY: "auto",
+                      scrollbarGutter: "stable",
+                      pr: "8px",
+                    }}
+                  >
+                    <Grid container spacing={"8px"}>
+                      {item.users.map((user, userIndex) => (
+                        <Grid
+                          size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                          key={`${item.scenename}-${user}-${userIndex}`}
                         >
-                          <Typography
-                            noWrap
+                          <Card
                             sx={{
-                              color: "inherit",
+                              background: theme.palette.card.main,
+                              borderRadius: "15px",
+                              color: "white",
                               width: "100%",
-                              textAlign: "center",
+                              minHeight: 40,
+                              px: "8px",
+                              py: "8px",
+                              m: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            {user}
-                          </Typography>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              )}
-            </Card>
+                            <Typography
+                              noWrap
+                              sx={{
+                                color: "inherit",
+                                width: "100%",
+                                textAlign: "center",
+                              }}
+                            >
+                              {user}
+                            </Typography>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
+              </Card>
             ))
           )}
         </Box>

@@ -54,14 +54,11 @@ export default function TeamCard({
         sx={{
           flexGrow: 1,
           overflowY: "auto",
+          px: "8px",
+          pb: "8px",
         }}
       >
-        <Stack
-          spacing={"8px"}
-          sx={{
-            mx: "8px",
-          }}
-        >
+        <Stack spacing={"8px"}>
           {member.map((item, index) => (
             <Card
               key={index}
@@ -82,7 +79,7 @@ export default function TeamCard({
 
       <Box
         sx={{
-          background: theme.palette.card.main,
+          background: "none",
           p: "8px",
           width: "100%",
         }}
@@ -108,13 +105,13 @@ export default function TeamCard({
                 borderRadius: "10px",
                 p: "4px",
                 color: "#ffffff",
-                background: theme.palette.button.light,
+                background: theme.palette.button.main,
                 "&:hover": {
                   width: "100%",
                   borderRadius: "10px",
                   p: "4px",
                   color: "#ffffff",
-                  background: theme.palette.button.light,
+                  background: theme.palette.button.main,
                 },
               }}
             >

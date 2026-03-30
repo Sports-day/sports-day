@@ -95,26 +95,32 @@ export default function Comp() {
             </Stack>
           </motion.div>
 
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              flexShrink: 0,
-              mt: "32px",
-            }}
-          >
-            <Image
-              src="/images/wider_horiz.png"
-              alt=""
-              width={160}
-              height={130}
-              style={{
-                opacity: 0.5,
-                width: "min(160px, 44vw)",
-                height: "auto",
+          <Stack direction="row" spacing={"8px"} sx={{ mt: "32px" }}>
+            <Typography
+              sx={{
+                color: "white",
+                opacity: 0.3,
+                fontSize: "20px",
+                lineHeight: 1,
               }}
-            />
-          </Box>
+            >
+              (C)
+            </Typography>
+            <Box>
+              <Image
+                src="/images/wider_horiz.png"
+                alt=""
+                width={160}
+                height={48}
+                style={{
+                  opacity: 0.3,
+                  width: "min(160px, 44vw)",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
+            </Box>
+          </Stack>
         </Stack>
       </motion.div>
     </Box>

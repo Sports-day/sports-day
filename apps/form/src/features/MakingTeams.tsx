@@ -1,10 +1,18 @@
 "use client";
 
-import { Typography, Box, Stack, useTheme } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Stack,
+  useTheme,
+} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import ExtraTeamCard from "@/components/cards/AboutMakingTeamPage/ExtraTeamCard";
 import TeamCard from "@/components/cards/AboutMakingTeamPage/TeamCard";
 import Instruction from "@/components/cards/AboutAnyPage/InstructionCard";
+import AppBreadcrumbs, {
+  type BreadcrumbItem,
+} from "@/components/layouts/AppBreadcrumbs";
 import { gql, useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import CircularUnderLoad from "./Loading";
@@ -51,6 +59,10 @@ export default function MakingTeams({
     data?.sportScenes?.filter(
       (d: any) => d.sport.id === sports && d.scene.id === type,
     ) ?? [];
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: "ホーム", href: `/weather/${type}` },
+    { label: "チーム確認" },
+  ];
 
   if (loading) {
     return <CircularUnderLoad />;
@@ -72,7 +84,7 @@ export default function MakingTeams({
         <Box
           sx={{
             flex: "0 0 auto",
-            mb: "16px",
+            mb: "8px",
             width: "100%",
             display: "flex",
             justifyContent: "left",
@@ -81,6 +93,9 @@ export default function MakingTeams({
           <Instruction sportname={sportname} weather={weather} />
         </Box>
 
+        <Box sx={{ mb: "8px" }}>
+          <AppBreadcrumbs items={breadcrumbs} />
+        </Box>
         <Box
           sx={{
             flex: 1,
@@ -99,6 +114,7 @@ export default function MakingTeams({
           <Typography
             sx={(theme) => ({
               ...theme.typography.buttonFont2,
+              mb: "16px",
             })}
           >
             作成したチーム一覧

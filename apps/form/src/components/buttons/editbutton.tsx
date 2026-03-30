@@ -17,31 +17,26 @@ export default function EditButton({ type, sports, teams }: Props) {
       passHref
     >
       <Button
+        variant="outlined"
         component="span"
         sx={{
+          borderColor: theme.palette.button.main,
+          borderWidth: "2px",
           borderRadius: "10px",
           p: "4px",
           width: "100%",
-          background: theme.palette.button.light,
+          background: theme.palette.button.main,
           "&:hover": {
+            borderColor: theme.palette.button.main,
+            borderWidth: "2px",
             borderRadius: "10px",
             p: "4px",
             width: "100%",
-            background: theme.palette.button.light,
+            background: theme.palette.button.main,
             opacity: 0.8,
           },
         }}
       >
-        <Typography
-          sx={{
-            color: theme.typography.buttonFont1.color,
-            fontSize: "14px",
-            lineHeight: 1,
-            mr: "4px",
-          }}
-        >
-          ✎
-        </Typography>
         <Typography
           sx={(theme) => ({
             ...theme.typography.buttonFont1,

@@ -30,6 +30,7 @@ export default function Warning({ warncomment }: warnProps) {
             borderColor: "#A27B1D",
             background: "#FDF5DE",
             width: "100%",
+            p: "4px",
           }}
         >
           <Box

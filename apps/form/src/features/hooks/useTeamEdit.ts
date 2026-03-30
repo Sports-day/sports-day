@@ -34,6 +34,7 @@ type SportSceneNode = {
   id: string;
   sport: { id: string };
   scene: { id: string };
+  entries: { team: TeamNode }[];
 };
 
 type SportSceneEntriesData = {
@@ -140,11 +141,13 @@ export function useTeamEdit() {
 
   const alreadyInAnyTeam = useMemo(() => {
     const myTeamUserIdSet = new Set(myTeamUserIds);
-    const all = sportSceneEntriesData?.sportScene?.entries?.flatMap(
-      (entry) => entry.team?.users ?? [],
-    ) ?? [];
+    const all = sportSceneData?.sportScenes
+      ?.filter((sportScene) => sportScene.scene.id === type)
+      .flatMap((sportScene) =>
+        sportScene.entries?.flatMap((entry) => entry.team?.users ?? []) ?? [],
+      ) ?? [];
     return all.filter((user) => !myTeamUserIdSet.has(user.id));
-  }, [sportSceneEntriesData?.sportScene?.entries, myTeamUserIds]);
+  }, [myTeamUserIds, sportSceneData?.sportScenes, type]);
 
   const [addTeamMemberMutation] = useMutation(ADD_TEAM_MEMBER);
   const [createSportEntryMutation] = useMutation(CREATE_SPORT_ENTRY);

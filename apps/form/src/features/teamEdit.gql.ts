@@ -19,6 +19,14 @@ export const GET_SPORTSCENE = gql`
       scene {
         id
       }
+      entries {
+        team {
+          id
+          users {
+            id
+          }
+        }
+      }
     }
   }
 `;

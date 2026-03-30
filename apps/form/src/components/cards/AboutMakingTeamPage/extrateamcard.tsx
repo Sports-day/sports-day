@@ -47,7 +47,7 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
             }}
           >
             <Typography
-              sx={{ color: "#A49494", fontSize: "20px", fontWeight: "medium" }}
+              sx={{ color: "#808080", fontSize: "20px", fontWeight: "medium" }}
             >
               +チームを追加
             </Typography>

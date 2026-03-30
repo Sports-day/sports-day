@@ -39,35 +39,41 @@ export default function ConfirmCard({
   return (
     <Card
       variant="outlined"
+      component="fieldset"
       sx={{
         background: "none",
+        border: "1px solid",
         borderColor: theme.palette.card.main,
         borderRadius: "10px",
+        m: 0,
 
         width: "100%",
         height: "100%",
       }}
     >
+      <Typography
+        component="legend"
+        sx={(theme) => ({
+          ...theme.typography.buttonFont3,
+          flexGrow: 1,
+          px: "8px",
+        })}
+      >
+        {scenename}
+        {sportname}
+      </Typography>
       <Box
         sx={{
-          p: "16px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "column",
+          px: "16px",
+          py: "8px",
           width: "100%",
           height: "100%",
         }}
       >
-        <Typography
-          sx={(theme) => ({
-            ...theme.typography.buttonFont3,
-            flexGrow: 1,
-          })}
-        >
-          {scenename}
-          {sportname}
-        </Typography>
         <Box
           sx={{
             background: "none",
@@ -85,39 +91,55 @@ export default function ConfirmCard({
             teamRows.map((row) => (
               <Card
                 variant="outlined"
+                component="fieldset"
                 key={row.teamId ?? row.teamName}
                 sx={{
+                  border: "1px solid",
                   borderColor: theme.palette.card.main,
                   background: "none",
-                  m: "16px",
-                  p: "16px",
+                  px: "16px",
+                  py: "8px",
+                  borderRadius: "10px",
+                  m: 0,
                 }}
               >
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  spacing={"16px"}
-                  sx={{ mb: "16px", width: "100%" }}
+                <Typography
+                  component="legend"
+                  sx={(theme) => ({
+                    ...theme.typography.buttonFont2,
+                    flexGrow: 1,
+                  })}
                 >
-                  <Typography
-                    sx={(theme) => ({
-                      ...theme.typography.buttonFont2,
-                      flexGrow: 1,
-                    })}
-                  >
-                    {row.teamName}
-                  </Typography>
-                  <Stack direction="row" alignItems="center" spacing={"8px"}>
-                    <EditButton
-                      type={sceneid}
-                      sports={sportid}
-                      teams={row.teamId}
-                    />
-                    <Button
-                      component="span"
-                      variant="outlined"
-                      sx={{
+                  {row.teamName}
+                </Typography>
+
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: "8px",
+                    mb: "8px",
+                  }}
+                >
+                  <EditButton
+                    type={sceneid}
+                    sports={sportid}
+                    teams={row.teamId}
+                  />
+                  <Button
+                    component="span"
+                    variant="outlined"
+                    sx={{
+                      borderWidth: "2px",
+                      borderColor: "#E4781A",
+                      background: "white",
+                      color: "#E4781A",
+                      borderRadius: "10px",
+                      p: "4px",
+                      width: "auto",
+                      "&:hover": {
                         borderWidth: "2px",
                         borderColor: "#E4781A",
                         background: "white",
@@ -125,35 +147,23 @@ export default function ConfirmCard({
                         borderRadius: "10px",
                         p: "4px",
                         width: "auto",
-                        "&:hover": {
-                          borderWidth: "2px",
-                          borderColor: "#E4781A",
-                          background: "white",
-                          color: "#E4781A",
-                          borderRadius: "10px",
-                          p: "4px",
-                          width: "auto",
-                          opacity: 0.8,
-                        },
-                      }}
-                      onClick={() => setOpenTeamId(row.teamId)}
-                    >
-                      <Typography sx={{ fontSize: "16px", lineHeight: 1 }}>
-                        ×
-                      </Typography>
-                      削除
-                    </Button>
-                    <CheckPopup_Confirm
-                      teamid={row.teamId}
-                      open={openTeamId === row.teamId}
-                      setOpen={(open) => {
-                        if (!open) {
-                          setOpenTeamId(null);
-                        }
-                      }}
-                    />
-                  </Stack>
-                </Stack>
+                        opacity: 0.8,
+                      },
+                    }}
+                    onClick={() => setOpenTeamId(row.teamId)}
+                  >
+                    削除
+                  </Button>
+                  <CheckPopup_Confirm
+                    teamid={row.teamId}
+                    open={openTeamId === row.teamId}
+                    setOpen={(open) => {
+                      if (!open) {
+                        setOpenTeamId(null);
+                      }
+                    }}
+                  />
+                </Box>
                 <Grid container spacing={"8px"}>
                   {row.members
                     ?.slice()

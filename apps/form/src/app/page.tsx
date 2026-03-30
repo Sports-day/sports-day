@@ -67,21 +67,21 @@ export default function Home() {
           <Image
             src="/images/logo_form.png"
             alt=""
-            width={320}
-            height={28}
-            style={{ width: "min(320px, 78vw)", height: "auto" }}
+            width={400}
+            height={33}
+            style={{ width: "min(380px, 78vw)", height: "auto" }}
           />
           <Typography
             sx={{
               color: "white",
-              fontSize: { xs: "15px", sm: "18px" },
+              fontSize: "14px",
               textAlign: "center",
             }}
           >
             球技大会のチーム登録プラットフォーム
           </Typography>
 
-          <Box sx={{ width: "min(320px, 100%)", mt: "12px" }}>
+          <Box sx={{ width: "min(320px, 100%)", mt: "32px" }}>
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -123,25 +123,31 @@ export default function Home() {
             <PrivacyPolicyDrawer>プライバシーポリシー</PrivacyPolicyDrawer>
           </Box>
 
-          <Stack
-            spacing={"16px"}
-            direction="row"
-            sx={{ mt: { xs: "32px", md: "64px" } }}
-          >
-            <Typography sx={{ color: "white", opacity: 0.5, fontSize: "20px" }}>
+          <Stack direction="row" spacing={"8px"} sx={{ mt: "32px" }}>
+            <Typography
+              sx={{
+                color: "white",
+                opacity: 0.3,
+                fontSize: "20px",
+                lineHeight: 1,
+              }}
+            >
               (C)
             </Typography>
-            <Image
-              src="/images/wider_horiz.png"
-              alt=""
-              width={160}
-              height={130}
-              style={{
-                opacity: 0.5,
-                width: "min(160px, 44vw)",
-                height: "auto",
-              }}
-            />
+            <Box>
+              <Image
+                src="/images/wider_horiz.png"
+                alt=""
+                width={160}
+                height={48}
+                style={{
+                  opacity: 0.3,
+                  width: "min(160px, 44vw)",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
+            </Box>
           </Stack>
         </Stack>
       </motion.div>
