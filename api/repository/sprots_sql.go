@@ -55,6 +55,14 @@ func (r sports) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.S
 	return &sport, nil
 }
 
+func (r sports) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Sport, error) {
+	var sports []*db_model.Sport
+	if err := db.Where("id IN ?", ids).Find(&sports).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return sports, nil
+}
+
 func (r sports) ListRankingRules(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.RankingRule, error) {
 	var rules []*db_model.RankingRule
 	if err := db.Where("sport_id = ?", sportID).Order("priority ASC").Find(&rules).Error; err != nil {

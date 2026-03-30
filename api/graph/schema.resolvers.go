@@ -97,11 +97,15 @@ func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input mo
 	if err != nil {
 		return nil, err
 	}
-	rules, err := r.SportService.GetRankingRules(ctx, id)
+	rankingRules, err := r.SportService.GetRankingRules(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatSportWithRankingRulesResponse(sport, rules), nil
+	rules, err := r.RuleService.ListBySportID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportWithRankingRulesResponse(sport, rankingRules, rules), nil
 }
 
 // CreateTeam is the resolver for the createTeam field.
@@ -415,7 +419,11 @@ func (r *mutationResolver) SetRankingRules(ctx context.Context, sportID string, 
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatSportWithRankingRulesResponse(sport, savedRules), nil
+	sportRules, err := r.RuleService.ListBySportID(ctx, sportID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportWithRankingRulesResponse(sport, savedRules, sportRules), nil
 }
 
 // SetTiebreakPriorities is the resolver for the setTiebreakPriorities field.
@@ -574,6 +582,33 @@ func (r *mutationResolver) AssignSeedTeam(ctx context.Context, input model.Assig
 	return model.FormatTournamentSlotResponse(slot), nil
 }
 
+// CreateRule is the resolver for the createRule field.
+func (r *mutationResolver) CreateRule(ctx context.Context, input model.CreateRuleInput) (*model.Rule, error) {
+	rule, err := r.RuleService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatRuleResponse(rule), nil
+}
+
+// UpdateRule is the resolver for the updateRule field.
+func (r *mutationResolver) UpdateRule(ctx context.Context, id string, input model.UpdateRuleInput) (*model.Rule, error) {
+	rule, err := r.RuleService.Update(ctx, id, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatRuleResponse(rule), nil
+}
+
+// DeleteRule is the resolver for the deleteRule field.
+func (r *mutationResolver) DeleteRule(ctx context.Context, id string) (*model.Rule, error) {
+	rule, err := r.RuleService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatRuleResponse(rule), nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -638,11 +673,15 @@ func (r *queryResolver) Sports(ctx context.Context) ([]*model.Sport, error) {
 
 	res := make([]*model.Sport, 0, len(sports))
 	for _, sport := range sports {
-		rules, err := r.SportService.GetRankingRules(ctx, sport.ID)
+		rankingRules, err := r.SportService.GetRankingRules(ctx, sport.ID)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, model.FormatSportWithRankingRulesResponse(sport, rules))
+		rules, err := r.RuleService.ListBySportID(ctx, sport.ID)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, model.FormatSportWithRankingRulesResponse(sport, rankingRules, rules))
 	}
 	return res, nil
 }
@@ -653,11 +692,15 @@ func (r *queryResolver) Sport(ctx context.Context, id string) (*model.Sport, err
 	if err != nil {
 		return nil, err
 	}
-	rules, err := r.SportService.GetRankingRules(ctx, id)
+	rankingRules, err := r.SportService.GetRankingRules(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatSportWithRankingRulesResponse(sport, rules), nil
+	rules, err := r.RuleService.ListBySportID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportWithRankingRulesResponse(sport, rankingRules, rules), nil
 }
 
 // Teams is the resolver for the teams field.
@@ -916,6 +959,29 @@ func (r *queryResolver) Tournaments(ctx context.Context, competitionID string) (
 // TournamentRanking is the resolver for the tournamentRanking field.
 func (r *queryResolver) TournamentRanking(ctx context.Context, competitionID string) ([]*model.TournamentRanking, error) {
 	return r.TournamentService.ComputeTournamentRanking(ctx, competitionID)
+}
+
+// Rule is the resolver for the rule field.
+func (r *queryResolver) Rule(ctx context.Context, id string) (*model.Rule, error) {
+	rule, err := r.RuleService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatRuleResponse(rule), nil
+}
+
+// Rules is the resolver for the rules field.
+func (r *queryResolver) Rules(ctx context.Context) ([]*model.Rule, error) {
+	rules, err := r.RuleService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*model.Rule, 0, len(rules))
+	for _, rule := range rules {
+		res = append(res, model.FormatRuleResponse(rule))
+	}
+	return res, nil
 }
 
 // Mutation returns MutationResolver implementation.

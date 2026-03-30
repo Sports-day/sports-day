@@ -38,9 +38,11 @@ type Loaders struct {
 	SlotByMatchEntryLoader         *dataloadgen.Loader[string, *db_model.TournamentSlot]
 	MatchesByTournamentLoader      *dataloadgen.Loader[string, []*db_model.Match]
 	MatchEntryLoader               *dataloadgen.Loader[string, *db_model.MatchEntry]
+	SportLoader                    *dataloadgen.Loader[string, *db_model.Sport]
+	SportRulesLoader               *dataloadgen.Loader[string, []*db_model.Rule]
 }
 
-func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League, tournamentSvc service.Tournament) *Loaders {
+func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League, tournamentSvc service.Tournament, sportSvc service.Sport, ruleSvc service.Rule) *Loaders {
 	return &Loaders{
 		UserLoader:                     dataloadgen.NewLoader(newUserLoader(userSvc)),
 		GroupLoader:                    dataloadgen.NewLoader(newGroupLoader(groupSvc)),
@@ -70,6 +72,8 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 		SlotByMatchEntryLoader:         dataloadgen.NewLoader(newSlotByMatchEntryLoader(tournamentSvc)),
 		MatchesByTournamentLoader:      dataloadgen.NewLoader(newMatchesByTournamentLoader(tournamentSvc)),
 		MatchEntryLoader:               dataloadgen.NewLoader(newMatchEntryLoader(matchSvc)),
+		SportLoader:                    dataloadgen.NewLoader(newSportLoader(sportSvc)),
+		SportRulesLoader:               dataloadgen.NewLoader(newSportRulesLoader(ruleSvc)),
 	}
 }
 
