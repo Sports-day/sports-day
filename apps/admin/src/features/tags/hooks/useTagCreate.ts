@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { MOCK_TAGS } from '../mock'
+import { MOCK_TAGS, persistTags } from '../mock'
 
 export function useTagCreate() {
   const [name, setName] = useState('')
 
   const handleCreate = () => {
-    const newId = String(MOCK_TAGS.length + 1)
+    const newId = String(Date.now())
     MOCK_TAGS.push({ id: newId, name, enabled: true })
+    persistTags()
     setName('')
   }
 

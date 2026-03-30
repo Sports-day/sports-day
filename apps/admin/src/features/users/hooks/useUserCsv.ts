@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { MOCK_TEAMS } from '../../teams/mock'
-import { MOCK_USERS } from '../mock'
+import { MOCK_USERS, persistUsers } from '../mock'
 
-const VALID_CLASSES = Array.from(new Set(MOCK_TEAMS.map((t) => t.class)))
+const VALID_GENDERS = ['男性', '女性']
 
 export type UserCsvRow = {
   userName: string
@@ -19,18 +18,28 @@ export function useUserCsv() {
   const handleCsvChange = (value: string) => {
     setCsvText(value)
 
+    const existingEmails = new Set(MOCK_USERS.map(u => u.email))
+    const seenEmails = new Set<string>()
+
     const parsed: UserCsvRow[] = value
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0)
       .map((line) => {
         const parts = line.split(',').map((s) => s.trim())
-        const userName = parts[0] || '未登録'
-        const email = parts[1] || '未登録'
-        const gender = parts[2] || '未登録'
-        const cls = parts[3] || '未登録'
-        const status = VALID_CLASSES.includes(cls) ? '登録可能' : 'クラスがありません'
-        return { userName, email, gender, class: cls, status }
+        const userName = parts[0] ?? ''
+        const email = parts[1] ?? ''
+        const gender = parts[2] ?? ''
+        const cls = parts[3] ?? ''
+
+        if (!userName) return { userName, email, gender, class: cls, status: '名前が空です' }
+        if (!email) return { userName, email, gender, class: cls, status: 'メールが空です' }
+        if (!VALID_GENDERS.includes(gender)) return { userName, email, gender, class: cls, status: '性別が不正です（男性/女性）' }
+        if (existingEmails.has(email)) return { userName, email, gender, class: cls, status: 'メールが重複しています（既存）' }
+        if (seenEmails.has(email)) return { userName, email, gender, class: cls, status: 'メールが重複しています（CSV内）' }
+
+        seenEmails.add(email)
+        return { userName, email, gender, class: cls, status: '登録可能' }
       })
 
     setRows(parsed)
@@ -49,6 +58,7 @@ export function useUserCsv() {
           teams: [],
         })
       })
+    persistUsers()
     setCsvText('')
     setRows([])
   }

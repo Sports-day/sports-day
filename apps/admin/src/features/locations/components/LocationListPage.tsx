@@ -50,12 +50,12 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', tableLayout: 'fixed', width: 'auto' }}>
+            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>場所ID</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>名前</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>説明</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>場所ID</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>説明</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

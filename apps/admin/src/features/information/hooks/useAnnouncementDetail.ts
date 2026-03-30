@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MOCK_ANNOUNCEMENTS } from '../mock'
+import { MOCK_ANNOUNCEMENTS, persistAnnouncements } from '../mock'
+import { notifyAnnouncementListeners } from './useAnnouncements'
 
 export function useAnnouncementDetail(id: string) {
   const item = MOCK_ANNOUNCEMENTS.find(a => a.id === id)
@@ -12,11 +13,15 @@ export function useAnnouncementDetail(id: string) {
       target.name = name
       target.content = content
     }
+    persistAnnouncements()
+    notifyAnnouncementListeners()
   }
 
   const handleDelete = () => {
     const index = MOCK_ANNOUNCEMENTS.findIndex(a => a.id === id)
     if (index !== -1) MOCK_ANNOUNCEMENTS.splice(index, 1)
+    persistAnnouncements()
+    notifyAnnouncementListeners()
   }
 
   return {

@@ -17,7 +17,7 @@ export type ActiveMatch = {
   teamBId: string
   scoreA: number | null
   scoreB: number | null
-  status: 'standby' | 'ongoing' | 'finished'
+  status: 'standby' | 'ongoing' | 'finished' | 'cancelled'
   time?: string
   note?: string
   referee?: string

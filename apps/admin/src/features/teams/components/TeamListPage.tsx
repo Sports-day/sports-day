@@ -61,13 +61,13 @@ export function TeamListPage({ onExport, onBulkRename, onTeamClick }: Props) {
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', tableLayout: 'fixed', width: 'auto' }}>
+          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>チームID</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>チーム名</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>クラス</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>タグ</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>チームID</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>チーム名</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>クラス</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>タグ</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

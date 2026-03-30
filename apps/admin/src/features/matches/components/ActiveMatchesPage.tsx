@@ -4,18 +4,14 @@ import GroupsIcon from '@mui/icons-material/Groups'
 import { useCompetitions } from '@/features/competitions'
 import { ActiveMatchCompetitionPage } from './ActiveMatchCompetitionPage'
 import { ActiveMatchLeaguePage } from './ActiveMatchLeaguePage'
+import { ActiveMatchTournamentPage } from './ActiveMatchTournamentPage'
 import { CARD_GRADIENT } from '@/styles/commonSx'
 
 type View =
   | { type: 'list' }
   | { type: 'competition'; competitionId: string; competitionName: string }
-  | {
-      type: 'league'
-      competitionId: string
-      competitionName: string
-      leagueId: string
-      leagueName: string
-    }
+  | { type: 'league'; competitionId: string; competitionName: string; leagueId: string; leagueName: string }
+  | { type: 'tournament'; competitionId: string; competitionName: string; tournamentId: string; tournamentName: string }
 
 export function ActiveMatchesPage() {
   const [view, setView] = useState<View>({ type: 'list' })
@@ -28,13 +24,10 @@ export function ActiveMatchesPage() {
         competitionName={view.competitionName}
         onBack={() => setView({ type: 'list' })}
         onSelectLeague={(leagueId, leagueName) =>
-          setView({
-            type: 'league',
-            competitionId: view.competitionId,
-            competitionName: view.competitionName,
-            leagueId,
-            leagueName,
-          })
+          setView({ type: 'league', competitionId: view.competitionId, competitionName: view.competitionName, leagueId, leagueName })
+        }
+        onSelectTournament={(tournamentId, tournamentName) =>
+          setView({ type: 'tournament', competitionId: view.competitionId, competitionName: view.competitionName, tournamentId, tournamentName })
         }
       />
     )
@@ -49,11 +42,21 @@ export function ActiveMatchesPage() {
         leagueName={view.leagueName}
         onBackToList={() => setView({ type: 'list' })}
         onBackToCompetition={() =>
-          setView({
-            type: 'competition',
-            competitionId: view.competitionId,
-            competitionName: view.competitionName,
-          })
+          setView({ type: 'competition', competitionId: view.competitionId, competitionName: view.competitionName })
+        }
+      />
+    )
+  }
+
+  if (view.type === 'tournament') {
+    return (
+      <ActiveMatchTournamentPage
+        competitionName={view.competitionName}
+        tournamentId={view.tournamentId}
+        tournamentName={view.tournamentName}
+        onBackToList={() => setView({ type: 'list' })}
+        onBackToCompetition={() =>
+          setView({ type: 'competition', competitionId: view.competitionId, competitionName: view.competitionName })
         }
       />
     )
@@ -77,11 +80,7 @@ export function ActiveMatchesPage() {
                 key={competition.id}
                 variant="text"
                 onClick={() =>
-                  setView({
-                    type: 'competition',
-                    competitionId: competition.id,
-                    competitionName: competition.name,
-                  })
+                  setView({ type: 'competition', competitionId: competition.id, competitionName: competition.name })
                 }
                 sx={{
                   backgroundColor: '#EFF0F8',

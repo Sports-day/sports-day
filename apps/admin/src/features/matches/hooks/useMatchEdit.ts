@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ActiveMatch } from '../types'
-import { MOCK_ACTIVE_LEAGUES } from '../mock'
+import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
 
 export type WinnerType = 'teamA' | 'draw' | 'teamB' | null
 export type MatchStatusType = 'cancelled' | 'standby' | 'ongoing' | 'finished' | null
@@ -17,7 +17,7 @@ export function useMatchEdit() {
     setScoreA(match.scoreA !== null ? String(match.scoreA) : '0')
     setScoreB(match.scoreB !== null ? String(match.scoreB) : '0')
     setWinner(null)
-    setMatchStatus('standby')
+    setMatchStatus(match.status ?? 'standby')
   }
 
   const closeMatch = () => {
@@ -44,6 +44,7 @@ export function useMatchEdit() {
         }
       }
     }
+    persistActiveLeagues()
     closeMatch()
   }
 

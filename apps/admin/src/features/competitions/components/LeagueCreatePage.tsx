@@ -5,7 +5,7 @@ import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_S
 import { TAG_OPTIONS } from '../constants'
 
 const FORMAT_OPTIONS = [
-  { value: 'league', label: 'リーグ戦' },
+  { value: 'league', label: 'リーグ' },
   { value: 'tournament', label: 'トーナメント' },
   { value: 'group', label: 'グループステージ' },
 ]
@@ -16,8 +16,8 @@ const SCORING_OPTIONS = [
   { value: 'time', label: 'タイム制' },
 ]
 
-
 type Props = {
+  type: 'league' | 'tournament'
   competitionId: string
   competitionName: string
   onBackToList: () => void
@@ -25,8 +25,10 @@ type Props = {
   onSave: () => void
 }
 
-export function LeagueCreatePage({ competitionId, competitionName, onBackToList, onBackToDetail, onSave }: Props) {
-  const { form, handleChange, handleSubmit } = useLeagueCreate(competitionId, onSave)
+export function LeagueCreatePage({ type, competitionId, competitionName, onBackToList, onBackToDetail, onSave }: Props) {
+  const { form, handleChange, handleSubmit } = useLeagueCreate(competitionId, type, onSave)
+
+  const label = type === 'tournament' ? 'トーナメント' : 'リーグ'
 
   return (
     <Box>
@@ -38,14 +40,14 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
           {competitionName}
         </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
-          リーグを作成
+          {label}を作成
         </Typography>
       </Breadcrumbs>
 
       <Card sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
-            リーグを作成
+            {label}を作成
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -148,7 +150,7 @@ export function LeagueCreatePage({ competitionId, competitionName, onBackToList,
               onClick={handleSubmit}
               sx={{ ...SAVE_BUTTON_SX, fontSize: '14px', '& .MuiButton-startIcon': { color: '#FFFFFF' } }}
             >
-              保存
+              作成
             </Button>
           </Box>
         </CardContent>

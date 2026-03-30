@@ -34,12 +34,14 @@ const TABLE_CELL_SX = {
   whiteSpace: 'nowrap' as const,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
+  'tr:last-child &': { borderBottom: 'none' },
 }
 
 const CLICKABLE_CELL_SX = {
   ...TABLE_CELL_SX,
   cursor: 'pointer',
   '&:hover': { textDecoration: 'underline' },
+  'tr:last-child &': { borderBottom: 'none' },
 }
 
 type Props = {
@@ -76,12 +78,12 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', tableLayout: 'fixed', width: 'auto' }}>
+          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ ...TABLE_HEAD_SX, width: 200 }}>タグID</TableCell>
-                <TableCell sx={{ ...TABLE_HEAD_SX, width: 200 }}>名前</TableCell>
-                <TableCell sx={{ ...TABLE_HEAD_SX, width: 200 }}>有効</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>タグID</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>名前</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>有効</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

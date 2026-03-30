@@ -1,6 +1,7 @@
 import type { ActiveLeague } from './types'
+import { loadFromStorage, saveToStorage } from '@/lib/localStore'
 
-export const MOCK_ACTIVE_LEAGUES: Record<string, ActiveLeague[]> = {
+const DEFAULT_ACTIVE_LEAGUES: Record<string, ActiveLeague[]> = {
   '1': [
     {
       id: '1',
@@ -99,4 +100,10 @@ export const MOCK_ACTIVE_LEAGUES: Record<string, ActiveLeague[]> = {
       ],
     },
   ],
+}
+
+export const MOCK_ACTIVE_LEAGUES: Record<string, ActiveLeague[]> = loadFromStorage('admin_active_leagues', DEFAULT_ACTIVE_LEAGUES)
+
+export function persistActiveLeagues() {
+  saveToStorage('admin_active_leagues', MOCK_ACTIVE_LEAGUES)
 }

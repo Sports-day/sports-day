@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Divider,
   MenuItem,
   Table,
   TableBody,
@@ -13,17 +14,19 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import CheckIcon from '@mui/icons-material/Check'
 import AddIcon from '@mui/icons-material/Add'
 import { useLeagueDetail } from '../hooks/useLeagueDetail'
+import { ScoringDnDList } from './ScoringDnDList'
+import { ProgressionRulesEditor } from './ProgressionRulesEditor'
 import { AddEntryDialog } from './AddEntryDialog'
-import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
 import { TAG_OPTIONS } from '../constants'
 
 const MATCH_FORMAT_OPTIONS = [
   { value: 'sunny', label: '晴天時' },
   { value: 'rainy', label: '雨天時' },
   { value: 'round_robin', label: 'ラウンドロビン' },
+  { value: 'league', label: 'リーグ' },
   { value: 'tournament', label: 'トーナメント' },
   { value: 'group', label: 'グループステージ' },
 ]
@@ -34,27 +37,34 @@ const RESULT_JUDGMENT_OPTIONS = [
   { value: 'time', label: '時間制' },
 ]
 
-
 type Props = {
   leagueId: string
   leagueName: string
+  competitionId: string
   competitionName: string
   onBackToList: () => void
   onBackToDetail: () => void
 }
 
-export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBackToList, onBackToDetail }: Props) {
+export function LeagueDetailPage({ leagueId, leagueName, competitionId, competitionName, onBackToList, onBackToDetail }: Props) {
   const {
     form,
     entries,
     addDialogOpen,
+    progressionEnabled,
+    progressionMaxRank,
+    progressionRules,
+    availableProgressionTargets,
     handleChange,
+    handleScoringChange,
     handleDeleteEntry,
     handleOpenAddDialog,
     handleCloseAddDialog,
     handleAddEntries,
-    handleSave,
-  } = useLeagueDetail(leagueId, leagueName)
+    setProgressionEnabled,
+    setProgressionMaxRank,
+    handleProgressionRuleChange,
+  } = useLeagueDetail(leagueId, leagueName, competitionId)
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -70,7 +80,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
         </Typography>
       </Breadcrumbs>
 
-      {/* 編集カード */}
+      {/* 編集カード（自動保存） */}
       <Card sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
@@ -109,47 +119,46 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
               label="大会形式"
               value={form.matchFormat}
               onChange={handleChange('matchFormat')}
+              fullWidth
               size="small"
-              sx={{ ...CARD_FIELD_SX, width: { xs: '100%', sm: '33%' } }}
+              sx={CARD_FIELD_SX}
             >
               {MATCH_FORMAT_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
               ))}
             </TextField>
-            <TextField
-              select
-              label="採点方式"
-              value={form.resultJudgment}
-              onChange={handleChange('resultJudgment')}
-              size="small"
-              sx={{ ...CARD_FIELD_SX, width: { xs: '100%', sm: '33%' } }}
-            >
-              {RESULT_JUDGMENT_OPTIONS.map(opt => (
-                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-              ))}
-            </TextField>
+
+            <ScoringDnDList
+              options={RESULT_JUDGMENT_OPTIONS}
+              selected={form.resultJudgments}
+              onChange={handleScoringChange}
+            />
+
             <TextField
               select
               label="タグ"
               value={form.tag}
               onChange={handleChange('tag')}
+              fullWidth
               size="small"
-              sx={{ ...CARD_FIELD_SX, width: { xs: '100%', sm: '33%' } }}
+              sx={CARD_FIELD_SX}
             >
               {TAG_OPTIONS.map(opt => (
                 <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
               ))}
             </TextField>
 
-            <Button
-              variant="contained"
-              fullWidth
-              startIcon={<CheckIcon />}
-              onClick={handleSave}
-              sx={{ ...SAVE_BUTTON_SX, mt: 1, '& .MuiButton-startIcon': { color: '#FFFFFF' } }}
-            >
-              保存
-            </Button>
+            <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
+
+            <ProgressionRulesEditor
+              enabled={progressionEnabled}
+              maxRank={progressionMaxRank}
+              rules={progressionRules}
+              availableTargets={availableProgressionTargets}
+              onEnabledChange={setProgressionEnabled}
+              onMaxRankChange={setProgressionMaxRank}
+              onRuleChange={handleProgressionRuleChange}
+            />
           </Box>
         </CardContent>
       </Card>
@@ -178,15 +187,10 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionName, onBack
                   <TableCell sx={CARD_TABLE_CELL_SX}>{entry.teamClass}</TableCell>
                   <TableCell sx={CARD_TABLE_CELL_SX}>
                     <Button
-                      variant="text"
+                      variant="outlined"
                       size="small"
                       onClick={() => handleDeleteEntry(entry.id)}
-                      sx={{
-                        color: '#D71212',
-                        backgroundColor: '#D9DCED',
-                        '&.MuiButton-root': { border: 'none', outline: 'none' },
-                        '&:hover': { backgroundColor: '#C8CAD9' },
-                      }}
+                      sx={DELETE_BUTTON_SX}
                     >
                       削除
                     </Button>

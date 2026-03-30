@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_USERS } from '../mock'
+import { MOCK_USERS, persistUsers } from '../mock'
 
 const GENDER_OPTIONS = ['男性', '女性']
 const CLASS_OPTIONS = ['Class A', 'Class B', 'Class C']
@@ -19,11 +19,13 @@ export function useUserDetail(userId: string) {
       u.class = userClass
       u.role = role
     }
+    persistUsers()
   }
 
   const handleDeleteUser = () => {
     const index = MOCK_USERS.findIndex((u) => u.id === userId)
     if (index !== -1) MOCK_USERS.splice(index, 1)
+    persistUsers()
   }
 
   return {

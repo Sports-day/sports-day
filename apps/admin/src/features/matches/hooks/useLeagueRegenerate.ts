@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_ACTIVE_LEAGUES } from '../mock'
+import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
 
 export function useLeagueRegenerate(competitionId: string, leagueId: string) {
   const [isOpen, setIsOpen] = useState(false)
@@ -28,6 +28,7 @@ export function useLeagueRegenerate(competitionId: string, leagueId: string) {
         m.status = 'standby'
       })
     }
+    persistActiveLeagues()
     closeOverlay()
   }
 

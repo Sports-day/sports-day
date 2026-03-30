@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_TAGS } from '../mock'
+import { MOCK_TAGS, persistTags } from '../mock'
 
 export function useTagDetail(tagId: string) {
   const tag = MOCK_TAGS.find((t) => t.id === tagId)
@@ -12,11 +12,13 @@ export function useTagDetail(tagId: string) {
       t.name = name
       t.enabled = enabled
     }
+    persistTags()
   }
 
   const handleDelete = () => {
     const index = MOCK_TAGS.findIndex((t) => t.id === tagId)
     if (index !== -1) MOCK_TAGS.splice(index, 1)
+    persistTags()
   }
 
   return { name, setName, enabled, setEnabled, handleSave, handleDelete, tagName: tag?.name ?? '', loading: false, error: null }

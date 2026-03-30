@@ -50,15 +50,15 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', tableLayout: 'fixed', width: 'auto' }}>
+          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>ユーザーID</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>名前</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>メール名</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>性別</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>クラス</TableCell>
-                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>チーム名</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>ユーザーID</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>メール名</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>クラス</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>チーム名</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

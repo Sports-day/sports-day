@@ -83,6 +83,7 @@ export const CARD_FIELD_CREATE_SX = {
 // ヘッダーアクションボタン（一覧画面の「新規作成」等、小さめ）
 export const ACTION_BUTTON_SX = {
   backgroundColor: COLOR_PRIMARY_BUTTON,
+  px: 2,
   boxShadow: 'none',
   '&:hover': { backgroundColor: COLOR_PRIMARY_DARK, boxShadow: 'none' },
 }

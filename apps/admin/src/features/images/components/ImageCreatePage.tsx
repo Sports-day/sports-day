@@ -1,5 +1,5 @@
 import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useImageCreate } from '../hooks/useImageCreate'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
@@ -23,14 +23,6 @@ type Props = {
 export function ImageCreatePage({ onBack }: Props) {
   const { name, setName, url, setUrl, handleCreate } = useImageCreate()
   const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    return () => {
-      if (url.startsWith('blob:')) {
-        URL.revokeObjectURL(url)
-      }
-    }
-  }, [url])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null

@@ -34,6 +34,7 @@ const TABLE_CELL_SX = {
   whiteSpace: 'nowrap' as const,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
+  'tr:last-child &': { borderBottom: 'none' },
 }
 
 type Props = {
@@ -70,13 +71,13 @@ export function PermissionsPage({ onCreateClick, onRoleClick }: Props) {
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', tableLayout: 'fixed', width: 'auto' }}>
+          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ ...TABLE_HEAD_SX, width: 200 }}>ロールID</TableCell>
-                <TableCell sx={{ ...TABLE_HEAD_SX, width: 200 }}>名前</TableCell>
-                <TableCell sx={{ ...TABLE_HEAD_SX, width: 200 }}>備考</TableCell>
-                <TableCell sx={{ ...TABLE_HEAD_SX, width: 200 }}>初期ロール</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>ロールID</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>名前</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>備考</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>初期ロール</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

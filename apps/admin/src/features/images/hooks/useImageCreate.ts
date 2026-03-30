@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MOCK_IMAGES } from '../mock'
+import { MOCK_IMAGES, persistImages } from '../mock'
+import { notifyImageListeners } from './useImages'
 
 export function useImageCreate() {
   const [name, setName] = useState('')
@@ -7,6 +8,8 @@ export function useImageCreate() {
 
   const handleCreate = () => {
     MOCK_IMAGES.push({ id: String(Date.now()), name, url })
+    persistImages()
+    notifyImageListeners()
     setName('')
     setUrl('')
   }

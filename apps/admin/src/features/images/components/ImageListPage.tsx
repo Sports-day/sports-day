@@ -54,27 +54,56 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', tableLayout: 'fixed', width: 'auto' }}>
+            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 80 }}>ID</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>名前</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 300 }}>URL</TableCell>
+                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 56 }}>プレビュー</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>ID</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>URL</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {images.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    <TableCell colSpan={4} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
                       データがありません
                     </TableCell>
                   </TableRow>
                 ) : (
                   images.map((image) => (
-                    <TableRow key={image.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                      <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onImageClick(image.id)}>{image.id}</TableCell>
-                      <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onImageClick(image.id)}>{image.name}</TableCell>
-                      <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onImageClick(image.id)}>{image.url}</TableCell>
+                    <TableRow
+                      key={image.id}
+                      hover
+                      onClick={() => onImageClick(image.id)}
+                      sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
+                    >
+                      <TableCell sx={{ ...LIST_TABLE_CELL_SX, width: 56, py: 0.5 }}>
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 1,
+                            border: '1px solid #D6D6D6',
+                            backgroundColor: '#EFF0F8',
+                            overflow: 'hidden',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {image.url && (
+                            <Box
+                              component="img"
+                              src={image.url}
+                              alt={image.name}
+                              sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX}>{image.id}</TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX}>{image.name}</TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX}>{image.url}</TableCell>
                     </TableRow>
                   ))
                 )}

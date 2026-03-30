@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { MOCK_LEAGUES_BY_COMPETITION } from '../mock'
+import { MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
 
-type LeagueCreateForm = {
+type CreateForm = {
   name: string
   description: string
   weight: number
@@ -10,7 +10,7 @@ type LeagueCreateForm = {
   tag: string
 }
 
-const INITIAL_FORM: LeagueCreateForm = {
+const INITIAL_FORM: CreateForm = {
   name: '',
   description: '',
   weight: 0,
@@ -19,10 +19,10 @@ const INITIAL_FORM: LeagueCreateForm = {
   tag: '',
 }
 
-export function useLeagueCreate(competitionId: string, onSave: () => void) {
-  const [form, setForm] = useState<LeagueCreateForm>(INITIAL_FORM)
+export function useLeagueCreate(competitionId: string, type: 'league' | 'tournament', onSave: () => void) {
+  const [form, setForm] = useState<CreateForm>(INITIAL_FORM)
 
-  const handleChange = (field: keyof LeagueCreateForm) => (
+  const handleChange = (field: keyof CreateForm) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const value = field === 'weight' ? Number(e.target.value) : e.target.value
@@ -32,10 +32,18 @@ export function useLeagueCreate(competitionId: string, onSave: () => void) {
   const handleSubmit = () => {
     if (!form.name.trim()) return
     const newId = String(Date.now())
-    if (!MOCK_LEAGUES_BY_COMPETITION[competitionId]) {
-      MOCK_LEAGUES_BY_COMPETITION[competitionId] = []
+    if (type === 'tournament') {
+      if (!MOCK_TOURNAMENTS_BY_COMPETITION[competitionId]) {
+        MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] = []
+      }
+      MOCK_TOURNAMENTS_BY_COMPETITION[competitionId].push({ id: newId, name: form.name })
+    } else {
+      if (!MOCK_LEAGUES_BY_COMPETITION[competitionId]) {
+        MOCK_LEAGUES_BY_COMPETITION[competitionId] = []
+      }
+      MOCK_LEAGUES_BY_COMPETITION[competitionId].push({ id: newId, name: form.name })
     }
-    MOCK_LEAGUES_BY_COMPETITION[competitionId].push({ id: newId, name: form.name })
+    persistCompetitionsData()
     onSave()
   }
 

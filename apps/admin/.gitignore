@@ -22,3 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+/*.md
+!/README.md
+
+# 一時ファイル
+/temp.md
+
+# 重複しているルートのロゴ画像
+/logo_admin.png
+
+# スクリーンショット（拡張子で指定）
+*.png
+*.jpg
+*.jpeg
+# 特定のディレクトリに固まっている場合は "screenshots/" のようにディレクトリ名で指定

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { MOCK_COMPETITIONS } from '../mock'
+import { MOCK_COMPETITIONS, persistCompetitionsData } from '../mock'
 
 type CompetitionCreateForm = {
   name: string
@@ -25,6 +25,7 @@ export function useCompetitionCreate(onSuccess: (name: string) => void) {
     if (!form.name.trim()) return
     const newId = String(Date.now())
     MOCK_COMPETITIONS.push({ id: newId, name: form.name })
+    persistCompetitionsData()
     onSuccess(form.name)
   }
 

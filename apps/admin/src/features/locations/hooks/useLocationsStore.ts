@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { MOCK_LOCATIONS } from '../mock'
 import type { Location } from '../types'
+import { loadFromStorage, saveToStorage } from '@/lib/localStore'
 
 // モジュールレベルで状態を保持し、複数のフックインスタンス間で共有する
-let _locations: Location[] = [...MOCK_LOCATIONS]
+let _locations: Location[] = loadFromStorage('admin_locations', [...MOCK_LOCATIONS])
 const _listeners = new Set<() => void>()
 
 function notify() {
+  saveToStorage('admin_locations', _locations)
   _listeners.forEach(fn => fn())
 }
 

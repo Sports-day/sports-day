@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_ROLES } from '../mock'
+import { MOCK_ROLES, persistRoles } from '../mock'
 
 export function useRoleDetail(roleId: string) {
   const role = MOCK_ROLES.find(r => r.id === roleId)
@@ -14,11 +14,13 @@ export function useRoleDetail(roleId: string) {
       target.description = description
       target.isDefault = isDefault
     }
+    persistRoles()
   }
 
   const handleDelete = () => {
     const index = MOCK_ROLES.findIndex(r => r.id === roleId)
     if (index !== -1) MOCK_ROLES.splice(index, 1)
+    persistRoles()
   }
 
   return {

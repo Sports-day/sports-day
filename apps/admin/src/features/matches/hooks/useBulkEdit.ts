@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_ACTIVE_LEAGUES } from '../mock'
+import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
 
 export type BulkEditRow = {
   matchId: string
@@ -67,6 +67,7 @@ export function useBulkEdit(competitionId: string, leagueId: string) {
         if (filterLocation) match.location = filterLocation
       }
     })
+    persistActiveLeagues()
     close()
   }
 
