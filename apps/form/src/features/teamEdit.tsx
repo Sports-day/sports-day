@@ -11,17 +11,12 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { motion } from "framer-motion";
-import { useParams } from "next/navigation";
 import MembersCard from "@/components/cards/AboutTeamEditPage/MembersCard";
-import AppBreadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/layouts/AppBreadcrumbs";
 import { useTeamEdit } from "@/features/hooks/useTeamEdit";
 import CircularUnderLoad from "@/features/Loading";
 
 export default function TeamEdit() {
   const theme = useTheme();
-  const { type, sports } = useParams() as { type: string; sports: string };
   const {
     loading,
     selectedMember,
@@ -40,12 +35,6 @@ export default function TeamEdit() {
     return <CircularUnderLoad />;
   }
 
-  const breadcrumbs: BreadcrumbItem[] = [
-    { label: "ホーム", href: `/weather/${type}` },
-    { label: "チーム確認", href: `/weather/${type}/sport/${sports}` },
-    { label: "チーム編集" },
-  ];
-
   return (
     <Box
       sx={{
@@ -56,9 +45,6 @@ export default function TeamEdit() {
         flexDirection: "column",
       }}
     >
-      <Box sx={{ width: "100%", mb: "12px" }}>
-        <AppBreadcrumbs items={breadcrumbs} />
-      </Box>
       <Box
         sx={{
           width: "100%",
@@ -98,15 +84,9 @@ export default function TeamEdit() {
             <Stack
               sx={{ width: "100%", height: "100%", minHeight: 0, minWidth: 0 }}
             >
-              <Typography
-                sx={(theme) => ({
-                  ...theme.typography.buttonFont2,
-                })}
-              >
-                メンバーを選択してください
-              </Typography>
               <Card
                 variant="outlined"
+                component="fieldset"
                 sx={{
                   borderColor: theme.palette.card.main,
                   borderWidth: "1px",
@@ -119,8 +99,19 @@ export default function TeamEdit() {
                   flex: 1,
                   minHeight: 0,
                   overflow: "hidden",
+                  m: 0,
+                  p: 0,
                 }}
               >
+                <Typography
+                  component="legend"
+                  sx={(theme) => ({
+                    ...theme.typography.buttonFont2,
+                    ml: "16px",
+                  })}
+                >
+                  メンバーを選択してください
+                </Typography>
                 <Stack
                   direction="column"
                   flexWrap="nowrap"
@@ -228,15 +219,9 @@ export default function TeamEdit() {
             <Stack
               sx={{ width: "100%", height: "100%", minHeight: 0, minWidth: 0 }}
             >
-              <Typography
-                sx={(theme) => ({
-                  ...theme.typography.buttonFont2,
-                })}
-              >
-                メンバー一覧
-              </Typography>
               <Card
                 variant="outlined"
+                component="fieldset"
                 sx={{
                   borderColor: theme.palette.card.main,
                   borderWidth: "1px",
@@ -250,8 +235,19 @@ export default function TeamEdit() {
                   minHeight: 0,
                   minWidth: 0,
                   overflow: "hidden",
+                  m: 0,
+                  p: 0,
                 }}
               >
+                <Typography
+                  component="legend"
+                  sx={(theme) => ({
+                    ...theme.typography.buttonFont2,
+                    ml: "16px",
+                  })}
+                >
+                  メンバー一覧
+                </Typography>
                 <Stack
                   sx={{
                     width: "100%",

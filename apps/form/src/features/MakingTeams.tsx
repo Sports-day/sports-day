@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Typography,
-  Box,
-  Stack,
-  useTheme,
-} from "@mui/material";
+import { Typography, Box, Stack, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import ExtraTeamCard from "@/components/cards/AboutMakingTeamPage/ExtraTeamCard";
 import TeamCard from "@/components/cards/AboutMakingTeamPage/TeamCard";
@@ -81,10 +76,13 @@ export default function MakingTeams({
       }}
     >
       <Stack sx={{ height: "100%", overflow: "hidden" }}>
+        <Box>
+          <AppBreadcrumbs items={breadcrumbs} />
+        </Box>
         <Box
           sx={{
             flex: "0 0 auto",
-            mb: "8px",
+            my: "8px",
             width: "100%",
             display: "flex",
             justifyContent: "left",
@@ -93,9 +91,6 @@ export default function MakingTeams({
           <Instruction sportname={sportname} weather={weather} />
         </Box>
 
-        <Box sx={{ mb: "8px" }}>
-          <AppBreadcrumbs items={breadcrumbs} />
-        </Box>
         <Box
           sx={{
             flex: 1,

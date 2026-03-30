@@ -44,7 +44,7 @@ export default function SceneStatusCardLayout({
           color: "#FF0000",
           fontSize: "14px",
           fontWeight: "medium",
-          px: "8px",
+          ml: "4px",
         }}
       >
         {title}

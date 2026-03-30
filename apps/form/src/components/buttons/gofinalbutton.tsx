@@ -16,12 +16,14 @@ export default function GoFinal() {
             borderRadius: "10px",
             background: theme.palette.button.veryLight,
             width: "100%",
-            p: "4px",
+            px: "4px",
+            py: "8px",
             "&:hover": {
               borderRadius: "10px",
               background: theme.palette.button.veryLight,
               width: "100%",
-              p: "4px",
+              px: "4px",
+              py: "8px",
               opacity: 0.8,
             },
           }}

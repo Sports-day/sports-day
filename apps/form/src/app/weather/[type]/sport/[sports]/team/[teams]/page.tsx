@@ -8,6 +8,9 @@ import Stack from "@mui/material/Stack";
 import { gql, useQuery } from "@apollo/client";
 import { useParams } from "next/navigation";
 import Instruction from "@/components/cards/AboutAnyPage/InstructionCard";
+import AppBreadcrumbs, {
+  type BreadcrumbItem,
+} from "@/components/layouts/AppBreadcrumbs";
 import CircularUnderLoad from "@/features/Loading";
 
 const SPORTDATA_GET = gql`
@@ -38,6 +41,11 @@ export default function MemberEdit() {
 
   const weatherName = data?.scene?.name;
   const sportName = data?.sport?.name;
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: "ホーム", href: `/weather/${type}` },
+    { label: "チーム確認", href: `/weather/${type}/sport/${sports}` },
+    { label: "チーム編集" },
+  ];
 
   return (
     <Box
@@ -64,6 +72,9 @@ export default function MemberEdit() {
           flexDirection: "column",
         }}
       >
+        <Box sx={{ mb: "8px", flexShrink: 0 }}>
+          <AppBreadcrumbs items={breadcrumbs} />
+        </Box>
         <Stack
           direction="row"
           display="flex"

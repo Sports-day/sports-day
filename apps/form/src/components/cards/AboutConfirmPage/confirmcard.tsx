@@ -56,7 +56,7 @@ export default function ConfirmCard({
         sx={(theme) => ({
           ...theme.typography.buttonFont3,
           flexGrow: 1,
-          px: "8px",
+          ml: "4px",
         })}
       >
         {scenename}

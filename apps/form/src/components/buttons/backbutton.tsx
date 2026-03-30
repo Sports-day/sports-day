@@ -16,12 +16,14 @@ export default function BackButton() {
           background: theme.palette.button.main,
           borderRadius: "10px",
           width: "100%",
-          p: "4px",
+          px: "4px",
+          py: "8px",
           "&:hover": {
             background: theme.palette.button.main,
             borderRadius: "10px",
             width: "100%",
-            p: "4px",
+            px: "4px",
+            py: "8px",
             opacity: 0.6,
           },
         }}
