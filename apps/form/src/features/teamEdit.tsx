@@ -135,7 +135,7 @@ export default function TeamEdit() {
                       }}
                     >
                       <Typography sx={{ color: "#FF0000" }}>
-                        ※学籍番号をタッチして
+                        　※学籍番号をタッチして
                         <br />
                         メンバーを追加してください
                       </Typography>

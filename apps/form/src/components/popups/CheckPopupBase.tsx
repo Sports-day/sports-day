@@ -7,8 +7,12 @@ import {
   DialogActions,
   Button,
   Typography,
+  Slide,
 } from "@mui/material";
 import { gql, useMutation } from "@apollo/client";
+import type { TransitionProps } from "@mui/material/transitions";
+import { forwardRef } from "react";
+import type { ReactElement, Ref } from "react";
 
 export type CheckPopupBaseProps = {
   teamid: string;
@@ -22,6 +26,15 @@ const DELETE_TEAM = gql`
     deleteTeam(id: $deleteTeamId)
   }
 `;
+
+const Transition = forwardRef(function Transition(
+  props: TransitionProps & {
+    children: ReactElement<any, any>;
+  },
+  ref: Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 export default function CheckPopupBase({
   teamid,
@@ -49,6 +62,8 @@ export default function CheckPopupBase({
     <Dialog
       open={open}
       onClose={handleClose}
+      TransitionComponent={Transition}
+      transitionDuration={250}
       PaperProps={{
         sx: {
           display: "flex",
@@ -67,9 +82,7 @@ export default function CheckPopupBase({
       <DialogContent>
         <Typography>本当に削除しますか?</Typography>
       </DialogContent>
-      <DialogActions
-        sx={{ display: "flex", justifyContent: "center", width: "100%" }}
-      >
+      <DialogActions sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
         <Button
           onClick={async () => {
             await handleDelete(teamid);

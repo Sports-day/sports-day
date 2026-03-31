@@ -25,7 +25,7 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
       <Card
         variant="outlined"
         sx={{
-          height: { xs: 260, md: 320, lg: 380, xl: 420 },
+          height: "clamp(260px, 40vw, 420px)",
           borderRadius: "10px",
           background: theme.palette.card.light,
           borderColor: theme.palette.card.main,
