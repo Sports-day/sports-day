@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -639,6 +638,15 @@ func (r *mutationResolver) CreateImageUploadURL(ctx context.Context, input model
 		ImageID:   img.ID,
 		UploadURL: uploadURL,
 	}, nil
+}
+
+// DeleteImage is the resolver for the deleteImage field.
+func (r *mutationResolver) DeleteImage(ctx context.Context, id string) (*model.Image, error) {
+	img, err := r.ImageService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatImageResponse(img), nil
 }
 
 // Users is the resolver for the users field.

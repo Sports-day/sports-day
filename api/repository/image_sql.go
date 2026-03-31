@@ -31,21 +31,27 @@ func (r image) Create(ctx context.Context, db *gorm.DB, image *db_model.Image) (
 	return image, nil
 }
 
-func (r image) MarkUploaded(ctx context.Context, db *gorm.DB, id string, url string) (*db_model.Image, error) {
-	var img db_model.Image
-	if err := db.First(&img, "id = ?", id).Error; err != nil {
+func (r image) BatchGet(ctx context.Context, db *gorm.DB, ids []string) (map[string]*db_model.Image, error) {
+	var images []*db_model.Image
+	if err := db.Where("id IN ?", ids).Find(&images).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
-
-	img.Status = "uploaded"
-	img.URL = sql.NullString{
-		String: url,
-		Valid:  true,
+	result := make(map[string]*db_model.Image, len(images))
+	for _, img := range images {
+		result[img.ID] = img
 	}
+	return result, nil
+}
 
-	if err := db.Save(&img).Error; err != nil {
-		return nil, errors.Wrap(err)
-	}
+func (r image) Delete(ctx context.Context, db *gorm.DB, id string) error {
+	return db.WithContext(ctx).Delete(&db_model.Image{}, "id = ?", id).Error
+}
 
-	return &img, nil
+func (r image) Update(ctx context.Context, db *gorm.DB, id string, status string, url string) error {
+	return db.WithContext(ctx).Model(&db_model.Image{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"status": status,
+			"url":    sql.NullString{String: url, Valid: url != ""},
+		}).Error
 }

@@ -1,16 +1,18 @@
-package webhook
+package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"sports-day/api"
-	"sports-day/api/repository"
-
-	"github.com/oklog/ulid/v2"
-	"gorm.io/gorm"
 )
+
+type imageService interface {
+	MarkUploaded(ctx context.Context, id string, url string) error
+}
 
 type S3Event struct {
 	Records []struct {
@@ -23,8 +25,7 @@ type S3Event struct {
 }
 
 func HandleUploadWebhook(
-	repo repository.Image,
-	db *gorm.DB,
+	imageSvc imageService,
 	secret string,
 	cdnBase string,
 	bucket string,
@@ -44,33 +45,16 @@ func HandleUploadWebhook(
 		}
 
 		for _, record := range event.Records {
-
 			objectKey := record.S3.Object.Key
-			imgID, err := ulid.Parse(objectKey)
-			if err != nil {
+			publicURL := fmt.Sprintf("%s/%s/%s", cdnBase, bucket, objectKey)
+
+			// objectKey = "{imageID}/{filename}" の先頭セグメントがImageID
+			imageID := strings.SplitN(objectKey, "/", 2)[0]
+
+			if err := imageSvc.MarkUploaded(r.Context(), imageID, publicURL); err != nil {
 				api.Logger.Error().
 					Err(err).
-					Str("objectKey", objectKey).
-					Msg("failed to parse object key as ULID")
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			publicURL := fmt.Sprintf("%s/%s/%s",
-				cdnBase,
-				bucket,
-				objectKey,
-			)
-
-			if _, err := repo.MarkUploaded(
-				r.Context(),
-				db,
-				imgID.String(),
-				publicURL,
-			); err != nil {
-				api.Logger.Error().
-					Err(err).
-					Str("imageID", imgID.String()).
+					Str("imageID", imageID).
 					Msg("failed to mark image as uploaded")
 				w.WriteHeader(http.StatusInternalServerError)
 				return

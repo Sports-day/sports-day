@@ -8,11 +8,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sports-day/api/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
-
-	"sports-day/api/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -49,6 +48,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Rule() RuleResolver
+	Sport() SportResolver
 	Standing() StandingResolver
 	Team() TeamResolver
 	Tournament() TournamentResolver
@@ -82,6 +82,12 @@ type ComplexityRoot struct {
 		Name      func(childComplexity int) int
 		Teams     func(childComplexity int) int
 		Users     func(childComplexity int) int
+	}
+
+	Image struct {
+		ID     func(childComplexity int) int
+		Status func(childComplexity int) int
+		URL    func(childComplexity int) int
 	}
 
 	ImageUploadURL struct {
@@ -155,6 +161,7 @@ type ComplexityRoot struct {
 		DeleteCompetition        func(childComplexity int, id string) int
 		DeleteCompetitionEntries func(childComplexity int, id string, input model.UpdateCompetitionEntriesInput) int
 		DeleteGroup              func(childComplexity int, id string) int
+		DeleteImage              func(childComplexity int, id string) int
 		DeleteInformation        func(childComplexity int, id string) int
 		DeleteLeague             func(childComplexity int, id string) int
 		DeleteLocation           func(childComplexity int, id string) int
@@ -259,6 +266,7 @@ type ComplexityRoot struct {
 
 	Sport struct {
 		ID           func(childComplexity int) int
+		Image        func(childComplexity int) int
 		Name         func(childComplexity int) int
 		RankingRules func(childComplexity int) int
 		Rules        func(childComplexity int) int
@@ -421,6 +429,7 @@ type MutationResolver interface {
 	UpdateRule(ctx context.Context, id string, input model.UpdateRuleInput) (*model.Rule, error)
 	DeleteRule(ctx context.Context, id string) (*model.Rule, error)
 	CreateImageUploadURL(ctx context.Context, input model.CreateImageUploadURLInput) (*model.ImageUploadURL, error)
+	DeleteImage(ctx context.Context, id string) (*model.Image, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -457,6 +466,9 @@ type QueryResolver interface {
 }
 type RuleResolver interface {
 	Sport(ctx context.Context, obj *model.Rule) (*model.Sport, error)
+}
+type SportResolver interface {
+	Image(ctx context.Context, obj *model.Sport) (*model.Image, error)
 }
 type StandingResolver interface {
 	Team(ctx context.Context, obj *model.Standing) (*model.Team, error)
@@ -606,6 +618,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Group.Users(childComplexity), true
+
+	case "Image.id":
+		if e.complexity.Image.ID == nil {
+			break
+		}
+
+		return e.complexity.Image.ID(childComplexity), true
+
+	case "Image.status":
+		if e.complexity.Image.Status == nil {
+			break
+		}
+
+		return e.complexity.Image.Status(childComplexity), true
+
+	case "Image.url":
+		if e.complexity.Image.URL == nil {
+			break
+		}
+
+		return e.complexity.Image.URL(childComplexity), true
 
 	case "ImageUploadURL.imageId":
 		if e.complexity.ImageUploadURL.ImageID == nil {
@@ -1059,6 +1092,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteGroup(childComplexity, args["id"].(string)), true
+
+	case "Mutation.deleteImage":
+		if e.complexity.Mutation.DeleteImage == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteImage_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteImage(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteInformation":
 		if e.complexity.Mutation.DeleteInformation == nil {
@@ -1910,6 +1955,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Sport.ID(childComplexity), true
+
+	case "Sport.image":
+		if e.complexity.Sport.Image == nil {
+			break
+		}
+
+		return e.complexity.Sport.Image(childComplexity), true
 
 	case "Sport.name":
 		if e.complexity.Sport.Name == nil {
@@ -2999,6 +3051,29 @@ func (ec *executionContext) field_Mutation_deleteGroup_args(ctx context.Context,
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_deleteGroup_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteImage_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteImage_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteImage_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -5491,6 +5566,135 @@ func (ec *executionContext) fieldContext_Group_judgments(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Image_id(ctx context.Context, field graphql.CollectedField, obj *model.Image) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Image_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Image_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Image",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Image_url(ctx context.Context, field graphql.CollectedField, obj *model.Image) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Image_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Image_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Image",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Image_status(ctx context.Context, field graphql.CollectedField, obj *model.Image) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Image_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Image_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Image",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ImageUploadURL_uploadUrl(ctx context.Context, field graphql.CollectedField, obj *model.ImageUploadURL) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ImageUploadURL_uploadUrl(ctx, field)
 	if err != nil {
@@ -7329,6 +7533,8 @@ func (ec *executionContext) fieldContext_Mutation_createSports(ctx context.Conte
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
 				return ec.fieldContext_Sport_rules(ctx, field)
+			case "image":
+				return ec.fieldContext_Sport_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -7396,6 +7602,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteSports(ctx context.Conte
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
 				return ec.fieldContext_Sport_rules(ctx, field)
+			case "image":
+				return ec.fieldContext_Sport_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -7463,6 +7671,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSports(ctx context.Conte
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
 				return ec.fieldContext_Sport_rules(ctx, field)
+			case "image":
+				return ec.fieldContext_Sport_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -9505,6 +9715,8 @@ func (ec *executionContext) fieldContext_Mutation_setRankingRules(ctx context.Co
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
 				return ec.fieldContext_Sport_rules(ctx, field)
+			case "image":
+				return ec.fieldContext_Sport_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -10767,6 +10979,69 @@ func (ec *executionContext) fieldContext_Mutation_createImageUploadURL(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_deleteImage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteImage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteImage(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Image)
+	fc.Result = res
+	return ec.marshalNImage2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteImage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Image_id(ctx, field)
+			case "url":
+				return ec.fieldContext_Image_url(ctx, field)
+			case "status":
+				return ec.fieldContext_Image_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Image", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteImage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PromotionRule_id(ctx context.Context, field graphql.CollectedField, obj *model.PromotionRule) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PromotionRule_id(ctx, field)
 	if err != nil {
@@ -11505,6 +11780,8 @@ func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field g
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
 				return ec.fieldContext_Sport_rules(ctx, field)
+			case "image":
+				return ec.fieldContext_Sport_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -11561,6 +11838,8 @@ func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field 
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
 				return ec.fieldContext_Sport_rules(ctx, field)
+			case "image":
+				return ec.fieldContext_Sport_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -13450,6 +13729,8 @@ func (ec *executionContext) fieldContext_Rule_sport(_ context.Context, field gra
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
 				return ec.fieldContext_Sport_rules(ctx, field)
+			case "image":
+				return ec.fieldContext_Sport_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sport", field.Name)
 		},
@@ -13774,6 +14055,55 @@ func (ec *executionContext) fieldContext_Sport_rules(_ context.Context, field gr
 				return ec.fieldContext_Rule_sport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Sport_image(ctx context.Context, field graphql.CollectedField, obj *model.Sport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sport_image(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Sport().Image(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Image)
+	fc.Result = res
+	return ec.marshalOImage2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Sport_image(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Sport",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Image_id(ctx, field)
+			case "url":
+				return ec.fieldContext_Image_url(ctx, field)
+			case "status":
+				return ec.fieldContext_Image_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Image", field.Name)
 		},
 	}
 	return fc, nil
@@ -20100,6 +20430,52 @@ func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var imageImplementors = []string{"Image"}
+
+func (ec *executionContext) _Image(ctx context.Context, sel ast.SelectionSet, obj *model.Image) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, imageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Image")
+		case "id":
+			out.Values[i] = ec._Image_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "url":
+			out.Values[i] = ec._Image_url(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._Image_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var imageUploadURLImplementors = []string{"ImageUploadURL"}
 
 func (ec *executionContext) _ImageUploadURL(ctx context.Context, sel ast.SelectionSet, obj *model.ImageUploadURL) graphql.Marshaler {
@@ -21184,6 +21560,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "deleteImage":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteImage(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -22220,28 +22603,61 @@ func (ec *executionContext) _Sport(ctx context.Context, sel ast.SelectionSet, ob
 		case "id":
 			out.Values[i] = ec._Sport_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Sport_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "weight":
 			out.Values[i] = ec._Sport_weight(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "rankingRules":
 			out.Values[i] = ec._Sport_rankingRules(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "rules":
 			out.Values[i] = ec._Sport_rules(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "image":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Sport_image(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -23911,6 +24327,20 @@ func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNImage2sportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx context.Context, sel ast.SelectionSet, v model.Image) graphql.Marshaler {
+	return ec._Image(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNImage2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx context.Context, sel ast.SelectionSet, v *model.Image) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Image(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNImageUploadURL2sportsᚑdayᚋapiᚋgraphᚋmodelᚐImageUploadURL(ctx context.Context, sel ast.SelectionSet, v model.ImageUploadURL) graphql.Marshaler {
@@ -25601,6 +26031,13 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	}
 	res := graphql.MarshalID(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOImage2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx context.Context, sel ast.SelectionSet, v *model.Image) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Image(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {

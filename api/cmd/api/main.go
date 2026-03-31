@@ -14,7 +14,7 @@ import (
 
 	"sports-day/api"
 	"sports-day/api/graph"
-	"sports-day/api/internal/webhook"
+	apihandler "sports-day/api/handler"
 	"sports-day/api/middleware"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/env"
@@ -140,6 +140,7 @@ func main() {
 		imageRepository,
 		s3Client,
 		env.Get().Storage.Bucket,
+		env.Get().Storage.Endpoint,
 	)
 
 	// graphql
@@ -159,12 +160,11 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService, imageService))
 	mux.Handle(
 		"/internal/webhooks/upload",
-		webhook.HandleUploadWebhook(
-			imageRepository,
-			db,
+		apihandler.HandleUploadWebhook(
+			&imageService,
 			env.Get().Storage.WebhookSecret,
 			env.Get().Storage.Endpoint,
 			env.Get().Storage.Bucket,

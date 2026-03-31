@@ -541,4 +541,8 @@ type Mutation {
   画像アップロード用のURLを発行する
   """
   createImageUploadURL(input: CreateImageUploadURLInput!): ImageUploadURL!
+  """
+  画像を削除する（S3ファイルとDBレコードを両方削除）
+  """
+  deleteImage(id: ID!): Image!
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"sports-day/api/db_model"
@@ -21,6 +22,7 @@ type Image struct {
 	imageRepository repository.Image
 	s3              *s3.Client
 	bucket          string
+	endpoint        string
 }
 
 func NewImage(
@@ -28,6 +30,7 @@ func NewImage(
 	imageRepository repository.Image,
 	s3 *s3.Client,
 	bucket string,
+	endpoint string,
 ) Image {
 
 	return Image{
@@ -35,14 +38,43 @@ func NewImage(
 		imageRepository: imageRepository,
 		s3:              s3,
 		bucket:          bucket,
+		endpoint:        endpoint,
 	}
 }
 
-func (s *Image) CreateUploadURL(
-	ctx context.Context,
-	filename string,
-) (*db_model.Image, string, error) {
+func (s *Image) MarkUploaded(ctx context.Context, id string, url string) error {
+	return s.imageRepository.Update(ctx, s.db, id, "uploaded", url)
+}
 
+func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) {
+	img, err := s.imageRepository.Get(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	if err := s.imageRepository.Delete(ctx, s.db, id); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	if img.URL.Valid {
+		prefix := s.endpoint + "/" + s.bucket + "/"
+		key := strings.TrimPrefix(img.URL.String, prefix)
+		if _, err := s.s3.DeleteObject(ctx, &s3.DeleteObjectInput{
+			Bucket: &s.bucket,
+			Key:    &key,
+		}); err != nil {
+			return nil, errors.Wrap(err)
+		}
+	}
+
+	return img, nil
+}
+
+func (s *Image) GetMapByIDs(ctx context.Context, ids []string) (map[string]*db_model.Image, error) {
+	return s.imageRepository.BatchGet(ctx, s.db, ids)
+}
+
+func (s *Image) CreateUploadURL(ctx context.Context, filename string) (*db_model.Image, string, error) {
 	img := &db_model.Image{
 		ID:     ulid.Make(),
 		Status: "pending",
