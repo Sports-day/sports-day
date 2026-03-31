@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"sports-day/api"
@@ -34,7 +35,8 @@ func HandleUploadWebhook(
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		if r.Header.Get("X-Webhook-Secret") != secret {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader != "Bearer "+secret {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -46,7 +48,10 @@ func HandleUploadWebhook(
 		}
 
 		for _, record := range event.Records {
-			objectKey := record.S3.Object.Key
+			objectKey, err := url.QueryUnescape(record.S3.Object.Key)
+			if err != nil {
+				objectKey = record.S3.Object.Key
+			}
 			publicURL := fmt.Sprintf("%s/%s/%s", cdnBase, bucket, objectKey)
 
 			// objectKey = "{imageID}/{filename}" の先頭セグメントがImageID
