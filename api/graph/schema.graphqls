@@ -351,15 +351,7 @@ type Query {
 }
 
 input CreateImageUploadURLInput {
-  ownerType: ImageOwnerType!
-  ownerId: ID
   filename: String!
-}
-
-enum ImageOwnerType {
-  USER
-  SPORT
-  COMPETITION
 }
 
 type ImageUploadURL {

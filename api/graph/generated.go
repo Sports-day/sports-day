@@ -8,10 +8,11 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"sports-day/api/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
+
+	"sports-day/api/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -13254,27 +13255,13 @@ func (ec *executionContext) unmarshalInputCreateImageUploadURLInput(ctx context.
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"ownerType", "ownerId", "filename"}
+	fieldsInOrder := [...]string{"filename"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "ownerType":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerType"))
-			data, err := ec.unmarshalNImageOwnerType2sportsᚑdayᚋapiᚋgraphᚋmodelᚐImageOwnerType(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.OwnerType = data
-		case "ownerId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.OwnerID = data
 		case "filename":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filename"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -17478,16 +17465,6 @@ func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalNImageOwnerType2sportsᚑdayᚋapiᚋgraphᚋmodelᚐImageOwnerType(ctx context.Context, v any) (model.ImageOwnerType, error) {
-	var res model.ImageOwnerType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNImageOwnerType2sportsᚑdayᚋapiᚋgraphᚋmodelᚐImageOwnerType(ctx context.Context, sel ast.SelectionSet, v model.ImageOwnerType) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) marshalNImageUploadURL2sportsᚑdayᚋapiᚋgraphᚋmodelᚐImageUploadURL(ctx context.Context, sel ast.SelectionSet, v model.ImageUploadURL) graphql.Marshaler {
