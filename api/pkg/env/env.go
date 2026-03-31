@@ -32,10 +32,11 @@ type Env struct {
 		}
 	}
 	Storage struct {
-		Endpoint  string `envconfig:"STORAGE_ENDPOINT"`
-		Bucket    string `envconfig:"STORAGE_BUCKET"`
-		AccessKey string `envconfig:"STORAGE_ACCESS_KEY"`
-		SecretKey string `envconfig:"STORAGE_SECRET_KEY"`
+		Endpoint      string `envconfig:"STORAGE_ENDPOINT"`
+		Bucket        string `envconfig:"STORAGE_BUCKET"`
+		AccessKey     string `envconfig:"STORAGE_ACCESS_KEY"`
+		SecretKey     string `envconfig:"STORAGE_SECRET_KEY"`
+		WebhookSecret string `envconfig:"STORAGE_WEBHOOK_SECRET"`
 	}
 
 	Debug bool `envconfig:"DEBUG" default:"false"`

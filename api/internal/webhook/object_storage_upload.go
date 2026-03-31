@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"sports-day/api"
 	"sports-day/api/repository"
 
 	"github.com/oklog/ulid/v2"
@@ -45,7 +46,15 @@ func HandleUploadWebhook(
 		for _, record := range event.Records {
 
 			objectKey := record.S3.Object.Key
-			imgID := ulid.MustParse(objectKey)
+			imgID, err := ulid.Parse(objectKey)
+			if err != nil {
+				api.Logger.Error().
+					Err(err).
+					Str("objectKey", objectKey).
+					Msg("failed to parse object key as ULID")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
 			publicURL := fmt.Sprintf("%s/%s/%s",
 				cdnBase,
@@ -53,12 +62,19 @@ func HandleUploadWebhook(
 				objectKey,
 			)
 
-			_, _ = repo.MarkUploaded(
+			if _, err := repo.MarkUploaded(
 				r.Context(),
 				db,
 				imgID.String(),
 				publicURL,
-			)
+			); err != nil {
+				api.Logger.Error().
+					Err(err).
+					Str("imageID", imgID.String()).
+					Msg("failed to mark image as uploaded")
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.WriteHeader(http.StatusNoContent)

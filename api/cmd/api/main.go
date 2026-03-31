@@ -155,24 +155,6 @@ func main() {
 	// mux
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/v1/images/presign", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		ctx := r.Context()
-
-		img, url, err := imageService.CreateUploadURL(ctx)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"upload_url":"%s","image_id":"%s"}`, url, img.ID)
-	})
-
 	// playground only in debug mode
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
@@ -183,7 +165,7 @@ func main() {
 		webhook.HandleUploadWebhook(
 			imageRepository,
 			db,
-			env.Get().Auth.JWT.SecretKey,
+			env.Get().Storage.WebhookSecret,
 			env.Get().Storage.Endpoint,
 			env.Get().Storage.Bucket,
 		),
