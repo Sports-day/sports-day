@@ -81,3 +81,11 @@ func (r *sportsRepository) SetRankingRules(ctx context.Context, db *gorm.DB, spo
 	}
 	return rules, nil
 }
+
+func (r *sportsRepository) UpdateImageID(ctx context.Context, db *gorm.DB, sportID string, imageID string) error {
+	return db.WithContext(ctx).
+		Model(&db_model.Sport{}).
+		Where("id = ?", sportID).
+		Update("image_id", imageID).
+		Error
+}

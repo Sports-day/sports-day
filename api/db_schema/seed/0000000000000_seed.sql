@@ -1,5 +1,4 @@
 -- migrate:up
-DELETE FROM league_standings;
 DELETE FROM leagues;
 DELETE FROM judgments;
 DELETE FROM match_entries;
@@ -374,53 +373,19 @@ INSERT INTO judgments (id, name, user_id,  team_id, group_id) VALUES
 -- --------------------------------------- ▲
 
 -- リーグデータ挿入
-INSERT INTO leagues (id, calculation_type, win_pt, draw_pt, lose_pt)
+INSERT INTO leagues (id, win_pt, draw_pt, lose_pt)
 VALUES
-  -- サッカーAリーグ（TOTAL_SCORE方式）
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', 'TOTAL_SCORE', 3, 1, 0),
-  -- バスケットボールCリーグ（DIFF_SCORE方式）
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQB', 'DIFF_SCORE', 2, 1, 0),
-  -- 陸上競技Dリーグ（WIN_SCORE方式）
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', 'WIN_SCORE', 3, 1, 0);
-
--- リーグ順位表データ挿入
-INSERT INTO league_standings (id, team_id, win, draw, lose, goals_for, goals_against, points, `rank`)
-VALUES
-  -- サッカーAリーグの順位表（試合結果から計算）
-  -- なでしこA: 2勝1敗（8得点4失点、得失点差+4）→ 6ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', '01JSB1ZQK0A2X6JQK1Q2X6JQT', 2, 0, 1, 8, 4, 6, 1),
-  -- ライジングA: 2勝1敗（7得点2失点、得失点差+5）→ 6ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', '01JSB1ZQK0A2X6JQK1Q2X6JQW', 2, 0, 1, 7, 2, 6, 2),
-  -- サムライA: 1勝2敗（3得点6失点、得失点差-3）→ 3ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', '01JSB1ZQK0A2X6JQK1Q2X6JQK', 1, 0, 2, 3, 6, 3, 3),
-  -- サムライB: 1勝2敗（4得点7失点、得失点差-3）→ 3ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', '01JSB1ZQK0A2X6JQK1Q2X6JQR', 1, 0, 2, 4, 7, 3, 4),
-
-  -- バスケットボールCリーグの順位表（1試合のみ完了）
-  -- サムライC: 1勝0敗（45得点38失点、得失点差+7）→ 2ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQB', '01JSB1ZQK0A2X6JQK1Q2X6JQS', 1, 0, 0, 45, 38, 2, 1),
-  -- なでしこB: 0勝1敗（38得点45失点、得失点差-7）→ 0ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQB', '01JSB1ZQK0A2X6JQK1Q2X6JQU', 0, 0, 1, 38, 45, 0, 2),
-  -- ライジングB: 0勝0敗（0得点0失点、得失点差0）→ 0ポイント（試合未実施）
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQB', '01JSB1ZQK0A2X6JQK1Q2X6JQX', 0, 0, 0, 0, 0, 0, 3),
-
-  -- 陸上競技Dリーグの順位表（1試合のみ完了、3チーム参加）
-  -- サムライB: 0勝0敗（0得点0失点、得失点差0）→ 0ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '01JSB1ZQK0A2X6JQK1Q2X6JQR', 0, 0, 0, 0, 0, 0, 1),
-  -- なでしこA: 0勝0敗（0得点0失点、得失点差0）→ 0ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '01JSB1ZQK0A2X6JQK1Q2X6JQT', 0, 0, 0, 0, 0, 0, 1),
-  -- なでしこB: 0勝0敗（0得点0失点、得失点差0）→ 0ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '01JSB1ZQK0A2X6JQK1Q2X6JQU', 0, 0, 0, 0, 0, 0, 1),
-  -- ライジングA: 0勝0敗（0得点0失点、得失点差0）→ 0ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '01JSB1ZQK0A2X6JQK1Q2X6JQW', 0, 0, 0, 0, 0, 0, 1),
-  -- ライジングB: 0勝0敗（0得点0失点、得失点差0）→ 0ポイント
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '01JSB1ZQK0A2X6JQK1Q2X6JQX', 0, 0, 0, 0, 0, 0, 1);
+  -- サッカーAリーグ
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', 3, 1, 0),
+  -- バスケットボールCリーグ
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQB', 2, 1, 0),
+  -- 陸上競技Dリーグ
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', 3, 1, 0);
 
 INSERT INTO rules (id, rule, sport_id)
 VALUES  ('01K1EAXE40D5JVD3B7DZRQ8M2R', '危険行為は禁止されています。', '01JS96Z963A6RT2C563DCSSCQN');
 
 -- migrate:down
-DELETE FROM league_standings;
 DELETE FROM leagues;
 DELETE FROM judgments;
 DELETE FROM match_entries;

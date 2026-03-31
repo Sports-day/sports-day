@@ -628,10 +628,7 @@ func (r *mutationResolver) DeleteRule(ctx context.Context, id string) (*model.Ru
 }
 
 // CreateImageUploadURL is the resolver for the createImageUploadURL field.
-func (r *mutationResolver) CreateImageUploadURL(
-	ctx context.Context,
-	input model.CreateImageUploadURLInput,
-) (*model.ImageUploadURL, error) {
+func (r *mutationResolver) CreateImageUploadURL(ctx context.Context, input model.CreateImageUploadURLInput) (*model.ImageUploadURL, error) {
 	img, uploadURL, err := r.ImageService.CreateUploadURL(ctx, input.Filename)
 
 	if err != nil {
