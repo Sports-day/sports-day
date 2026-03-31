@@ -1010,6 +1010,28 @@ func (r *queryResolver) Rules(ctx context.Context) ([]*model.Rule, error) {
 	return res, nil
 }
 
+// Image is the resolver for the image field.
+func (r *queryResolver) Image(ctx context.Context, id string) (*model.Image, error) {
+	img, err := r.ImageService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatImageResponse(img), nil
+}
+
+// Images is the resolver for the images field.
+func (r *queryResolver) Images(ctx context.Context) ([]*model.Image, error) {
+	imgs, err := r.ImageService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*model.Image, 0, len(imgs))
+	for _, img := range imgs {
+		res = append(res, model.FormatImageResponse(img))
+	}
+	return res, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

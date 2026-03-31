@@ -348,6 +348,14 @@ type Query {
   tournamentRanking(competitionId: ID!): [TournamentRanking!]!
   rule(id: ID!): Rule!
   rules: [Rule]!
+  """
+  ID指定で画像を取得する
+  """
+  image(id: ID!): Image!
+  """
+  画像一覧を取得する
+  """
+  images: [Image!]!
 }
 
 input CreateImageUploadURLInput {

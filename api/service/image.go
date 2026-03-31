@@ -56,10 +56,6 @@ func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) 
 		return nil, errors.Wrap(err)
 	}
 
-	if err := s.imageRepository.Delete(ctx, s.db, id); err != nil {
-		return nil, errors.Wrap(err)
-	}
-
 	if img.URL.Valid {
 		prefix := s.endpoint + "/" + s.bucket + "/"
 		key := strings.TrimPrefix(img.URL.String, prefix)
@@ -71,7 +67,15 @@ func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) 
 		}
 	}
 
+	if err := s.imageRepository.Delete(ctx, s.db, id); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
 	return img, nil
+}
+
+func (s *Image) List(ctx context.Context) ([]*db_model.Image, error) {
+	return s.imageRepository.List(ctx, s.db)
 }
 
 func (s *Image) GetMapByIDs(ctx context.Context, ids []string) (map[string]*db_model.Image, error) {

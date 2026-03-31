@@ -219,6 +219,8 @@ type ComplexityRoot struct {
 		Competitions      func(childComplexity int) int
 		Group             func(childComplexity int, id string) int
 		Groups            func(childComplexity int) int
+		Image             func(childComplexity int, id string) int
+		Images            func(childComplexity int) int
 		Information       func(childComplexity int, id string) int
 		Informations      func(childComplexity int) int
 		Judgment          func(childComplexity int, id string) int
@@ -463,6 +465,8 @@ type QueryResolver interface {
 	TournamentRanking(ctx context.Context, competitionID string) ([]*model.TournamentRanking, error)
 	Rule(ctx context.Context, id string) (*model.Rule, error)
 	Rules(ctx context.Context) ([]*model.Rule, error)
+	Image(ctx context.Context, id string) (*model.Image, error)
+	Images(ctx context.Context) ([]*model.Image, error)
 }
 type RuleResolver interface {
 	Sport(ctx context.Context, obj *model.Rule) (*model.Sport, error)
@@ -1630,6 +1634,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Groups(childComplexity), true
+
+	case "Query.image":
+		if e.complexity.Query.Image == nil {
+			break
+		}
+
+		args, err := ec.field_Query_image_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Image(childComplexity, args["id"].(string)), true
+
+	case "Query.images":
+		if e.complexity.Query.Images == nil {
+			break
+		}
+
+		return e.complexity.Query.Images(childComplexity), true
 
 	case "Query.Information":
 		if e.complexity.Query.Information == nil {
@@ -4372,6 +4395,29 @@ func (ec *executionContext) field_Query_group_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 func (ec *executionContext) field_Query_group_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_image_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_image_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_image_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -13374,6 +13420,121 @@ func (ec *executionContext) fieldContext_Query_rules(_ context.Context, field gr
 				return ec.fieldContext_Rule_sport(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Rule", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_image(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_image(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Image(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Image)
+	fc.Result = res
+	return ec.marshalNImage2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_image(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Image_id(ctx, field)
+			case "url":
+				return ec.fieldContext_Image_url(ctx, field)
+			case "status":
+				return ec.fieldContext_Image_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Image", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_image_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_images(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_images(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Images(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Image)
+	fc.Result = res
+	return ec.marshalNImage2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImageᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_images(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Image_id(ctx, field)
+			case "url":
+				return ec.fieldContext_Image_url(ctx, field)
+			case "status":
+				return ec.fieldContext_Image_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Image", field.Name)
 		},
 	}
 	return fc, nil
@@ -22396,6 +22557,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "image":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_image(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "images":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_images(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -24331,6 +24536,50 @@ func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast
 
 func (ec *executionContext) marshalNImage2sportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx context.Context, sel ast.SelectionSet, v model.Image) graphql.Marshaler {
 	return ec._Image(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNImage2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImageᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Image) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNImage2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNImage2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐImage(ctx context.Context, sel ast.SelectionSet, v *model.Image) graphql.Marshaler {
