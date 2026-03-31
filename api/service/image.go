@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"sports-day/api/db_model"
@@ -12,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"gorm.io/gorm"
 )
+
+const presignExpiry = 15 * time.Minute
 
 type Image struct {
 	db              *gorm.DB
@@ -36,34 +39,35 @@ func NewImage(
 }
 
 func (s *Image) CreateUploadURL(
-    ctx context.Context,
+	ctx context.Context,
+	filename string,
 ) (*db_model.Image, string, error) {
 
-    img := &db_model.Image{
-        ID:     ulid.Make(),
-        Status: "pending",
-    }
+	img := &db_model.Image{
+		ID:     ulid.Make(),
+		Status: "pending",
+	}
 
-    img, err := s.imageRepository.Create(ctx, s.db, img)
-    if err != nil {
-        return nil, "", errors.Wrap(err)
-    }
+	img, err := s.imageRepository.Create(ctx, s.db, img)
+	if err != nil {
+		return nil, "", errors.Wrap(err)
+	}
 
-    presigner := s3.NewPresignClient(s.s3)
+	presigner := s3.NewPresignClient(s.s3)
 
-    key := img.ID
-	
+	key := fmt.Sprintf("%s/%s", img.ID, filename)
+
 	presigned, err := presigner.PresignPutObject(
-    	ctx,
-    	&s3.PutObjectInput{
-        	Bucket: &s.bucket,
-        	Key:    &key,
-   		},
-    	s3.WithPresignExpires(15*time.Minute),
+		ctx,
+		&s3.PutObjectInput{
+			Bucket: &s.bucket,
+			Key:    &key,
+		},
+		s3.WithPresignExpires(presignExpiry),
 	)
-    if err != nil {
-        return nil, "", errors.Wrap(err)
-    }
+	if err != nil {
+		return nil, "", errors.Wrap(err)
+	}
 
-    return img, presigned.URL, nil
+	return img, presigned.URL, nil
 }

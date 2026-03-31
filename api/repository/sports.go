@@ -24,6 +24,3 @@ type Sports interface {
 		imageID string,
 	) error
 }
-
-
-

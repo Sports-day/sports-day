@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -631,12 +632,7 @@ func (r *mutationResolver) CreateImageUploadURL(
 	ctx context.Context,
 	input model.CreateImageUploadURLInput,
 ) (*model.ImageUploadURL, error) {
-	img, uploadURL, err := r.ImageService.CreateUploadURL(
-		ctx,
-		string(input.OwnerType),
-		input.OwnerID,
-		input.Filename,
-	)
+	img, uploadURL, err := r.ImageService.CreateUploadURL(ctx, input.Filename)
 
 	if err != nil {
 		return nil, err

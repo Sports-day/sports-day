@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	goerrors "errors"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -157,13 +156,9 @@ func (s *Sport) SetImage(
 	imageID string,
 ) error {
 
-	img, err := s.imageRepository.Get(ctx, s.db, imageID)
+	_, err := s.imageRepository.Get(ctx, s.db, imageID)
 	if err != nil {
 		return err
-	}
-
-	if img.Status != "uploaded" {
-		return goerrors.New("image not uploaded yet")
 	}
 
 	return s.sportsRepository.UpdateImageID(
