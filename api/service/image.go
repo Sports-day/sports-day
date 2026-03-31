@@ -42,8 +42,12 @@ func NewImage(
 	}
 }
 
+func (s *Image) Get(ctx context.Context, id string) (*db_model.Image, error) {
+	return s.imageRepository.Get(ctx, s.db, id)
+}
+
 func (s *Image) MarkUploaded(ctx context.Context, id string, url string) error {
-	return s.imageRepository.Update(ctx, s.db, id, "uploaded", url)
+	return s.imageRepository.MarkUploaded(ctx, s.db, id, url)
 }
 
 func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) {

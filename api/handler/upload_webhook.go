@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"sports-day/api"
+	"github.com/oklog/ulid/v2"
 )
 
 type imageService interface {
@@ -50,6 +51,14 @@ func HandleUploadWebhook(
 
 			// objectKey = "{imageID}/{filename}" の先頭セグメントがImageID
 			imageID := strings.SplitN(objectKey, "/", 2)[0]
+			if _, err := ulid.Parse(imageID); err != nil {
+				api.Logger.Error().
+					Err(err).
+					Str("objectKey", objectKey).
+					Msg("invalid imageID in object key")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
 			if err := imageSvc.MarkUploaded(r.Context(), imageID, publicURL); err != nil {
 				api.Logger.Error().

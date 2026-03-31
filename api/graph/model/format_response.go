@@ -36,6 +36,13 @@ func FormatSceneResponse(scene *db_model.Scene) *Scene {
 	}
 }
 
+func FormatImageUploadURLResponse(image *db_model.Image, uploadURL string) *ImageUploadURL {
+	return &ImageUploadURL{
+		ImageID:   image.ID,
+		UploadURL: uploadURL,
+	}
+}
+
 func FormatImageResponse(image *db_model.Image) *Image {
 	var url *string
 	if image.URL.Valid {

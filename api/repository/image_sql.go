@@ -47,11 +47,11 @@ func (r image) Delete(ctx context.Context, db *gorm.DB, id string) error {
 	return db.WithContext(ctx).Delete(&db_model.Image{}, "id = ?", id).Error
 }
 
-func (r image) Update(ctx context.Context, db *gorm.DB, id string, status string, url string) error {
+func (r image) MarkUploaded(ctx context.Context, db *gorm.DB, id string, url string) error {
 	return db.WithContext(ctx).Model(&db_model.Image{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"status": status,
-			"url":    sql.NullString{String: url, Valid: url != ""},
+			"status": "uploaded",
+			"url":    sql.NullString{String: url, Valid: true},
 		}).Error
 }

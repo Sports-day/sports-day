@@ -129,19 +129,8 @@ func main() {
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
-	sportService := service.NewSports(
-		db,
-		sportRepository,
-		imageRepository,
-	)
-
-	imageService := service.NewImage(
-		db,
-		imageRepository,
-		s3Client,
-		env.Get().Storage.Bucket,
-		env.Get().Storage.Endpoint,
-	)
+	imageService := service.NewImage(db, imageRepository, s3Client, env.Get().Storage.Bucket,env.Get().Storage.Endpoint)
+	sportService := service.NewSports(db, sportRepository, &imageService)
 
 	// graphql
 	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService)}

@@ -15,18 +15,18 @@ import (
 type Sport struct {
 	db               *gorm.DB
 	sportsRepository repository.Sports
-	imageRepository  repository.Image
+	imageService     *Image
 }
 
 func NewSports(
 	db *gorm.DB,
 	sportsRepository repository.Sports,
-	imageRepository repository.Image,
+	imageService *Image,
 ) Sport {
 	return Sport{
 		db:               db,
 		sportsRepository: sportsRepository,
-		imageRepository:  imageRepository,
+		imageService:     imageService,
 	}
 }
 
@@ -61,25 +61,49 @@ func (s *Sport) Create(ctx context.Context, input *model.CreateSportsInput) (*db
 }
 
 func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsInput) (*db_model.Sport, error) {
-	sport, err := s.sportsRepository.Get(ctx, s.db, id)
+	// imageIdの存在確認はトランザクション外で行う（DB更新を伴わないため）
+	if input.ImageID != nil {
+		if _, err := s.imageService.Get(ctx, *input.ImageID); err != nil {
+			return nil, err
+		}
+	}
+
+	var result *db_model.Sport
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		sport, err := s.sportsRepository.Get(ctx, tx, id)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		if input.Name != nil {
+			sport.Name = *input.Name
+		}
+		if input.Weight != nil {
+			sport.Weight = int(*input.Weight)
+		}
+
+		sport, err = s.sportsRepository.Save(ctx, tx, sport)
+		if err != nil {
+			return errors.ErrSaveSport
+		}
+
+		if input.ImageID != nil {
+			if err := s.sportsRepository.UpdateImageID(ctx, tx, id, *input.ImageID); err != nil {
+				return errors.Wrap(err)
+			}
+			sport, err = s.sportsRepository.Get(ctx, tx, id)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+		}
+
+		result = sport
+		return nil
+	})
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, err
 	}
-
-	if input.Name != nil {
-		sport.Name = *input.Name
-	}
-
-	if input.Weight != nil {
-		sport.Weight = int(*input.Weight)
-	}
-
-	sport, err = s.sportsRepository.Save(ctx, s.db, sport)
-	if err != nil {
-		return nil, errors.ErrSaveSport
-	}
-
-	return sport, nil
+	return result, nil
 }
 
 func (s *Sport) Delete(ctx context.Context, id string) (*db_model.Sport, error) {
@@ -150,13 +174,8 @@ func (s *Sport) SetRankingRules(ctx context.Context, sportID string, rules []mod
 	return result, nil
 }
 
-func (s *Sport) SetImage(
-	ctx context.Context,
-	sportID string,
-	imageID string,
-) error {
-
-	_, err := s.imageRepository.Get(ctx, s.db, imageID)
+func (s *Sport) SetImage(ctx context.Context, sportID string, imageID string,) error {
+	_, err := s.imageService.Get(ctx, imageID)
 	if err != nil {
 		return err
 	}
