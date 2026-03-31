@@ -1,0 +1,158 @@
+name: Supply Chain Guard
+
+on:
+  pull_request:
+    paths:
+      - "**/package.json"
+      - "**/yarn.lock"
+      - "**/package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  check-package-age:
+    name: Supply Chain Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Check package publish age
+        timeout-minutes: 10
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 << 'EOF'
+          import subprocess, json, sys, re, os
+          import urllib.request, urllib.parse
+          from datetime import datetime, timezone
+
+          THRESHOLD_DAYS = 14
+          base_sha = os.environ["BASE_SHA"]
+
+          PKG_RE = re.compile(r'^"?(@[a-z0-9._-]+/[a-z0-9._-]+|[a-z0-9][a-z0-9._-]*)@')
+          VER_RE = re.compile(r'^\s{2}version "([^"]+)"')
+
+          def get_publish_date(package, version):
+              encoded = urllib.parse.quote(package, safe="@/")
+              url = f"https://registry.npmjs.org/{encoded}"
+              try:
+                  req = urllib.request.Request(url, headers={"Accept": "application/json"})
+                  with urllib.request.urlopen(req, timeout=10) as res:
+                      data = json.loads(res.read())
+                      time_str = data.get("time", {}).get(version)
+                      if time_str:
+                          return datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+              except Exception as e:
+                      print(f"  ⚠️  {package}@{version} の情報取得失敗（スキップ）: {e}", flush=True)
+              return None
+
+          def parse_yarn_lock(content):
+              pkgs = {}
+              lines = content.splitlines()
+              i = 0
+              while i < len(lines):
+                  line = lines[i]
+                  pkg_m = PKG_RE.match(line)
+                  if pkg_m and line.rstrip().endswith(":"):
+                      pkg_name = pkg_m.group(1)
+                      for j in range(i + 1, min(i + 10, len(lines))):
+                          ver_m = VER_RE.match(lines[j])
+                          if ver_m:
+                              pkgs.setdefault(pkg_name, set()).add(ver_m.group(1))
+                              break
+                  i += 1
+              return pkgs
+
+          def parse_package_lock(content):
+              try:
+                  data = json.loads(content)
+                  pkgs = {}
+                  for key, val in data.get("packages", {}).items():
+                      if key.startswith("node_modules/") and key.count("node_modules/") == 1:
+                          name = key[len("node_modules/"):]
+                          pkgs.setdefault(name, set()).add(val.get("version", ""))
+                  return pkgs
+              except Exception:
+                  return {}
+
+          changed_files = subprocess.run(
+              ["git", "diff", "--name-only", base_sha, "HEAD"],
+              capture_output=True, text=True
+          ).stdout.splitlines()
+
+          lockfiles = [
+              f for f in changed_files
+              if f.endswith("yarn.lock") or f.endswith("package-lock.json")
+          ]
+
+          if not lockfiles:
+              print("ℹ️  lockfileの変更なし（チェックをスキップ）")
+              sys.exit(0)
+
+          blocked = []
+          checked = set()
+
+          for lockfile in lockfiles:
+              print(f"\n── {lockfile} をチェック ──", flush=True)
+
+              base_result = subprocess.run(
+                  ["git", "show", f"{base_sha}:{lockfile}"],
+                  capture_output=True, text=True
+              )
+              base_content = base_result.stdout if base_result.returncode == 0 else ""
+
+              try:
+                  with open(lockfile) as f:
+                      head_content = f.read()
+              except FileNotFoundError:
+                  continue
+
+              if lockfile.endswith("yarn.lock"):
+                  base_pkgs = parse_yarn_lock(base_content)
+                  head_pkgs = parse_yarn_lock(head_content)
+              else:
+                  base_pkgs = parse_package_lock(base_content)
+                  head_pkgs = parse_package_lock(head_content)
+
+              for pkg_name, versions in head_pkgs.items():
+                  base_versions = base_pkgs.get(pkg_name, set())
+                  new_versions = versions - base_versions
+                  if not new_versions:
+                      continue
+
+                  for version in new_versions:
+                      key = f"{pkg_name}@{version}"
+                      if key in checked:
+                          continue
+                      checked.add(key)
+
+                      label = "新規" if not base_versions else f"更新 → {version}"
+                      print(f"チェック中: {key} ({label})", flush=True)
+
+                      pub_date = get_publish_date(pkg_name, version)
+                      if pub_date:
+                          age = (datetime.now(timezone.utc) - pub_date).days
+                          if age < THRESHOLD_DAYS:
+                              blocked.append((pkg_name, version, age,
+                                              pub_date.strftime("%Y-%m-%d"), label))
+                              print(f"  ❌ 公開から{age}日（14日未満）")
+                          else:
+                              print(f"  ✅ 公開から{age}日")
+
+          if not checked:
+              print("ℹ️  新規追加・更新パッケージなし")
+              sys.exit(0)
+
+          if blocked:
+              print("\n" + "=" * 60)
+              print("❌ 以下のパッケージは公開14日未満のためブロックします：")
+              for name, ver, days, date, label in blocked:
+                  print(f"  - {name}@{ver}  公開日: {date}（{days}日前） [{label}]")
+              print("=" * 60)
+              sys.exit(1)
+          else:
+              print("\n✅ 全パッケージが14日ルールをパスしました")
+          EOF
