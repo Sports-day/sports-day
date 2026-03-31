@@ -124,6 +124,12 @@ type GenerateRoundRobinInput struct {
 	LocationID    *string `json:"locationId,omitempty"`
 }
 
+type Image struct {
+	ID     string  `json:"id"`
+	URL    *string `json:"url,omitempty"`
+	Status string  `json:"status"`
+}
+
 type ImageUploadURL struct {
 	UploadURL string `json:"uploadUrl"`
 	ImageID   string `json:"imageId"`
@@ -206,14 +212,6 @@ type SlotInput struct {
 	SourceType    SlotSourceType `json:"sourceType"`
 	SourceMatchID *string        `json:"sourceMatchId,omitempty"`
 	SeedNumber    *int32         `json:"seedNumber,omitempty"`
-}
-
-type Sport struct {
-	ID           string         `json:"id"`
-	Name         string         `json:"name"`
-	Weight       int32          `json:"weight"`
-	RankingRules []*RankingRule `json:"rankingRules"`
-	Rules        []*Rule        `json:"rules"`
 }
 
 // SUBブラケット定義（自動生成用）
