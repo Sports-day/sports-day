@@ -72,7 +72,7 @@ export default function LoginPage({ onLogin, onPrivacy }: Props) {
 
         {/* コピーライト */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Typography sx={{ fontSize: '11px', color: '#8490C8' }}>(C)2024 WIDER</Typography>
+          <Typography sx={{ fontSize: '11px', color: '#8490C8' }}>(C)2026 WIDER</Typography>
         </Box>
       </Box>
     </Box>

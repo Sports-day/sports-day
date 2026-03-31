@@ -1,6 +1,9 @@
-import { Box, Breadcrumbs, Button, TextField, Typography } from '@mui/material'
+import { Box, Breadcrumbs, Button, ButtonBase, TextField, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
+import { useState } from 'react'
+import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { useImageDetail } from '../hooks/useImageDetail'
+import { showToast } from '@/lib/toast'
 import { CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 type Props = {
@@ -10,23 +13,28 @@ type Props = {
 
 export function ImageDetailPage({ imageId, onBack }: Props) {
   const { name, setName, url, setUrl, handleSave, handleDelete, imageName } = useImageDetail(imageId)
+  const [dirty, setDirty] = useState(false)
+  useUnsavedWarning(dirty)
 
   const onSave = () => {
     handleSave()
+    setDirty(false)
+    showToast('画像を保存しました')
     onBack()
   }
 
   const onDelete = () => {
     handleDelete()
+    showToast('画像を削除しました')
     onBack()
   }
 
   return (
     <Box>
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
-        <Typography sx={BREADCRUMB_LINK_SX} onClick={onBack}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           画像
-        </Typography>
+        </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>{imageName}</Typography>
       </Breadcrumbs>
 
@@ -75,7 +83,7 @@ export function ImageDetailPage({ imageId, onBack }: Props) {
           </Box>
 
           {/* フォーム */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }} onChangeCapture={() => setDirty(true)}>
             <TextField
               size="small"
               label="名前"

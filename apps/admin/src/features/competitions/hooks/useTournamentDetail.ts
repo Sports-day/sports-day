@@ -6,6 +6,10 @@ export function useTournamentDetail(tournamentId: string, tournamentName: string
     MOCK_TOURNAMENT_DETAILS[tournamentId] ?? {
       id: tournamentId,
       name: tournamentName,
+      description: '',
+      teamCount: 0,
+      placementMethod: 'SEED_OPTIMIZED' as const,
+      tag: '',
       brackets: [],
     }
   )

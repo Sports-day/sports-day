@@ -7,9 +7,9 @@ import type { MockBracket, MockTMatch, MockTSlot } from '../mock'
 const MATCH_W = 224
 const MATCH_H = 108    // card height (header ~36 + row1 36 + row2 36)
 const H_GAP = 48       // horizontal gap between round columns
-const V_GAP = 20       // vertical gap between matches in the same round
-const SLOT_H = MATCH_H + V_GAP  // 128px — height of one original "seed pair" slot
-const ROUND_LABEL_H = 28
+const V_GAP = 8        // vertical gap between matches in the same round
+const SLOT_H = MATCH_H + V_GAP  // 116px — height of one original "seed pair" slot
+const ROUND_LABEL_H = 20
 
 const C = {
   border: 'rgba(63,81,181,0.22)',
@@ -59,6 +59,31 @@ function colX(r: number) { return r * (MATCH_W + H_GAP) }
  * SUB brackets: simple power-of-2 round layout (always works because SUB
  * brackets have a uniform number of feeder matches per round).
  */
+/** Padding above the first card and below the last card */
+const Y_PAD = V_GAP
+
+/**
+ * After computing raw centre-Y values, shift them so the topmost card
+ * starts at Y_PAD from the top and recalculate totalHeight to fit.
+ */
+function normalizePositions(
+  matchCenterY: Map<string, number>,
+): { matchCenterY: Map<string, number>; totalHeight: number } {
+  if (matchCenterY.size === 0) return { matchCenterY, totalHeight: SLOT_H }
+
+  const allY = Array.from(matchCenterY.values())
+  const minCenter = Math.min(...allY)
+  const maxCenter = Math.max(...allY)
+
+  // Shift so the topmost card's top edge sits at Y_PAD
+  const offset = minCenter - MATCH_H / 2 - Y_PAD
+  for (const [k, v] of matchCenterY) {
+    matchCenterY.set(k, v - offset)
+  }
+  const totalHeight = (maxCenter - offset) + MATCH_H / 2 + Y_PAD
+  return { matchCenterY, totalHeight }
+}
+
 function computeLayout(
   matches: MockTMatch[],
   bracketType: MockBracket['bracketType'],
@@ -103,22 +128,54 @@ function computeLayout(
           }
           const y1 = y(m.slot1)
           const y2 = y(m.slot2)
-          matchCenterY.set(m.id, (y1 + y2) / 2)
+          // BYEがある場合（片方がSEED直進、もう片方が試合）→ 試合側のYに揃える
+          const isByeSlot1 = m.slot1.sourceType === 'SEED' && !m.slot1.sourceMatchId && r > 0
+          const isByeSlot2 = m.slot2.sourceType === 'SEED' && !m.slot2.sourceMatchId && r > 0
+          const isMatchSlot1 = !!m.slot1.sourceMatchId
+          const isMatchSlot2 = !!m.slot2.sourceMatchId
+          if (isByeSlot1 && isMatchSlot2) {
+            matchCenterY.set(m.id, y2)
+          } else if (isByeSlot2 && isMatchSlot1) {
+            matchCenterY.set(m.id, y1)
+          } else {
+            matchCenterY.set(m.id, (y1 + y2) / 2)
+          }
         }
       }
 
-      return { matchCenterY, totalHeight: (bracketSize / 2) * SLOT_H }
+      return normalizePositions(matchCenterY)
     }
   }
 
-  // ── SUB bracket (or fallback): simple round-doubling ──
-  const numRound0 = rounds[0].length
+  // ── SUB bracket (or fallback): feeder-based positioning ──
+  // Round 0 matches are stacked vertically.
+  // Later rounds center on their feeder matches within this bracket.
   const matchCenterY = new Map<string, number>()
-  for (let r = 0; r <= maxRound; r++) {
-    const sh = SLOT_H * Math.pow(2, r)
-    rounds[r].forEach((m, i) => matchCenterY.set(m.id, i * sh + sh / 2))
+
+  // Place round 0
+  rounds[0].forEach((m, i) => matchCenterY.set(m.id, i * SLOT_H + SLOT_H / 2))
+
+  // Place subsequent rounds based on feeder positions
+  for (let r = 1; r <= maxRound; r++) {
+    for (const m of rounds[r]) {
+      const feederYs: number[] = []
+      for (const slot of [m.slot1, m.slot2]) {
+        if (slot.sourceMatchId && matchCenterY.has(slot.sourceMatchId)) {
+          feederYs.push(matchCenterY.get(slot.sourceMatchId)!)
+        }
+      }
+      if (feederYs.length > 0) {
+        // Center between feeder matches in this bracket
+        matchCenterY.set(m.id, feederYs.reduce((a, b) => a + b, 0) / feederYs.length)
+      } else {
+        // No feeders in this bracket (e.g., MATCH_LOSER from main bracket) — stack
+        const sh = SLOT_H * Math.pow(2, r)
+        const idx = rounds[r].indexOf(m)
+        matchCenterY.set(m.id, idx * sh + sh / 2)
+      }
+    }
   }
-  return { matchCenterY, totalHeight: numRound0 * SLOT_H }
+  return normalizePositions(matchCenterY)
 }
 
 // ─── Helpers ────────────────────────────────────────────
@@ -135,12 +192,12 @@ function isEmptySeed(slot: MockTSlot): boolean {
   return slot.sourceType === 'SEED' && !slot.teamName
 }
 
-function getRoundLabel(round: number, maxRound: number): string {
+function getRoundLabel(round: number, maxRound: number, matchCountInRound: number): string {
   const fromFinal = maxRound - round
   if (fromFinal === 0) return '決勝'
   if (fromFinal === 1) return '準決勝'
-  if (fromFinal === 2) return '準々決勝'
-  return `第 ${round + 1} ラウンド`
+  if (matchCountInRound === 4) return '準々決勝'
+  return `${fromFinal + 1}回戦`
 }
 
 function getProgress(matches: MockTMatch[]): { finished: number; total: number } {
@@ -288,19 +345,16 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
         paths.push(`M ${midX} ${topY} L ${midX} ${botY}`)
         paths.push(`M ${midX} ${parentY} L ${leftX} ${parentY}`)
       } else if (f1Y != null || f2Y != null) {
-        // 片方のみ試合（奇数チームのBYE直進） → 水平 H-V-H
-        const fY = f1Y ?? f2Y ?? parentY
-        const midX = rightX + H_GAP / 2
-        paths.push(`M ${rightX} ${fY} L ${midX} ${fY}`)
-        if (Math.abs(fY - parentY) > 1) paths.push(`M ${midX} ${fY} L ${midX} ${parentY}`)
-        paths.push(`M ${midX} ${parentY} L ${leftX} ${parentY}`)
+        // 片方のみ試合（奇数チームのBYE直進） → 直線
+        // parentY は layout 側で fY に揃えてあるので水平線になる
+        paths.push(`M ${rightX} ${parentY} L ${leftX} ${parentY}`)
       }
       // 両フィーダーがシード直進 → コネクターなし
     }
   }
 
   return (
-    <Box sx={{ overflowX: 'auto', overflowY: 'visible', pb: 2 }}>
+    <Box sx={{ overflowX: 'auto', overflowY: 'visible', pb: 1 }}>
       {/* Round labels */}
       {bracketType === 'MAIN' && (
         <Box sx={{ display: 'flex', width: totalWidth, mb: 1 }}>
@@ -316,7 +370,7 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
                 borderRadius: 1, px: 1.5, py: 0.25,
               }}>
                 <Typography sx={{ fontSize: '11px', color: C.roundLabel, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  {getRoundLabel(r, maxRound)}
+                  {getRoundLabel(r, maxRound, rounds[r].length)}
                 </Typography>
               </Box>
             </Box>
@@ -379,9 +433,9 @@ export function TournamentBracketView({ bracket, onMatchClick }: Props) {
   const progressPct = total > 0 ? Math.round((finished / total) * 100) : 0
 
   return (
-    <Box sx={{ borderLeft: `4px solid ${accentColor}`, pl: 2, py: 0.5 }}>
+    <Box sx={{ borderLeft: `4px solid ${accentColor}`, pl: 2, pt: 0.5, pb: 0 }}>
       {/* ブラケットヘッダー */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.75, flexWrap: 'wrap' }}>
         {isMain
           ? <EmojiEventsIcon sx={{ fontSize: 18, color: accentColor }} />
           : <AccountTreeIcon sx={{ fontSize: 18, color: accentColor }} />
@@ -389,7 +443,7 @@ export function TournamentBracketView({ bracket, onMatchClick }: Props) {
         <Typography sx={{ fontSize: '15px', fontWeight: 700, color: '#2F3C8C' }}>
           {bracket.name}
         </Typography>
-        <Chip label={isMain ? 'MAIN' : 'SUB'} size="small"
+        <Chip label={isMain ? '本戦' : '順位決定戦'} size="small"
           sx={{ bgcolor: accentColor, color: '#fff', fontSize: '10px', height: 20, fontWeight: 700 }} />
         <Chip label={status.label} size="small"
           sx={{ bgcolor: status.bg, color: status.color, fontSize: '11px', height: 20, fontWeight: 600 }} />

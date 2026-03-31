@@ -2,6 +2,7 @@ import {
   Box,
   Breadcrumbs,
   Button,
+  ButtonBase,
   Card,
   CardContent,
   Divider,
@@ -15,6 +16,8 @@ import {
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import SportsScoreIcon from '@mui/icons-material/SportsScore'
+import { navigateToPage } from '@/hooks/useAppNavigation'
 import { useLeagueDetail } from '../hooks/useLeagueDetail'
 import { ScoringDnDList } from './ScoringDnDList'
 import { ProgressionRulesEditor } from './ProgressionRulesEditor'
@@ -69,12 +72,12 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
-        <Typography sx={BREADCRUMB_LINK_SX} onClick={onBackToList}>
+        <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           競技
-        </Typography>
-        <Typography sx={BREADCRUMB_LINK_SX} onClick={onBackToDetail}>
+        </ButtonBase>
+        <ButtonBase onClick={onBackToDetail} sx={BREADCRUMB_LINK_SX}>
           {competitionName}
-        </Typography>
+        </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
           {leagueName}
         </Typography>
@@ -208,6 +211,25 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
           >
             エントリーを追加
           </Button>
+          {entries.length >= 2 && (
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<SportsScoreIcon />}
+              onClick={() => navigateToPage('active-matches')}
+              sx={{
+                mt: 1.5,
+                borderColor: '#5B6DC6',
+                color: '#2F3C8C',
+                fontSize: '14px',
+                fontWeight: 600,
+                '&:hover': { backgroundColor: '#E8EAF6', borderColor: '#3949AB' },
+                '& .MuiButton-startIcon': { color: '#5B6DC6' },
+              }}
+            >
+              試合ページで確認する
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -215,6 +237,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
         open={addDialogOpen}
         leagueName={leagueName}
         competitionName={competitionName}
+        existingTeamNames={entries.map(e => e.teamName)}
         onClose={handleCloseAddDialog}
         onAdd={handleAddEntries}
       />

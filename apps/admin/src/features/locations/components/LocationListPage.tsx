@@ -59,18 +59,26 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
                 </TableRow>
               </TableHead>
               <TableBody>
-                {locations.map((location) => (
-                  <TableRow
-                    key={location.id}
-                    hover
-                    onClick={() => onSelectLocation(location.id)}
-                    sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
-                  >
-                    <TableCell sx={LIST_TABLE_CELL_SX}>{location.id}</TableCell>
-                    <TableCell sx={LIST_TABLE_CELL_SX}>{location.name}</TableCell>
-                    <TableCell sx={LIST_TABLE_CELL_SX}>{location.description}</TableCell>
+                {locations.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                      データがありません
+                    </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  locations.map((location) => (
+                    <TableRow
+                      key={location.id}
+                      hover
+                      onClick={() => onSelectLocation(location.id)}
+                      sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
+                    >
+                      <TableCell sx={LIST_TABLE_CELL_SX}>{location.id}</TableCell>
+                      <TableCell sx={LIST_TABLE_CELL_SX}>{location.name}</TableCell>
+                      <TableCell sx={LIST_TABLE_CELL_SX}>{location.description}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </Box>

@@ -12,8 +12,6 @@ export type TournamentCreateForm = {
   name: string
   description: string
   teamCount: number
-  hasThirdPlace: boolean
-  hasFifthPlace: boolean
   placementMethod: 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
   tag: string
 }
@@ -22,8 +20,6 @@ const INITIAL_FORM: TournamentCreateForm = {
   name: '',
   description: '',
   teamCount: 4,
-  hasThirdPlace: false,
-  hasFifthPlace: false,
   placementMethod: 'SEED_OPTIMIZED',
   tag: '',
 }
@@ -56,14 +52,23 @@ function nodeToSlot(node: BracketNode): MockTSlot {
   throw new Error('BYE node cannot become a slot')
 }
 
-function getMatchLabel(round: number, maxRound: number, indexInRound: number): string {
+/**
+ * ラウンドのラベルを実際の試合数から決定する。
+ * 7チームの場合: 1回戦(3試合) → 準決勝(2試合) → 決勝(1試合)
+ * 8チームの場合: 準々決勝(4試合) → 準決勝(2試合) → 決勝(1試合)
+ */
+function getRoundName(matchCountInRound: number, fromFinal: number): string {
+  if (fromFinal === 0) return '決勝'
+  if (fromFinal === 1) return '準決勝'
+  if (matchCountInRound === 4) return '準々決勝'
+  return `${fromFinal + 1}回戦`
+}
+
+function getMatchLabel(roundName: string, indexInRound: number, totalInRound: number): string {
+  if (totalInRound <= 1) return roundName
   const NUMS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧']
   const num = NUMS[indexInRound] ?? `${indexInRound + 1}`
-  const fromFinal = maxRound - round
-  if (fromFinal === 0) return '決勝'
-  if (fromFinal === 1) return `準決勝${num}`
-  if (fromFinal === 2) return `準々決勝${num}`
-  return `第${round + 1}ラウンド ${num}`
+  return `${roundName}${num}`
 }
 
 /**
@@ -125,11 +130,18 @@ function generateMainMatches(teamCount: number, prefix: string): MockTMatch[] {
 
   // ラウンドラベルを一括設定
   const maxRound = allMatches.length > 0 ? Math.max(...allMatches.map((m) => m.round)) : 0
+  // 各ラウンドの試合数を先に数える
+  const roundCounts: Record<number, number> = {}
+  for (const m of allMatches) roundCounts[m.round] = (roundCounts[m.round] ?? 0) + 1
+  // ラウンド名を決定してからラベル設定
   const roundIdx: Record<number, number> = {}
   for (const m of allMatches) {
+    const fromFinal = maxRound - m.round
+    const countInRound = roundCounts[m.round] ?? 1
+    const roundName = getRoundName(countInRound, fromFinal)
     const idx = roundIdx[m.round] ?? 0
     roundIdx[m.round] = idx + 1
-    m.label = getMatchLabel(m.round, maxRound, idx)
+    m.label = getMatchLabel(roundName, idx, countInRound)
   }
 
   return allMatches
@@ -162,12 +174,71 @@ function generateThirdPlaceBracket(mainMatches: MockTMatch[], prefix: string): M
   }
 }
 
-/** 5〜8位決定戦ブラケットを生成する（MAINの準々決勝敗者4チーム） */
+/**
+ * 下位順位決定戦ブラケットを生成する（MAINの準々決勝敗者）
+ * - 敗者2チーム（6チーム参加時）: 5-6位決定戦（1試合）
+ * - 敗者3チーム（7チーム参加時）: 5-7位決定戦（2試合、1チームBYE）
+ * - 敗者4チーム（8チーム以上参加時）: 5-8位決定戦（3試合）
+ */
 function generateFifthPlaceBracket(mainMatches: MockTMatch[], prefix: string): MockBracket | null {
   const maxRound = mainMatches.length > 0 ? Math.max(...mainMatches.map((m) => m.round)) : -1
   const quarterFinals = mainMatches.filter((m) => m.round === maxRound - 2)
-  if (quarterFinals.length < 4) return null
+  if (quarterFinals.length < 2) return null
 
+  const loserCount = quarterFinals.length
+  const lastPlace = 4 + loserCount // 5位〜(4+loserCount)位
+  const bracketName = loserCount === 1
+    ? '5位決定戦'
+    : `5〜${lastPlace}位決定戦`
+
+  if (loserCount === 2) {
+    // 2チーム: 5-6位決定戦（1試合のみ）
+    const matchId = `${prefix}_5th_final`
+    const matches: MockTMatch[] = [
+      {
+        id: matchId, round: 0, label: '5-6位 決定戦',
+        slot1: { sourceType: 'MATCH_LOSER', sourceMatchId: quarterFinals[0].id, teamId: null, teamName: null },
+        slot2: { sourceType: 'MATCH_LOSER', sourceMatchId: quarterFinals[1].id, teamId: null, teamName: null },
+        score1: null, score2: null, winnerTeamId: null, status: 'STANDBY',
+      },
+    ]
+    return {
+      id: `${prefix}_5th`,
+      name: bracketName,
+      bracketType: 'SUB',
+      displayOrder: 3,
+      matches,
+    }
+  }
+
+  if (loserCount === 3) {
+    // 3チーム: 5-7位決定戦（準決勝1試合 + 決勝1試合、1チームはBYEで決勝へ）
+    const sfId = `${prefix}_5th_sf1`
+    const finalId = `${prefix}_5th_final`
+    const matches: MockTMatch[] = [
+      {
+        id: sfId, round: 0, label: '5-7位 準決勝',
+        slot1: { sourceType: 'MATCH_LOSER', sourceMatchId: quarterFinals[0].id, teamId: null, teamName: null },
+        slot2: { sourceType: 'MATCH_LOSER', sourceMatchId: quarterFinals[1].id, teamId: null, teamName: null },
+        score1: null, score2: null, winnerTeamId: null, status: 'STANDBY',
+      },
+      {
+        id: finalId, round: 1, label: '5-7位 決定戦',
+        slot1: { sourceType: 'MATCH_WINNER', sourceMatchId: sfId, teamId: null, teamName: null },
+        slot2: { sourceType: 'MATCH_LOSER', sourceMatchId: quarterFinals[2].id, teamId: null, teamName: null },
+        score1: null, score2: null, winnerTeamId: null, status: 'STANDBY',
+      },
+    ]
+    return {
+      id: `${prefix}_5th`,
+      name: bracketName,
+      bracketType: 'SUB',
+      displayOrder: 3,
+      matches,
+    }
+  }
+
+  // 4チーム以上: 5-8位決定戦（準決勝2試合 + 決勝1試合）
   const sf1Id = `${prefix}_5th_sf1`
   const sf2Id = `${prefix}_5th_sf2`
   const finalId = `${prefix}_5th_final`
@@ -195,7 +266,7 @@ function generateFifthPlaceBracket(mainMatches: MockTMatch[], prefix: string): M
 
   return {
     id: `${prefix}_5th`,
-    name: '5〜8位決定戦',
+    name: bracketName,
     bracketType: 'SUB',
     displayOrder: 3,
     matches,
@@ -212,7 +283,7 @@ export function generateTournamentData(
 
   const mainBracket: MockBracket = {
     id: `${prefix}_main`,
-    name: 'メインブラケット',
+    name: '本戦',
     bracketType: 'MAIN',
     displayOrder: 1,
     matches: mainMatches,
@@ -220,23 +291,19 @@ export function generateTournamentData(
 
   const brackets: MockBracket[] = [mainBracket]
 
-  if (form.hasThirdPlace) {
-    const sub = generateThirdPlaceBracket(mainMatches, prefix)
-    if (sub) brackets.push(sub)
-  }
+  // 3位決定戦を自動生成（4チーム以上で準決勝がある場合）
+  const thirdPlace = generateThirdPlaceBracket(mainMatches, prefix)
+  if (thirdPlace) brackets.push(thirdPlace)
 
-  if (form.hasFifthPlace) {
-    const sub = generateFifthPlaceBracket(mainMatches, prefix)
-    if (sub) brackets.push(sub)
-  }
+  // 下位順位決定戦を自動生成（6チーム以上で準々決勝の敗者がいる場合）
+  const fifthPlace = generateFifthPlaceBracket(mainMatches, prefix)
+  if (fifthPlace) brackets.push(fifthPlace)
 
   return {
     id,
     name: form.name,
     description: form.description,
     teamCount: form.teamCount,
-    hasThirdPlace: form.hasThirdPlace,
-    hasFifthPlace: form.hasFifthPlace,
     placementMethod: form.placementMethod,
     tag: form.tag,
     brackets,
@@ -254,10 +321,6 @@ export function useTournamentCreate(competitionId: string, onSave: () => void) {
       const value = field === 'teamCount' ? Number(e.target.value) : e.target.value
       setForm((prev) => ({ ...prev, [field]: value }))
     }
-
-  const handleToggle = (field: 'hasThirdPlace' | 'hasFifthPlace') => {
-    setForm((prev) => ({ ...prev, [field]: !prev[field] }))
-  }
 
   const handleSubmit = () => {
     if (!form.name.trim()) return
@@ -278,5 +341,5 @@ export function useTournamentCreate(competitionId: string, onSave: () => void) {
     onSave()
   }
 
-  return { form, handleChange, handleToggle, handleSubmit }
+  return { form, handleChange, handleSubmit }
 }

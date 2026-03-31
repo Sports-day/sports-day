@@ -6,9 +6,8 @@ import { LeagueDetailPage } from './LeagueDetailPage'
 import { LeagueCreatePage } from './LeagueCreatePage'
 import { TournamentCreatePage } from './TournamentCreatePage'
 import { TournamentDetailPage } from './TournamentDetailPage'
-import { TournamentEditPage } from './TournamentEditPage'
 
-type View = 'list' | 'create' | 'detail' | 'league-detail' | 'league-create' | 'tournament-create' | 'tournament-detail' | 'tournament-edit'
+type View = 'list' | 'create' | 'detail' | 'league-detail' | 'league-create' | 'tournament-create' | 'tournament-detail'
 
 export function CompetitionsContainer() {
   const [view, setView] = useState<View>('list')
@@ -66,20 +65,7 @@ export function CompetitionsContainer() {
         competitionName={competitionName}
         onBackToList={() => setView('list')}
         onBackToDetail={() => setView('detail')}
-        onNavigateToEdit={() => setView('tournament-edit')}
-      />
-    )
-  }
-
-  if (view === 'tournament-edit') {
-    return (
-      <TournamentEditPage
-        tournamentId={tournamentId}
-        tournamentName={tournamentName}
-        competitionId={competitionId}
-        competitionName={competitionName}
-        onBackToList={() => setView('list')}
-        onBackToDetail={() => setView('detail')}
+        onSaved={(newName) => setTournamentName(newName)}
         onDeleted={() => setView('detail')}
       />
     )
@@ -103,6 +89,8 @@ export function CompetitionsContainer() {
         }}
         onNavigateToLeagueCreate={() => setView('league-create')}
         onNavigateToTournamentCreate={() => setView('tournament-create')}
+        onSaved={(newName) => setCompetitionName(newName)}
+        onDeleted={() => setView('list')}
       />
     )
   }

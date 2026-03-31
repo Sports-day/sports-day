@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useUserCsv } from '../hooks/useUserCsv'
+import { showToast } from '@/lib/toast'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const TABLE_HEAD_SX = {
@@ -43,6 +44,7 @@ export function UserCsvPage({ onBack }: Props) {
 
   const onCreateClick = () => {
     handleCreate()
+    showToast('ユーザーを一括作成しました')
     onBack()
   }
 

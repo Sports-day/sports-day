@@ -1,21 +1,21 @@
 import { useState } from 'react'
 import { useLocationsStore } from './useLocationsStore'
-import type { Location } from '../types'
 
-export function useLocationDetail(location: Location, onSave: () => void, onDelete: () => void) {
-  const { updateLocation, deleteLocation } = useLocationsStore()
-  const [name, setName] = useState(location.name)
-  const [note, setNote] = useState(location.description)
+export function useLocationDetail(locationId: string, onSave: () => void, onDelete: () => void) {
+  const { locations, updateLocation, deleteLocation } = useLocationsStore()
+  const location = locations.find((l) => l.id === locationId)
+  const [name, setName] = useState(location?.name ?? '')
+  const [note, setNote] = useState(location?.description ?? '')
 
   const handleSave = () => {
-    updateLocation(location.id, { name, description: note })
+    updateLocation(locationId, { name, description: note })
     onSave()
   }
 
   const handleDelete = () => {
-    deleteLocation(location.id)
+    deleteLocation(locationId)
     onDelete()
   }
 
-  return { name, note, setName, setNote, handleSave, handleDelete, loading: false, error: null }
+  return { location, name, note, setName, setNote, handleSave, handleDelete }
 }

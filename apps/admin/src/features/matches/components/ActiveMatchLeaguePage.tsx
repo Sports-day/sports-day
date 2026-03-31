@@ -23,6 +23,8 @@ import { LeagueRegenerateOverlay } from './LeagueRegenerateOverlay'
 import { ActiveMatchBulkEditPage } from './ActiveMatchBulkEditPage'
 import { MatchEditPage } from './MatchEditPage'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
+import { showToast } from '@/lib/toast'
+import { executeProgression } from '@/lib/autoSync'
 
 // ─── 定数 ────────────────────────────────────────────────
 const CELL_BORDER = '1px solid #5B6DC6'
@@ -72,7 +74,20 @@ export function ActiveMatchLeaguePage({
   const regen = useLeagueRegenerate(competitionId, leagueId)
   const bulkEdit = useBulkEdit(competitionId, leagueId)
   const matchEdit = useMatchEdit()
-  if (!league) return null
+  if (!league) {
+    return (
+      <Box>
+        <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+          <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>試合</ButtonBase>
+          <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>{competitionName}</ButtonBase>
+          <Typography sx={BREADCRUMB_CURRENT_SX}>{leagueName}</Typography>
+        </Breadcrumbs>
+        <Typography sx={{ fontSize: '13px', color: '#2F3C8C', opacity: 0.6, mt: 2 }}>
+          試合データがまだありません。競技設定からリーグの試合を登録してください。
+        </Typography>
+      </Box>
+    )
+  }
 
   // 一括編集ページ表示中
   if (bulkEdit.isOpen) {
@@ -111,7 +126,7 @@ export function ActiveMatchLeaguePage({
         onBackToLeague={regen.closeOverlay}
         onSave={regen.openConfirm}
         onConfirmClose={regen.closeConfirm}
-        onConfirmSave={regen.confirmSave}
+        onConfirmSave={() => { regen.confirmSave(); showToast('リーグの試合を再生成しました') }}
       />
     )
   }
@@ -128,7 +143,7 @@ export function ActiveMatchLeaguePage({
           match={matchEdit.selectedMatch}
           teamA={tA}
           teamB={tB}
-          context={{ leagueName, competitionName }}
+          context={{ leagueId, leagueName, competitionName }}
           form={{
             scoreA: matchEdit.scoreA,
             scoreB: matchEdit.scoreB,
@@ -177,6 +192,15 @@ export function ActiveMatchLeaguePage({
             <Button variant="text" size="small" sx={SMALL_BTN_SX} onClick={regen.openOverlay}>
               試合を再生成
             </Button>
+            {allFinished && (
+              <Button variant="text" size="small" sx={SMALL_BTN_SX} onClick={() => {
+                const count = executeProgression(competitionId, leagueId)
+                if (count > 0) showToast(`${count}チームをトーナメントに進出させました`)
+                else showToast('進出ルールが未設定、または対象がありません')
+              }}>
+                進出を実行
+              </Button>
+            )}
           </Box>
 
           {/* 警告カード */}

@@ -18,6 +18,7 @@ export type ActiveMatch = {
   scoreA: number | null
   scoreB: number | null
   status: 'standby' | 'ongoing' | 'finished' | 'cancelled'
+  winner?: 'teamA' | 'teamB' | 'draw'
   time?: string
   note?: string
   referee?: string

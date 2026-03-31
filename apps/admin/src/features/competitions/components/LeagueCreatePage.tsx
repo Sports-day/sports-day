@@ -1,5 +1,7 @@
 import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, MenuItem, TextField, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
+import { useState } from 'react'
+import { showToast } from '@/lib/toast'
 import { useLeagueCreate } from '../hooks/useLeagueCreate'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_CREATE_SX } from '@/styles/commonSx'
 import { TAG_OPTIONS } from '../constants'
@@ -27,6 +29,7 @@ type Props = {
 
 export function LeagueCreatePage({ type, competitionId, competitionName, onBackToList, onBackToDetail, onSave }: Props) {
   const { form, handleChange, handleSubmit } = useLeagueCreate(competitionId, type, onSave)
+  const [submitted, setSubmitted] = useState(false)
 
   const label = type === 'tournament' ? 'トーナメント' : 'リーグ'
 
@@ -57,6 +60,8 @@ export function LeagueCreatePage({ type, competitionId, competitionName, onBackT
               onChange={handleChange('name')}
               fullWidth
               size="small"
+              error={submitted && !form.name.trim()}
+              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : ''}
               sx={CARD_FIELD_CREATE_SX}
             />
 
@@ -147,7 +152,8 @@ export function LeagueCreatePage({ type, competitionId, competitionName, onBackT
               variant="contained"
               fullWidth
               startIcon={<CheckIcon />}
-              onClick={handleSubmit}
+              disabled={submitted && !form.name.trim()}
+              onClick={() => { setSubmitted(true); if (!form.name.trim()) return; handleSubmit(); showToast('リーグを作成しました') }}
               sx={{ ...SAVE_BUTTON_SX, fontSize: '14px', '& .MuiButton-startIcon': { color: '#FFFFFF' } }}
             >
               作成

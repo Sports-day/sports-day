@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { MOCK_TEAMS, MOCK_TEAM_MEMBERS, MOCK_SELECTABLE_USERS, persistTeams } from '../mock'
+import { propagateTeamNameChange } from '@/lib/autoSync'
+import { notifyTeamListeners } from './useTeams'
 import type { TeamMember } from '../types'
 
 export function useTeamDetail(teamId: string) {
@@ -43,12 +45,15 @@ export function useTeamDetail(teamId: string) {
     }
     MOCK_TEAM_MEMBERS[teamId] = members
     persistTeams()
+    notifyTeamListeners()
+    propagateTeamNameChange(teamId, name)
   }
 
   const handleDeleteTeam = () => {
     const index = MOCK_TEAMS.findIndex((t) => t.id === teamId)
     if (index !== -1) MOCK_TEAMS.splice(index, 1)
     persistTeams()
+    notifyTeamListeners()
   }
 
   return {

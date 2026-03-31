@@ -1,5 +1,7 @@
 import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, TextField, Typography } from '@mui/material'
+import { useState } from 'react'
 import { useLocationCreate } from '../hooks/useLocationCreate'
+import { showToast } from '@/lib/toast'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_CREATE_SX } from '@/styles/commonSx'
 
 type Props = {
@@ -8,7 +10,15 @@ type Props = {
 }
 
 export function LocationCreatePage({ onBack, onSave }: Props) {
-  const { form, handleChange, handleSubmit } = useLocationCreate(onSave)
+  const { form, handleChange, handleSubmit: handleSubmitOriginal } = useLocationCreate(onSave)
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSubmit = () => {
+    setSubmitted(true)
+    if (!form.name.trim()) return
+    handleSubmitOriginal()
+    showToast('場所を作成しました')
+  }
 
   return (
     <Box>
@@ -34,6 +44,8 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
               onChange={handleChange('name')}
               fullWidth
               size="small"
+              error={submitted && !form.name.trim()}
+              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : ''}
               sx={CARD_FIELD_CREATE_SX}
             />
 
@@ -50,6 +62,7 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
               <Button
                 variant="contained"
                 onClick={handleSubmit}
+                disabled={submitted && !form.name.trim()}
                 sx={{ ...SAVE_BUTTON_SX, px: 3 }}
               >
                 作成

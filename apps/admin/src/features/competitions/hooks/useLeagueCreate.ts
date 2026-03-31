@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
+import { MOCK_LEAGUES_BY_COMPETITION, MOCK_LEAGUE_DETAILS, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
+import { getCompetitionTag } from '@/lib/autoSync'
 
 type CreateForm = {
   name: string
@@ -42,6 +43,11 @@ export function useLeagueCreate(competitionId: string, type: 'league' | 'tournam
         MOCK_LEAGUES_BY_COMPETITION[competitionId] = []
       }
       MOCK_LEAGUES_BY_COMPETITION[competitionId].push({ id: newId, name: form.name })
+      MOCK_LEAGUE_DETAILS[newId] = {
+        name: form.name, description: form.description, weight: String(form.weight),
+        matchFormat: form.format || 'sunny', resultJudgments: [form.scoringFormat || 'score'],
+        tag: getCompetitionTag(competitionId),
+      }
     }
     persistCompetitionsData()
     onSave()

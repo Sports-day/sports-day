@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Table,
   TableBody,
@@ -48,18 +49,20 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', tableLayout: 'fixed', width: 'auto' }}>
+            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 80 }}>ID</TableCell>
                   <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>名前</TableCell>
                   <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 400 }}>内容</TableCell>
+                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 120 }}>ステータス</TableCell>
+                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 160 }}>作成日</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {announcements.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    <TableCell colSpan={5} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
                       データがありません
                     </TableCell>
                   </TableRow>
@@ -74,6 +77,22 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.id}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.name}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.content}</TableCell>
+                      <TableCell sx={LIST_TABLE_CELL_SX}>
+                        <Chip
+                          label={item.status === 'published' ? '公開中' : item.status === 'scheduled' ? '公開予約' : '下書き'}
+                          size="small"
+                          sx={{
+                            bgcolor: item.status === 'published' ? '#E8EAF6' : item.status === 'scheduled' ? '#E3F2FD' : '#F5F5F5',
+                            color: item.status === 'published' ? '#3949AB' : item.status === 'scheduled' ? '#1565C0' : '#9E9E9E',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            height: 22,
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={LIST_TABLE_CELL_SX}>
+                        {item.createdAt ? new Date(item.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

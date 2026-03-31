@@ -1,6 +1,9 @@
-import { Box, Breadcrumbs, Button, Checkbox, FormControlLabel, TextField, Typography } from '@mui/material'
+import { Box, Breadcrumbs, Button, ButtonBase, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, TextField, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
+import { useState } from 'react'
+import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { useTagDetail } from '../hooks/useTagDetail'
+import { showToast } from '@/lib/toast'
 import { CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 type Props = {
@@ -10,23 +13,30 @@ type Props = {
 
 export function TagDetailPage({ tagId, onBack }: Props) {
   const { name, setName, enabled, setEnabled, handleSave, handleDelete, tagName } = useTagDetail(tagId)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  useUnsavedWarning(dirty)
 
   const onSave = () => {
     handleSave()
+    setDirty(false)
+    showToast('タグを保存しました')
     onBack()
   }
 
-  const onDelete = () => {
+  const onConfirmDelete = () => {
+    setDeleteDialogOpen(false)
     handleDelete()
+    showToast('タグを削除しました')
     onBack()
   }
 
   return (
     <Box>
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
-        <Typography sx={BREADCRUMB_LINK_SX} onClick={onBack}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           タグ
-        </Typography>
+        </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>{tagName}</Typography>
       </Breadcrumbs>
 
@@ -35,7 +45,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
           タグ情報
         </Typography>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1.5, mb: 2 }} onChangeCapture={() => setDirty(true)}>
           <TextField
             size="small"
             label="タグ名"
@@ -60,7 +70,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
-            onClick={onDelete}
+            onClick={() => setDeleteDialogOpen(true)}
             sx={DELETE_BUTTON_SX}
           >
             このタグを削除
@@ -76,6 +86,43 @@ export function TagDetailPage({ tagId, onBack }: Props) {
           </Button>
         </Box>
       </Box>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2, p: 1, backgroundColor: '#EFF0F8' } }}
+      >
+        <DialogTitle sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
+          タグを削除しますか？
+        </DialogTitle>
+        <DialogContent sx={{ pb: 1 }}>
+          <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
+            「{tagName}」を削除します。この操作は元に戻せません。
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 2, pb: 2, gap: 1 }}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{ fontSize: '13px', color: '#2F3C8C', '&:hover': { backgroundColor: '#E8EAF6' } }}
+          >
+            キャンセル
+          </Button>
+          <Button
+            onClick={onConfirmDelete}
+            variant="outlined"
+            sx={{
+              fontSize: '13px',
+              color: '#D71212',
+              borderColor: '#D71212',
+              '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
+            }}
+          >
+            削除
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

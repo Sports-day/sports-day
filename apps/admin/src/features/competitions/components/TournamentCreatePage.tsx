@@ -5,14 +5,13 @@ import {
   ButtonBase,
   Card,
   CardContent,
-  Checkbox,
-  FormControlLabel,
   MenuItem,
   TextField,
   Typography,
 } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import { useState } from 'react'
 import { useTournamentCreate } from '../hooks/useTournamentCreate'
 import {
   BREADCRUMB_CURRENT_SX,
@@ -21,6 +20,7 @@ import {
   CARD_GRADIENT,
   SAVE_BUTTON_SX,
 } from '@/styles/commonSx'
+import { showToast } from '@/lib/toast'
 import { TAG_OPTIONS } from '../constants'
 
 const PLACEMENT_OPTIONS = [
@@ -45,7 +45,8 @@ export function TournamentCreatePage({
   onBackToDetail,
   onSave,
 }: Props) {
-  const { form, handleChange, handleToggle, handleSubmit } = useTournamentCreate(competitionId, onSave)
+  const { form, handleChange, handleSubmit } = useTournamentCreate(competitionId, onSave)
+  const [submitted, setSubmitted] = useState(false)
 
   return (
     <Box>
@@ -76,6 +77,8 @@ export function TournamentCreatePage({
               onChange={handleChange('name')}
               fullWidth
               size="small"
+              error={submitted && !form.name.trim()}
+              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : ''}
               sx={CARD_FIELD_CREATE_SX}
             />
 
@@ -97,57 +100,9 @@ export function TournamentCreatePage({
               fullWidth
               size="small"
               slotProps={{ htmlInput: { min: 2, max: 64 } }}
-              helperText="ブラケットの構造が自動生成されます"
+              helperText="本戦と順位決定戦（3位決定戦等）が自動生成されます"
               sx={CARD_FIELD_CREATE_SX}
             />
-
-            {/* サブブラケットオプション */}
-            <Box
-              sx={{
-                border: '1px solid',
-                borderColor: 'primary.light',
-                borderRadius: 1.5,
-                px: 2,
-                py: 1.5,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 0.5,
-              }}
-            >
-              <Typography sx={{ fontSize: '12px', color: '#2F3C8C', fontWeight: 600, mb: 0.5 }}>
-                サブブラケット（自動生成）
-              </Typography>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={form.hasThirdPlace}
-                    onChange={() => handleToggle('hasThirdPlace')}
-                    size="small"
-                    sx={{ color: 'primary.light', '&.Mui-checked': { color: 'primary.dark' } }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-                    3位決定戦を追加
-                  </Typography>
-                }
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={form.hasFifthPlace}
-                    onChange={() => handleToggle('hasFifthPlace')}
-                    size="small"
-                    sx={{ color: 'primary.light', '&.Mui-checked': { color: 'primary.dark' } }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-                    5〜8位決定戦を追加
-                  </Typography>
-                }
-              />
-            </Box>
 
             {/* シード配置方法 */}
             <TextField
@@ -202,7 +157,8 @@ export function TournamentCreatePage({
               variant="contained"
               fullWidth
               startIcon={<CheckIcon />}
-              onClick={handleSubmit}
+              disabled={submitted && !form.name.trim()}
+              onClick={() => { setSubmitted(true); if (!form.name.trim()) return; handleSubmit(); showToast('トーナメントを作成しました') }}
               sx={{ ...SAVE_BUTTON_SX, fontSize: '14px', '& .MuiButton-startIcon': { color: '#FFFFFF' } }}
             >
               作成

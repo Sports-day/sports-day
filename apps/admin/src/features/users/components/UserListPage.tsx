@@ -62,19 +62,27 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                  {[user.id, user.name, user.email, user.gender, user.class, user.teams.join(', ')].map((val, i) => (
-                    <TableCell
-                      key={i}
-                      sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-                      onClick={() => onUserClick(user.id)}
-                    >
-                      {val}
-                    </TableCell>
-                  ))}
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    データがありません
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
+                    {[user.id, user.name, user.email, user.gender, user.class, user.teams.join(', ')].map((val, i) => (
+                      <TableCell
+                        key={i}
+                        sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                        onClick={() => onUserClick(user.id)}
+                      >
+                        {val}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
           </Box>

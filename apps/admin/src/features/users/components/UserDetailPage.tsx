@@ -2,6 +2,7 @@ import {
   Box,
   Breadcrumbs,
   Button,
+  ButtonBase,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,7 +15,10 @@ import {
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
+import { useState } from 'react'
 import { useUserDetail } from '../hooks/useUserDetail'
+import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
+import { showToast } from '@/lib/toast'
 import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 const SELECT_SX = {
@@ -57,13 +61,20 @@ export function UserDetailPage({ userId, onBack }: Props) {
     roleOptions,
   } = useUserDetail(userId)
 
+  const [dirty, setDirty] = useState(false)
+  useUnsavedWarning(dirty)
+
   const onSave = () => {
     handleSave()
+    setDirty(false)
+    showToast('ユーザーを保存しました')
     onBack()
   }
 
   const onConfirmDelete = () => {
+    closeDeleteDialog()
     handleDeleteUser()
+    showToast('ユーザーを削除しました')
     onBack()
   }
 
@@ -71,9 +82,9 @@ export function UserDetailPage({ userId, onBack }: Props) {
     <Box>
       {/* パンくずリスト */}
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
-        <Typography sx={BREADCRUMB_LINK_SX} onClick={onBack}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           ユーザー
-        </Typography>
+        </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
           {userName}
         </Typography>
@@ -86,6 +97,7 @@ export function UserDetailPage({ userId, onBack }: Props) {
           borderRadius: 2,
           p: 2,
         }}
+        onChangeCapture={() => setDirty(true)}
       >
         <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 0.5 }}>
           {userName}さんの情報
@@ -167,9 +179,10 @@ export function UserDetailPage({ userId, onBack }: Props) {
         onClose={closeDeleteDialog}
         maxWidth="xs"
         fullWidth
+        aria-labelledby="delete-dialog-title"
         PaperProps={{ sx: { borderRadius: 2, p: 1, backgroundColor: '#EFF0F8' } }}
       >
-        <DialogTitle sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
+        <DialogTitle id="delete-dialog-title" sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
           ユーザーを削除しますか？
         </DialogTitle>
         <DialogContent sx={{ pb: 1 }}>

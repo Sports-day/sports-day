@@ -24,7 +24,7 @@ export function useCompetitionCreate(onSuccess: (name: string) => void) {
   const handleSubmit = () => {
     if (!form.name.trim()) return
     const newId = String(Date.now())
-    MOCK_COMPETITIONS.push({ id: newId, name: form.name })
+    MOCK_COMPETITIONS.push({ id: newId, name: form.name, description: form.description, icon: form.icon, tag: form.tag })
     persistCompetitionsData()
     onSuccess(form.name)
   }

@@ -2,10 +2,10 @@ import type { Competition } from './types'
 import { loadFromStorage, saveToStorage } from '@/lib/localStore'
 
 export const MOCK_COMPETITIONS: Competition[] = loadFromStorage('admin_competitions', [
-  { id: '1', name: 'バスケットボール晴天時' },
-  { id: '2', name: 'バスケットボール雨天時' },
-  { id: '3', name: 'ビーチボール晴天時' },
-  { id: '4', name: 'ビーチボール雨天時' },
+  { id: '1', name: 'バスケットボール晴天時', description: '', icon: 'basketball', tag: 'sunny' },
+  { id: '2', name: 'バスケットボール雨天時', description: '', icon: 'basketball', tag: 'rainy' },
+  { id: '3', name: 'ビーチボール晴天時', description: '', icon: 'volleyball', tag: 'sunny' },
+  { id: '4', name: 'ビーチボール雨天時', description: '', icon: 'volleyball', tag: 'rainy' },
 ])
 
 export type MockLeague = { id: string; name: string }
@@ -94,8 +94,6 @@ export type MockTournamentDetailData = {
   name: string
   description: string
   teamCount: number
-  hasThirdPlace: boolean
-  hasFifthPlace: boolean
   placementMethod: 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
   tag: string
   brackets: MockBracket[]
@@ -113,14 +111,12 @@ const TOURNAMENT_T1_DEFAULT: MockTournamentDetailData = {
   name: '晴天時 決勝トーナメント',
   description: '',
   teamCount: 4,
-  hasThirdPlace: true,
-  hasFifthPlace: false,
   placementMethod: 'SEED_OPTIMIZED',
   tag: 'sunny',
   brackets: [
     {
       id: 'tb_main_1',
-      name: 'メインブラケット',
+      name: '本戦',
       bracketType: 'MAIN',
       displayOrder: 1,
       matches: [
@@ -188,14 +184,12 @@ const TOURNAMENT_T2_DEFAULT: MockTournamentDetailData = {
   name: '晴天時 決勝トーナメント',
   description: '',
   teamCount: 8,
-  hasThirdPlace: false,
-  hasFifthPlace: false,
   placementMethod: 'SEED_OPTIMIZED',
   tag: 'sunny',
   brackets: [
     {
       id: 'tb_main_2',
-      name: 'メインブラケット',
+      name: '本戦',
       bracketType: 'MAIN',
       displayOrder: 1,
       matches: [

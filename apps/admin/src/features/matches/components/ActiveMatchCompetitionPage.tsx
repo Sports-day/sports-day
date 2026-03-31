@@ -1,7 +1,6 @@
 import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, Typography } from '@mui/material'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import { MOCK_ACTIVE_LEAGUES } from '../mock'
-import { MOCK_TOURNAMENTS_BY_COMPETITION } from '@/features/competitions/mock'
+import { MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION } from '@/features/competitions/mock'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 const ITEM_BUTTON_SX = {
@@ -28,7 +27,7 @@ type Props = {
 }
 
 export function ActiveMatchCompetitionPage({ competitionId, competitionName, onBack, onSelectLeague, onSelectTournament }: Props) {
-  const leagues = MOCK_ACTIVE_LEAGUES[competitionId] ?? []
+  const leagues = MOCK_LEAGUES_BY_COMPETITION[competitionId] ?? []
   const tournaments = MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] ?? []
 
   return (

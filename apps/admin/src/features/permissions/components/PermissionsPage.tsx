@@ -77,30 +77,40 @@ export function PermissionsPage({ onCreateClick, onRoleClick }: Props) {
                 <TableCell sx={TABLE_HEAD_SX}>ロールID</TableCell>
                 <TableCell sx={TABLE_HEAD_SX}>名前</TableCell>
                 <TableCell sx={TABLE_HEAD_SX}>備考</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>権限数</TableCell>
                 <TableCell sx={TABLE_HEAD_SX}>初期ロール</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {roles.map((role) => (
-                <TableRow
-                  key={role.id}
-                  hover
-                  onClick={() => onRoleClick(role.id)}
-                  sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
-                >
-                  <TableCell sx={TABLE_CELL_SX}>{role.id}</TableCell>
-                  <TableCell sx={TABLE_CELL_SX}>{role.name}</TableCell>
-                  <TableCell sx={TABLE_CELL_SX}>{role.description}</TableCell>
-                  <TableCell sx={TABLE_CELL_SX} onClick={(e) => { e.stopPropagation(); toggleDefault(role.id) }}>
-                    <Checkbox
-                      checked={role.isDefault}
-                      size="small"
-                      onChange={() => toggleDefault(role.id)}
-                      sx={{ color: '#5B6DC6', '&.Mui-checked': { color: '#3949AB' }, p: 0 }}
-                    />
+              {roles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    データがありません
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                roles.map((role) => (
+                  <TableRow
+                    key={role.id}
+                    hover
+                    onClick={() => onRoleClick(role.id)}
+                    sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
+                  >
+                    <TableCell sx={TABLE_CELL_SX}>{role.id}</TableCell>
+                    <TableCell sx={TABLE_CELL_SX}>{role.name}</TableCell>
+                    <TableCell sx={TABLE_CELL_SX}>{role.description}</TableCell>
+                    <TableCell sx={TABLE_CELL_SX}>{role.permissions?.length ?? 0}</TableCell>
+                    <TableCell sx={TABLE_CELL_SX} onClick={(e) => { e.stopPropagation(); toggleDefault(role.id) }}>
+                      <Checkbox
+                        checked={role.isDefault}
+                        size="small"
+                        onChange={() => toggleDefault(role.id)}
+                        sx={{ color: '#5B6DC6', '&.Mui-checked': { color: '#3949AB' }, p: 0 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
           </Box>

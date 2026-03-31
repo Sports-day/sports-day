@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Box,
   Breadcrumbs,
@@ -6,17 +5,16 @@ import {
   ButtonBase,
   Card,
   CardContent,
-  IconButton,
   TextField,
   Typography,
 } from '@mui/material'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import CheckIcon from '@mui/icons-material/Check'
-import CloseIcon from '@mui/icons-material/Close'
 import type { ActiveMatch, ActiveTeam } from '../types'
 import type { WinnerType, MatchStatusType } from '../hooks/useMatchEdit'
 import { MatchDetailsCard } from './MatchDetailsCard'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { showToast } from '@/lib/toast'
 
 // ─── 定数 ────────────────────────────────────────────────
 const SCORE_INPUT_SX = (bg: string) => ({
@@ -45,9 +43,8 @@ const TOGGLE_BTN_SX = (active: boolean, activeBg: string) => ({
   '&:hover': { backgroundColor: active ? activeBg : '#E0E3F5' },
 })
 
-type ToastType = 'saved' | 'reverted' | null
-
 type MatchContext = {
+  leagueId: string
   leagueName: string
   competitionName: string
 }
@@ -84,16 +81,15 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
   const { leagueName, competitionName } = context
   const { scoreA, scoreB, winner, matchStatus, onScoreAChange, onScoreBChange, onWinnerChange, onMatchStatusChange } = form
   const { onBack, onBackToList, onBackToCompetition } = nav
-  const [toast, setToast] = useState<ToastType>(null)
 
   const handleSave = () => {
     onSave()
-    setToast('saved')
+    showToast('変更が保存されました')
   }
 
   const handleReset = () => {
     onReset()
-    setToast('reverted')
+    showToast('変更を元に戻しました')
   }
 
   return (
@@ -107,7 +103,7 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
           {competitionName}
         </ButtonBase>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
-          {leagueName}(ID:1)
+          {leagueName}(ID:{context.leagueId})
         </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
           試合(ID:{match.id})
@@ -268,61 +264,6 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
       {/* ─── カード2: 試合の詳細設定 ─── */}
       <MatchDetailsCard match={match} />
 
-      {/* ─── トースト通知 ─── */}
-      {toast && (
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            backgroundColor: '#52598D',
-            borderRadius: 2,
-            px: 2,
-            py: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            zIndex: 2000,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-            minWidth: 300,
-          }}
-        >
-          {/* テキスト */}
-          <Typography sx={{ fontSize: '13px', color: '#fff', fontWeight: 500, flex: 1 }}>
-            {toast === 'saved' ? '変更が保存されました' : '変更を元に戻しました'}
-          </Typography>
-
-          {/* リーグに戻るボタン */}
-          <Button
-            size="small"
-            onClick={onBack}
-            sx={{
-              fontSize: '12px',
-              color: '#fff',
-              backgroundColor: '#5F6DC2',
-              whiteSpace: 'nowrap',
-              px: 1.5,
-              flexShrink: 0,
-              '&:hover': { backgroundColor: '#4F5DB2' },
-            }}
-          >
-            リーグに戻る
-          </Button>
-
-          {/* × ボタン */}
-          <IconButton
-            size="small"
-            onClick={() => setToast(null)}
-            sx={{
-              color: '#fff',
-              flexShrink: 0,
-              '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
-            }}
-          >
-            <CloseIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-        </Box>
-      )}
     </Box>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MOCK_ANNOUNCEMENTS, persistAnnouncements } from '../mock'
+import type { Announcement } from '../types'
 
 // モジュールレベルのリスナーセット
 const _listeners = new Set<() => void>()
@@ -17,8 +18,9 @@ export function useAnnouncements() {
     return () => { _listeners.delete(trigger) }
   }, [])
 
-  const addAnnouncement = (name: string, content: string) => {
-    MOCK_ANNOUNCEMENTS.push({ id: String(Date.now()), name, content })
+  const addAnnouncement = (name: string, content: string, status: Announcement['status'], scheduledAt?: string) => {
+    const now = new Date().toISOString()
+    MOCK_ANNOUNCEMENTS.push({ id: String(Date.now()), name, content, createdAt: now, updatedAt: now, status, scheduledAt })
     persistAnnouncements()
     notifyAnnouncementListeners()
   }

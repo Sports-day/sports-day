@@ -38,15 +38,21 @@ export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }:
             </Button>
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1 }}>
-            {competitions.map((competition) => (
-              <CompetitionCard
-                key={competition.id}
-                competition={competition}
-                onSelect={() => onSelectCompetition(competition.id, competition.name)}
-              />
-            ))}
-          </Box>
+          {competitions.length === 0 ? (
+            <Typography sx={{ py: 8, color: '#888', fontSize: '13px', textAlign: 'center' }}>
+              データがありません
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1 }}>
+              {competitions.map((competition) => (
+                <CompetitionCard
+                  key={competition.id}
+                  competition={competition}
+                  onSelect={() => onSelectCompetition(competition.id, competition.name)}
+                />
+              ))}
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Box>

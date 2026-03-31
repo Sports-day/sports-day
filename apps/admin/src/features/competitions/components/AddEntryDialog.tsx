@@ -18,13 +18,17 @@ type Props = {
   open: boolean
   leagueName: string
   competitionName: string
+  existingTeamNames?: string[]
   onClose: () => void
   onAdd: (selectedIds: string[]) => void
 }
 
-export function AddEntryDialog({ open, leagueName, competitionName, onClose, onAdd }: Props) {
+export function AddEntryDialog({ open, leagueName, competitionName, existingTeamNames = [], onClose, onAdd }: Props) {
   const { data: teams } = useTeams()
-  const availableTeams = teams.map(t => ({ id: t.id, name: t.name }))
+  const existingSet = new Set(existingTeamNames)
+  const availableTeams = teams
+    .map(t => ({ id: t.id, name: t.name }))
+    .filter(t => !existingSet.has(t.name))
   const { selected, allSelected, toggle, toggleAll, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
 
   return (

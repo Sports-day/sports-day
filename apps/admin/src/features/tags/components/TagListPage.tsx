@@ -87,7 +87,13 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tags.map((tag) => (
+              {tags.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    データがありません
+                  </TableCell>
+                </TableRow>
+              ) : tags.map((tag) => (
                 <TableRow key={tag.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
                   <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onTagClick(tag.id)}>{tag.id}</TableCell>
                   <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onTagClick(tag.id)}>{tag.name}</TableCell>
@@ -102,6 +108,7 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
                 </TableRow>
               ))}
             </TableBody>
+
           </Table>
           </Box>
         </CardContent>

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import type { ActiveMatch } from '../types'
-import { MOCK_ACTIVE_LEAGUES } from '../mock'
+import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
 
 export function useMatchDetails(match: ActiveMatch) {
   const [open, setOpen] = useState(false)
   const [note, setNote] = useState(match.note ?? '')
   const [referee, setReferee] = useState(match.referee ?? '')
   const [location, setLocation] = useState(match.location ?? '1')
-  const [startTime, setStartTime] = useState(match.startTime ?? '2026-03-25T22:48')
+  const [startTime, setStartTime] = useState(match.startTime ?? new Date().toISOString().slice(0, 16))
 
   const handleSave = () => {
     for (const leagues of Object.values(MOCK_ACTIVE_LEAGUES)) {
@@ -21,6 +21,7 @@ export function useMatchDetails(match: ActiveMatch) {
         }
       }
     }
+    persistActiveLeagues()
     setOpen(false)
   }
 
@@ -28,7 +29,7 @@ export function useMatchDetails(match: ActiveMatch) {
     setNote(match.note ?? '')
     setReferee(match.referee ?? '')
     setLocation(match.location ?? '1')
-    setStartTime(match.startTime ?? '2026-03-25T22:48')
+    setStartTime(match.startTime ?? new Date().toISOString().slice(0, 16))
   }
 
   return {

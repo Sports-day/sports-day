@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MOCK_USERS, persistUsers } from '../mock'
+import { notifyUserListeners } from './useUsers'
 
 const VALID_GENDERS = ['男性', '女性']
 
@@ -59,6 +60,7 @@ export function useUserCsv() {
         })
       })
     persistUsers()
+    notifyUserListeners()
     setCsvText('')
     setRows([])
   }

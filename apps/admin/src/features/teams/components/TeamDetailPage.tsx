@@ -14,7 +14,10 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
+import { useState } from 'react'
 import { useTeamDetail } from '../hooks/useTeamDetail'
+import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
+import { showToast } from '@/lib/toast'
 import { AddMemberDialog } from './AddMemberDialog'
 import { DeleteTeamDialog } from './DeleteTeamDialog'
 import {
@@ -53,13 +56,20 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
     teamName,
   } = useTeamDetail(teamId)
 
+  const [dirty, setDirty] = useState(false)
+  useUnsavedWarning(dirty)
+
   const onSave = () => {
     handleSave()
+    setDirty(false)
+    showToast('チームを保存しました')
     onBack()
   }
 
   const onConfirmDelete = () => {
+    handleCloseDeleteDialog()
     handleDeleteTeam()
+    showToast('チームを削除しました')
     onBack()
   }
 
@@ -82,6 +92,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
           borderRadius: 2,
           p: 2,
         }}
+        onChangeCapture={() => setDirty(true)}
       >
         <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
           {teamName}の情報
@@ -110,7 +121,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
         {/* チームメンバー */}
         <Box
           component="fieldset"
-          sx={{ border: '1px solid #5B6DC6', borderRadius: 1, padding: 0, margin: 0, marginBottom: 16 }}
+          sx={{ border: '1px solid #5B6DC6', borderRadius: 1, padding: 0, margin: 0, mb: 1.5 }}
         >
           <Box
             component="legend"

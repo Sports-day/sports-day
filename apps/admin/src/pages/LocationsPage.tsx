@@ -1,14 +1,11 @@
+import { LocationListPage, LocationCreatePage, LocationDetailPage } from '@/features/locations'
 import { useState } from 'react'
-import { LocationListPage, LocationCreatePage, LocationDetailPage, useLocations } from '@/features/locations'
 
 type View = 'list' | 'create' | 'detail'
 
 export default function LocationsPage() {
   const [view, setView] = useState<View>('list')
   const [selectedId, setSelectedId] = useState('')
-  const { data: locations } = useLocations()
-
-  const selectedLocation = locations.find(l => l.id === selectedId)
 
   if (view === 'create') {
     return (
@@ -19,10 +16,10 @@ export default function LocationsPage() {
     )
   }
 
-  if (view === 'detail' && selectedLocation) {
+  if (view === 'detail') {
     return (
       <LocationDetailPage
-        location={selectedLocation}
+        locationId={selectedId}
         onBack={() => setView('list')}
         onSave={() => setView('list')}
         onDelete={() => setView('list')}

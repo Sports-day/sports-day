@@ -41,6 +41,11 @@ export function useMatchEdit() {
           match.scoreA = scoreA === '' ? null : Number(scoreA)
           match.scoreB = scoreB === '' ? null : Number(scoreB)
           if (matchStatus) match.status = matchStatus
+          // winner フィールドがある場合は保存（明示的な勝敗指定）
+          if (winner === 'teamA') match.winner = 'teamA'
+          else if (winner === 'teamB') match.winner = 'teamB'
+          else if (winner === 'draw') match.winner = 'draw'
+          else match.winner = undefined
         }
       }
     }

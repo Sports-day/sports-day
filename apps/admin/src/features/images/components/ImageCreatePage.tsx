@@ -1,6 +1,7 @@
 import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useImageCreate } from '../hooks/useImageCreate'
+import { showToast } from '@/lib/toast'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const INPUT_SX = {
@@ -23,18 +24,26 @@ type Props = {
 export function ImageCreatePage({ onBack }: Props) {
   const { name, setName, url, setUrl, handleCreate } = useImageCreate()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [submitted, setSubmitted] = useState(false)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
     if (file) {
       if (!name) setName(file.name)
-      setUrl(URL.createObjectURL(file))
+      // blob: URL はリロードで無効になるため data URL に変換して永続化する
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') setUrl(reader.result)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
   const onCreate = () => {
+    setSubmitted(true)
     if (!name.trim()) return
     handleCreate()
+    showToast('画像を作成しました')
     onBack()
   }
 
@@ -58,6 +67,8 @@ export function ImageCreatePage({ onBack }: Props) {
           label="名前*"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          error={submitted && !name.trim()}
+          helperText={submitted && !name.trim() ? 'この項目は必須です' : ''}
           sx={INPUT_SX}
         />
 
@@ -97,6 +108,7 @@ export function ImageCreatePage({ onBack }: Props) {
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="contained"
+            disabled={!name.trim()}
             onClick={onCreate}
             sx={{ ...SAVE_BUTTON_SX, fontSize: '13px' }}
           >

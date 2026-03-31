@@ -21,11 +21,12 @@ export function DeleteTeamDialog({ open, onClose, onConfirm }: Props) {
       onClose={onClose}
       maxWidth="xs"
       fullWidth
+      aria-labelledby="delete-dialog-title"
       PaperProps={{
         sx: { borderRadius: 2, p: 1, backgroundColor: '#EFF0F8' },
       }}
     >
-      <DialogTitle sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
+      <DialogTitle id="delete-dialog-title" sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
         チームを削除しますか？
       </DialogTitle>
       <DialogContent sx={{ pb: 1 }}>

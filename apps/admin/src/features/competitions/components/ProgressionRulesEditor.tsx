@@ -66,6 +66,11 @@ export function ProgressionRulesEditor({
               </Typography>
               {Array.from({ length: maxRank }, (_, i) => i + 1).map(rank => {
                 const rule = rules.find(r => r.rank === rank)
+                const usedTargetIds = new Set(
+                  rules
+                    .filter(r => r.rank !== rank && r.targetId)
+                    .map(r => r.targetId),
+                )
                 return (
                   <Box key={rank} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Typography sx={{ fontSize: '13px', color: '#2F3C8C', minWidth: 28, fontWeight: 600 }}>
@@ -86,7 +91,11 @@ export function ProgressionRulesEditor({
                         </Typography>
                       </MenuItem>
                       {availableTargets.map(target => (
-                        <MenuItem key={target.id} value={target.id}>
+                        <MenuItem
+                          key={target.id}
+                          value={target.id}
+                          disabled={usedTargetIds.has(target.id)}
+                        >
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography
                               component="span"

@@ -1,5 +1,7 @@
 import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
+import { useState } from 'react'
 import { useTagCreate } from '../hooks/useTagCreate'
+import { showToast } from '@/lib/toast'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const INPUT_SX = {
@@ -21,10 +23,13 @@ type Props = {
 
 export function TagCreatePage({ onBack }: Props) {
   const { name, setName, handleCreate } = useTagCreate()
+  const [submitted, setSubmitted] = useState(false)
 
   const onCreate = () => {
+    setSubmitted(true)
     if (!name.trim()) return
     handleCreate()
+    showToast('タグを作成しました')
     onBack()
   }
 
@@ -42,11 +47,12 @@ export function TagCreatePage({ onBack }: Props) {
           タグ作成
         </Typography>
 
-        <TextField fullWidth size="small" label="名前*" value={name} onChange={(e) => setName(e.target.value)} sx={INPUT_SX} />
+        <TextField fullWidth size="small" label="名前*" value={name} onChange={(e) => setName(e.target.value)} error={submitted && !name.trim()} helperText={submitted && !name.trim() ? 'この項目は必須です' : ''} sx={INPUT_SX} />
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="contained"
+            disabled={!name.trim()}
             onClick={onCreate}
             sx={{ ...SAVE_BUTTON_SX, fontSize: '13px' }}
           >

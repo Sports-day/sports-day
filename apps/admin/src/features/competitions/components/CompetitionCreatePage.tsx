@@ -1,5 +1,7 @@
 import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, MenuItem, TextField, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
+import { useState } from 'react'
+import { showToast } from '@/lib/toast'
 import { useCompetitionCreate } from '../hooks/useCompetitionCreate'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_CREATE_SX } from '@/styles/commonSx'
 import { ICON_OPTIONS, TAG_OPTIONS } from '../constants'
@@ -13,6 +15,7 @@ type Props = {
 
 export function CompetitionCreatePage({ onBack, onSave }: Props) {
   const { form, handleChange, handleSubmit } = useCompetitionCreate(onSave)
+  const [submitted, setSubmitted] = useState(false)
 
   return (
     <Box>
@@ -38,11 +41,12 @@ export function CompetitionCreatePage({ onBack, onSave }: Props) {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               placeholder="競技名"
-              helperText="例: バスケットボール晴天時"
+              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : '例: バスケットボール晴天時'}
               value={form.name}
               onChange={handleChange('name')}
               fullWidth
               size="small"
+              error={submitted && !form.name.trim()}
               sx={FIELD_SX}
             />
 
@@ -101,7 +105,8 @@ export function CompetitionCreatePage({ onBack, onSave }: Props) {
               variant="contained"
               fullWidth
               startIcon={<CheckIcon />}
-              onClick={handleSubmit}
+              disabled={submitted && !form.name.trim()}
+              onClick={() => { setSubmitted(true); if (!form.name.trim()) return; handleSubmit(); showToast('競技を作成しました') }}
               sx={{ ...SAVE_BUTTON_SX, fontSize: '14px', '& .MuiButton-startIcon': { color: '#FFFFFF' } }}
             >
               保存

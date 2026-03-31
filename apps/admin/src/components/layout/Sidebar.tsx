@@ -21,21 +21,23 @@ type NavItem = {
   key: string
   label: string
   icon: React.ReactNode
+  /** このページを表示するために必要な権限キー。省略=常に表示 */
+  permission?: string
 }
 
 const PREPARATION_ITEMS: NavItem[] = [
-  { key: 'competitions', label: '競技', icon: <EmojiEventsIcon fontSize="small" /> },
-  { key: 'teams', label: 'チーム', icon: <GroupsIcon fontSize="small" /> },
-  { key: 'users', label: 'ユーザー', icon: <PersonIcon fontSize="small" /> },
-  { key: 'locations', label: '場所', icon: <LocationOnIcon fontSize="small" /> },
-  { key: 'permissions', label: '権限', icon: <AdminPanelSettingsIcon fontSize="small" /> },
-  { key: 'tags', label: 'タグ', icon: <LabelIcon fontSize="small" /> },
-  { key: 'images', label: '画像', icon: <ImageIcon fontSize="small" /> },
+  { key: 'competitions', label: '競技', icon: <EmojiEventsIcon fontSize="small" />, permission: 'competitions.view' },
+  { key: 'teams', label: 'チーム', icon: <GroupsIcon fontSize="small" />, permission: 'teams.view' },
+  { key: 'users', label: 'ユーザー', icon: <PersonIcon fontSize="small" />, permission: 'users.view' },
+  { key: 'locations', label: '場所', icon: <LocationOnIcon fontSize="small" />, permission: 'locations.view' },
+  { key: 'permissions', label: '権限', icon: <AdminPanelSettingsIcon fontSize="small" />, permission: 'roles.view' },
+  { key: 'tags', label: 'タグ', icon: <LabelIcon fontSize="small" />, permission: 'tags.edit' },
+  { key: 'images', label: '画像', icon: <ImageIcon fontSize="small" />, permission: 'images.view' },
 ]
 
 const PROGRESS_ITEMS: NavItem[] = [
-  { key: 'active-matches', label: '試合', icon: <PlayCircleIcon fontSize="small" /> },
-  { key: 'information', label: 'お知らせ', icon: <CampaignIcon fontSize="small" /> },
+  { key: 'active-matches', label: '試合', icon: <PlayCircleIcon fontSize="small" />, permission: 'matches.view' },
+  { key: 'information', label: 'お知らせ', icon: <CampaignIcon fontSize="small" />, permission: 'information.view' },
 ]
 
 const NAV_ITEM_SX = (selected: boolean) => ({
@@ -67,9 +69,11 @@ type SidebarProps = {
   onMobileClose?: () => void
   onLogout?: () => void
   onHome?: () => void
+  /** 権限チェック関数。渡すと権限のないメニューが非表示になる */
+  checkPermission?: (key: string) => boolean
 }
 
-export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose, onLogout, onHome }: SidebarProps) {
+export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose, onLogout, onHome, checkPermission }: SidebarProps) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
@@ -95,8 +99,8 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
       <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
         準備
       </Typography>
-      <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {PREPARATION_ITEMS.map(({ key, label, icon }) => (
+      <List dense disablePadding aria-label="メインナビゲーション" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {PREPARATION_ITEMS.filter(({ permission }) => !permission || !checkPermission || checkPermission(permission)).map(({ key, label, icon }) => (
           <ListItemButton
             key={key}
             selected={selected === key}
@@ -114,8 +118,8 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
       <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
         進行
       </Typography>
-      <List dense disablePadding sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {PROGRESS_ITEMS.map(({ key, label, icon }) => (
+      <List dense disablePadding aria-label="進行ナビゲーション" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {PROGRESS_ITEMS.filter(({ permission }) => !permission || !checkPermission || checkPermission(permission)).map(({ key, label, icon }) => (
           <ListItemButton
             key={key}
             selected={selected === key}
