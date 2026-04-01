@@ -1,162 +1,156 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Stack,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemText,
-  Avatar,
-  Chip,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
+import { Box, Typography, Stack, Button, useTheme } from "@mui/material";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import { gql, useQuery } from "@apollo/client";
+import { useRouter } from "next/navigation";
+import PrivacyPolicyDrawer from "@/components/layouts/PrivacyPolicyDrawer";
+import CircularUnderLoad from "@/features/Loading";
 
-const Query = gql`
-  query GetUsers {
-    users {
+const GET_TYPE = gql`
+  query GetType {
+    scenes {
       id
-      name
-      email
     }
   }
 `;
 
 export default function Home() {
-  const { data, loading, error } = useQuery(Query);
+  const { data, loading, error } = useQuery(GET_TYPE, {
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
+  });
+  const router = useRouter();
+  const theme = useTheme();
+
+  const firstSceneId = data?.scenes?.[0]?.id;
 
   if (loading) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="400px"
-        >
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
+    return <CircularUnderLoad />;
   }
 
   if (error) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Failed to load users: {error.message}
-        </Alert>
-        <Button variant="contained" onClick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </Container>
-    );
+    throw error;
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 8 }}>
-      <Stack spacing={6}>
-        <Box textAlign="center">
-          <Typography variant="h2" component="h1" gutterBottom fontWeight="300">
-            Users
-          </Typography>
-          <Typography variant="h6" color="text.secondary" fontWeight="400">
-            {data?.users?.length || 0} users found
-          </Typography>
-        </Box>
-
-        <Card sx={{ width: "100%", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h5" gutterBottom fontWeight="500">
-              User List
-            </Typography>
-
-            {data?.users?.length > 0 ? (
-              <List sx={{ mt: 2 }}>
-                {data.users.map((user: any) => (
-                  <ListItem
-                    key={user.id}
-                    sx={{
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 2,
-                      mb: 2,
-                      "&:last-child": { mb: 0 },
-                    }}
-                  >
-                    <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
-                      {user.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <ListItemText
-                      primary={user.name}
-                      secondary={
-                        <>
-                          <Typography
-                            variant="body2"
-                            component="span"
-                            display="block"
-                          >
-                            ID: {user.id}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            component="span"
-                            display="block"
-                          >
-                            Email: {user.email}
-                          </Typography>
-                        </>
-                      }
-                    />
-                    <Chip label="Active" color="success" size="small" />
-                  </ListItem>
-                ))}
-              </List>
-            ) : (
-              <Box textAlign="center" py={4}>
-                <Typography variant="body1" color="text.secondary">
-                  No users found
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-
-        <Stack direction="row" spacing={3} justifyContent="center">
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => window.location.reload()}
-            sx={{ px: 4, py: 1.5 }}
-          >
-            Refresh
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            href="https://nextjs.org/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ px: 4, py: 1.5 }}
-          >
-            Documentation
-          </Button>
-        </Stack>
-
-        <Box
-          sx={{ mt: 4, pt: 4, borderTop: "1px solid", borderColor: "divider" }}
+    <Box
+      sx={{
+        background: theme.palette.background.default,
+        width: "100%",
+        minHeight: "100dvh",
+        display: "flex",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        style={{
+          width: "100%",
+          minHeight: "100dvh",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <Stack
+          sx={{
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            px: "16px",
+            py: "16px",
+          }}
         >
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            Built with Next.js, Material-UI and Apollo GraphQL
+          <Image
+            src="/images/logo_form.png"
+            alt=""
+            width={380}
+            height={30}
+            style={{ width: "min(380px, 78vw)", height: "auto" }}
+          />
+          <Typography
+            sx={{
+              color: "white",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            球技大会のチーム登録プラットフォーム
           </Typography>
-        </Box>
-      </Stack>
-    </Container>
+
+          <Box sx={{ width: "min(320px, 100%)", mt: "32px" }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+              style={{ width: "100%" }}
+            >
+              <Button
+                variant="contained"
+                color="secondary"
+                disableElevation
+                disabled={loading || !firstSceneId}
+                onClick={() => {
+                  if (firstSceneId) {
+                    router.push(`/weather/${firstSceneId}`);
+                  }
+                }}
+                sx={{
+                  width: "100%",
+                  background: theme.palette.button.veryLight,
+                  borderRadius: "10px",
+                  "&:hover": {
+                    background: theme.palette.button.veryLight,
+                    borderRadius: "10px",
+                    opacity: 0.9,
+                  },
+                }}
+              >
+                <Typography
+                  sx={(theme) => ({
+                    ...theme.typography.buttonFont2,
+                  })}
+                >
+                  回答へ進む
+                </Typography>
+              </Button>
+            </motion.div>
+          </Box>
+          <Box sx={{ width: "min(320px, 100%)", mt: "16px" }}>
+            <PrivacyPolicyDrawer>プライバシーポリシー</PrivacyPolicyDrawer>
+          </Box>
+
+          <Stack direction="row" spacing={"8px"} sx={{ mt: "32px" }}>
+            <Typography
+              sx={{
+                color: "white",
+                opacity: 0.3,
+                fontSize: "20px",
+                lineHeight: 1,
+              }}
+            >
+              (C)
+            </Typography>
+            <Box>
+              <Image
+                src="/images/wider_horiz.png"
+                alt=""
+                width={160}
+                height={48}
+                style={{
+                  opacity: 0.3,
+                  width: "min(160px, 44vw)",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
+            </Box>
+          </Stack>
+        </Stack>
+      </motion.div>
+    </Box>
   );
 }
