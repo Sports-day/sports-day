@@ -10,7 +10,7 @@ import {
     Stack,
     SvgIcon,
     Typography,
-    Unstable_Grid2 as Grid,
+    Grid,
     useTheme
 } from "@mui/material";
 import {GameProgress} from "@/components/game/game-progress";
@@ -194,7 +194,7 @@ export default function Page() {
                                         <Grid container spacing={1}>
                                             {myTeam &&
                                                 <>
-                                                    <Grid xs={5.5} sm={5.5} lg={5.5}>
+                                                    <Grid size={5.5}>
                                                         <Box
                                                             px={2}
                                                             py={2}
@@ -230,7 +230,7 @@ export default function Page() {
                                                             </Stack>
                                                         </Box>
                                                     </Grid>
-                                                    <Grid xs={6.5} sm={6.5} lg={6.5}>
+                                                    <Grid size={6.5}>
                                                         <Box
                                                             px={2}
                                                             py={2}
@@ -268,7 +268,7 @@ export default function Page() {
                                                     </Grid>
                                                 </>
                                             }
-                                            <Grid xs={6.5} sm={6.5} lg={6.5}>
+                                            <Grid size={6.5}>
                                                 <Box
                                                     px={2}
                                                     py={1.5}
@@ -283,7 +283,7 @@ export default function Page() {
                                                     <GameProgress sportsId={sport.id}/>
                                                 </Box>
                                             </Grid>
-                                            <Grid xs={5.5} sm={5.5} lg={5.5}>
+                                            <Grid size={5.5}>
                                                 <Button
                                                     variant={"contained"}
                                                     color={"secondary"}

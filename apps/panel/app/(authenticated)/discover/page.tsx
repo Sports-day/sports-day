@@ -2,7 +2,7 @@ import {
     Box,
     Container,
     Stack, Typography,
-    Unstable_Grid2 as Grid,
+    Grid,
     TextField,
     useTheme, Tabs, Tab
 } from "@mui/material";

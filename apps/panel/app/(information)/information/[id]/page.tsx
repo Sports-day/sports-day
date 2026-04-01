@@ -2,7 +2,6 @@ import {Box, Card, CardContent, Grid, LinearProgress, Stack, Typography} from "@
 import LeftCircleContainer from "@/components/information/layout/leftCircleContainer";
 import MatchList from "@/components/information/match/matchList"
 import {InfoGameProgressChart} from "@/components/information/infoGameProgressChart";
-import Grid2 from "@mui/material/Unstable_Grid2";
 import * as React from "react";
 import LeagueCardList from "@/components/information/league/leagueCardList";
 import Top3LeagueCards from "@/components/information/league/top3LeagueCards";
@@ -85,17 +84,17 @@ export default function Page() {
                             全体の順位
                         </Typography>
                         <Box sx={{flexGrow: 1}} width="100%">
-                            <Grid2 container alignItems="flex-end" justifyContent="center" columnSpacing={3}
+                            <Grid container alignItems="flex-end" justifyContent="center" columnSpacing={3}
                                    columns={12}
                                    margin={0}>
                                 <Top3LeagueCards games={filteredGames}/>
-                            </Grid2>
+                            </Grid>
 
                         </Box>
                         <Box sx={{flexGrow: 1}}>
-                            <Grid2 container alignItems="flex-end" justifyContent="center" spacing={3} columns={12}>
+                            <Grid container alignItems="flex-end" justifyContent="center" spacing={3} columns={12}>
                                 <LeagueCardList games={filteredGames}/>
-                            </Grid2>
+                            </Grid>
                         </Box>
 
 
@@ -104,7 +103,7 @@ export default function Page() {
 
                     {/* Second Component */}
                     <Grid
-                        xs={6}
+                        size={{ xs: 6 }}
                         justifyContent="center"
                         alignItems="center"
                         flex={1}

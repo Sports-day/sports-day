@@ -8,7 +8,7 @@ import {
     Stack,
     SvgIcon,
     Typography,
-    Unstable_Grid2 as Grid,
+    Grid,
     useTheme
 } from "@mui/material";
 import * as React from "react";
@@ -89,7 +89,7 @@ export default function Page() {
 
                             <Grid container spacing={1.5}>
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -139,7 +139,7 @@ export default function Page() {
                                     </motion.div>
                                 </Grid>
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -189,7 +189,7 @@ export default function Page() {
                                     </motion.div>
                                 </Grid>
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -253,7 +253,7 @@ export default function Page() {
                                     </Typography>
                                 </Stack>
 
-                                <Grid xs={12} sm={12} lg={12}>
+                                <Grid size={12}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -361,7 +361,7 @@ export default function Page() {
                                     </motion.div>
                                 </Grid>
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -418,7 +418,7 @@ export default function Page() {
                                     </motion.div>
                                 </Grid>
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -479,7 +479,7 @@ export default function Page() {
                                         </Card>
                                     </motion.div>
                                 </Grid>
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -536,7 +536,7 @@ export default function Page() {
                                     </motion.div>
                                 </Grid>
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -593,7 +593,7 @@ export default function Page() {
                                 </Grid>
 
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -650,7 +650,7 @@ export default function Page() {
                                 </Grid>
 
 
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         initial={{opacity: 0, y: "50px"}}
                                         whileInView={{opacity: 1, y: "0px"}}
@@ -719,7 +719,7 @@ export default function Page() {
                                         SPORTSDAYは、球技大会をDXするWebプラットフォーム。
                                     </Typography>
                                 </Stack>
-                                <Grid xs={12} sm={12} lg={12}>
+                                <Grid size={12}>
                                     <motion.div
                                         style={{width: "100%"}}
                                         initial={{opacity: 0, scale: 0.8}}
@@ -744,7 +744,7 @@ export default function Page() {
                                         </Card>
                                     </motion.div>
                                 </Grid>
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         style={{width: "100%"}}
                                         initial={{opacity: 0, scale: 0.8}}
@@ -773,7 +773,7 @@ export default function Page() {
                                         </Card>
                                     </motion.div>
                                 </Grid>
-                                <Grid xs={12} sm={6} lg={6}>
+                                <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                     <motion.div
                                         style={{width: "100%"}}
                                         initial={{opacity: 0, scale: 0.8}}
@@ -804,7 +804,7 @@ export default function Page() {
                                 </Grid>
                             </Grid>
 
-                            <Grid xs={12} sm={6} lg={6}>
+                            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                 <motion.div
                                     style={{width: "100%"}}
                                     initial={{opacity: 0, scale: 0.8}}
@@ -830,7 +830,7 @@ export default function Page() {
                                 </motion.div>
                             </Grid>
 
-                            <Grid xs={12} sm={6} lg={6}>
+                            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                 <motion.div
                                     initial={{opacity: 0, y: "50px"}}
                                     whileInView={{opacity: 1, y: "0px"}}
@@ -869,7 +869,7 @@ export default function Page() {
 
                                 </Typography>
                             </Stack>
-                            <Grid xs={12} sm={6} lg={6}>
+                            <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
                                 <motion.div
                                     style={{width: "100%"}}
                                     initial={{opacity: 0, scale: 0.8}}

@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import Grid2 from "@mui/material/Unstable_Grid2";
+import { Grid as Grid2 } from "@mui/material";
 import {Game, gameFactory, LeagueResult, LeagueTeamResult} from "@/src/models/GameModel";
 import {Team, teamFactory} from "@/src/models/TeamModel";
 import {useAsync} from "react-use";
@@ -57,7 +57,7 @@ export default function LeagueCardList(props: LeagueCardListProps) {
     return (
         <Grid2 container spacing={2} columns={12} margin={2}>
             {results.map((value, index) => (
-                <Grid2 xs={6} key={index} direction="row">
+                <Grid2 size={{ xs: 6 }} key={index} direction="row">
                     <LeagueCard
                         league={value.game.name}
                         team={value.team.name}

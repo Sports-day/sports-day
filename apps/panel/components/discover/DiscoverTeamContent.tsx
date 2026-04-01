@@ -7,7 +7,7 @@ import {
     SvgIcon,
     SwipeableDrawer,
     Typography,
-    Unstable_Grid2 as Grid,
+    Grid,
     useTheme
 } from "@mui/material";
 import {HiLocationMarker} from "react-icons/hi";
@@ -39,7 +39,7 @@ export const DiscoverTeamContent = (props:DiscoverTeamContentProps) => {
     });
     return (
         <>
-            <Grid xs={12} sm={12} lg={12}>
+            <Grid size={12}>
                 <Card>
                     <Button sx={{width:"100%"}} onClick={() => toggleDrawer(true)}>
                             <Stack
