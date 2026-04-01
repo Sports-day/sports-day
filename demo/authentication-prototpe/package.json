@@ -33,6 +33,12 @@
     "ts-api-utils": "2.4.0",
     "@emnapi/core": "1.9.0",
     "@emnapi/runtime": "1.9.0",
-    "baseline-browser-mapping": "2.10.8"
+    "@napi-rs/wasm-runtime": "1.1.1",
+    "baseline-browser-mapping": "2.10.8",
+    "brace-expansion": "1.1.12",
+    "browserslist": "4.28.1",
+    "caniuse-lite": "1.0.30001779",
+    "electron-to-chromium": "1.5.313",
+    "picomatch": "4.0.3"
   }
 }
