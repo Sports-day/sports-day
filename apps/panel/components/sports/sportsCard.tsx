@@ -10,7 +10,7 @@ type SportCardProps = {
 
 export const SportCard: React.FC<SportCardProps> = ({img, children, link}) => {
     return (
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Button
                 color={"secondary"}
                 variant={"contained"}

@@ -2,7 +2,7 @@ import {Box, Card, Stack, SvgIcon, Typography} from "@mui/material";
 import * as React from "react";
 import {Match} from "@/src/models/MatchModel";
 import {HiClock, HiMapPin} from "react-icons/hi2";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import { Grid as Grid2 } from "@mui/material";
 import {useFetchGame} from "@/src/features/games/hook";
 import {useFetchLocation} from "@/src/features/locations/hook";
 import {useFetchTeam} from "@/src/features/teams/hook";
@@ -54,27 +54,27 @@ export default function MatchCard(props: MatchCardProps) {
 
                         <Grid2 container spacing={2.5} width="100%" height="100%" alignItems="center"
                                justifyContent="center" margin="0">
-                            <Grid2 xs={2.5} display="flex" justifyContent="center">
+                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
                                 <Typography variant="subtitle1" component="div" textAlign="center">
                                     {game?.name}
                                 </Typography>
                             </Grid2>
-                            <Grid2 xs={2.5} display="flex" justifyContent="center">
+                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
                                 <Typography variant="h4" component="div" textAlign="center">
                                     {leftTeam?.name ?? "未登録"}
                                 </Typography>
                             </Grid2>
-                            <Grid2 xs={1} display="flex" justifyContent="center">
+                            <Grid2 size={{ xs: 1 }} display="flex" justifyContent="center">
                                 <Typography variant="subtitle1" color="text.secondary" textAlign="center">
                                     vs
                                 </Typography>
                             </Grid2>
-                            <Grid2 xs={2.5} display="flex" justifyContent="center">
+                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
                                 <Typography variant="h4" component="div" textAlign="center">
                                     {rightTeam?.name ?? "未登録"}
                                 </Typography>
                             </Grid2>
-                            <Grid2 xs={3} display="flex" flexDirection="column" alignItems="left"
+                            <Grid2 size={{ xs: 3 }} display="flex" flexDirection="column" alignItems="left"
                                    justifyContent="center" margin="0">
                                 <Stack direction={"row"} alignItems={"center"} spacing={0.5}>
                                     <SvgIcon fontSize={"small"}>

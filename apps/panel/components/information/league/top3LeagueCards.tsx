@@ -1,4 +1,4 @@
-import Grid2 from "@mui/material/Unstable_Grid2";
+import { Grid as Grid2 } from "@mui/material";
 import {Card, Stack, SvgIcon, Typography} from "@mui/material";
 import {HiChartBar} from "react-icons/hi2";
 import * as React from "react";
@@ -58,7 +58,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
 
     return (
         <>
-            <Grid2 xs={3.8}>
+            <Grid2 size={{ xs: 3.8 }}>
                 <Card
                     variant="outlined"
                     sx={{
@@ -102,7 +102,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
                     </Stack>
                 </Card>
             </Grid2>
-            <Grid2 xs={3.8}>
+            <Grid2 size={{ xs: 3.8 }}>
                 <Card
                     variant="outlined"
                     sx={{
@@ -146,7 +146,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
                     </Stack>
                 </Card>
             </Grid2>
-            <Grid2 xs={3.8}>
+            <Grid2 size={{ xs: 3.8 }}>
                 <Card
                     variant="outlined"
                     sx={{

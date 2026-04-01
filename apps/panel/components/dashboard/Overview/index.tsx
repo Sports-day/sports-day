@@ -7,7 +7,7 @@ import {
     SvgIcon,
     Typography,
     SwipeableDrawer,
-    Unstable_Grid2 as Grid, Box
+    Grid, Box
 } from "@mui/material";
 import {
     HiChartBar,
@@ -52,7 +52,7 @@ export const Overview = (props: OverviewProps) => {
             maxWidth={"xl"}
         >
             <Grid container spacing={1}>
-                <Grid xs={6.5} sm={6.5} lg={6.5}>
+                <Grid size={6.5}>
                     <Button
                         disableElevation
                         color={"secondary"}
@@ -98,7 +98,7 @@ export const Overview = (props: OverviewProps) => {
                         </Stack>
                     </Button>
                 </Grid>
-                <Grid xs={5.5} sm={5.5} lg={5.5}>
+                <Grid size={5.5}>
                     <Button
                         disableElevation
                         color={"secondary"}

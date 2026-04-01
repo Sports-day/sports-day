@@ -48,22 +48,22 @@ export const RuleKickbase = () => {
             sx={{width:"100%"}}
         >
             <Grid container>
-                <Grid xs={12} sm={12} lg={12}>
+                <Grid size={12}>
                     <RuleNumCard title={"会場"} content={"グラウンド"} sub={" "}/>
                 </Grid>
-                <Grid xs={6} sm={6} lg={3}>
+                <Grid size={{ xs: 6, lg: 3 }}>
                     <RuleNumCard title={"試合時間"} content={"20分"} sub={"-"}/>
                 </Grid>
-                <Grid xs={6} sm={6} lg={3}>
+                <Grid size={{ xs: 6, lg: 3 }}>
                     <RuleNumCard title={"出場人数"} content={"9 〜 11"} sub={"人"}/>
                 </Grid>
-                <Grid xs={12} sm={12} lg={6}>
+                <Grid size={{ xs: 12, lg: 6 }}>
                     <RuleNumCard title={"担当審判"} content={"学生会役員・指定審判"} sub={"-"}/>
                 </Grid>
-                <Grid xs={12} sm={12} lg={6}>
+                <Grid size={{ xs: 12, lg: 6 }}>
                     <RuleNumCard title={"部員ハンデ"} content={"サッカー部員は１度に２ベース以上進むことができない"} sub={""}/>
                 </Grid>
-                <Grid xs={12} sm={12} lg={6}>
+                <Grid size={{ xs: 12, lg: 6 }}>
                     <RuleNumCard title={"女子ハンデ"} content={"女子か３人以上のチームが攻撃の回は３アウト交代"} sub={"女子が本塁に帰ってきた場合は２点を得点とする。３回空振り制限の対象外とする。女子が蹴ったボールをピッチャーが取ることはできない。"}/>
                 </Grid>
             </Grid>

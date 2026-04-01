@@ -1,4 +1,4 @@
-import Grid from "@mui/material/Grid";
+import { Grid } from "@mui/material";
 import {Match} from "@/src/models/MatchModel";
 import MatchCard from "@/components/information/match/matchCard";
 
