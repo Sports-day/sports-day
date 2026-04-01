@@ -33,6 +33,7 @@ type Env struct {
 	}
 	Storage struct {
 		Endpoint      string `envconfig:"STORAGE_ENDPOINT"`
+		Region        string `envconfig:"STORAGE_REGION" default:"us-east-1"`
 		Bucket        string `envconfig:"STORAGE_BUCKET"`
 		AccessKey     string `envconfig:"STORAGE_ACCESS_KEY"`
 		SecretKey     string `envconfig:"STORAGE_SECRET_KEY"`

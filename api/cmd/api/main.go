@@ -92,7 +92,7 @@ func main() {
 
 	cfg, err := config.LoadDefaultConfig(
 		context.Background(),
-		config.WithRegion("us-east-1"),
+		config.WithRegion(env.Get().Storage.Region),
 		config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
 				env.Get().Storage.AccessKey,
