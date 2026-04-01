@@ -3,11 +3,6 @@ input CreateUserInput {
   email: String!
 }
 
-input LoginInput {
-  code: String!
-  redirectURL: String!
-}
-
 input CreateGroupInput {
   name: String!
 }
@@ -383,7 +378,6 @@ type ImageUploadURL {
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
-  login(input: LoginInput!): AuthResponse!
   createGroup(input: CreateGroupInput!): Group!
   deleteGroup(id: ID!): Group!
   updateGroup(id: ID!, input: UpdateGroupInput!): Group!

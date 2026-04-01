@@ -22,11 +22,6 @@ type AssignSeedTeamInput struct {
 	TeamID *string `json:"teamId,omitempty"`
 }
 
-type AuthResponse struct {
-	Token string `json:"token"`
-	User  *User  `json:"user"`
-}
-
 type CreateCompetitionInput struct {
 	Name    string          `json:"name"`
 	Type    CompetitionType `json:"type"`
@@ -165,11 +160,6 @@ type JudgmentEntry struct {
 	UserID  *string `json:"userId,omitempty"`
 	TeamID  *string `json:"teamId,omitempty"`
 	GroupID *string `json:"groupId,omitempty"`
-}
-
-type LoginInput struct {
-	Code        string `json:"code"`
-	RedirectURL string `json:"redirectURL"`
 }
 
 type MatchEntry struct {

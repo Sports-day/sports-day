@@ -20,15 +20,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 	return model.FormatUserResponse(user), nil
 }
 
-// Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthResponse, error) {
-	authResponse, err := r.AuthService.Login(ctx, input.Code, input.RedirectURL)
-	if err != nil {
-		return nil, err
-	}
-	return authResponse, nil
-}
-
 // CreateGroup is the resolver for the createGroup field.
 func (r *mutationResolver) CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error) {
 	group, err := r.GroupService.Create(ctx, &input)

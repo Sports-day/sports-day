@@ -4,15 +4,21 @@ import "context"
 
 type userContextKey struct{}
 
-func AttachUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, userContextKey{}, userID)
+type Claims struct {
+	Sub   string
+	Email string
+	Name  string
 }
 
-func GetUserID(ctx context.Context) (string, bool) {
+func AttachClaims(ctx context.Context, claims *Claims) context.Context {
+	return context.WithValue(ctx, userContextKey{}, claims)
+}
+
+func GetClaims(ctx context.Context) (*Claims, bool) {
 	switch v := ctx.Value(userContextKey{}).(type) {
-	case string:
+	case *Claims:
 		return v, true
 	default:
-		return "", false
+		return nil, false
 	}
 }

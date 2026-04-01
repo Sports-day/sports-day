@@ -84,9 +84,13 @@ var (
 	/*
 		Authentication
 	*/
-	ErrUnauthorized = NewError("UNAUTHORIZED", "ログインしてください")
-	ErrForbidden    = NewError("FORBIDDEN", "アクセスできません")
-	ErrTokenExpired = NewError("TOKEN_EXPIRED", "再度ログインしてください")
-	ErrLoginFailed  = NewError("LOGIN_FAILED", "ログインできません")
-	ErrAuth         = NewError("AUTH_ERROR", "認証エラーが発生しました")
+	ErrUnauthorized       = NewError("UNAUTHORIZED", "ログインしてください")
+	ErrForbidden          = NewError("FORBIDDEN", "アクセスできません")
+	ErrTokenExpired       = NewError("TOKEN_EXPIRED", "再度ログインしてください")
+	ErrLoginFailed        = NewError("LOGIN_FAILED", "ログインできません")
+	ErrAuth               = NewError("AUTH_ERROR", "認証エラーが発生しました")
+	ErrTokenMissing       = NewError("TOKEN_MISSING", "認証トークンが見つかりません")
+	ErrTokenInvalid       = NewError("TOKEN_INVALID", "認証トークンが無効です")
+	ErrTokenClaimsInvalid = NewError("TOKEN_CLAIMS_INVALID", "認証トークンの情報が不正です")
+	ErrUserSyncFailed     = NewError("USER_SYNC_FAILED", "ユーザー情報の同期に失敗しました")
 )

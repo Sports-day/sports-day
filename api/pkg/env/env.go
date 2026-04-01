@@ -20,16 +20,8 @@ type Env struct {
 		CORSOrigins []string `envconfig:"SERVER_CORS_ORIGINS" default:"*"`
 	}
 	Auth struct {
-		OIDC struct {
-			IssuerURL   string `envconfig:"AUTH_ISSUER_URL" required:"true"`
-			ClientID    string `envconfig:"AUTH_CLIENT_ID" required:"true"`
-			SecretKey   string `envconfig:"AUTH_SECRET_KEY" required:"true"`
-			RedirectURL string `envconfig:"AUTH_REDIRECT_URL" required:"true"`
-		}
-		JWT struct {
-			SecretKey     string `envconfig:"JWT_SECRET_KEY" required:"true"`
-			ExpirySeconds int    `envconfig:"JWT_EXPIRY_SECONDS" default:"3600"`
-		}
+		IssuerURL string `envconfig:"AUTH_ISSUER_URL" required:"true"`
+		ClientID  string `envconfig:"AUTH_CLIENT_ID" required:"true"`
 	}
 	Storage struct {
 		Endpoint      string `envconfig:"STORAGE_ENDPOINT"`
