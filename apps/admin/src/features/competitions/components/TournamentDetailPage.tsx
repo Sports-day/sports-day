@@ -33,7 +33,7 @@ import { TAG_OPTIONS } from '../constants'
 import { MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
 import { useTournamentDetail } from '../hooks/useTournamentDetail'
 import { useTournamentEdit } from '../hooks/useTournamentEdit'
-import { useSeedAssignment } from '@/features/matches/hooks/useSeedAssignment'
+import { useSeedAssignment } from '@/hooks/useSeedAssignment'
 
 const PLACEMENT_OPTIONS = [
   { value: 'SEED_OPTIMIZED', label: 'シード最適化（上位シード同士が終盤まで当たらない）' },

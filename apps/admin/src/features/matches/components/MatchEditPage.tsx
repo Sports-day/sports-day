@@ -238,10 +238,10 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
               sx={{
                 fontSize: '13px',
                 color: '#D71212',
-                borderColor: '#5B6DC6',
+                borderColor: '#D71212',
                 backgroundColor: 'transparent',
                 whiteSpace: 'nowrap',
-                '&:hover': { backgroundColor: '#FDECEA', borderColor: '#5B6DC6' },
+                '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
               }}
             >
               元に戻す
