@@ -14,6 +14,7 @@ import (
 
 	"sports-day/api"
 	"sports-day/api/graph"
+	apihandler "sports-day/api/handler"
 	"sports-day/api/middleware"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/env"
@@ -25,6 +26,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func main() {
@@ -83,11 +88,32 @@ func main() {
 	leagueRepository := repository.NewLeague()
 	tournamentRepository := repository.NewTournament()
 	ruleRepository := repository.NewRule()
+	imageRepository := repository.NewImage()
+
+	cfg, err := config.LoadDefaultConfig(
+		context.Background(),
+		config.WithRegion(env.Get().Storage.Region),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				env.Get().Storage.AccessKey,
+				env.Get().Storage.SecretKey,
+				"",
+			),
+		),
+	)
+	if err != nil {
+		api.Logger.Fatal().Err(err).Msg("failed to load aws config")
+	}
+
+	s3Client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(env.Get().Storage.Endpoint)
+		o.UsePathStyle = true
+	})
+
 	// service
 	userService := service.NewUser(db, userRepository)
 	authService := service.NewAuthService(db, userRepository, oidc, jwt)
 	groupService := service.NewGroup(db, groupRepository, userRepository)
-	sportService := service.NewSports(db, sportRepository)
 	teamService := service.NewTeam(db, teamRepository, userRepository)
 	locationService := service.NewLocation(db, locationRepository)
 	sceneService := service.NewScene(db, sceneRepository)
@@ -103,9 +129,11 @@ func main() {
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
+	imageService := service.NewImage(db, imageRepository, s3Client, env.Get().Storage.Bucket,env.Get().Storage.Endpoint)
+	sportService := service.NewSports(db, sportRepository, &imageService)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService)}
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})
@@ -121,7 +149,16 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService, imageService))
+	mux.Handle(
+		"/internal/webhooks/upload",
+		apihandler.HandleUploadWebhook(
+			&imageService,
+			env.Get().Storage.WebhookSecret,
+			env.Get().Storage.Endpoint,
+			env.Get().Storage.Bucket,
+		),
+	)
 
 	address := fmt.Sprintf("%s:%d", env.Get().Server.Host, env.Get().Server.Port)
 

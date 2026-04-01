@@ -31,6 +31,15 @@ type Env struct {
 			ExpirySeconds int    `envconfig:"JWT_EXPIRY_SECONDS" default:"3600"`
 		}
 	}
+	Storage struct {
+		Endpoint      string `envconfig:"STORAGE_ENDPOINT"`
+		Region        string `envconfig:"STORAGE_REGION" default:"us-east-1"`
+		Bucket        string `envconfig:"STORAGE_BUCKET"`
+		AccessKey     string `envconfig:"STORAGE_ACCESS_KEY"`
+		SecretKey     string `envconfig:"STORAGE_SECRET_KEY"`
+		WebhookSecret string `envconfig:"STORAGE_WEBHOOK_SECRET"`
+	}
+
 	Debug bool `envconfig:"DEBUG" default:"false"`
 }
 

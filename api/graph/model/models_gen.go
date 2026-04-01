@@ -28,6 +28,10 @@ type CreateGroupInput struct {
 	Name string `json:"name"`
 }
 
+type CreateImageUploadURLInput struct {
+	Filename string `json:"filename"`
+}
+
 type CreateInformationInput struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
@@ -120,6 +124,17 @@ type GenerateRoundRobinInput struct {
 	LocationID    *string `json:"locationId,omitempty"`
 }
 
+type Image struct {
+	ID     string  `json:"id"`
+	URL    *string `json:"url,omitempty"`
+	Status string  `json:"status"`
+}
+
+type ImageUploadURL struct {
+	UploadURL string `json:"uploadUrl"`
+	ImageID   string `json:"imageId"`
+}
+
 type Information struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"`
@@ -199,14 +214,6 @@ type SlotInput struct {
 	SeedNumber    *int32         `json:"seedNumber,omitempty"`
 }
 
-type Sport struct {
-	ID           string         `json:"id"`
-	Name         string         `json:"name"`
-	Weight       int32          `json:"weight"`
-	RankingRules []*RankingRule `json:"rankingRules"`
-	Rules        []*Rule        `json:"rules"`
-}
-
 // SUBブラケット定義（自動生成用）
 type SubBracketInput struct {
 	Name        string `json:"name"`
@@ -228,7 +235,8 @@ type UpdateCompetitionEntriesInput struct {
 }
 
 type UpdateCompetitionInput struct {
-	Name *string `json:"name,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	ImageID *string `json:"imageId,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -301,8 +309,9 @@ type UpdateSlotConnectionInput struct {
 }
 
 type UpdateSportsInput struct {
-	Name   *string `json:"name,omitempty"`
-	Weight *int32  `json:"weight,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	Weight  *int32  `json:"weight,omitempty"`
+	ImageID *string `json:"imageId,omitempty"`
 }
 
 type UpdateTeamInput struct {

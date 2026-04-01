@@ -21,7 +21,7 @@
     "ghcr.io/va-h/devcontainers-features/uv:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "forwardPorts": [3000, 3001, 3002, 8080, 8888],
+  "forwardPorts": [3000, 3001, 3002, 8080, 8888, 9000, 9001],
   "portsAttributes": {
     "3000": {
       "label": "panel",
@@ -41,6 +41,14 @@
     },
     "8888": {
       "label": "keycloak",
+      "onAutoForward": "notify"
+    },
+    "9000": {
+      "label": "rustfs (S3)",
+      "onAutoForward": "silent"
+    },
+    "9001": {
+      "label": "rustfs (console)",
       "onAutoForward": "notify"
     }
   },

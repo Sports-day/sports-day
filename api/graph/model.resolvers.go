@@ -311,6 +311,18 @@ func (r *ruleResolver) Sport(ctx context.Context, obj *model.Rule) (*model.Sport
 	return model.FormatSportResponse(sports[0]), nil
 }
 
+// Image is the resolver for the image field.
+func (r *sportResolver) Image(ctx context.Context, obj *model.Sport) (*model.Image, error) {
+	if obj.ImageID == nil {
+		return nil, nil
+	}
+	img, err := loader.LoadImage(ctx, *obj.ImageID)
+	if err != nil || img == nil {
+		return nil, err
+	}
+	return model.FormatImageResponse(img), nil
+}
+
 // Team is the resolver for the team field.
 func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*model.Team, error) {
 	teams, err := loader.LoadTeams(ctx, []string{obj.TeamID})
@@ -608,6 +620,9 @@ func (r *Resolver) Match() MatchResolver { return &matchResolver{r} }
 // Rule returns RuleResolver implementation.
 func (r *Resolver) Rule() RuleResolver { return &ruleResolver{r} }
 
+// Sport returns SportResolver implementation.
+func (r *Resolver) Sport() SportResolver { return &sportResolver{r} }
+
 // Standing returns StandingResolver implementation.
 func (r *Resolver) Standing() StandingResolver { return &standingResolver{r} }
 
@@ -635,6 +650,7 @@ type leagueResolver struct{ *Resolver }
 type locationResolver struct{ *Resolver }
 type matchResolver struct{ *Resolver }
 type ruleResolver struct{ *Resolver }
+type sportResolver struct{ *Resolver }
 type standingResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type tournamentResolver struct{ *Resolver }

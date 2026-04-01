@@ -93,10 +93,16 @@ func (r *mutationResolver) DeleteSports(ctx context.Context, id string) (*model.
 
 // UpdateSports is the resolver for the updateSports field.
 func (r *mutationResolver) UpdateSports(ctx context.Context, id string, input model.UpdateSportsInput) (*model.Sport, error) {
-	sport, err := r.SportService.Update(ctx, id, input)
+	sport, err := r.SportService.Update(
+		ctx,
+		id,
+		input,
+	)
+
 	if err != nil {
 		return nil, err
 	}
+
 	rankingRules, err := r.SportService.GetRankingRules(ctx, id)
 	if err != nil {
 		return nil, err
@@ -609,6 +615,26 @@ func (r *mutationResolver) DeleteRule(ctx context.Context, id string) (*model.Ru
 	return model.FormatRuleResponse(rule), nil
 }
 
+// CreateImageUploadURL is the resolver for the createImageUploadURL field.
+func (r *mutationResolver) CreateImageUploadURL(ctx context.Context, input model.CreateImageUploadURLInput) (*model.ImageUploadURL, error) {
+	img, uploadURL, err := r.ImageService.CreateUploadURL(ctx, input.Filename)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return model.FormatImageUploadURLResponse(img, uploadURL), nil
+}
+
+// DeleteImage is the resolver for the deleteImage field.
+func (r *mutationResolver) DeleteImage(ctx context.Context, id string) (*model.Image, error) {
+	img, err := r.ImageService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatImageResponse(img), nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -980,6 +1006,28 @@ func (r *queryResolver) Rules(ctx context.Context) ([]*model.Rule, error) {
 	res := make([]*model.Rule, 0, len(rules))
 	for _, rule := range rules {
 		res = append(res, model.FormatRuleResponse(rule))
+	}
+	return res, nil
+}
+
+// Image is the resolver for the image field.
+func (r *queryResolver) Image(ctx context.Context, id string) (*model.Image, error) {
+	img, err := r.ImageService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatImageResponse(img), nil
+}
+
+// Images is the resolver for the images field.
+func (r *queryResolver) Images(ctx context.Context) ([]*model.Image, error) {
+	imgs, err := r.ImageService.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*model.Image, 0, len(imgs))
+	for _, img := range imgs {
+		res = append(res, model.FormatImageResponse(img))
 	}
 	return res, nil
 }

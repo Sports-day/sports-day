@@ -36,13 +36,37 @@ func FormatSceneResponse(scene *db_model.Scene) *Scene {
 	}
 }
 
+func FormatImageUploadURLResponse(image *db_model.Image, uploadURL string) *ImageUploadURL {
+	return &ImageUploadURL{
+		ImageID:   image.ID,
+		UploadURL: uploadURL,
+	}
+}
+
+func FormatImageResponse(image *db_model.Image) *Image {
+	var url *string
+	if image.URL.Valid {
+		url = &image.URL.String
+	}
+	return &Image{
+		ID:     image.ID,
+		URL:    url,
+		Status: image.Status,
+	}
+}
+
 func FormatSportResponse(sport *db_model.Sport) *Sport {
+	var imageID *string
+	if sport.ImageID.Valid {
+		imageID = &sport.ImageID.String
+	}
 	return &Sport{
 		ID:           sport.ID,
 		Name:         sport.Name,
 		Weight:       int32(sport.Weight),
 		RankingRules: []*RankingRule{},
 		Rules:        []*Rule{},
+		ImageID:      imageID,
 	}
 }
 

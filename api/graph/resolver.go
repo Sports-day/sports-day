@@ -27,6 +27,7 @@ type Resolver struct {
 	LeagueService      service.League
 	TournamentService  service.Tournament
 	RuleService        service.Rule
+	ImageService       service.Image
 }
 
 // computeBracketStateForTournament は Tournament に BracketState を付与してレスポンスを生成する。
@@ -67,6 +68,7 @@ func NewResolver(
 	leagueService service.League,
 	tournamentService service.Tournament,
 	ruleService service.Rule,
+	imageService service.Image,
 ) *Resolver {
 	return &Resolver{
 		UserService:        userService,
@@ -83,5 +85,6 @@ func NewResolver(
 		LeagueService:      leagueService,
 		TournamentService:  tournamentService,
 		RuleService:        ruleService,
+		ImageService:       imageService,
 	}
 }

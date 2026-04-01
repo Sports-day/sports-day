@@ -44,6 +44,7 @@ input CreateSportsInput {
 input UpdateSportsInput {
   name: String
   weight: Int
+  imageId: ID
 }
 
 input CreateTeamInput {
@@ -77,6 +78,7 @@ input CreateCompetitionInput {
 
 input UpdateCompetitionInput {
   name: String
+  imageId: ID
 }
 
 input UpdateCompetitionEntriesInput {
@@ -123,18 +125,18 @@ input UpdateMatchEntryScoreInput {
 """
 input JudgmentEntry {
   name: String
-	userId: ID
-	teamId: ID
-	groupId: ID
+  userId: ID
+  teamId: ID
+  groupId: ID
 }
 
 input CreateJudgmentInput {
-	id: ID!
-	entry: JudgmentEntry!
+  id: ID!
+  entry: JudgmentEntry!
 }
 
 input UpdateJudgmentInput {
-	entry: JudgmentEntry
+  entry: JudgmentEntry
 }
 
 input CreateLeagueInput {
@@ -143,7 +145,7 @@ input CreateLeagueInput {
 }
 
 input UpdateLeagueRuleInput {
-	winPt:  Int
+  winPt: Int
   drawPt: Int
   losePt: Int
 }
@@ -311,7 +313,7 @@ type Query {
   """
   ID指定で試合を取得する
   """
-	judgment(id: ID!): Judgment!
+  judgment(id: ID!): Judgment!
   """
   リーグをまとめて取得する
   """
@@ -319,7 +321,7 @@ type Query {
   """
   ID指定でリーグを取得する
   """
-	league(id: ID!): League!
+  league(id: ID!): League!
   """
   リーグの順位表をリアルタイム計算で取得する
   """
@@ -346,6 +348,23 @@ type Query {
   tournamentRanking(competitionId: ID!): [TournamentRanking!]!
   rule(id: ID!): Rule!
   rules: [Rule]!
+  """
+  ID指定で画像を取得する
+  """
+  image(id: ID!): Image!
+  """
+  画像一覧を取得する
+  """
+  images: [Image!]!
+}
+
+input CreateImageUploadURLInput {
+  filename: String!
+}
+
+type ImageUploadURL {
+  uploadUrl: String!
+  imageId: ID!
 }
 
 type Mutation {
@@ -408,11 +427,17 @@ type Mutation {
   """
   大会にチームエントリーを追加する
   """
-  addCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  addCompetitionEntries(
+    id: ID!
+    input: UpdateCompetitionEntriesInput!
+  ): Competition!
   """
   大会からチームエントリーを削除する
   """
-  deleteCompetitionEntries(id: ID!, input: UpdateCompetitionEntriesInput!): Competition!
+  deleteCompetitionEntries(
+    id: ID!
+    input: UpdateCompetitionEntriesInput!
+  ): Competition!
   """
   試合を作成する
   """
@@ -440,7 +465,7 @@ type Mutation {
   """
   審判の情報を更新する
   """
-	updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
+  updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
   """
   リーグを追加する
   """
@@ -520,4 +545,12 @@ type Mutation {
   createRule(input: CreateRuleInput!): Rule!
   updateRule(id: ID!, input: UpdateRuleInput!): Rule!
   deleteRule(id: ID!): Rule!
+  """
+  画像アップロード用のURLを発行する
+  """
+  createImageUploadURL(input: CreateImageUploadURLInput!): ImageUploadURL!
+  """
+  画像を削除する（S3ファイルとDBレコードを両方削除）
+  """
+  deleteImage(id: ID!): Image!
 }

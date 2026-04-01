@@ -41,7 +41,6 @@ func (s *Tournament) SetCompetitionService(cs *Competition) {
 	s.competitionService = cs
 }
 
-
 // --- Query ---
 
 func (s *Tournament) Get(ctx context.Context, id string) (*db_model.Tournament, error) {
@@ -1915,11 +1914,11 @@ func (s *Tournament) IsTournamentMatch(ctx context.Context, tx *gorm.DB, competi
 
 // bracketGraph はブラケット構造のデータ一式を保持する。
 type bracketGraph struct {
-	tournaments        []*db_model.Tournament
-	slotsByTournament  map[string][]*db_model.TournamentSlot
+	tournaments         []*db_model.Tournament
+	slotsByTournament   map[string][]*db_model.TournamentSlot
 	matchesByTournament map[string][]*db_model.Match
-	entriesByMatch     map[string][]*db_model.MatchEntry
-	entryIDToMatchID   map[string]string
+	entriesByMatch      map[string][]*db_model.MatchEntry
+	entryIDToMatchID    map[string]string
 }
 
 // loadBracketGraph は competition 内の全ブラケット構造を一括取得する。
@@ -1999,11 +1998,11 @@ func (s *Tournament) loadBracketGraph(ctx context.Context, db *gorm.DB, competit
 	}
 
 	return &bracketGraph{
-		tournaments:        tournaments,
-		slotsByTournament:  slotsByTournament,
+		tournaments:         tournaments,
+		slotsByTournament:   slotsByTournament,
 		matchesByTournament: matchesByTournament,
-		entriesByMatch:     entriesByMatch,
-		entryIDToMatchID:   entryIDToMatchID,
+		entriesByMatch:      entriesByMatch,
+		entryIDToMatchID:    entryIDToMatchID,
 	}, nil
 }
 

@@ -40,9 +40,10 @@ type Loaders struct {
 	MatchEntryLoader               *dataloadgen.Loader[string, *db_model.MatchEntry]
 	SportLoader                    *dataloadgen.Loader[string, *db_model.Sport]
 	SportRulesLoader               *dataloadgen.Loader[string, []*db_model.Rule]
+	ImageLoader                    *dataloadgen.Loader[string, *db_model.Image]
 }
 
-func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League, tournamentSvc service.Tournament, sportSvc service.Sport, ruleSvc service.Rule) *Loaders {
+func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League, tournamentSvc service.Tournament, sportSvc service.Sport, ruleSvc service.Rule, imageSvc service.Image) *Loaders {
 	return &Loaders{
 		UserLoader:                     dataloadgen.NewLoader(newUserLoader(userSvc)),
 		GroupLoader:                    dataloadgen.NewLoader(newGroupLoader(groupSvc)),
@@ -74,6 +75,7 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 		MatchEntryLoader:               dataloadgen.NewLoader(newMatchEntryLoader(matchSvc)),
 		SportLoader:                    dataloadgen.NewLoader(newSportLoader(sportSvc)),
 		SportRulesLoader:               dataloadgen.NewLoader(newSportRulesLoader(ruleSvc)),
+		ImageLoader:                    dataloadgen.NewLoader(newImageLoader(imageSvc)),
 	}
 }
 

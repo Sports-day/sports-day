@@ -134,6 +134,13 @@ type Sport {
   weight: Int!
   rankingRules: [RankingRule!]!
   rules: [Rule!]!
+  image: Image
+}
+
+type Image {
+  id: ID!
+  url: String
+  status: String!
 }
 
 type Scene {
