@@ -7,6 +7,7 @@ import {
   Stack,
   Button,
   Typography,
+  Alert,
   useTheme,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
@@ -29,6 +30,7 @@ export default function TeamEdit() {
     removeStudent,
     submit,
     isSubmitting,
+    submitError,
   } = useTeamEdit();
 
   if (loading) {
@@ -158,11 +160,16 @@ export default function TeamEdit() {
                   sx={{
                     background: theme.palette.card.main,
                     display: "flex",
-                    justifyContent: "center",
+                    flexDirection: "column",
                     alignItems: "center",
                     width: "100%",
                   }}
                 >
+                  {submitError && (
+                    <Alert severity="error" sx={{ width: "90%", mt: "8px" }}>
+                      {submitError}
+                    </Alert>
+                  )}
                   <motion.div
                     whileTap={{ scale: 0.98 }}
                     style={{

@@ -71,8 +71,10 @@ export function useTeamEdit() {
   const apolloClient = useApolloClient();
 
   const [localSelectedMember, setLocalSelectedMember] = useState<StudentInformation[] | null>(null);
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set());
   const [searchName, setSearchName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const teamId = searchParams?.get("teamid")?.trim() ?? "";
   const hasTeamId = teamId.length > 0;
@@ -196,16 +198,10 @@ export function useTeamEdit() {
     });
   };
 
-  const removeStudent = async (studentId: string) => {
+  const removeStudent = (studentId: string) => {
     if (hasTeamId) {
-      await deleteMemberMutation({
-        variables: {
-          teamId,
-          userIds: [studentId],
-        },
-      });
+      setPendingDeleteIds((prev) => new Set([...prev, studentId]));
     }
-
     setLocalSelectedMember((prev) => {
       const base = prev ?? teamMembersFromQuery;
       return base.filter((s) => s.studentId !== studentId);
@@ -217,10 +213,23 @@ export function useTeamEdit() {
 
     let createdTeamId: string | undefined;
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
       if (hasTeamId) {
-        await addTeamMember(teamId, selectedIds);
+        if (pendingDeleteIds.size > 0) {
+          await deleteMemberMutation({
+            variables: {
+              teamId,
+              userIds: [...pendingDeleteIds],
+            },
+          });
+        }
+        const myTeamUserIdSet = new Set(myTeamUserIds);
+        const newMemberIds = selectedIds.filter((id) => !myTeamUserIdSet.has(id));
+        if (newMemberIds.length > 0) {
+          await addTeamMember(teamId, newMemberIds);
+        }
       } else {
         if (!sportSceneId) return;
         const newTeamId = await createTeam();
@@ -251,7 +260,7 @@ export function useTeamEdit() {
           // Rollback failed; keep original error path.
         }
       }
-      throw error;
+      setSubmitError("送信に失敗しました。もう一度お試しください。");
     } finally {
       setIsSubmitting(false);
     }
@@ -269,5 +278,6 @@ export function useTeamEdit() {
     removeStudent,
     submit,
     isSubmitting,
+    submitError,
   };
 }
