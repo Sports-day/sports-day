@@ -205,5 +205,3 @@ func (r *matchRepository) UpdateMatchEntryTeamID(ctx context.Context, db *gorm.D
 	}
 	return nil
 }
-
-

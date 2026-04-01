@@ -100,9 +100,10 @@ func FormatLocationResponse(location *db_model.Location) *Location {
 
 func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
 	return &Competition{
-		ID:   competition.ID,
-		Name: competition.Name,
-		Type: CompetitionType(competition.Type),
+		ID:      competition.ID,
+		Name:    competition.Name,
+		Type:    CompetitionType(competition.Type),
+		SceneID: competition.SceneID,
 	}
 }
 
@@ -223,6 +224,22 @@ func FormatRankingRuleResponse(rule *db_model.RankingRule) *RankingRule {
 	return &RankingRule{
 		ConditionKey: RankingConditionKey(rule.ConditionKey),
 		Priority:     int32(rule.Priority),
+	}
+}
+
+func FormatSportSceneResponse(sportScene *db_model.SportScene) *SportScene {
+	return &SportScene{
+		ID:      sportScene.ID,
+		SportID: sportScene.SportID,
+		SceneID: sportScene.SceneID,
+	}
+}
+
+func FormatSportEntryResponse(sportEntry *db_model.SportEntry) *SportEntry {
+	return &SportEntry{
+		ID:           sportEntry.ID,
+		SportSceneID: sportEntry.SportSceneID,
+		TeamID:       sportEntry.TeamID,
 	}
 }
 

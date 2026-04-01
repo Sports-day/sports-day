@@ -7,11 +7,24 @@ package graph
 import (
 	"context"
 	"fmt"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
 	"sports-day/api/pkg/slices"
 )
+
+// Scene is the resolver for the scene field.
+func (r *competitionResolver) Scene(ctx context.Context, obj *model.Competition) (*model.Scene, error) {
+	scenes, err := loader.LoadScenes(ctx, []string{obj.SceneID})
+	if err != nil {
+		return nil, err
+	}
+	if len(scenes) == 0 || scenes[0] == nil {
+		return nil, nil
+	}
+	return model.FormatSceneResponse(scenes[0]), nil
+}
 
 // Teams is the resolver for the teams field.
 func (r *competitionResolver) Teams(ctx context.Context, obj *model.Competition) ([]*model.Team, error) {
@@ -311,6 +324,17 @@ func (r *ruleResolver) Sport(ctx context.Context, obj *model.Rule) (*model.Sport
 	return model.FormatSportResponse(sports[0]), nil
 }
 
+// SportScenes is the resolver for the sportScenes field.
+func (r *sceneResolver) SportScenes(ctx context.Context, obj *model.Scene) ([]*model.SportScene, error) {
+	res, err := loader.LoadSportScenesByScene(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(res, func(s *db_model.SportScene) *model.SportScene {
+		return model.FormatSportSceneResponse(s)
+	}), nil
+}
+
 // Image is the resolver for the image field.
 func (r *sportResolver) Image(ctx context.Context, obj *model.Sport) (*model.Image, error) {
 	if obj.ImageID == nil {
@@ -321,6 +345,76 @@ func (r *sportResolver) Image(ctx context.Context, obj *model.Sport) (*model.Ima
 		return nil, err
 	}
 	return model.FormatImageResponse(img), nil
+}
+
+// Scene is the resolver for the scene field.
+func (r *sportResolver) Scene(ctx context.Context, obj *model.Sport) ([]*model.SportScene, error) {
+	res, err := loader.LoadSportScenesBySport(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(res, func(s *db_model.SportScene) *model.SportScene {
+		return model.FormatSportSceneResponse(s)
+	}), nil
+}
+
+// SportScene is the resolver for the sportScene field.
+func (r *sportEntryResolver) SportScene(ctx context.Context, obj *model.SportEntry) (*model.SportScene, error) {
+	rows, err := loader.LoadSportScenes(ctx, []string{obj.SportSceneID})
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 || rows[0] == nil {
+		return nil, nil
+	}
+	return model.FormatSportSceneResponse(rows[0]), nil
+}
+
+// Team is the resolver for the team field.
+func (r *sportEntryResolver) Team(ctx context.Context, obj *model.SportEntry) (*model.Team, error) {
+	teams, err := loader.LoadTeams(ctx, []string{obj.TeamID})
+	if err != nil {
+		return nil, err
+	}
+	if len(teams) == 0 || teams[0] == nil {
+		return nil, nil
+	}
+	return model.FormatTeamResponse(teams[0]), nil
+}
+
+// Sport is the resolver for the sport field.
+func (r *sportSceneResolver) Sport(ctx context.Context, obj *model.SportScene) (*model.Sport, error) {
+	res, err := loader.LoadSports(ctx, []string{obj.SportID})
+	if err != nil {
+		return nil, err
+	}
+	if len(res) == 0 {
+		return nil, nil
+	}
+	return model.FormatSportResponse(res[0]), nil
+}
+
+// Scene is the resolver for the scene field.
+func (r *sportSceneResolver) Scene(ctx context.Context, obj *model.SportScene) (*model.Scene, error) {
+	res, err := loader.LoadScenes(ctx, []string{obj.SceneID})
+	if err != nil {
+		return nil, err
+	}
+	if len(res) == 0 {
+		return nil, nil
+	}
+	return model.FormatSceneResponse(res[0]), nil
+}
+
+// Entries is the resolver for the entries field.
+func (r *sportSceneResolver) Entries(ctx context.Context, obj *model.SportScene) ([]*model.SportEntry, error) {
+	res, err := loader.LoadSportEntries(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	return slices.Map(res, func(e *db_model.SportEntry) *model.SportEntry {
+		return model.FormatSportEntryResponse(e)
+	}), nil
 }
 
 // Team is the resolver for the team field.
@@ -620,8 +714,17 @@ func (r *Resolver) Match() MatchResolver { return &matchResolver{r} }
 // Rule returns RuleResolver implementation.
 func (r *Resolver) Rule() RuleResolver { return &ruleResolver{r} }
 
+// Scene returns SceneResolver implementation.
+func (r *Resolver) Scene() SceneResolver { return &sceneResolver{r} }
+
 // Sport returns SportResolver implementation.
 func (r *Resolver) Sport() SportResolver { return &sportResolver{r} }
+
+// SportEntry returns SportEntryResolver implementation.
+func (r *Resolver) SportEntry() SportEntryResolver { return &sportEntryResolver{r} }
+
+// SportScene returns SportSceneResolver implementation.
+func (r *Resolver) SportScene() SportSceneResolver { return &sportSceneResolver{r} }
 
 // Standing returns StandingResolver implementation.
 func (r *Resolver) Standing() StandingResolver { return &standingResolver{r} }
@@ -650,7 +753,10 @@ type leagueResolver struct{ *Resolver }
 type locationResolver struct{ *Resolver }
 type matchResolver struct{ *Resolver }
 type ruleResolver struct{ *Resolver }
+type sceneResolver struct{ *Resolver }
 type sportResolver struct{ *Resolver }
+type sportEntryResolver struct{ *Resolver }
+type sportSceneResolver struct{ *Resolver }
 type standingResolver struct{ *Resolver }
 type teamResolver struct{ *Resolver }
 type tournamentResolver struct{ *Resolver }

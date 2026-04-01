@@ -40,6 +40,7 @@ type Competition {
   id: ID!
   name: String!
   type: CompetitionType!
+  scene: Scene!
   teams: [Team!]!
   matches: [Match!]!
   league: League
@@ -135,6 +136,7 @@ type Sport {
   rankingRules: [RankingRule!]!
   rules: [Rule!]!
   image: Image
+  scene: [SportScene!]
 }
 
 type Image {
@@ -146,6 +148,20 @@ type Image {
 type Scene {
   id: ID!
   name: String!
+  sportScenes: [SportScene!]!
+}
+
+type SportScene {
+  id: ID!
+  sport: Sport!
+  scene: Scene!
+  entries: [SportEntry!]!
+}
+
+type SportEntry {
+  id: ID!
+  sportScene: SportScene!
+  team: Team!
 }
 
 enum BracketType {

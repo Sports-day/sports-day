@@ -42,9 +42,10 @@ func (s *Competition) SetTournamentService(ts *Tournament) {
 
 func (s *Competition) Create(ctx context.Context, input *model.CreateCompetitionInput) (*db_model.Competition, error) {
 	competition := &db_model.Competition{
-		ID:   ulid.Make(),
-		Name: input.Name,
-		Type: input.Type.String(),
+		ID:      ulid.Make(),
+		Name:    input.Name,
+		Type:    input.Type.String(),
+		SceneID: input.SceneID,
 	}
 
 	competition, err := s.competitionRepository.Save(ctx, s.db, competition)
@@ -1145,4 +1146,12 @@ func generateOddRR(teamIDs []string) [][2]string {
 		}
 	}
 	return schedule
+}
+
+func (s *Competition) FindBySceneID(ctx context.Context, sceneID string) ([]*db_model.Competition, error) {
+	competitions, err := s.competitionRepository.FindBySceneID(ctx, s.db, sceneID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return competitions, nil
 }

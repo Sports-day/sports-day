@@ -174,7 +174,7 @@ func (s *Sport) SetRankingRules(ctx context.Context, sportID string, rules []mod
 	return result, nil
 }
 
-func (s *Sport) SetImage(ctx context.Context, sportID string, imageID string,) error {
+func (s *Sport) SetImage(ctx context.Context, sportID string, imageID string) error {
 	_, err := s.imageService.Get(ctx, imageID)
 	if err != nil {
 		return err

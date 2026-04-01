@@ -18,9 +18,10 @@ type Team struct {
 }
 
 type Competition struct {
-	ID   string          `json:"id"`
-	Name string          `json:"name"`
-	Type CompetitionType `json:"type"`
+	ID      string          `json:"id"`
+	Name    string          `json:"name"`
+	Type    CompetitionType `json:"type"`
+	SceneID string          `json:"sceneId"`
 }
 
 type Match struct {
@@ -104,6 +105,11 @@ type Rule struct {
 	SportID string `json:"sportId"`
 }
 
+type Scene struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type Sport struct {
 	ID           string         `json:"id"`
 	Name         string         `json:"name"`
@@ -111,4 +117,16 @@ type Sport struct {
 	RankingRules []*RankingRule `json:"rankingRules"`
 	Rules        []*Rule        `json:"rules"`
 	ImageID      *string        `json:"imageId"`
+}
+
+type SportScene struct {
+	ID      string `json:"id"`
+	SportID string `json:"sportId"`
+	SceneID string `json:"sceneId"`
+}
+
+type SportEntry struct {
+	ID           string `json:"id"`
+	SportSceneID string `json:"sportSceneId"`
+	TeamID       string `json:"teamId"`
 }

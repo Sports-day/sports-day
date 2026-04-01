@@ -8,6 +8,14 @@ import (
 	"strconv"
 )
 
+type AddSportEntriesInput struct {
+	TeamIds []string `json:"teamIds"`
+}
+
+type AddSportScenesInput struct {
+	SportIds []string `json:"sportIds"`
+}
+
 // SEEDスロットへのチーム手動配置
 type AssignSeedTeamInput struct {
 	SlotID string  `json:"slotId"`
@@ -20,8 +28,9 @@ type AuthResponse struct {
 }
 
 type CreateCompetitionInput struct {
-	Name string          `json:"name"`
-	Type CompetitionType `json:"type"`
+	Name    string          `json:"name"`
+	Type    CompetitionType `json:"type"`
+	SceneID string          `json:"sceneId"`
 }
 
 type CreateGroupInput struct {
@@ -109,6 +118,14 @@ type CreateUserInput struct {
 	Email string `json:"email"`
 }
 
+type DeleteSportEntriesInput struct {
+	TeamIds []string `json:"teamIds"`
+}
+
+type DeleteSportScenesInput struct {
+	SportIds []string `json:"sportIds"`
+}
+
 // ブラケット自動生成
 type GenerateBracketInput struct {
 	CompetitionID   string             `json:"competitionId"`
@@ -194,11 +211,6 @@ type RankingRule struct {
 type RankingRuleInput struct {
 	ConditionKey RankingConditionKey `json:"conditionKey"`
 	Priority     int32               `json:"priority"`
-}
-
-type Scene struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
 
 // seed_number 振り直し

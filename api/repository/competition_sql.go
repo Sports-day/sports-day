@@ -114,6 +114,14 @@ func (r competition) BatchGetByLocationIDs(ctx context.Context, db *gorm.DB, loc
 	return competitions, nil
 }
 
+func (r competition) FindBySceneID(ctx context.Context, db *gorm.DB, sceneID string) ([]*db_model.Competition, error) {
+	var competitions []*db_model.Competition
+	if err := db.Where("scene_id = ?", sceneID).Find(&competitions).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return competitions, nil
+}
+
 // Promotion rule methods
 
 func (r competition) GetPromotionRule(ctx context.Context, db *gorm.DB, id string) (*db_model.PromotionRule, error) {

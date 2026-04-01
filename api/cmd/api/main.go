@@ -116,9 +116,9 @@ func main() {
 	groupService := service.NewGroup(db, groupRepository, userRepository)
 	teamService := service.NewTeam(db, teamRepository, userRepository)
 	locationService := service.NewLocation(db, locationRepository)
-	sceneService := service.NewScene(db, sceneRepository)
 	informationService := service.NewInformation(db, informationRepository)
 	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository, matchRepository, sportRepository)
+	sceneService := service.NewScene(db, sceneRepository, &competitionService)
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository)
 	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService, sportRepository)
@@ -129,7 +129,7 @@ func main() {
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
-	imageService := service.NewImage(db, imageRepository, s3Client, env.Get().Storage.Bucket,env.Get().Storage.Endpoint)
+	imageService := service.NewImage(db, imageRepository, s3Client, env.Get().Storage.Bucket, env.Get().Storage.Endpoint)
 	sportService := service.NewSports(db, sportRepository, &imageService)
 
 	// graphql
@@ -149,7 +149,7 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService, imageService))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService, imageService, sceneService))
 	mux.Handle(
 		"/internal/webhooks/upload",
 		apihandler.HandleUploadWebhook(
