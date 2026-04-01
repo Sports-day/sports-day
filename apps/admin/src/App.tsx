@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { TopHeader, TOP_HEADER_HEIGHT } from "@/components/layout/TopHeader";
+import { TopHeader, TOP_HEADER_HEIGHT_XS, TOP_HEADER_HEIGHT_MD } from "@/components/layout/TopHeader";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { GlobalToast } from "@/components/ui/GlobalToast";
 import { registerNavigate } from "@/hooks/useAppNavigation";
@@ -82,10 +82,10 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
         component="main"
         sx={{
           flexGrow: 1,
-          mt: `${TOP_HEADER_HEIGHT}px`,
+          mt: { xs: `${TOP_HEADER_HEIGHT_XS}px`, md: `${TOP_HEADER_HEIGHT_MD}px` },
           p: { xs: 2, sm: 3 },
           minWidth: 0,
-          height: `calc(100vh - ${TOP_HEADER_HEIGHT}px)`,
+          height: { xs: `calc(100vh - ${TOP_HEADER_HEIGHT_XS}px)`, md: `calc(100vh - ${TOP_HEADER_HEIGHT_MD}px)` },
           overflowY: "auto",
         }}
       >

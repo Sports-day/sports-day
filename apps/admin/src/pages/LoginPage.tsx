@@ -18,7 +18,18 @@ export default function LoginPage({ onLogin, onPrivacy }: Props) {
     >
       <Box sx={{ width: 420, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
         {/* ロゴ */}
-        <Box component="img" src="/logo_admin.png" alt="SPORTSDAY Admin" sx={{ height: 14, objectFit: 'contain', mb: 1, filter: 'brightness(0) saturate(100%) invert(21%) sepia(62%) saturate(714%) hue-rotate(203deg) brightness(96%)' }} />
+        <Box
+          component="img"
+          src="/logo_admin.png"
+          alt="SPORTSDAY Admin"
+          sx={{
+            width: 'clamp(150px, 24vw, 300px)',
+            height: 'auto',
+            objectFit: 'contain',
+            mb: 1,
+            filter: 'brightness(0) saturate(100%) invert(21%) sepia(62%) saturate(714%) hue-rotate(203deg) brightness(96%)',
+          }}
+        />
 
         {/* サブタイトル */}
         <Typography sx={{ fontSize: '14px', color: '#2F3C8C', mb: 3 }}>

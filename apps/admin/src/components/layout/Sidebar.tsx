@@ -1,5 +1,5 @@
 import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemText, Typography, useMediaQuery, useTheme } from '@mui/material'
-import { TOP_HEADER_HEIGHT } from './TopHeader'
+import { TOP_HEADER_HEIGHT_XS, TOP_HEADER_HEIGHT_MD } from './TopHeader'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import GroupsIcon from '@mui/icons-material/Groups'
 import PersonIcon from '@mui/icons-material/Person'
@@ -89,8 +89,8 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
         backgroundColor: COLOR_BG_SIDEBAR,
         display: 'flex',
         flexDirection: 'column',
-        height: isMobile ? '100%' : `calc(100% - ${TOP_HEADER_HEIGHT}px)`,
-        mt: isMobile ? 0 : `${TOP_HEADER_HEIGHT}px`,
+        height: isMobile ? '100%' : { xs: `calc(100% - ${TOP_HEADER_HEIGHT_XS}px)`, md: `calc(100% - ${TOP_HEADER_HEIGHT_MD}px)` },
+        mt: isMobile ? 0 : { xs: `${TOP_HEADER_HEIGHT_XS}px`, md: `${TOP_HEADER_HEIGHT_MD}px` },
         overflow: 'hidden',
       }}
     >
