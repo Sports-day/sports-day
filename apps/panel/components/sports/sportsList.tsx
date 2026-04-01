@@ -16,7 +16,7 @@ export default function SportsList(props: SportsListProps) {
                 {props.sports.map((sport) => (
                     <SportCard
                         key={sport.id}
-                        img={`${process.env.NEXT_PUBLIC_API_URL}/images/${sport.iconId}/file`}
+                        img={`${import.meta.env.VITE_API_URL}/images/${sport.iconId}/file`}
                         link={`/information/${sport.id}`}
                     >
                         {sport.name}

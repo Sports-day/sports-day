@@ -1,4 +1,3 @@
-'use client'
 import {motion} from "framer-motion";
 import {
     Box, Button,
@@ -20,15 +19,12 @@ import {
 import {
     HiChevronDown,
 } from "react-icons/hi2";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import CircleContainer from "@/components/layouts/circleContainer";
-import Logo from "@/public/logo/logo.svg";
+import Logo from "@/src/assets/logo.svg?react";
 import {TbBrandKotlin, TbBrandNextjs} from "react-icons/tb";
 import {SiAffinitydesigner, SiArgo, SiKubernetes} from "react-icons/si";
 
-// export const metadata: Metadata = {
-//     title: 'SPORTSDAY : About',
-// }
 
 export default function Page() {
     const theme = useTheme();

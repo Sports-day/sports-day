@@ -1,16 +1,15 @@
 import {
     BottomNavigation, Typography, Box, Stack, Button
 } from '@mui/material';
-// import Logo from "public/logo.svg"
 import * as React from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 export const Footer = () => {
     return(
         <BottomNavigation
             sx={{height:"80px", color:"#23398A"}}
         >
-            <Button component={Link} href={"/about"}　scroll={true}>
+            <Button component={Link} to={"/about"}>
                 <Stack
                     direction={"row"}
                     justifyContent={"space-between"}

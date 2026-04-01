@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import {RuleNumCard} from "./rule-elements/RuleNumCard";
 import ReactMarkdown from "react-markdown";
-import Coat from "../../public/rules/coat-dodgebee.svg"
+import Coat from "@/src/assets/coat-dodgebee.svg?react"
 import * as React from "react";
 
 const markdown = `

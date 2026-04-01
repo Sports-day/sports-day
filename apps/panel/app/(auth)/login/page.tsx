@@ -1,6 +1,5 @@
-'use client'
 import {Box, Button, Container, Stack, Typography} from "@mui/material";
-import Logo from "@/public/logo/logo.svg"
+import Logo from "@/src/assets/logo.svg?react"
 import * as React from "react";
 import {motion, AnimatePresence} from "framer-motion";
 import LoginButton from "@/components/auth/LoginButton";
@@ -8,9 +7,6 @@ import WiderLogo from "@/components/layouts/logo/widerlogo";
 import PrivacyPolicyDrawer from "@/components/layouts/privacyPolicyDrawer";
 import {useTheme} from "@mui/material/styles";
 
-// export const metadata: Metadata = {
-//     title: 'SPORTSDAY : Login',
-// }
 
 export default function Page() {
     const theme = useTheme();

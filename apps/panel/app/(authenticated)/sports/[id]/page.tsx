@@ -1,5 +1,3 @@
-'use client'
-import Head from "next/head";
 import {
     Avatar,
     Box,
@@ -26,7 +24,7 @@ import {
 import * as React from "react";
 import {GameList} from "@/components/game/GameList"
 import {GamesContext, LocationsContext, MatchesContext, TeamsContext} from "@/components/context";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {DialogProps} from '@mui/material/Dialog';
 import {Rules} from "@/components/rules/Rules";
 import {useInterval} from "react-use";
@@ -37,14 +35,16 @@ import {useFetchMatches} from "@/src/features/matches/hook";
 import {useFetchUserinfo} from "@/src/features/userinfo/hook";
 import CircleContainer from "@/components/layouts/circleContainer";
 import {motion} from "framer-motion";
+import { useParams } from "react-router-dom";
 
 const REFRESH_INTERVAL = 1000 * 60 * 5
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page() {
+    const { id } = useParams<{ id: string }>()
     const theme = useTheme()
     //  fetch
-    const {sport, isFetching: isSportFetching, refresh: refreshSport} = useFetchSport(+params.id)
-    const {games, isFetching: isGameFetching, refresh: refreshGame} = useFetchSportGames(+params.id, true)
+    const {sport, isFetching: isSportFetching, refresh: refreshSport} = useFetchSport(+(id ?? '0'))
+    const {games, isFetching: isGameFetching, refresh: refreshGame} = useFetchSportGames(+(id ?? '0'), true)
     const {matches, isFetching: isMatchesFetching, refresh: refreshMatches} = useFetchMatches()
     const {teams, isFetching: isTeamFetching, refresh: refreshTeam} = useFetchTeams()
     const {locations, isFetching: isLocationsFetching, refresh: refreshLocations} = useFetchLocations()
@@ -67,6 +67,15 @@ export default function Page({ params }: { params: { id: string } }) {
         refreshLocations()
         refreshMatches()
     }
+
+    useEffect(() => {
+        if (sport?.name) {
+            document.title = `SPORTSDAY : ${sport.name}`
+        }
+        return () => {
+            document.title = 'Sports-day'
+        }
+    }, [sport?.name])
 
     //  set focusedGameId when games is loaded
     if (!isFetching && focusedGameId === null) {
@@ -142,11 +151,6 @@ export default function Page({ params }: { params: { id: string } }) {
                                 }
                             }}
                         >
-
-                            <Head>
-                                {/* TODO use metadata api instead of Head component*/}
-                                <title>{`SPORTSDAY : ${sport.name}`}</title>
-                            </Head>
                             <Box
                                 component={"main"}
                                 minHeight={"96vh"}
@@ -175,7 +179,7 @@ export default function Page({ params }: { params: { id: string } }) {
                                             <Avatar
                                                 alt={sport.name}
                                                 sx={{height: "2.5em", width: "2.5em"}}
-                                                src={`${process.env.NEXT_PUBLIC_API_URL}/images/${sport.iconId}/file`}
+                                                src={`${import.meta.env.VITE_API_URL}/images/${sport.iconId}/file`}
                                             >
                                                 {!sport.iconId && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                                             </Avatar>

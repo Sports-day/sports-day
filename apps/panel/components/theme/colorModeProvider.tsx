@@ -1,4 +1,3 @@
-'use client';
 import { createTheme, ThemeProvider, useMediaQuery, PaletteMode } from '@mui/material';
 import React, { useMemo } from 'react';
 import { createShadows } from "@/components/theme/createShadows";
@@ -36,7 +35,7 @@ const baseTheme = {
                     minHeight: '100%',
                     width: '100%'
                 },
-                '#__next': {
+                '#root': {
                     display: 'flex',
                     flex: '1 1 auto',
                     flexDirection: 'column',
