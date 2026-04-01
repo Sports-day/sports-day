@@ -74,6 +74,7 @@ input UpdateLocationInput {
 input CreateCompetitionInput {
   name: String!
   type: CompetitionType!
+  sceneId: ID!
 }
 
 input UpdateCompetitionInput {
@@ -155,6 +156,19 @@ input GenerateRoundRobinInput {
   matchDuration: Int!
   breakDuration: Int!
   locationId: ID
+}
+
+input AddSportScenesInput {
+  sportIds: [ID!]!
+}
+input DeleteSportScenesInput {
+  sportIds: [ID!]!
+}
+input AddSportEntriesInput {
+  teamIds: [ID!]!
+}
+input DeleteSportEntriesInput {
+  teamIds: [ID!]!
 }
 
 input RankingRuleInput {
@@ -553,4 +567,28 @@ type Mutation {
   画像を削除する（S3ファイルとDBレコードを両方削除）
   """
   deleteImage(id: ID!): Image!
+  """
+  シーンにスポーツを一括追加する
+  """
+  addSportScenes(id: ID!, input: AddSportScenesInput!): Scene!
+  """
+  シーンからスポーツを一括削除する
+  """
+  deleteSportScenes(id: ID!, input: DeleteSportScenesInput!): Scene!
+  """
+  スポーツシーンを削除する
+  """
+  deleteSportScene(id: ID!): SportScene!
+  """
+  スポーツシーンにチームエントリーを一括追加する
+  """
+  addSportEntries(id: ID!, input: AddSportEntriesInput!): SportScene!
+  """
+  スポーツシーンからチームエントリーを一括削除する
+  """
+  deleteSportEntries(id: ID!, input: DeleteSportEntriesInput!): SportScene!
+  """
+  スポーツエントリーを削除する
+  """
+  deleteSportEntry(id: ID!): SportEntry!
 }

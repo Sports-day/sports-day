@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -633,6 +634,60 @@ func (r *mutationResolver) DeleteImage(ctx context.Context, id string) (*model.I
 		return nil, err
 	}
 	return model.FormatImageResponse(img), nil
+}
+
+// AddSportScenes is the resolver for the addSportScenes field.
+func (r *mutationResolver) AddSportScenes(ctx context.Context, id string, input model.AddSportScenesInput) (*model.Scene, error) {
+	res, err := r.SceneService.AddSportScenes(ctx, id, input.SportIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(res), nil
+}
+
+// DeleteSportScenes is the resolver for the deleteSportScenes field.
+func (r *mutationResolver) DeleteSportScenes(ctx context.Context, id string, input model.DeleteSportScenesInput) (*model.Scene, error) {
+	res, err := r.SceneService.DeleteSportScenes(ctx, id, input.SportIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(res), nil
+}
+
+// DeleteSportScene is the resolver for the deleteSportScene field.
+func (r *mutationResolver) DeleteSportScene(ctx context.Context, id string) (*model.SportScene, error) {
+	res, err := r.SceneService.DeleteSportScene(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportSceneResponse(res), nil
+}
+
+// AddSportEntries is the resolver for the addSportEntries field.
+func (r *mutationResolver) AddSportEntries(ctx context.Context, id string, input model.AddSportEntriesInput) (*model.SportScene, error) {
+	res, err := r.SceneService.AddSportEntries(ctx, id, input.TeamIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportSceneResponse(res), nil
+}
+
+// DeleteSportEntries is the resolver for the deleteSportEntries field.
+func (r *mutationResolver) DeleteSportEntries(ctx context.Context, id string, input model.DeleteSportEntriesInput) (*model.SportScene, error) {
+	res, err := r.SceneService.DeleteSportEntries(ctx, id, input.TeamIds)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportSceneResponse(res), nil
+}
+
+// DeleteSportEntry is the resolver for the deleteSportEntry field.
+func (r *mutationResolver) DeleteSportEntry(ctx context.Context, id string) (*model.SportEntry, error) {
+	res, err := r.SceneService.DeleteSportEntry(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSportEntryResponse(res), nil
 }
 
 // Users is the resolver for the users field.

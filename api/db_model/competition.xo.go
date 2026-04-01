@@ -13,4 +13,5 @@ type Competition struct {
 	Name    string         `json:"name"`     // 大会名
 	Type    string         `json:"type"`     // 大会種別
 	SportID sql.NullString `json:"sport_id"` // 競技ID
+	SceneID string         `json:"scene_id"` // シーンID
 }

@@ -39,11 +39,17 @@ type Loaders struct {
 	MatchesByTournamentLoader      *dataloadgen.Loader[string, []*db_model.Match]
 	MatchEntryLoader               *dataloadgen.Loader[string, *db_model.MatchEntry]
 	SportLoader                    *dataloadgen.Loader[string, *db_model.Sport]
+	SceneLoader                    *dataloadgen.Loader[string, *db_model.Scene]
+	SportSceneLoader               *dataloadgen.Loader[string, *db_model.SportScene]
 	SportRulesLoader               *dataloadgen.Loader[string, []*db_model.Rule]
+	SportScenesBySportLoader       *dataloadgen.Loader[string, []*db_model.SportScene]
+	SportScenesBySceneLoader       *dataloadgen.Loader[string, []*db_model.SportScene]
+	SportEntriesLoader             *dataloadgen.Loader[string, []*db_model.SportEntry]
+	EntrySportScenesLoader         *dataloadgen.Loader[string, []*db_model.SportEntry]
 	ImageLoader                    *dataloadgen.Loader[string, *db_model.Image]
 }
 
-func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League, tournamentSvc service.Tournament, sportSvc service.Sport, ruleSvc service.Rule, imageSvc service.Image) *Loaders {
+func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, competitionSvc service.Competition, locationSvc service.Location, matchSvc service.Match, judgmentSvc service.Judgment, leagueSvc service.League, tournamentSvc service.Tournament, sportSvc service.Sport, ruleSvc service.Rule, imageSvc service.Image, sceneSvc service.Scene) *Loaders {
 	return &Loaders{
 		UserLoader:                     dataloadgen.NewLoader(newUserLoader(userSvc)),
 		GroupLoader:                    dataloadgen.NewLoader(newGroupLoader(groupSvc)),
@@ -74,7 +80,13 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 		MatchesByTournamentLoader:      dataloadgen.NewLoader(newMatchesByTournamentLoader(tournamentSvc)),
 		MatchEntryLoader:               dataloadgen.NewLoader(newMatchEntryLoader(matchSvc)),
 		SportLoader:                    dataloadgen.NewLoader(newSportLoader(sportSvc)),
+		SceneLoader:                    dataloadgen.NewLoader(newSceneLoader(sceneSvc)),
+		SportSceneLoader:               dataloadgen.NewLoader(newSportSceneLoader(sceneSvc)),
 		SportRulesLoader:               dataloadgen.NewLoader(newSportRulesLoader(ruleSvc)),
+		SportScenesBySportLoader:       dataloadgen.NewLoader(newSportScenesBySportLoader(sceneSvc)),
+		SportScenesBySceneLoader:       dataloadgen.NewLoader(newSportScenesBySceneLoader(sceneSvc)),
+		SportEntriesLoader:             dataloadgen.NewLoader(newSportEntriesLoader(sceneSvc)),
+		EntrySportScenesLoader:         dataloadgen.NewLoader(newEntrySportScenesLoader(sceneSvc)),
 		ImageLoader:                    dataloadgen.NewLoader(newImageLoader(imageSvc)),
 	}
 }
