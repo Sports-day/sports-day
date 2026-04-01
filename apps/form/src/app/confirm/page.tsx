@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Stack } from "@mui/material";
 import Header from "@/components/header/Header";
 import Warning from "@/components/cards/AboutAnyPage/WarningCard";

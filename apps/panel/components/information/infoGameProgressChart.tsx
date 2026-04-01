@@ -1,4 +1,3 @@
-'use client'
 import {Box, LinearProgress, linearProgressClasses, Stack, styled, Typography, useTheme} from "@mui/material";
 import * as React from "react";
 import {useContext} from "react";

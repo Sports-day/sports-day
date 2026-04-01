@@ -66,7 +66,7 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                             width: "1.5em",
                             backgroundColor: theme.palette.text.secondary,
                         }}
-                        src={`${process.env.NEXT_PUBLIC_API_URL}/images/${props.user?.pictureId}/file`}
+                        src={`${import.meta.env.VITE_API_URL}/images/${props.user?.pictureId}/file`}
                     >
                         {props.user?.pictureId === null && <HiUser/>}
                     </Avatar>
@@ -122,7 +122,7 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                                 width: "1.5em",
                                                 backgroundColor: theme.palette.text.secondary,
                                             }}
-                                            // src={`${process.env.NEXT_PUBLIC_API_URL}/images/${props.user?.pictureId}/file`}
+                                            // src={`${import.meta.env.VITE_API_URL}/images/${props.user?.pictureId}/file`}
                                         >
                                             {/*{props.user?.pictureId === null && <HiUser/>}*/}
                                             <HiUser/>
@@ -143,7 +143,7 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                             height: "2em", width: "2em",
                                             backgroundColor: `${theme.palette.text.secondary}`,
                                         }}
-                                        src={`${process.env.NEXT_PUBLIC_API_URL}/images/${userMatchSport?.iconId}/file`}
+                                        src={`${import.meta.env.VITE_API_URL}/images/${userMatchSport?.iconId}/file`}
                                     >
                                         {!userMatchSport?.iconId && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                                     </Avatar>

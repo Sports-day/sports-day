@@ -1,15 +1,8 @@
-'use client'
 import {Box, Button, Container, Stack, Typography, SvgIcon} from "@mui/material";
-// import Mark from "public/mark.svg"
 import {BiErrorAlt} from "react-icons/bi"
 import * as React from "react";
 import {useEffect} from "react";
-import {Metadata} from "next";
-import NextLink from "next/link";
-
-export const metadata: Metadata = {
-    title: 'SPORTSDAY : Error',
-}
+import { Link } from "react-router-dom";
 
 export default function Error({
                                   error
@@ -18,7 +11,6 @@ export default function Error({
     reset: () => void
 }) {
     useEffect(() => {
-        // Log the error to an error reporting service
         console.error(error)
     }, [error])
 
@@ -68,15 +60,6 @@ export default function Error({
                                 borderBottomLeftRadius: "3px"
                             }}
                         >
-                            <Box
-                                pb={0.5}
-                            >
-                                {/*<Mark*/}
-                                {/*    width={20}*/}
-                                {/*    height={20}*/}
-                                {/*    fill={"#99a5d6"}*/}
-                                {/*/>*/}
-                            </Box>
                             <Typography fontSize={"16px"} color={"#99a5d6"}>エラーが発生しました</Typography>
                             <Stack
                                 spacing={1}
@@ -90,8 +73,8 @@ export default function Error({
                             </Stack>
                         </Stack>
                         <Button
-                            href={"/"}
-                            component={NextLink}
+                            component={Link}
+                            to={"/"}
                             sx={{
                                 width: "100%",
                                 height: "fit-content",

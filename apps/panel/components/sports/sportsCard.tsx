@@ -1,6 +1,6 @@
 import {Avatar, Button, Grid, Stack, Typography} from "@mui/material";
 import React, {ReactNode} from "react";
-import NextLink from "next/link";
+import { Link as NextLink } from "react-router-dom";
 
 type SportCardProps = {
     img?: string;
@@ -15,7 +15,7 @@ export const SportCard: React.FC<SportCardProps> = ({img, children, link}) => {
                 color={"secondary"}
                 variant={"contained"}
                 sx={{width: "100%"}}
-                href={link}
+                to={link}
                 component={NextLink}
             >
                 <Stack

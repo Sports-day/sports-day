@@ -1,4 +1,3 @@
-'use client'
 import React, {useState} from 'react';
 import Grid2 from "@mui/material/Unstable_Grid2";
 import {Game, gameFactory, LeagueResult, LeagueTeamResult} from "@/src/models/GameModel";

@@ -1,6 +1,6 @@
 import {Avatar, Box, Button, Stack, Typography, useTheme} from "@mui/material";
 import {Sport} from "@/src/models/SportModel";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {HiOutlineExclamationTriangle} from "react-icons/hi2";
 import * as React from "react";
 
@@ -16,9 +16,8 @@ export const SportsListElement = (props: SportsListElementProps) => {
         <Button
             variant={"contained"}
             color={"secondary"}
-            scroll={false}
             component={Link}
-            href={`/sports/${props.sport.id}`}
+            to={`/sports/${props.sport.id}`}
             sx={{
                 width:"100%",
                 border: `1px solid ${theme.palette.secondary.dark}66`,
@@ -36,7 +35,7 @@ export const SportsListElement = (props: SportsListElementProps) => {
                         sx={{height: "2em", width: "2em",
                             backgroundColor: theme.palette.text.secondary,
                         }}
-                        src={`${process.env.NEXT_PUBLIC_API_URL}/images/${props.sport.iconId}/file`}
+                        src={`${import.meta.env.VITE_API_URL}/images/${props.sport.iconId}/file`}
                     >
                         {!props.sport.iconId && <HiOutlineExclamationTriangle fontSize={"20px"}/>}
                     </Avatar>

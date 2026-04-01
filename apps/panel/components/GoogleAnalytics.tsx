@@ -1,40 +1,36 @@
-'use client'
-import { usePathname, useSearchParams } from 'next/navigation'
-import Script from 'next/script'
+import { useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-
 import { existsGaId, GA_MEASUREMENT_ID, pageview } from '@/src/lib/gtag'
 
 const GoogleAnalytics = () => {
-    const pathname = usePathname()
-    const searchParams = useSearchParams()
+    const location = useLocation()
 
     useEffect(() => {
-        if (!existsGaId) {
-            return
-        }
-        const url = pathname + searchParams.toString()
-        pageview(url)
-    }, [pathname, searchParams])
+        if (!existsGaId) return
 
-    return (
-        <>
-            <Script
-                strategy='lazyOnload'
-                src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-            />
-            <Script id='gtag-init' strategy='afterInteractive'>
-                {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${GA_MEASUREMENT_ID}', {
-            page_path: window.location.pathname,
-          });
-        `}
-            </Script>
-        </>
-    )
+        // GAスクリプトの初期化（まだロードされていない場合）
+        if (!window.gtag) {
+            const script = document.createElement('script')
+            script.async = true
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`
+            document.head.appendChild(script)
+
+            window.dataLayer = window.dataLayer || []
+            window.gtag = function gtag() {
+                // eslint-disable-next-line prefer-rest-params
+                window.dataLayer.push(arguments)
+            }
+            window.gtag('js', new Date())
+            window.gtag('config', GA_MEASUREMENT_ID, { page_path: window.location.pathname })
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!existsGaId) return
+        pageview(location.pathname + location.search)
+    }, [location])
+
+    return null
 }
 
 export default GoogleAnalytics

@@ -1,18 +1,18 @@
 import { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Box, Divider, MenuItem, MenuList, Popover, Typography } from '@mui/material';
 
 export const AccountPopover = (props: any) => {
     const { anchorEl, onClose, open } = props;
-    const router = useRouter();
+    const navigate = useNavigate();
 
     const handleSignOut = useCallback(
         () => {
             onClose?.();
-            router.push('/auth/login');
+            navigate('/login');
         },
-        [onClose, router]
+        [onClose, navigate]
     );
 
     return (

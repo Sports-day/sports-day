@@ -278,7 +278,7 @@ export const UserDetail = (props: UserDetailProps) => {
                         {users
                             .filter(user => user.teamIds.includes(Number(leftTeamModel?.id)))
                             .map(user => {
-                                const image = `${process.env.NEXT_PUBLIC_API_URL}/images/${user?.pictureId}/file`
+                                const image = `${import.meta.env.VITE_API_URL}/images/${user?.pictureId}/file`
                                 return (
                                     <Fragment key={user.id}>
                                         <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>
@@ -313,7 +313,7 @@ export const UserDetail = (props: UserDetailProps) => {
                         {users
                             .filter(user => user.teamIds.includes(Number(rightTeamModel?.id)))
                             .map(user => {
-                                const image = `${process.env.NEXT_PUBLIC_API_URL}/images/${user?.pictureId}/file`
+                                const image = `${import.meta.env.VITE_API_URL}/images/${user?.pictureId}/file`
                                 return (
                                     <Fragment key={user.id}>
                                         <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>

@@ -1,22 +1,21 @@
 import {Box, Card, Stack, SvgIcon, Typography} from "@mui/material";
 import * as React from "react";
-import {gameFactory} from "@/src/models/GameModel";
 import {Match} from "@/src/models/MatchModel";
-import {locationFactory} from "@/src/models/LocationModel";
-import {teamFactory} from "@/src/models/TeamModel";
 import {HiClock, HiMapPin} from "react-icons/hi2";
 import Grid2 from "@mui/material/Unstable_Grid2";
+import {useFetchGame} from "@/src/features/games/hook";
+import {useFetchLocation} from "@/src/features/locations/hook";
+import {useFetchTeam} from "@/src/features/teams/hook";
 
 type MatchCardProps = {
     match: Match
 }
 
-export default async function MatchCard(props: MatchCardProps) {
-
-    const game = await gameFactory().show(props.match.gameId)
-    const location = props.match.locationId == null ? undefined : await locationFactory().show(props.match.locationId)
-    const leftTeam = props.match.leftTeamId == null ? undefined : await teamFactory().show(props.match.leftTeamId)
-    const rightTeam = props.match.rightTeamId == null ? undefined : await teamFactory().show(props.match.rightTeamId)
+export default function MatchCard(props: MatchCardProps) {
+    const {game} = useFetchGame(props.match.gameId)
+    const {location} = useFetchLocation(props.match.locationId ?? 0)
+    const {team: leftTeam} = useFetchTeam(props.match.leftTeamId ?? 0)
+    const {team: rightTeam} = useFetchTeam(props.match.rightTeamId ?? 0)
 
     const formattedTime = new Date(props.match.startAt).toLocaleTimeString("ja-JP", {
         hour: '2-digit',
@@ -57,7 +56,7 @@ export default async function MatchCard(props: MatchCardProps) {
                                justifyContent="center" margin="0">
                             <Grid2 xs={2.5} display="flex" justifyContent="center">
                                 <Typography variant="subtitle1" component="div" textAlign="center">
-                                    {game.name}
+                                    {game?.name}
                                 </Typography>
                             </Grid2>
                             <Grid2 xs={2.5} display="flex" justifyContent="center">
@@ -82,7 +81,7 @@ export default async function MatchCard(props: MatchCardProps) {
                                         <HiMapPin/>
                                     </SvgIcon>
                                     <Typography variant="subtitle1" component="div" textAlign="left" sx={{flexGrow: 1}}>
-                                        {location?.name ?? "未登録"}
+                                        {props.match.locationId == null ? "未登録" : (location?.name ?? "未登録")}
                                     </Typography>
                                 </Stack>
 

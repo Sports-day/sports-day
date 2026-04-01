@@ -12,7 +12,7 @@ import {
 import { gql, useMutation } from "@apollo/client";
 import type { TransitionProps } from "@mui/material/transitions";
 import { forwardRef } from "react";
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
 export type CheckPopupBaseProps = {
   teamid: string;
@@ -31,7 +31,7 @@ const Transition = forwardRef(function Transition(
   props: TransitionProps & {
     children: ReactElement<any, any>;
   },
-  ref: Ref<unknown>,
+  ref,
 ) {
   return <Slide direction="up" ref={ref} {...props} />;
 });

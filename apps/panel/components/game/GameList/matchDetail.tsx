@@ -21,7 +21,7 @@ import {ThemeProvider, useTheme} from "@mui/material/styles";
 import {useFetchUsers} from "@/src/features/users/hook";
 import {useFetchTeams} from "@/src/features/teams/hook";
 import {useFetchLocations} from "@/src/features/locations/hook";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 export type MatchDetailProps = {
     match: Match;
@@ -366,7 +366,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                                     fullWidth disableElevation
                                     variant={"contained"}
                                     component={Link}
-                                    href={`/sports/${props.match.sportId}`}
+                                    to={`/sports/${props.match.sportId}`}
                                 >
                                     <Stack
                                         direction={"row"}

@@ -1,9 +1,7 @@
-"use client";
-
 import { Card, Box, Typography, Stack, Button, useTheme } from "@mui/material";
 import { useState } from "react";
 import CheckPopup from "../../popups/CheckPopup";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 type teamMember = {
   name: string;
@@ -94,8 +92,7 @@ export default function TeamCard({
           }}
         >
           <Link
-            href={`/weather/${type}/sport/${sports}/team/teamedit?teamid=${teamid}`}
-            passHref
+            to={`/weather/${type}/sport/${sports}/team/teamedit?teamid=${teamid}`}
             style={{ width: "100%" }}
           >
             <Button

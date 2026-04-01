@@ -1,4 +1,3 @@
-'use client'
 import Grid2 from "@mui/material/Unstable_Grid2";
 import {Card, Stack, SvgIcon, Typography} from "@mui/material";
 import {HiChartBar} from "react-icons/hi2";

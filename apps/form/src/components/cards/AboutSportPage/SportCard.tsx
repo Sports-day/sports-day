@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Box,
   Card,
@@ -8,7 +6,7 @@ import {
   CardActionArea,
   useTheme,
 } from "@mui/material";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 type SportCardProps = {
@@ -27,8 +25,7 @@ export default function SportCard({
   const theme = useTheme();
   return (
     <Link
-      href={`/weather/${type}/sport/${sportId}`}
-      passHref
+      to={`/weather/${type}/sport/${sportId}`}
       style={{ display: "block", width: "100%" }}
     >
       <motion.div

@@ -1,10 +1,6 @@
-"use client";
-
 import { Toolbar, Box } from "@mui/material";
-import Image from "next/image";
 import { useTheme } from "@mui/material/styles";
-import { useParams } from "next/navigation";
-import Link from "next/link";
+import { useParams, Link } from "react-router-dom";
 
 export default function Header() {
   const theme = useTheme();
@@ -29,8 +25,8 @@ export default function Header() {
           px: { xs: "16px", md: "32px" },
         }}
       >
-        <Link href={`/weather/${type}`} passHref>
-          <Image
+        <Link to={`/weather/${type}`}>
+          <img
             src="/images/logo_form.png"
             alt=""
             width={260}

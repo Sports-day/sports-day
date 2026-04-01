@@ -1,5 +1,5 @@
 import {Box, Container} from "@mui/material";
-import Logo from "@/public/logo/logo.svg";
+import Logo from "@/src/assets/logo.svg?react";
 import {InformationList} from "@/components/InformationList";
 import * as React from "react";
 import {motion} from "framer-motion";

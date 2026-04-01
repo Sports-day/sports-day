@@ -1,10 +1,7 @@
-"use client";
-
 import { Box, Typography, Stack, Button, useTheme } from "@mui/material";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { gql, useQuery } from "@apollo/client";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import PrivacyPolicyDrawer from "@/components/layouts/PrivacyPolicyDrawer";
 import CircularUnderLoad from "@/features/Loading";
 
@@ -21,7 +18,7 @@ export default function Home() {
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
   });
-  const router = useRouter();
+  const navigate = useNavigate();
   const theme = useTheme();
 
   const firstSceneId = data?.scenes?.[0]?.id;
@@ -64,7 +61,7 @@ export default function Home() {
             py: "16px",
           }}
         >
-          <Image
+          <img
             src="/images/logo_form.png"
             alt=""
             width={380}
@@ -95,7 +92,7 @@ export default function Home() {
                 disabled={loading || !firstSceneId}
                 onClick={() => {
                   if (firstSceneId) {
-                    router.push(`/weather/${firstSceneId}`);
+                    navigate(`/weather/${firstSceneId}`);
                   }
                 }}
                 sx={{
@@ -135,7 +132,7 @@ export default function Home() {
               (C)
             </Typography>
             <Box>
-              <Image
+              <img
                 src="/images/wider_horiz.png"
                 alt=""
                 width={160}

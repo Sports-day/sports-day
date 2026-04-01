@@ -1,12 +1,10 @@
-"use client";
-
 import TeamEdit from "@/features/TeamEdit";
 import SubFooter from "@/components/footers/SubFooter";
 import Header from "@/components/header/Header";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { gql, useQuery } from "@apollo/client";
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import Instruction from "@/components/cards/AboutAnyPage/InstructionCard";
 import AppBreadcrumbs, {
   type BreadcrumbItem,

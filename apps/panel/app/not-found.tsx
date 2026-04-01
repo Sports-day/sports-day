@@ -1,24 +1,12 @@
-import type {Metadata} from 'next'
-import Head from 'next/head'
 import {Box, Button, Container, Stack, Typography, SvgIcon} from "@mui/material";
-import Mark from "@/public/mark.svg"
+import Mark from "@/src/assets/mark.svg?react"
 import {BiErrorAlt} from "react-icons/bi"
 import * as React from "react";
-import NextLink from "next/link";
-
-export const metadata: Metadata = {
-    title: 'SPORTSDAY : 404'
-}
+import { Link } from "react-router-dom";
 
 export default function NotFound() {
     return (
         <>
-            <Head>
-                <title>SPORTSDAY : Error</title>
-                <meta name="description" content="SPORTSDAY Login page"/>
-                <meta name="viewport" content="width=device-width, initial-scale=1"/>
-                <link rel="icon" href="/favicon.ico"/>
-            </Head>
             <Box
                 maxHeight={"100vh"}
                 sx={{
@@ -84,8 +72,8 @@ export default function NotFound() {
                             </Stack>
                         </Stack>
                         <Button
-                            href={"/"}
-                            component={NextLink}
+                            component={Link}
+                            to={"/"}
                             sx={{
                                 width: "100%",
                                 height: "fit-content",

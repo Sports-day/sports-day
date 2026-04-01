@@ -1,4 +1,3 @@
-'use client'
 import {Container, Button, AppBar, Box, SwipeableDrawer, } from "@mui/material";
 import React from 'react';
 import {HiXMark} from "react-icons/hi2";
