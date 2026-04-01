@@ -1,8 +1,6 @@
-"use client";
-
 import { useMemo, useState } from "react";
 import { useApolloClient, useMutation, useQuery } from "@apollo/client";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ADD_TEAM_MEMBER,
   CREATE_SPORT_ENTRY,
@@ -66,8 +64,8 @@ type GetTeamVars = {
 
 export function useTeamEdit() {
   const { type, sports } = useParams() as { type: string; sports: string };
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const apolloClient = useApolloClient();
 
   const [localSelectedMember, setLocalSelectedMember] = useState<StudentInformation[] | null>(null);
@@ -247,7 +245,7 @@ export function useTeamEdit() {
           "GetAllTeamdata",
         ],
       });
-      router.back();
+      navigate(-1);
     } catch (error) {
       if (createdTeamId) {
         try {

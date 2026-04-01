@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { CssBaseline, GlobalStyles, ThemeProvider } from "@mui/material";
 import { ApolloProvider } from "@/components/ApolloProvider";

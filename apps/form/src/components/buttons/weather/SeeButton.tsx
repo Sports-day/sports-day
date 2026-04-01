@@ -1,5 +1,5 @@
 import { Stack, Button, Typography, useTheme } from "@mui/material";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export type weatherProps = {
@@ -12,7 +12,7 @@ export default function SeeButton({ type, name, id }: weatherProps) {
   const same = type === id;
   const theme = useTheme();
   return (
-    <Link href={`/weather/${type}`} passHref>
+    <Link to={`/weather/${type}`}>
       <motion.div whileTap={{ scale: 0.97 }}>
         <Button
           variant="outlined"

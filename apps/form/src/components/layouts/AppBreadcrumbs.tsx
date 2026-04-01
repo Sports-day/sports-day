@@ -1,7 +1,5 @@
-"use client";
-
 import { Breadcrumbs, Link, Typography, useTheme } from "@mui/material";
-import NextLink from "next/link";
+import { Link as RouterLink } from "react-router-dom";
 
 export type BreadcrumbItem = {
   label: string;
@@ -32,10 +30,10 @@ export default function AppBreadcrumbs({ items }: AppBreadcrumbsProps) {
         return (
           <Link
             key={`${item.label}-${index}`}
-            component={NextLink}
+            component={RouterLink}
             underline="hover"
             color="inherit"
-            href={item.href}
+            to={item.href}
           >
             {item.label}
           </Link>

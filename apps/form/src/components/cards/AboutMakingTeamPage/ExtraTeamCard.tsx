@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Card,
   Typography,
@@ -7,7 +5,7 @@ import {
   CardActionArea,
   useTheme,
 } from "@mui/material";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 export type informationProps = {
   sports: string;
@@ -18,8 +16,7 @@ export default function ExtraTeamCard({ sports, type }: informationProps) {
   const theme = useTheme();
   return (
     <Link
-      href={`/weather/${type}/sport/${sports}/team/makenewteam`}
-      passHref
+      to={`/weather/${type}/sport/${sports}/team/makenewteam`}
       style={{ display: "block", width: "100%", height: "100%" }}
     >
       <Card

@@ -1,17 +1,15 @@
-"use client";
-
 import { Typography, Button } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTheme } from "@mui/material/styles";
 
 export default function BackButton() {
   const theme = useTheme();
-  const router = useRouter();
+  const navigate = useNavigate();
   return (
     <motion.div whileTap={{ scale: 0.98 }}>
       <Button
-        onClick={() => router.back()}
+        onClick={() => navigate(-1)}
         sx={{
           background: theme.palette.button.main,
           borderRadius: "10px",

@@ -1,7 +1,5 @@
-"use client";
-
 import MakingTeams from "@/features/MakingTeams";
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Header from "@/components/header/Header";
 import SubFooter from "@/components/footers/SubFooter";

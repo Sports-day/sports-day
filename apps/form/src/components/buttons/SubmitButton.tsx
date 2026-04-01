@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import Button from "@mui/material/Button";
 import { motion } from "framer-motion";
 import { useTheme, Typography } from "@mui/material";
@@ -8,7 +6,7 @@ import { useTheme, Typography } from "@mui/material";
 export default function SubmitButton() {
   const theme = useTheme();
   return (
-    <Link href={{ pathname: "/submit" }} passHref>
+    <Link to="/submit">
       <motion.div whileTap={{ scale: 0.98 }}>
         <Button
           component="span"

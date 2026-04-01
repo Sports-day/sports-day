@@ -1,7 +1,4 @@
-"use client";
-
 import { Box, Typography, Stack } from "@mui/material";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { useTheme } from "@mui/material/styles";
 
@@ -38,7 +35,7 @@ export default function Comp() {
             py: "32px",
           }}
         >
-          <Image
+          <img
             src="/images/logo_form.png"
             alt=""
             width={320}
@@ -107,7 +104,7 @@ export default function Comp() {
               (C)
             </Typography>
             <Box>
-              <Image
+              <img
                 src="/images/wider_horiz.png"
                 alt=""
                 width={160}

@@ -1,14 +1,12 @@
-"use client";
-
 import Button from "@mui/material/Button";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTheme, Typography } from "@mui/material";
 
 export default function GoFinal() {
   const theme = useTheme();
   return (
-    <Link href={{ pathname: "/confirm" }} passHref>
+    <Link to="/confirm">
       <motion.div whileTap={{ scale: 0.98 }}>
         <Button
           component="span"

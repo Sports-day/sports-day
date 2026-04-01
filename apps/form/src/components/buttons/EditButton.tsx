@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Typography, useTheme, Button } from "@mui/material";
 
 type Props = {
@@ -12,10 +10,7 @@ type Props = {
 export default function EditButton({ type, sports, teams }: Props) {
   const theme = useTheme();
   return (
-    <Link
-      href={`/weather/${type}/sport/${sports}/team/teamedit?teamid=${teams}`}
-      passHref
-    >
+    <Link to={`/weather/${type}/sport/${sports}/team/teamedit?teamid=${teams}`}>
       <Button
         variant="outlined"
         component="span"

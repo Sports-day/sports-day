@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Stack } from "@mui/material";
 import Warning from "@/components/cards/AboutAnyPage/WarningCard";
 import SportCards from "@/features/SportCards";
@@ -7,9 +5,10 @@ import WeatherCards from "@/features/WeatherCards";
 import MainFooter from "@/components/footers/MainFooter";
 import Header from "@/components/header/Header";
 import { gql, useQuery } from "@apollo/client";
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import CircularUnderLoad from "@/features/Loading";
 import { motion } from "framer-motion";
+
 
 const GET_SPORTS = gql`
   query GetSport($sceneId: ID!) {
