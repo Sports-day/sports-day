@@ -1,0 +1,123 @@
+import {
+  Box,
+  Button,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from '@mui/material'
+import { useState } from 'react'
+import { MOCK_SELECTABLE_USERS } from '../mock'
+import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
+
+type Props = {
+  open: boolean
+  onClose: () => void
+  onAdd: (selectedIds: string[]) => void
+}
+
+export function AddMemberDialog({ open, onClose, onAdd }: Props) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+  const toggle = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  const handleAdd = () => {
+    onAdd(selectedIds)
+    setSelectedIds([])
+  }
+
+  const handleClose = () => {
+    setSelectedIds([])
+    onClose()
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          p: 1,
+        },
+      }}
+    >
+      <DialogTitle sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 1 }}>
+        チームメンバーの追加
+      </DialogTitle>
+      <DialogContent sx={{ p: 0, px: 2, pb: 2 }}>
+        <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 40 }} padding="checkbox" />
+              <TableCell sx={LIST_TABLE_HEAD_SX}>ID</TableCell>
+              <TableCell sx={LIST_TABLE_HEAD_SX}>ユーザー名</TableCell>
+              <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
+              <TableCell sx={LIST_TABLE_HEAD_SX}>学籍番号</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {MOCK_SELECTABLE_USERS.map((user) => (
+              <TableRow
+                key={user.id}
+                hover
+                onClick={() => toggle(user.id)}
+                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
+              >
+                <TableCell padding="checkbox" sx={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #D6D6D6' }}>
+                  <Checkbox
+                    checked={selectedIds.includes(user.id)}
+                    size="small"
+                    sx={{ color: '#5B6DC6', '&.Mui-checked': { color: '#5B6DC6' } }}
+                  />
+                </TableCell>
+                <TableCell sx={LIST_TABLE_CELL_SX}>{user.id}</TableCell>
+                <TableCell sx={LIST_TABLE_CELL_SX}>{user.userName}</TableCell>
+                <TableCell sx={LIST_TABLE_CELL_SX}>{user.gender}</TableCell>
+                <TableCell sx={LIST_TABLE_CELL_SX}>{user.studentId}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={handleClose}
+            sx={{
+              color: '#2F3C8C',
+              borderColor: '#5B6DC6',
+              fontSize: '13px',
+              '&:hover': { backgroundColor: '#E8EAF6', borderColor: '#5B6DC6' },
+            }}
+          >
+            キャンセル
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAdd}
+            disabled={selectedIds.length === 0}
+            sx={{
+              ...SAVE_BUTTON_SX,
+              fontSize: '13px',
+              '&:disabled': { backgroundColor: '#B0B8E8', color: '#FFFFFF' },
+            }}
+          >
+            追加
+          </Button>
+        </Box>
+      </DialogContent>
+    </Dialog>
+  )
+}
