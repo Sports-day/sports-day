@@ -7,7 +7,7 @@ import {
     SvgIcon,
     Typography,
     SwipeableDrawer,
-    Unstable_Grid2 as Grid, Box
+    Grid, Box
 } from "@mui/material";
 import {
     HiChartBar,
@@ -18,7 +18,7 @@ import {Team} from "@/src/models/TeamModel";
 import {User} from "@/src/models/UserModel";
 import {Fragment, useState} from "react";
 import * as React from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import Rank from "./Rank"
 import {useTheme} from "@mui/material/styles";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
@@ -52,7 +52,7 @@ export const Overview = (props: OverviewProps) => {
             maxWidth={"xl"}
         >
             <Grid container spacing={1}>
-                <Grid xs={6.5} sm={6.5} lg={6.5}>
+                <Grid size={6.5}>
                     <Button
                         disableElevation
                         color={"secondary"}
@@ -64,8 +64,7 @@ export const Overview = (props: OverviewProps) => {
                             border: `1px solid ${theme.palette.secondary.dark}66`,
                             boxShadow: `0px 0px 5px ${theme.palette.primary.dark}33`,
                         }}
-                        href={`/sports/${props.mySport.id}`}
-                        scroll={false}
+                        to={`/sports/${props.mySport.id}`}
                     >
                         <Stack
                             sx={{height: "100%", width: "100%", py: 2}}
@@ -79,7 +78,7 @@ export const Overview = (props: OverviewProps) => {
                                     height: "2.5em", width: "2.5em",
                                     backgroundColor: `${theme.palette.text.secondary}`,
                                 }}
-                                src={`${process.env.NEXT_PUBLIC_API_URL}/images/${props.mySport.iconId}/file`}
+                                src={`${import.meta.env.VITE_API_URL}/images/${props.mySport.iconId}/file`}
                             >
                                 {!props.mySport.iconId && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                             </Avatar>
@@ -99,7 +98,7 @@ export const Overview = (props: OverviewProps) => {
                         </Stack>
                     </Button>
                 </Grid>
-                <Grid xs={5.5} sm={5.5} lg={5.5}>
+                <Grid size={5.5}>
                     <Button
                         disableElevation
                         color={"secondary"}
@@ -216,7 +215,7 @@ export const Overview = (props: OverviewProps) => {
                             </Stack>
 
                             {props.myTeamUsers.map(user => {
-                                const image = `${process.env.NEXT_PUBLIC_API_URL}/images/${user?.pictureId}/file`
+                                const image = `${import.meta.env.VITE_API_URL}/images/${user?.pictureId}/file`
                                 return (
                                     <Fragment key={user.id}>
                                         <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>

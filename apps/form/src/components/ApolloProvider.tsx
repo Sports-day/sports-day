@@ -1,32 +1,18 @@
-"use client";
-
 import type { ReactNode } from "react";
 import {
   ApolloClient,
   InMemoryCache,
-  ApolloNextAppProvider as Provider,
-} from "@apollo/client-integration-nextjs";
-import { HttpLink } from "@apollo/client";
+  HttpLink,
+  ApolloProvider as Provider,
+} from "@apollo/client";
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: new HttpLink({
+    uri: import.meta.env.VITE_GRAPHQL_ENDPOINT,
+  }),
+});
 
 export const ApolloProvider = ({ children }: { children: ReactNode }) => {
-  return <Provider makeClient={makeClient}>{children}</Provider>;
-};
-
-const makeClient = () => {
-  const httpLink = new HttpLink({
-    uri: `${process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT}`,
-    fetchOptions: {
-      cache: "no-store",
-    },
-  });
-
-  return new ApolloClient({
-    cache: new InMemoryCache(),
-    defaultOptions: {
-      watchQuery: {
-        fetchPolicy: "network-only",
-      },
-    },
-    link: httpLink,
-  });
+  return <Provider client={client}>{children}</Provider>;
 };

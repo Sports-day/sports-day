@@ -1,5 +1,4 @@
-'use client'
-import Widerlogo from "@/public/logo/widerlogotype.svg";
+import Widerlogo from "@/src/assets/widerlogotype.svg?react";
 import {useTheme} from "@mui/material/styles";
 
 export default function WiderLogo() {

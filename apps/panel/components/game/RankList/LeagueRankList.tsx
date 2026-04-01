@@ -1,4 +1,3 @@
-'use client'
 import {LeagueRankListCard} from "@/components/game/RankList/LeagueRankListCard";
 import {useTheme, Box, Card, Stack, Typography} from "@mui/material";
 import {Team} from "@/src/models/TeamModel";

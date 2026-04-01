@@ -1,0 +1,68 @@
+name: ER Diagram
+
+on:
+  pull_request:
+    paths:
+      - "api/db_schema/migrations/**"
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  generate-er-diagram:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ""
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: sportsday
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Run migrations
+        run: |
+          DATABASE_URL="mysql://root:@127.0.0.1:3306/sportsday" \
+          go tool dbmate \
+            -d api/db_schema/migrations \
+            -s api/db_schema/schema.sql \
+            up
+
+      - name: Install tbls
+        run: |
+          TBLS_VERSION="v1.79.2"
+          curl -fsSL -o tbls.tar.gz \
+            "https://github.com/k1LoW/tbls/releases/download/${TBLS_VERSION}/tbls_linux_amd64.tar.gz"
+          tar -xzf tbls.tar.gz tbls
+          sudo mv tbls /usr/local/bin/tbls
+
+      - name: Generate ER diagram
+        run: |
+          tbls doc "mysql://root:@127.0.0.1:3306/sportsday" er --force
+
+      - name: Commit and push ER diagram
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add er/
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "docs: ERダイアグラムを更新"
+          git push

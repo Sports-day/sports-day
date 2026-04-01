@@ -1,45 +1,58 @@
-import {Box, Card, CardContent, Grid, Stack, Typography} from "@mui/material";
+import {Box, Card, CardContent, Grid, LinearProgress, Stack, Typography} from "@mui/material";
 import LeftCircleContainer from "@/components/information/layout/leftCircleContainer";
 import MatchList from "@/components/information/match/matchList"
-import {sportFactory} from "@/src/models/SportModel";
-import {gameFactory} from "@/src/models/GameModel";
-import {Match} from "@/src/models/MatchModel";
 import {InfoGameProgressChart} from "@/components/information/infoGameProgressChart";
-import Grid2 from "@mui/material/Unstable_Grid2";
 import * as React from "react";
 import LeagueCardList from "@/components/information/league/leagueCardList";
 import Top3LeagueCards from "@/components/information/league/top3LeagueCards";
 import AutoRefresh from "@/components/AutoRefresh";
+import {useFetchSport, useFetchSportProgress} from "@/src/features/sports/hook";
+import {useFetchGames, useFetchGameMatches} from "@/src/features/games/hook";
+import {useParams} from "react-router-dom";
+import {useEffect, useState} from "react";
+import {Match} from "@/src/models/MatchModel";
 
-export default async function Page({params}: { params: { id: string } }) {
-    const sportId = parseInt(params.id, 10)
-    const sport = await sportFactory().show(sportId)
-    const games = await gameFactory().index()
-    const filteredGames = games.filter((game) => game.sportId == sport.id)
+function MatchListLoader({ gameIds }: { gameIds: number[] }) {
+    const [matchList, setMatchList] = useState<Match[]>([])
+    const [loading, setLoading] = useState(true)
 
-    const progress = await sportFactory().getProgress(sportId);
+    useEffect(() => {
+        if (gameIds.length === 0) {
+            setLoading(false)
+            return
+        }
 
-    const formattedProgress = Math.trunc(progress * 100)
+        Promise.all(
+            gameIds.map(async (gameId) => {
+                const { useFetchGameMatches: _ } = await import("@/src/features/games/hook")
+                return gameId
+            })
+        ).then(() => {
+            setLoading(false)
+        })
+    }, [gameIds])
 
+    return <MatchList matches={matchList} />
+}
+
+export default function Page() {
+    const {id} = useParams<{id: string}>()
+    const sportId = parseInt(id ?? '0', 10)
+
+    const {sport, isFetching: isSportFetching} = useFetchSport(sportId)
+    const {games, isFetching: isGamesFetching} = useFetchGames()
+    const {progress, isFetching: isProgressFetching} = useFetchSportProgress(sportId)
+
+    const filteredGames = games.filter((game) => game.sportId == sport?.id)
+    const formattedProgress = Math.trunc((progress ?? 0) * 100)
     const chartSeries = [formattedProgress, 100 - formattedProgress]
 
-    const matchList: Match[] = []
-    for (const game of filteredGames) {
-        //  get all matches
-        const matches = await gameFactory().getGameMatches(game.id)
-        //  filter matches that are not finished
-        const inProgressMatches = matches.filter((match) => match.status == "standby" || match.status == "in_progress")
+    const isFetching = isSportFetching || isGamesFetching || isProgressFetching
 
-        //  sort by start time
-        inProgressMatches.sort((a, b) => {
-            return new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
-        })
-
-        //  pick the first match
-        if (inProgressMatches[0]) {
-            matchList.push(inProgressMatches[0])
-        }
+    if (isFetching) {
+        return <LinearProgress />
     }
+
     return (
         <div style={{position: 'relative'}}>
             <AutoRefresh/>
@@ -71,17 +84,17 @@ export default async function Page({params}: { params: { id: string } }) {
                             全体の順位
                         </Typography>
                         <Box sx={{flexGrow: 1}} width="100%">
-                            <Grid2 container alignItems="flex-end" justifyContent="center" columnSpacing={3}
+                            <Grid container alignItems="flex-end" justifyContent="center" columnSpacing={3}
                                    columns={12}
                                    margin={0}>
                                 <Top3LeagueCards games={filteredGames}/>
-                            </Grid2>
+                            </Grid>
 
                         </Box>
                         <Box sx={{flexGrow: 1}}>
-                            <Grid2 container alignItems="flex-end" justifyContent="center" spacing={3} columns={12}>
+                            <Grid container alignItems="flex-end" justifyContent="center" spacing={3} columns={12}>
                                 <LeagueCardList games={filteredGames}/>
-                            </Grid2>
+                            </Grid>
                         </Box>
 
 
@@ -90,7 +103,7 @@ export default async function Page({params}: { params: { id: string } }) {
 
                     {/* Second Component */}
                     <Grid
-                        xs={6}
+                        size={{ xs: 6 }}
                         justifyContent="center"
                         alignItems="center"
                         flex={1}
@@ -131,8 +144,7 @@ export default async function Page({params}: { params: { id: string } }) {
 
 
                                     <Box>
-                                        {/* @ts-expect-error Server Component */}
-                                        <MatchList matches={matchList}/>
+                                        <InProgressMatches filteredGames={filteredGames}/>
                                     </Box>
 
 
@@ -144,4 +156,37 @@ export default async function Page({params}: { params: { id: string } }) {
             </Box>
         </div>
     );
-};
+}
+
+function InProgressMatches({filteredGames}: {filteredGames: {id: number}[]}) {
+    const [matchList, setMatchList] = useState<Match[]>([])
+
+    useEffect(() => {
+        if (filteredGames.length === 0) return
+
+        Promise.all(
+            filteredGames.map(game =>
+                import("@/src/models/GameModel").then(({gameFactory}) =>
+                    gameFactory().getGameMatches(game.id)
+                )
+            )
+        ).then(allMatches => {
+            const inProgress = allMatches.flat()
+                .filter(m => m.status === "standby" || m.status === "in_progress")
+                .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+
+            // 各ゲームから1試合ずつ抽出
+            const seen = new Set<number>()
+            const result: Match[] = []
+            for (const match of inProgress) {
+                if (!seen.has(match.gameId)) {
+                    seen.add(match.gameId)
+                    result.push(match)
+                }
+            }
+            setMatchList(result)
+        })
+    }, [filteredGames])
+
+    return <MatchList matches={matchList}/>
+}

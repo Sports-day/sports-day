@@ -1,4 +1,4 @@
-import Grid from "@mui/material/Grid";
+import { Grid } from "@mui/material";
 import {Match} from "@/src/models/MatchModel";
 import MatchCard from "@/components/information/match/matchCard";
 
@@ -6,19 +6,15 @@ export type MatchListProps = {
     matches: Match[]
 }
 
-export default async function MatchList(props: MatchListProps) {
+export default function MatchList(props: MatchListProps) {
     const components = props.matches
         //  sort by date in ascending order
         .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
         .map((match) =>
-
-            <>
-                {/* @ts-expect-error Server Component */}
-                <MatchCard
-                    match={match}
-                    key={match.id}
-                />
-            </>
+            <MatchCard
+                match={match}
+                key={match.id}
+            />
         )
     return (
         <Grid

@@ -1,7 +1,6 @@
-'use client'
 import * as React from "react";
 import {useTheme} from '@mui/material/styles';
-import Logo from "@/public/logo/logo.svg";
+import Logo from "@/src/assets/logo.svg?react";
 import {Box, Container, Stack, Typography} from "@mui/material";
 
 

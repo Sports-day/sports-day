@@ -1,14 +1,11 @@
 import {Navigation} from "@/components/layouts/navigation";
+import {Outlet} from "react-router-dom";
 
-export default function RootLayout({
-                                       children,
-                                   }: {
-    children: React.ReactNode
-}) {
+export default function AuthenticatedLayout() {
     return (
         <>
             <Navigation/>
-            {children}
+            <Outlet/>
         </>
     )
 }

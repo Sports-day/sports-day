@@ -1,4 +1,3 @@
-'use client'
 import {createContext} from "react";
 import { User } from "@/src/models/UserModel";
 import {Team} from "@/src/models/TeamModel";

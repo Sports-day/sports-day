@@ -1,9 +1,8 @@
-'use client'
 import {
     Box,
     Container,
     Stack, Typography,
-    Unstable_Grid2 as Grid,
+    Grid,
     TextField,
     useTheme, Tabs, Tab
 } from "@mui/material";
@@ -22,11 +21,6 @@ import {useFetchGames} from "@/src/features/games/hook";
 import {useFetchMatches} from "@/src/features/matches/hook";
 import {DiscoverUser} from "@/components/discover/discoverUser";
 import {MatchesContext, TeamsContext} from "@/components/context";
-// import {Metadata} from "next";
-
-// export const metadata: Metadata = {
-//     title: 'SPORTSDAY : Discover',
-// }
 
 export type TabPanelProps = {
     children?: React.ReactNode;

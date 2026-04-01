@@ -1,8 +1,12 @@
 {
+  "containerEnv": {
+    "WATCHPACK_POLLING": "false"
+  },
   "name": "sports-day-devcontainer",
   "dockerComposeFile": "docker-compose.dev.yaml",
   "service": "app",
   "workspaceFolder": "/workspace",
+
   "features": {
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.24"
@@ -48,7 +52,9 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/init.sh",
+  // register util aliases
+  "postCreateCommand": "cat ${containerWorkspaceFolder}/.devcontainer/aliases.sh >> ~/.zshrc && bash ${containerWorkspaceFolder}/.devcontainer/init.sh",
+  "postStartCommand": "cd ${containerWorkspaceFolder}/apps/admin && yarn dev &",
   "customizations": {
     "vscode": {
       "settings": {

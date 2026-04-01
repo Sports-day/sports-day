@@ -1,9 +1,8 @@
-'use client'
 import {
     Box,
     Container, LinearProgress,
     Stack, Typography,
-    Unstable_Grid2 as Grid,
+    Grid,
 } from "@mui/material";
 import * as React from "react";
 import Overview from "@/components/dashboard/Overview";
@@ -129,7 +128,7 @@ export default function Page() {
                                                     spacing={3}
                                                 >
                                                     <Grid container spacing={1}>
-                                                        <Grid xs={12} sm={gridValue} lg={gridValue}>
+                                                        <Grid size={{ xs: 12, sm: gridValue, lg: gridValue }}>
                                                             <Typography pl={2} pt={2}>
                                                                 あなたが参加する試合
                                                             </Typography>
@@ -151,7 +150,7 @@ export default function Page() {
                                                                 </>
                                                             }
                                                         </Grid>
-                                                        <Grid xs={12} sm={gridValue} lg={gridValue}>
+                                                        <Grid size={{ xs: 12, sm: gridValue, lg: gridValue }}>
                                                             <Typography pl={2} pt={2}>
                                                                 あなたが審判する試合
                                                             </Typography>
@@ -174,7 +173,7 @@ export default function Page() {
                                                             .sort((a, b) => b.weight - a.weight)
                                                             .map((sport) => {
                                                                 return (
-                                                                    <Grid xs={12} sm={12} lg={12} key={sport.id}>
+                                                                    <Grid size={12} key={sport.id}>
                                                                         <SportsListElement
                                                                             sport={sport}
                                                                         />

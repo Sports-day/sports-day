@@ -2,29 +2,27 @@ FROM node:18.20.0 AS Builder
 
 WORKDIR /app
 
-# fetch packages
-COPY package*.json ./
-COPY yarn.lock ./
-RUN yarn
+COPY package*.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-FROM node:18.20.0-alpine AS Runner
-
-WORKDIR /app
-
-COPY --from=Builder /app/package.json ./
-COPY --from=Builder /app/node_modules/ ./node_modules/
-
-# copy files for build
 COPY app/ ./app/
 COPY components/ ./components/
 COPY src/ ./src/
 COPY public/ ./public/
 COPY styles/ ./styles/
 COPY types/ ./types/
+COPY index.html .
+COPY vite.config.ts .
 COPY tsconfig.json .
-COPY next.config.js .
-COPY middleware.ts .
+COPY schema.graphqls .
 
-EXPOSE 3000
+RUN yarn build
 
-CMD yarn build && yarn start
+FROM nginx:alpine AS Runner
+
+COPY --from=Builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

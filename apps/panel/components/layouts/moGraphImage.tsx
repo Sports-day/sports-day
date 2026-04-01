@@ -1,8 +1,8 @@
 import {alpha} from "@mui/material/styles";
-import {Box, Stack, LinearProgress, Container,Grid, useTheme} from "@mui/material";
+import {Box, Stack, LinearProgress, Container, useTheme} from "@mui/material";
 // import Logo from "public/mark.svg"
 import * as React from "react";
-import Logo from "@/public/logo/logo.svg";
+import Logo from "@/src/assets/logo.svg?react";
 import {motion} from "framer-motion";
 
 export const MoGraphImage = () => {

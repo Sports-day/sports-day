@@ -1,9 +1,9 @@
-export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "";
+export const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_ID || ""
 
-export const existsGaId = GA_MEASUREMENT_ID !== "";
+export const existsGaId = GA_MEASUREMENT_ID !== ""
 
 export const pageview = (path: string) => {
-    window.gtag("config", GA_MEASUREMENT_ID, {
-        page_path: path,
-    });
-};
+  window.gtag("config", GA_MEASUREMENT_ID, {
+    page_path: path,
+  })
+}

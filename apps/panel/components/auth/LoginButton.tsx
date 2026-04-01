@@ -1,9 +1,6 @@
-'use client'
 import {Button, Stack, Typography} from "@mui/material";
-import crypto from 'crypto';
-import * as querystring from "querystring";
 import {useEffect, useState} from "react";
-import MSLogo from "@/public/images/ms.svg";
+import MSLogo from "@/src/assets/ms.svg?react";
 import * as React from "react";
 import {useTheme} from "@mui/material/styles";
 
@@ -12,30 +9,30 @@ export default function LoginButton() {
     const [authorizationUrl, setAuthorizationUrl] = useState<string>('')
 
     useEffect(() => {
-        const authorizationBaseUrl = process.env.NEXT_PUBLIC_OIDC_AUTHORIZE_URL
-        //  query params
-        const clientId = process.env.NEXT_PUBLIC_OIDC_CLIENT_ID
-        const redirectUri = process.env.NEXT_PUBLIC_OIDC_REDIRECT_URL
-        const scope = process.env.NEXT_PUBLIC_OIDC_SCOPE ?? "openid profile email"
-        //  generate random nonce and state
-        const nonce = crypto.randomBytes(16).toString('hex')
+        const authorizationBaseUrl = import.meta.env.VITE_OIDC_AUTHORIZE_URL
+        const clientId = import.meta.env.VITE_OIDC_CLIENT_ID
+        const redirectUri = import.meta.env.VITE_OIDC_REDIRECT_URL
+        const scope = import.meta.env.VITE_OIDC_SCOPE ?? "openid profile email"
 
-        const queryData = {
-            "client_id": clientId,
-            "redirect_uri": redirectUri,
-            "response_type": "code",
-            "response_mode": "form_post",
-            "scope": scope,
-            "nonce": nonce,
+        // Web Crypto API でランダムなnonceを生成
+        const nonceArray = new Uint8Array(16)
+        window.crypto.getRandomValues(nonceArray)
+        const nonce = Array.from(nonceArray).map(b => b.toString(16).padStart(2, '0')).join('')
+
+        const queryData: Record<string, string> = {
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            response_type: "code",
+            response_mode: "query",
+            scope: scope,
+            nonce: nonce,
         }
 
-        //  make query string
-        const searchParams = querystring.stringify(queryData);
-        //  make url
+        const searchParams = new URLSearchParams(queryData).toString()
         setAuthorizationUrl(`${authorizationBaseUrl}?${searchParams}`)
     }, [])
 
-    const buttonDisplayName = process.env.NEXT_PUBLIC_OIDC_DISPLAY_NAME ?? "ログインできません"
+    const buttonDisplayName = import.meta.env.VITE_OIDC_DISPLAY_NAME ?? "ログインできません"
 
     return (
         <Button

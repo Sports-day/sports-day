@@ -5,12 +5,17 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
-    host: true,
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+    dedupe: ['react', 'react-dom', 'vite'],
+  },
+  server: {
+    host: true,
+    port: 3001,
+    watch: {
+      usePolling: true,
     },
   },
 });
