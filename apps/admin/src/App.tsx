@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -37,11 +37,10 @@ function keyToPath(key: string): string {
   return `/${key}`
 }
 
-function AppShell() {
+function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { loggedIn } = useAuth()
-  const [showPrivacy, setShowPrivacy] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   // 未ログインならログインページへリダイレクト
@@ -50,7 +49,10 @@ function AppShell() {
   }
 
   const selected = pathToKey(location.pathname)
-  registerNavigate((page: string) => navigate(keyToPath(page)))
+
+  useEffect(() => {
+    registerNavigate((page: string) => navigate(keyToPath(page)))
+  }, [navigate])
 
   const handleLogout = () => {
     logout()
@@ -66,11 +68,6 @@ function AppShell() {
         backgroundColor: "background.default",
       }}
     >
-      <Suspense fallback={null}>
-        {showPrivacy && (
-          <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
-        )}
-      </Suspense>
       <TopHeader onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
       <Sidebar
         selected={selected}
@@ -78,7 +75,7 @@ function AppShell() {
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
         onLogout={handleLogout}
-        onHome={() => setShowPrivacy(true)}
+        onHome={onPrivacy}
         checkPermission={hasPermission}
       />
       <Box
@@ -114,10 +111,9 @@ function AppShell() {
   )
 }
 
-function LoginRoute() {
+function LoginRoute({ onPrivacy }: { onPrivacy: () => void }) {
   const navigate = useNavigate()
   const { loggedIn } = useAuth()
-  const [showPrivacy, setShowPrivacy] = useState(false)
 
   if (loggedIn) {
     return <Navigate to="/competitions" replace />
@@ -125,23 +121,27 @@ function LoginRoute() {
 
   return (
     <Suspense fallback={<PageFallback />}>
-      {showPrivacy && (
-        <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
-      )}
       <LoginPage
         onLogin={() => { login(); navigate("/competitions") }}
-        onPrivacy={() => setShowPrivacy(true)}
+        onPrivacy={onPrivacy}
       />
     </Suspense>
   )
 }
 
 export default function App() {
+  const [showPrivacy, setShowPrivacy] = useState(false)
+
   return (
     <BrowserRouter>
+      <Suspense fallback={null}>
+        {showPrivacy && (
+          <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
+        )}
+      </Suspense>
       <Routes>
-        <Route path="/login" element={<LoginRoute />} />
-        <Route path="/*" element={<AppShell />} />
+        <Route path="/login" element={<LoginRoute onPrivacy={() => setShowPrivacy(true)} />} />
+        <Route path="/*" element={<AppShell onPrivacy={() => setShowPrivacy(true)} />} />
       </Routes>
     </BrowserRouter>
   )

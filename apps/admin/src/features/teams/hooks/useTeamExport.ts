@@ -11,8 +11,9 @@ export function useTeamExport() {
       ? MOCK_TEAMS.filter((t) => t.tags.includes(selectedTag))
       : MOCK_TEAMS
     const header = 'ID,チーム名,クラス,タグ\n'
+    const escape = (s: string) => `"${s.replace(/"/g, '""')}"`;
     const rows = filtered
-      .map((t) => `${t.id},${t.name},${t.class},"${t.tags.join('/')}"`)
+      .map((t) => `${escape(String(t.id))},${escape(t.name)},${escape(t.class)},${escape(t.tags.join('/'))}`)
       .join('\n')
     const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)

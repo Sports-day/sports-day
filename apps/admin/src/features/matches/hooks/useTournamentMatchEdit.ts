@@ -78,9 +78,13 @@ export function useTournamentMatchEdit() {
         match.score2 = score2 === '' ? null : Number(score2)
         match.status = status
         if (status === 'FINISHED' && match.score1 != null && match.score2 != null) {
-          if (match.score1 > match.score2) match.winnerTeamId = match.slot1.teamId
-          else if (match.score2 > match.score1) match.winnerTeamId = match.slot2.teamId
-          else match.winnerTeamId = null
+          if (match.score1 > match.score2) match.winnerTeamId = match.slot1.teamId ?? null
+          else if (match.score2 > match.score1) match.winnerTeamId = match.slot2.teamId ?? null
+          else {
+            // 引き分け（トーナメントでは通常発生しない）: スコア上位のslot1を暫定勝者とする
+            // TODO: 延長戦・PK戦などの引き分け解決UIを実装する
+            match.winnerTeamId = match.slot1.teamId ?? match.slot2.teamId ?? null
+          }
         } else if (status !== 'FINISHED') {
           match.winnerTeamId = null
         }

@@ -12,10 +12,10 @@ import CampaignIcon from '@mui/icons-material/Campaign'
 import LogoutIcon from '@mui/icons-material/Logout'
 import GitHubIcon from '@mui/icons-material/GitHub'
 import HomeIcon from '@mui/icons-material/Home'
+import { COLOR_BG_SIDEBAR, COLOR_PRIMARY_DARK, COLOR_PRIMARY_LIGHT } from '@/styles/colors'
+import { GITHUB_URL } from '@/lib/constants'
 
 export const DRAWER_WIDTH = 250
-
-const GITHUB_URL = 'https://github.com/Sports-day/sports-day-admin'
 
 type NavItem = {
   key: string
@@ -86,7 +86,7 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
     <Box
       sx={{
         width: DRAWER_WIDTH,
-        backgroundColor: '#D9DCED',
+        backgroundColor: COLOR_BG_SIDEBAR,
         display: 'flex',
         flexDirection: 'column',
         height: isMobile ? '100%' : `calc(100% - ${TOP_HEADER_HEIGHT}px)`,
@@ -96,7 +96,7 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
     >
       <Divider />
 
-      <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
+      <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: COLOR_PRIMARY_DARK, opacity: 0.55, letterSpacing: '0.08em' }}>
         準備
       </Typography>
       <List dense disablePadding aria-label="メインナビゲーション" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -107,15 +107,15 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
             onClick={() => handleSelect(key)}
             sx={NAV_ITEM_SX(selected === key)}
           >
-            <Box sx={{ color: '#4A5ABB', display: 'flex', alignItems: 'center' }}>{icon}</Box>
-            <ListItemText primary={label} primaryTypographyProps={{ fontSize: '14px', color: '#2F3C8C' }} />
+            <Box sx={{ color: COLOR_PRIMARY_LIGHT, display: 'flex', alignItems: 'center' }}>{icon}</Box>
+            <ListItemText primary={label} primaryTypographyProps={{ fontSize: '14px', color: COLOR_PRIMARY_DARK }} />
           </ListItemButton>
         ))}
       </List>
 
       <Divider sx={{ mt: 1 }} />
 
-      <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: '#2F3C8C', opacity: 0.55, letterSpacing: '0.08em' }}>
+      <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: COLOR_PRIMARY_DARK, opacity: 0.55, letterSpacing: '0.08em' }}>
         進行
       </Typography>
       <List dense disablePadding aria-label="進行ナビゲーション" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -126,27 +126,27 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
             onClick={() => handleSelect(key)}
             sx={NAV_ITEM_SX(selected === key)}
           >
-            <Box sx={{ color: '#4A5ABB', display: 'flex', alignItems: 'center' }}>{icon}</Box>
-            <ListItemText primary={label} primaryTypographyProps={{ fontSize: '14px', color: '#2F3C8C' }} />
+            <Box sx={{ color: COLOR_PRIMARY_LIGHT, display: 'flex', alignItems: 'center' }}>{icon}</Box>
+            <ListItemText primary={label} primaryTypographyProps={{ fontSize: '14px', color: COLOR_PRIMARY_DARK }} />
           </ListItemButton>
         ))}
       </List>
 
       <Box sx={{ mt: 2 }}>
         <Box sx={{ px: 1, pt: 0.5, display: 'flex', gap: 3, justifyContent: 'center' }}>
-          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onLogout}>
+          <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={onLogout}>
             <LogoutIcon sx={{ fontSize: 24 }} />
           </IconButton>
-          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={() => window.open(GITHUB_URL, '_blank')}>
+          <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={() => window.open(GITHUB_URL, '_blank')}>
             <GitHubIcon sx={{ fontSize: 24 }} />
           </IconButton>
-          <IconButton sx={{ color: '#4A5ABB', opacity: 0.7 }} onClick={onHome}>
+          <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={onHome}>
             <HomeIcon sx={{ fontSize: 24 }} />
           </IconButton>
         </Box>
         <Box sx={{ px: 2, pt: 1.5, pb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography sx={{ fontSize: '10px', color: '#2F3C8C', opacity: 0.7 }}>
-            (C)2026
+          <Typography sx={{ fontSize: '10px', color: COLOR_PRIMARY_DARK, opacity: 0.7 }}>
+            (C){new Date().getFullYear()}
           </Typography>
           {/* 画像スペース */}
         </Box>

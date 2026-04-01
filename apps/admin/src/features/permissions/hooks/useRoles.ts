@@ -20,11 +20,9 @@ export function useRoles() {
   const toggleDefault = (id: string) => {
     const role = MOCK_ROLES.find((r) => r.id === id)
     if (!role) return
-    const newValue = !role.isDefault
-    if (newValue) {
-      MOCK_ROLES.forEach((r) => { r.isDefault = false })
-    }
-    role.isDefault = newValue
+    if (role.isDefault) return // デフォルトロールの解除は禁止
+    MOCK_ROLES.forEach((r) => { r.isDefault = false })
+    role.isDefault = true
     persistRoles()
     setRoles([...MOCK_ROLES])
   }

@@ -20,14 +20,19 @@ export function useLeagueRegenerate(competitionId: string, leagueId: string) {
 
   const confirmSave = () => {
     const leagues = MOCK_ACTIVE_LEAGUES[competitionId] ?? []
-    const league = leagues.find((l) => l.id === leagueId)
-    if (league) {
-      league.matches.forEach((m) => {
-        m.scoreA = 0
-        m.scoreB = 0
-        m.status = 'standby'
-      })
-    }
+    MOCK_ACTIVE_LEAGUES[competitionId] = leagues.map((l) =>
+      l.id === leagueId
+        ? {
+            ...l,
+            matches: l.matches.map((m) => ({
+              ...m,
+              scoreA: 0,
+              scoreB: 0,
+              status: 'standby' as const,
+            })),
+          }
+        : l,
+    )
     persistActiveLeagues()
     closeOverlay()
   }

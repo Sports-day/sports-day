@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { ChangeEvent } from 'react'
 import { MOCK_TEAMS } from '../../teams/mock'
 import { MOCK_LEAGUE_DETAILS, MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
@@ -105,6 +105,29 @@ function syncActiveLeagueMatches(
   persistActiveLeagues()
 }
 
+/**
+ * targetId から進出先を再帰的に辿り、sourceId に戻るかチェックする。
+ */
+function wouldCreateCycle(sourceId: string, targetId: string): boolean {
+  const visited = new Set<string>()
+  let current = targetId
+  while (current) {
+    if (current === sourceId) return true
+    if (visited.has(current)) return false
+    visited.add(current)
+    const detail = MOCK_LEAGUE_DETAILS[current]
+    const targets = detail?.progressionRules?.map((r: ProgressionRule) => r.targetId).filter(Boolean) ?? []
+    if (targets.length === 0) return false
+    // 複数の進出先がある場合、いずれかが循環していれば循環とみなす
+    if (targets.length === 1) {
+      current = targets[0]
+    } else {
+      return targets.some((t: string) => t === sourceId || wouldCreateCycle(sourceId, t))
+    }
+  }
+  return false
+}
+
 export function useLeagueDetail(leagueId: string, leagueName: string, competitionId: string) {
   const saved = MOCK_LEAGUE_DETAILS[leagueId]
   const [form, setForm] = useState<LeagueForm>({
@@ -121,15 +144,23 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   const [progressionMaxRank, setProgressionMaxRank] = useState(saved?.progressionMaxRank ?? 3)
   const [progressionRules, setProgressionRules] = useState<ProgressionRule[]>(saved?.progressionRules ?? [])
 
-  // 変更のたびに自動保存
+  // 変更のたびに自動保存（前回値と比較して実際に変更があった場合のみ）
+  const prevDetailRef = useRef<string>('')
   useEffect(() => {
+    const snapshot = JSON.stringify({ ...form, entries, progressionEnabled, progressionMaxRank, progressionRules })
+    if (snapshot === prevDetailRef.current) return
+    prevDetailRef.current = snapshot
     MOCK_LEAGUE_DETAILS[leagueId] = { ...form, entries, progressionEnabled, progressionMaxRank, progressionRules }
     persistCompetitionsData()
     syncLeagueName(leagueId, form.name)
   }, [form, entries, leagueId, progressionEnabled, progressionMaxRank, progressionRules])
 
   // エントリー変更時にアクティブリーグの試合データも同期
+  const prevEntriesRef = useRef<string>('')
   useEffect(() => {
+    const snapshot = JSON.stringify({ entries, competitionId, leagueId, name: form.name })
+    if (snapshot === prevEntriesRef.current) return
+    prevEntriesRef.current = snapshot
     if (entries.length >= 2) {
       syncActiveLeagueMatches(competitionId, leagueId, form.name, entries)
     }
@@ -160,6 +191,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   }
 
   const handleProgressionRuleChange = (rank: number, targetId: string) => {
+    if (targetId && wouldCreateCycle(leagueId, targetId)) return
     setProgressionRules(prev => {
       const existing = prev.find(r => r.rank === rank)
       if (existing) return prev.map(r => r.rank === rank ? { ...r, targetId } : r)

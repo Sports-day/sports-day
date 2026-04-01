@@ -48,12 +48,14 @@ function calcStats(team: ActiveTeam, matches: ActiveMatch[]): TeamStats {
 }
 
 function calcRankLabel(team: ActiveTeam, allTeams: ActiveTeam[], statsMap: Map<string, TeamStats>): string {
-  const my = statsMap.get(team.id)!
+  const my = statsMap.get(team.id)
+  if (!my) return '-'
   const myDiff = my.goalsFor - my.goalsAgainst
   let better = 0, tied = 0
   allTeams.forEach((t) => {
     if (t.id === team.id) return
-    const s = statsMap.get(t.id)!
+    const s = statsMap.get(t.id)
+    if (!s) return
     const sDiff = s.goalsFor - s.goalsAgainst
     if (s.points > my.points || (s.points === my.points && sDiff > myDiff) || (s.points === my.points && sDiff === myDiff && s.goalsFor > my.goalsFor)) {
       better++

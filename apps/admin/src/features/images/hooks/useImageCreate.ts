@@ -7,6 +7,12 @@ export function useImageCreate() {
   const [url, setUrl] = useState('')
 
   const handleCreate = () => {
+    try {
+      const parsed = new URL(url)
+      if (!['http:', 'https:'].includes(parsed.protocol)) return
+    } catch {
+      return
+    }
     MOCK_IMAGES.push({ id: String(Date.now()), name, url })
     persistImages()
     notifyImageListeners()

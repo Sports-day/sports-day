@@ -38,8 +38,10 @@ export function useMatchEdit() {
       for (const league of leagues) {
         const match = league.matches.find((m) => m.id === selectedMatch.id)
         if (match) {
-          match.scoreA = scoreA === '' ? null : Number(scoreA)
-          match.scoreB = scoreB === '' ? null : Number(scoreB)
+          const parsedA = Number(scoreA)
+          const parsedB = Number(scoreB)
+          match.scoreA = scoreA === '' ? null : (Number.isFinite(parsedA) && parsedA >= 0 ? parsedA : null)
+          match.scoreB = scoreB === '' ? null : (Number.isFinite(parsedB) && parsedB >= 0 ? parsedB : null)
           if (matchStatus) match.status = matchStatus
           // winner フィールドがある場合は保存（明示的な勝敗指定）
           if (winner === 'teamA') match.winner = 'teamA'
