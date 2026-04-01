@@ -1,14 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Box, IconButton, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import { dismissToast, getToastQueue, subscribeToast } from '@/lib/toast'
 
 export function GlobalToast() {
-  const [, rerender] = useState(0)
-
-  useEffect(() => subscribeToast(() => rerender((n) => n + 1)), [])
-
-  const queue = getToastQueue()
+  const queue = useSyncExternalStore(subscribeToast, getToastQueue)
   if (queue.length === 0) return null
 
   return (

@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import type { ErrorInfo, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Box, Button, Typography } from '@mui/material'
 
 type Props = { children: ReactNode }
@@ -10,10 +10,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error) {
     return { error }
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, info)
   }
 
   render() {
