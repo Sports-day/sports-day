@@ -32,7 +32,7 @@ export function useNotSelectedScenes(): HookResult {
         name: d.name?.trim(),
       })) ?? [];
     const scenes = sceneData?.scenes ?? [];
-    const sportScenes = sportSceneData?.sportScenes ?? [];
+    const sportScenes = sportSceneData?.scenes?.flatMap((s: any) => s.sportScenes) ?? [];
 
     const sceneTeamUserIdMap = new Map<string, Set<string>>();
     sportScenes.forEach((sportScene: any) => {
@@ -58,7 +58,7 @@ export function useNotSelectedScenes(): HookResult {
           .map((user: { id: string; name: string }) => user.name),
       };
     });
-  }, [allUserData?.users, sceneData?.scenes, sportSceneData?.sportScenes]);
+  }, [allUserData?.users, sceneData?.scenes, sportSceneData?.scenes]);
 
   return { items, loading, error };
 }

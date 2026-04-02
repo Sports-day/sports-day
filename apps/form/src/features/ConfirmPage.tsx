@@ -10,21 +10,23 @@ import CircularUnderLoad from "@/features/Loading";
 
 const GET_ALLTEAMDATA = gql`
   query GetAllTeamdata {
-    sportScenes {
-      scene {
-        id
-        name
-      }
-      sport {
-        id
-        name
-      }
-      entries {
-        team {
+    scenes {
+      sportScenes {
+        scene {
           id
           name
-          users {
+        }
+        sport {
+          id
+          name
+        }
+        entries {
+          team {
+            id
             name
+            users {
+              name
+            }
           }
         }
       }
@@ -49,17 +51,19 @@ export default function ConfirmPage() {
         teamId: string[];
         memberData: string[][];
       }[]
-    | undefined = data?.sportScenes?.map((d: any) => ({
-    sceneName: d.scene?.name,
-    sceneId: d.scene?.id,
-    sportName: d.sport?.name,
-    sportId: d.sport?.id,
-    teamName: d.entries?.map((s: any) => s.team?.name),
-    teamId: d.entries?.map((s: any) => s.team?.id),
-    memberData: d.entries?.map((s: any) =>
-      s.team?.users?.map((u: any) => u.name),
-    ),
-  }));
+    | undefined = data?.scenes
+    ?.flatMap((s: any) => s.sportScenes)
+    ?.map((d: any) => ({
+      sceneName: d.scene?.name,
+      sceneId: d.scene?.id,
+      sportName: d.sport?.name,
+      sportId: d.sport?.id,
+      teamName: d.entries?.map((s: any) => s.team?.name),
+      teamId: d.entries?.map((s: any) => s.team?.id),
+      memberData: d.entries?.map((s: any) =>
+        s.team?.users?.map((u: any) => u.name),
+      ),
+    }));
 
   if (loading) {
     return <CircularUnderLoad />;

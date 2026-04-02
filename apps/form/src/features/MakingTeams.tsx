@@ -21,22 +21,24 @@ type MakingProps = {
 
 const GET_SCENE_SPORT = gql`
   query GetSceneSport {
-    sportScenes {
-      id
-      entries {
-        team {
-          id
-          name
-          users {
+    scenes {
+      sportScenes {
+        id
+        entries {
+          team {
+            id
             name
+            users {
+              name
+            }
           }
         }
-      }
-      sport {
-        id
-      }
-      scene {
-        id
+        sport {
+          id
+        }
+        scene {
+          id
+        }
       }
     }
   }
@@ -51,9 +53,9 @@ export default function MakingTeams({
   const theme = useTheme();
   const { data, loading } = useQuery(GET_SCENE_SPORT);
   const teams =
-    data?.sportScenes?.filter(
-      (d: any) => d.sport.id === sports && d.scene.id === type,
-    ) ?? [];
+    data?.scenes
+      ?.flatMap((s: any) => s.sportScenes)
+      ?.filter((d: any) => d.sport.id === sports && d.scene.id === type) ?? [];
   const breadcrumbs: BreadcrumbItem[] = [
     { label: "ホーム", href: `/weather/${type}` },
     { label: "チーム確認" },

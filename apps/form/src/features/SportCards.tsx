@@ -15,17 +15,19 @@ type Props = {
 
 const GET_TEAMDATA = gql`
   query GetTeamData {
-    sportScenes {
-      sport {
-        id
-      }
-      scene {
-        id
-      }
-      entries {
-        team {
-          users {
-            name
+    scenes {
+      sportScenes {
+        sport {
+          id
+        }
+        scene {
+          id
+        }
+        entries {
+          team {
+            users {
+              name
+            }
           }
         }
       }
@@ -41,9 +43,9 @@ export default function SportCards({ weather, type }: Props) {
   const hasTeamMap = new Map<string, boolean>();
 
   weather.forEach((item) => {
-    const entry = data?.sportScenes?.find(
-      (d: any) => d.sport?.id === item.id && d.scene?.id === type,
-    );
+    const entry = data?.scenes
+      ?.flatMap((d: any) => d.sportScenes)
+      ?.find((d: any) => d.sport?.id === item.id && d.scene?.id === type);
     const users =
       entry?.entries?.flatMap((s: any) => s.team?.users ?? []) ?? [];
     hasTeamMap.set(item.id, users.length > 0);
