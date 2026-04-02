@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"gorm.io/gorm"
 
@@ -66,14 +65,14 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 		return nil
 	}
 	if !errors.Is(err, errors.ErrUserNotFound) {
-		return fmt.Errorf("failed to find user idp: %w", err)
+		return errors.Wrap(err)
 	}
 
 	// users_idpに存在しない → usersとusers_idpをトランザクションで新規作成
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		newUser := &db_model.User{ID: ulid.Make()}
 		if _, err := s.userRepo.Save(ctx, tx, newUser); err != nil {
-			return fmt.Errorf("failed to create user: %w", err)
+			return errors.ErrSaveUser
 		}
 
 		newIdp := &db_model.UsersIdp{
@@ -86,7 +85,7 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 		newIdp.MicrosoftUserID.Valid = claims.MicrosoftUserID != ""
 
 		if _, err := s.userRepo.SaveUserIdp(ctx, tx, newIdp); err != nil {
-			return fmt.Errorf("failed to create user idp: %w", err)
+			return errors.ErrSaveUserIdp
 		}
 
 		return nil
