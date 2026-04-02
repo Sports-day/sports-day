@@ -17,22 +17,18 @@ const (
 
 // 定義済みパーミッション
 const (
-	PermTournamentRead  = "tournament:read"
-	PermTournamentWrite = "tournament:write"
-	PermTeamRead        = "team:read"
-	PermTeamWrite       = "team:write"
-	PermMatchRead       = "match:read"
-	PermMatchWrite      = "match:write"
-	PermUserRead        = "user:read"
-	PermUserWrite       = "user:write"
-	PermUserManage      = "user:manage"
-	PermGroupWrite      = "group:write"
-	PermSportWrite      = "sport:write"
-	PermLocationWrite   = "location:write"
-	PermSceneWrite      = "scene:write"
+	PermTournamentWrite  = "tournament:write"
+	PermTeamWrite        = "team:write"
+	PermMatchWrite       = "match:write"
+	PermUserWrite        = "user:write"
+	PermUserManage       = "user:manage"
+	PermGroupWrite       = "group:write"
+	PermSportWrite       = "sport:write"
+	PermLocationWrite    = "location:write"
+	PermSceneWrite       = "scene:write"
 	PermInformationWrite = "information:write"
-	PermRuleWrite       = "rule:write"
-	PermImageWrite      = "image:write"
+	PermRuleWrite        = "rule:write"
+	PermImageWrite       = "image:write"
 )
 
 // StaticAuthorizer は Go の map を使った静的ロール-パーミッションマッピング実装。
@@ -46,13 +42,9 @@ func NewStaticAuthorizer() *StaticAuthorizer {
 	return &StaticAuthorizer{
 		permissions: map[string]map[string]bool{
 			RoleAdmin: {
-				PermTournamentRead:   true,
 				PermTournamentWrite:  true,
-				PermTeamRead:         true,
 				PermTeamWrite:        true,
-				PermMatchRead:        true,
 				PermMatchWrite:       true,
-				PermUserRead:         true,
 				PermUserWrite:        true,
 				PermUserManage:       true,
 				PermGroupWrite:       true,
@@ -64,13 +56,9 @@ func NewStaticAuthorizer() *StaticAuthorizer {
 				PermImageWrite:       true,
 			},
 			RoleOrganizer: {
-				PermTournamentRead:   true,
 				PermTournamentWrite:  true,
-				PermTeamRead:         true,
 				PermTeamWrite:        true,
-				PermMatchRead:        true,
 				PermMatchWrite:       true,
-				PermUserRead:         true,
 				PermUserWrite:        true,
 				PermUserManage:       false,
 				PermGroupWrite:       true,
@@ -82,13 +70,9 @@ func NewStaticAuthorizer() *StaticAuthorizer {
 				PermImageWrite:       true,
 			},
 			RoleParticipant: {
-				PermTournamentRead:   true,
-				PermTeamRead:         true,
-				PermMatchRead:        true,
 				PermTournamentWrite:  false,
 				PermTeamWrite:        false,
 				PermMatchWrite:       false,
-				PermUserRead:         false,
 				PermUserWrite:        false,
 				PermUserManage:       false,
 				PermGroupWrite:       false,
