@@ -1,0 +1,822 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  groups: [Group!]!
+  teams: [Team!]!
+  judgments: [Judgment!]!
+}
+
+type Group {
+  id: ID!
+  name: String!
+  teams: [Team!]!
+  users: [User!]!
+  judgments: [Judgment!]!
+}
+
+type Team {
+  id: ID!
+  name: String!
+  group: Group!
+  users: [User!]!
+  competitions: [Competition!]!
+  matches: [Match!]!
+  judgments: [Judgment!]!
+  leagues: [League!]!
+}
+
+enum CompetitionType {
+  LEAGUE
+  TOURNAMENT
+}
+
+type Competition {
+  id: ID!
+  name: String!
+  type: CompetitionType!
+  scene: Scene!
+  teams: [Team!]!
+  matches: [Match!]!
+  league: League
+  tournaments: [Tournament!]!
+}
+
+type Location {
+  id: ID!
+  name: String!
+  matches: [Match!]!
+}
+
+enum MatchStatus {
+  CANCELED
+  STANDBY
+  ONGOING
+  FINISHED
+}
+
+type MatchEntry {
+  id: ID!
+  team: Team
+  score: Int!
+}
+
+type Match {
+  id: ID!
+  time: String!
+  status: MatchStatus!
+  location: Location
+  competition: Competition!
+  winnerTeam: Team
+  entries: [MatchEntry!]!
+  judgment: Judgment
+}
+
+type Judgment {
+  id: ID!
+  name: String
+  user: User
+  team: Team
+  group: Group
+}
+
+type Standing {
+  id: ID!
+  team: Team!
+  points: Int!
+  rank: Int!
+  win: Int!
+  draw: Int!
+  lose: Int!
+  goalsFor: Int!
+  goalsAgainst: Int!
+  goalDiff: Int!
+  matchesPlayed: Int!
+}
+
+type League {
+  id: ID!
+  name: String!
+  teams: [Team!]!
+}
+
+type Information {
+  id: ID!
+  title: String!
+  content: String!
+}
+
+enum RankingConditionKey {
+  WIN_POINTS
+  GOAL_DIFF
+  TOTAL_GOALS
+  HEAD_TO_HEAD
+  ADMIN_DECISION
+}
+
+type RankingRule {
+  conditionKey: RankingConditionKey!
+  priority: Int!
+}
+
+type TiebreakPriority {
+  team: Team!
+  priority: Int!
+}
+
+type Sport {
+  id: ID!
+  name: String!
+  weight: Int!
+  rankingRules: [RankingRule!]!
+  rules: [Rule!]!
+  image: Image
+  scene: [SportScene!]
+}
+
+type Image {
+  id: ID!
+  url: String
+  status: String!
+}
+
+type Scene {
+  id: ID!
+  name: String!
+  sportScenes: [SportScene!]!
+}
+
+type SportScene {
+  id: ID!
+  sport: Sport!
+  scene: Scene!
+  entries: [SportEntry!]!
+}
+
+type SportEntry {
+  id: ID!
+  sportScene: SportScene!
+  team: Team!
+}
+
+enum BracketType {
+  MAIN
+  SUB
+}
+
+enum PlacementMethod {
+  SEED_OPTIMIZED
+  BALANCED
+  RANDOM
+  MANUAL
+}
+
+enum SlotSourceType {
+  SEED
+  MATCH_WINNER
+  MATCH_LOSER
+}
+
+enum BracketState {
+  BUILDING
+  READY
+  IN_PROGRESS
+  COMPLETED
+}
+
+type Tournament {
+  id: ID!
+  competition: Competition!
+  name: String!
+  bracketType: BracketType!
+  placementMethod: PlacementMethod
+  displayOrder: Int!
+  state: BracketState!
+  progress: Float!
+  matches: [Match!]!
+  slots: [TournamentSlot!]!
+}
+
+type TournamentSlot {
+  id: ID!
+  tournament: Tournament!
+  matchEntry: MatchEntry!
+  sourceType: SlotSourceType!
+  sourceMatch: Match
+  seedNumber: Int
+}
+
+type TournamentRanking {
+  rank: Int!
+  team: Team!
+  isTied: Boolean!
+}
+
+type PromotionRule {
+  id: ID!
+  sourceCompetition: Competition!
+  targetCompetition: Competition!
+  rankSpec: String!
+  slot: Int
+}
+
+type PromotionStatus {
+  targetCompetitionId: ID!
+  expectedTeamCount: Int!
+  currentEntryCount: Int!
+}
+
+type Rule {
+  id: ID
+  rule: String!
+  sport: Sport
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+}
+
+input CreateGroupInput {
+  name: String!
+}
+
+input UpdateGroupInput {
+  name: String
+}
+
+input UpdateGroupUsersInput {
+  userIds: [ID!]!
+}
+
+input CreateInformationInput {
+  title: String!
+  content: String!
+}
+
+input UpdateInformationInput {
+  title: String
+  content: String
+}
+
+input CreateSceneInput {
+  name: String!
+}
+
+input UpdateSceneInput {
+  name: String
+}
+input CreateSportsInput {
+  name: String!
+}
+
+input UpdateSportsInput {
+  name: String
+  weight: Int
+  imageId: ID
+}
+
+input CreateTeamInput {
+  name: String!
+  groupId: ID!
+  userIds: [ID!]!
+}
+
+input UpdateTeamInput {
+  name: String
+  groupId: ID
+}
+
+input UpdateTeamUsersInput {
+  addUserIds: [ID!]
+  removeUserIds: [ID!]
+}
+
+input CreateLocationInput {
+  name: String!
+}
+
+input UpdateLocationInput {
+  name: String
+}
+
+input CreateCompetitionInput {
+  name: String!
+  type: CompetitionType!
+  sceneId: ID!
+}
+
+input UpdateCompetitionInput {
+  name: String
+  imageId: ID
+}
+
+input UpdateCompetitionEntriesInput {
+  teamIds: [ID!]!
+}
+
+input MatchResultInput {
+  teamId: ID!
+  score: Int!
+}
+
+input CreateMatchInput {
+  time: String!
+  status: MatchStatus!
+  locationId: ID
+  competitionId: ID!
+  teamIds: [ID!]
+  judgment: JudgmentEntry
+}
+
+input UpdateMatchDetailInput {
+  time: String
+  locationId: ID
+}
+
+input UpdateMatchResultInput {
+  status: MatchStatus
+  winnerTeamId: ID
+  results: [MatchResultInput!]
+}
+
+input UpdateMatchEntriesInput {
+  teamIds: [ID!]!
+}
+
+input UpdateMatchEntryScoreInput {
+  teamId: ID!
+  score: Int!
+}
+
+"""
+3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
+1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
+"""
+input JudgmentEntry {
+  name: String
+  userId: ID
+  teamId: ID
+  groupId: ID
+}
+
+input CreateJudgmentInput {
+  id: ID!
+  entry: JudgmentEntry!
+}
+
+input UpdateJudgmentInput {
+  entry: JudgmentEntry
+}
+
+input CreateLeagueInput {
+  name: String!
+  defaultLocationId: ID
+}
+
+input UpdateLeagueRuleInput {
+  winPt: Int
+  drawPt: Int
+  losePt: Int
+}
+
+input GenerateRoundRobinInput {
+  startTime: String!
+  matchDuration: Int!
+  breakDuration: Int!
+  locationId: ID
+}
+
+input AddSportScenesInput {
+  sportIds: [ID!]!
+}
+input DeleteSportScenesInput {
+  sportIds: [ID!]!
+}
+input AddSportEntriesInput {
+  teamIds: [ID!]!
+}
+input DeleteSportEntriesInput {
+  teamIds: [ID!]!
+}
+
+input RankingRuleInput {
+  conditionKey: RankingConditionKey!
+  priority: Int!
+}
+
+input TiebreakPriorityInput {
+  teamId: ID!
+  priority: Int!
+}
+
+"""
+ブラケット自動生成
+"""
+input GenerateBracketInput {
+  competitionId: ID!
+  teamCount: Int!
+  subBrackets: [SubBracketInput!]
+  placementMethod: PlacementMethod
+}
+
+"""
+SUBブラケット定義（自動生成用）
+"""
+input SubBracketInput {
+  name: String!
+  sourceRound: Int!
+}
+
+"""SUBブラケット手動追加"""
+input CreateTournamentInput {
+  competitionId: ID!
+  name: String!
+  bracketType: BracketType!
+  placementMethod: PlacementMethod
+  displayOrder: Int
+}
+
+"""
+ブラケット内試合追加
+"""
+input CreateTournamentMatchInput {
+  tournamentId: ID!
+  slot1: SlotInput!
+  slot2: SlotInput!
+  time: String
+  judgment: JudgmentEntry
+}
+
+"""
+スロットのソース指定
+"""
+input SlotInput {
+  sourceType: SlotSourceType!
+  sourceMatchId: ID
+  seedNumber: Int
+}
+
+"""スロット接続変更"""
+input UpdateSlotConnectionInput {
+  slotId: ID!
+  sourceType: SlotSourceType!
+  sourceMatchId: ID
+  seedNumber: Int
+}
+
+"""seed_number 振り直し"""
+input SeedNumberInput {
+  slotId: ID!
+  seedNumber: Int!
+}
+
+"""トーナメント（ブラケット）更新"""
+input UpdateTournamentInput {
+  name: String
+  displayOrder: Int
+}
+
+"""SEEDスロットへのチーム手動配置"""
+input AssignSeedTeamInput {
+  slotId: ID!
+  teamId: ID
+}
+
+input CreatePromotionRuleInput {
+  sourceCompetitionId: ID!
+  targetCompetitionId: ID!
+  rankSpec: String!
+  slot: Int
+}
+
+input UpdatePromotionRuleInput {
+  rankSpec: String
+  slot: Int
+}
+
+input CreateRuleInput {
+  rule: String!
+  sportId: ID
+}
+
+input UpdateRuleInput {
+  rule: String
+  sportId: ID
+}
+
+type Query {
+  users: [User!]!
+  user(id: ID!): User!
+  me: User!
+  groups: [Group!]!
+  group(id: ID!): Group!
+  sports: [Sport!]!
+  sport(id: ID!): Sport!
+  """
+  チームをまとめて取得する
+  """
+  teams: [Team!]!
+  """
+  ID指定でチームを取得する
+  """
+  team(id: ID!): Team!
+  """
+  場所をまとめて取得する
+  """
+  locations: [Location!]!
+  """
+  ID指定で場所を取得する
+  """
+  location(id: ID!): Location!
+  scenes: [Scene!]!
+  scene(id: ID!): Scene!
+  Informations: [Information!]!
+  Information(id: ID!): Information!
+  """
+  大会をまとめて取得する
+  """
+  competitions: [Competition!]!
+  """
+  ID指定で大会を取得する
+  """
+  competition(id: ID!): Competition!
+  """
+  試合をまとめて取得する
+  """
+  matches: [Match!]!
+  """
+  ID指定で試合を取得する
+  """
+  match(id: ID!): Match!
+  """
+  審判をまとめて取得する
+  """
+  judgments: [Judgment!]!
+  """
+  ID指定で試合を取得する
+  """
+  judgment(id: ID!): Judgment!
+  """
+  リーグをまとめて取得する
+  """
+  leagues: [League!]!
+  """
+  ID指定でリーグを取得する
+  """
+  league(id: ID!): League!
+  """
+  リーグの順位表をリアルタイム計算で取得する
+  """
+  leagueStandings(leagueId: ID!): [Standing!]!
+  """
+  進出ルールを取得する（進出元の大会IDで絞り込み）
+  """
+  promotionRules(sourceCompetitionId: ID!): [PromotionRule!]!
+  """
+  進出先の期待チーム数と現在のエントリー数を取得する
+  """
+  promotionStatus(targetCompetitionId: ID!): PromotionStatus!
+  """
+  ブラケット単体取得
+  """
+  tournament(id: ID!): Tournament!
+  """
+  competition内の全ブラケット取得
+  """
+  tournaments(competitionId: ID!): [Tournament!]!
+  """
+  トーナメント順位（全ブラケット統合）
+  """
+  tournamentRanking(competitionId: ID!): [TournamentRanking!]!
+  rule(id: ID!): Rule!
+  rules: [Rule]!
+  """
+  ID指定で画像を取得する
+  """
+  image(id: ID!): Image!
+  """
+  画像一覧を取得する
+  """
+  images: [Image!]!
+}
+
+input CreateImageUploadURLInput {
+  filename: String!
+}
+
+type ImageUploadURL {
+  uploadUrl: String!
+  imageId: ID!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  createGroup(input: CreateGroupInput!): Group!
+  deleteGroup(id: ID!): Group!
+  updateGroup(id: ID!, input: UpdateGroupInput!): Group!
+  addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
+  removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
+  createSports(input: CreateSportsInput!): Sport!
+  deleteSports(id: ID!): Sport!
+  updateSports(id: ID!, input: UpdateSportsInput!): Sport!
+  """
+  チームを作成する
+  """
+  createTeam(input: CreateTeamInput!): Team!
+  """
+  チームを削除する
+  """
+  deleteTeam(id: ID!): Team!
+  """
+  チームの情報を更新する
+  """
+  updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+  """
+  チームメンバーを更新する
+  """
+  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team!
+  """
+  場所を追加する
+  """
+  createLocation(input: CreateLocationInput!): Location!
+  """
+  場所の情報を更新する
+  """
+  updateLocation(id: ID!, input: UpdateLocationInput!): Location!
+  """
+  場所を削除する
+  """
+  deleteLocation(id: ID!): Location!
+  createScene(input: CreateSceneInput!): Scene!
+  updateScene(id: ID!, input: UpdateSceneInput!): Scene!
+  deleteScene(id: ID!): Scene!
+  createInformation(input: CreateInformationInput!): Information!
+  deleteInformation(id: ID!): Information!
+  updateInformation(id: ID!, input: UpdateInformationInput!): Information!
+  """
+  大会を作成する
+  """
+  createCompetition(input: CreateCompetitionInput!): Competition!
+  """
+  大会の情報を更新する
+  """
+  updateCompetition(id: ID!, input: UpdateCompetitionInput!): Competition!
+  """
+  大会を削除する
+  """
+  deleteCompetition(id: ID!): Competition!
+  """
+  大会にチームエントリーを追加する
+  """
+  addCompetitionEntries(
+    id: ID!
+    input: UpdateCompetitionEntriesInput!
+  ): Competition!
+  """
+  大会からチームエントリーを削除する
+  """
+  deleteCompetitionEntries(
+    id: ID!
+    input: UpdateCompetitionEntriesInput!
+  ): Competition!
+  """
+  試合を作成する
+  """
+  createMatch(input: CreateMatchInput!): Match!
+  """
+  試合の詳細情報を更新する
+  """
+  updateMatchDetail(id: ID!, input: UpdateMatchDetailInput!): Match!
+  """
+  試合結果を更新する
+  """
+  updateMatchResult(id: ID!, input: UpdateMatchResultInput!): Match!
+  """
+  試合を削除する
+  """
+  deleteMatch(id: ID!): Match!
+  """
+  試合にチームエントリーを追加する
+  """
+  addMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
+  """
+  試合からチームエントリーを削除する
+  """
+  deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
+  """
+  審判の情報を更新する
+  """
+  updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
+  """
+  リーグを追加する
+  """
+  createLeague(input: CreateLeagueInput!): League!
+  """
+  リーグのルールを更新する
+  """
+  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League!
+  """
+  リーグを削除する
+  """
+  deleteLeague(id: ID!): League!
+  """
+  リーグの総当たり戦を自動生成する
+  """
+  generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]!
+  """
+  スポーツのランキングルールを設定する（全削除→再挿入）
+  """
+  setRankingRules(sportId: ID!, rules: [RankingRuleInput!]!): Sport!
+  """
+  リーグのタイブレーク優先度を設定する
+  """
+  setTiebreakPriorities(leagueId: ID!, priorities: [TiebreakPriorityInput!]!): [TiebreakPriority!]!
+  """
+  進出ルールを作成する
+  """
+  createPromotionRule(input: CreatePromotionRuleInput!): PromotionRule!
+  """
+  進出ルールを更新する
+  """
+  updatePromotionRule(id: ID!, input: UpdatePromotionRuleInput!): PromotionRule!
+  """
+  進出ルールを削除する
+  """
+  deletePromotionRule(id: ID!): PromotionRule!
+  """
+  ブラケット自動生成（MAIN + オプショナルSUB）
+  """
+  generateBracket(input: GenerateBracketInput!): [Tournament!]!
+  """
+  SUBブラケット手動追加
+  """
+  createTournament(input: CreateTournamentInput!): Tournament!
+  """
+  トーナメント（ブラケット）を更新する
+  """
+  updateTournament(id: ID!, input: UpdateTournamentInput!): Tournament!
+  """
+  ブラケット削除（SUBのみ。MAIN削除不可）
+  """
+  deleteTournament(id: ID!): Tournament!
+  """
+  ブラケット内試合追加
+  """
+  createTournamentMatch(input: CreateTournamentMatchInput!): Match!
+  """
+  ブラケット内試合削除
+  """
+  deleteTournamentMatch(matchId: ID!): Match!
+  """
+  スロット接続変更
+  """
+  updateSlotConnection(input: UpdateSlotConnectionInput!): TournamentSlot!
+  """
+  seed_number 振り直し
+  """
+  updateSeedNumbers(tournamentId: ID!, seeds: [SeedNumberInput!]!): [TournamentSlot!]!
+  """
+  トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持）
+  """
+  resetTournamentBrackets(competitionId: ID!): Competition!
+  """
+  SEEDスロットへのチーム手動配置（teamId=null でクリア）
+  """
+  assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot!
+  createRule(input: CreateRuleInput!): Rule!
+  updateRule(id: ID!, input: UpdateRuleInput!): Rule!
+  deleteRule(id: ID!): Rule!
+  """
+  画像アップロード用のURLを発行する
+  """
+  createImageUploadURL(input: CreateImageUploadURLInput!): ImageUploadURL!
+  """
+  画像を削除する（S3ファイルとDBレコードを両方削除）
+  """
+  deleteImage(id: ID!): Image!
+  """
+  シーンにスポーツを一括追加する
+  """
+  addSportScenes(id: ID!, input: AddSportScenesInput!): Scene!
+  """
+  シーンからスポーツを一括削除する
+  """
+  deleteSportScenes(id: ID!, input: DeleteSportScenesInput!): Scene!
+  """
+  スポーツシーンを削除する
+  """
+  deleteSportScene(id: ID!): SportScene!
+  """
+  スポーツシーンにチームエントリーを一括追加する
+  """
+  addSportEntries(id: ID!, input: AddSportEntriesInput!): SportScene!
+  """
+  スポーツシーンからチームエントリーを一括削除する
+  """
+  deleteSportEntries(id: ID!, input: DeleteSportEntriesInput!): SportScene!
+  """
+  スポーツエントリーを削除する
+  """
+  deleteSportEntry(id: ID!): SportEntry!
+}
