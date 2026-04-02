@@ -1,209 +1,83 @@
-import {useState} from "react";
-import {Game, gameFactory, LeagueResult, TournamentResult} from "../../../models/GameModel";
-import {useAsyncRetry} from "react-use";
-import {Match} from "../../../models/MatchModel";
-import {Team, teamFactory} from "../../../models/TeamModel";
+import {
+  useGetPanelCompetitionsQuery,
+  useGetPanelCompetitionQuery,
+} from "@/src/gql/__generated__/graphql";
 
-export const useFetchGames = (filter: boolean = false) => {
-    const [games, setGames] = useState<Game[]>([])
-    const [isFetching, setIsFetching] = useState(true)
+// games = competitions（同義語）。GameRepository → Competition クエリにマッピング
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
+export const useFetchGames = (_filter: boolean = false) => {
+  const { data, loading, refetch } = useGetPanelCompetitionsQuery();
+  return {
+    games: data?.competitions ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-            const data = await gameFactory().index(filter);
-            setGames(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
+export const useFetchGame = (gameId: string) => {
+  const { data, loading, refetch } = useGetPanelCompetitionQuery({
+    variables: { id: gameId },
+    skip: !gameId,
+  });
+  return {
+    game: data?.competition,
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-    return {
-        games: games,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchGameMatches = (gameId: string) => {
+  const { data, loading, refetch } = useGetPanelCompetitionQuery({
+    variables: { id: gameId },
+    skip: !gameId,
+  });
+  return {
+    matches: data?.competition?.matches ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-export const useFetchGame = (gameId: number) => {
-    const [game, setGame] = useState<Game>()
-    const [isFetching, setIsFetching] = useState(true)
+export const useFetchGameEntries = (gameId: string) => {
+  const { data, loading, refetch } = useGetPanelCompetitionQuery({
+    variables: { id: gameId },
+    skip: !gameId,
+  });
+  return {
+    teams: data?.competition?.teams ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
+// 【未確定】leagueStandings / tournamentRanking クエリへの移行は TASK-005 で対応
+export const useFetchGameResult = (_gameId: string) => {
+  return {
+    result: undefined,
+    isFetching: false,
+    refresh: () => {},
+  };
+};
 
-            const data = await gameFactory().show(gameId);
-            setGame(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
+// 【未確定】leagueStandings / tournamentRanking クエリへの移行は TASK-005 で対応
+export const useFetchGameResultWithoutFetchGame = (_game: unknown, _restrict: boolean = true) => {
+  return {
+    result: undefined,
+    isFetching: false,
+    refresh: () => {},
+  };
+};
 
-    return {
-        game: game,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches all matches of a game
- * @param gameId
- */
-export const useFetchGameMatches = (gameId: number) => {
-    const [matches, setMatches] = useState<Match[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await gameFactory().getGameMatches(gameId);
-            setMatches(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        matches: matches,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches game result
- * @param gameId
- */
-export const useFetchGameResult = (gameId: number) => {
-    const [result, setResult] = useState<TournamentResult | LeagueResult>()
-    const [isFetching, setIsFetching] = useState(true)
-
-    const {game, isFetching: isFetchingGame} = useFetchGame(gameId);
-
-    const state = useAsyncRetry(async () => {
-        if (!isFetchingGame) {
-            try {
-                setIsFetching(true);
-
-                if (game?.type === "league") {
-                    const data = await gameFactory().getLeagueResult(gameId);
-                    setResult(data);
-                } else if (game?.type === "tournament") {
-                    const data = await gameFactory().getTournamentResult(gameId);
-                    setResult(data);
-                }
-            } catch (e) {
-                console.log(e);
-            } finally {
-                setIsFetching(false);
-            }
-        }
-    }, [isFetchingGame])
-
-    return {
-        result: result,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches game result without fetching game
- * @param game
- * @param restrict
- */
-export const useFetchGameResultWithoutFetchGame = (game: Game, restrict: boolean = true) => {
-    const [result, setResult] = useState<TournamentResult | LeagueResult | undefined>()
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            if (game?.type === "league") {
-                const data = await gameFactory().getLeagueResult(game.id, restrict);
-                setResult(data);
-            } else if (game?.type === "tournament") {
-                const data = await gameFactory().getTournamentResult(game.id);
-                setResult(data);
-            }
-        } catch (e) {
-            setResult(undefined);
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-
-    })
-
-    return {
-        result: result,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches all games of a team
- * @param teamId
- */
-export const useFetchTeamGames = (teamId: number) => {
-    const [games, setGames] = useState<Game[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const team = await teamFactory().show(teamId);
-            const data = await gameFactory().index()
-                .then(values => values.filter(value => team.enteredGameIds.includes(value.id)));
-            setGames(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        games: games,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-export const useFetchGameEntries = (gameId: number) => {
-    const [teams, setTeams] = useState<Team[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await gameFactory().getGameEntries(gameId);
-            setTeams(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-
-    return {
-        teams: teams,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchTeamGames = (teamId: string) => {
+  // team.competitions を利用（competitions に team でフィルタは GQL 側で解決済み）
+  // 現在の GetPanelCompetitions はフィルタ未対応のため全件返す
+  // 【未確定】team 固有の competitions フィルタは TASK-005 で対応
+  const { data, loading, refetch } = useGetPanelCompetitionsQuery({
+    skip: !teamId,
+  });
+  return {
+    games: data?.competitions ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
