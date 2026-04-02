@@ -11,6 +11,9 @@ export const GET_COMPETITIONS = gql`
         id
         name
       }
+      teams {
+        id
+      }
     }
   }
 `;
