@@ -38,11 +38,11 @@ func (s *User) List(ctx context.Context) ([]*db_model.User, error) {
 }
 
 func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_model.User, error) {
-	user := &db_model.User{
-		ID:    ulid.Make(),
-		Name:  input.Name,
-		Email: input.Email,
-	}
+	user := &db_model.User{ID: ulid.Make()}
+	user.Name.String = input.Name
+	user.Name.Valid = input.Name != ""
+	user.Email.String = input.Email
+	user.Email.Valid = input.Email != ""
 	row, err := s.userRepository.Save(ctx, s.db, user)
 	if err != nil {
 		return nil, errors.Wrap(err)

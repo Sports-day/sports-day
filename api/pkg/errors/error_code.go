@@ -24,6 +24,8 @@ var (
 	/*
 		Validation
 	*/
+	ErrSaveUser                       = NewError("USER_SAVE_FAILED", "ユーザーの更新に失敗しました")
+	ErrSaveUserIdp                    = NewError("USER_IDP_SAVE_FAILED", "ユーザーIDP情報の更新に失敗しました")
 	ErrSaveTeam                       = NewError("TEAM_SAVE_FAILED", "チームの更新に失敗しました")
 	ErrAddTeamUser                    = NewError("TEAM_USER_ADD_FAILED", "チームユーザーの追加に失敗しました")
 	ErrDeleteTeamUser                 = NewError("TEAM_USER_REMOVE_FAILED", "チームユーザーの削除に失敗しました")

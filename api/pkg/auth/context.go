@@ -5,9 +5,10 @@ import "context"
 type userContextKey struct{}
 
 type Claims struct {
-	Sub   string
-	Email string
-	Name  string
+	Sub             string
+	Email           string
+	Name            string
+	MicrosoftUserID string
 }
 
 func AttachClaims(ctx context.Context, claims *Claims) context.Context {

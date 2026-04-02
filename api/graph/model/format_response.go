@@ -9,8 +9,8 @@ import (
 func FormatUserResponse(user *db_model.User) *User {
 	return &User{
 		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
+		Name:  user.Name.String,
+		Email: user.Email.String,
 	}
 }
 

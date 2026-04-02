@@ -54,3 +54,32 @@ func (r user) FindByEmail(ctx context.Context, db *gorm.DB, email string) (*db_m
 	}
 	return &user, nil
 }
+
+func (r user) FindUserIdpBySub(ctx context.Context, db *gorm.DB, sub string) (*db_model.UsersIdp, error) {
+	var record db_model.UsersIdp
+	if err := db.First(&record, "sub = ?", sub).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrUserNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+	return &record, nil
+}
+
+func (r user) FindUserIdpByMicrosoftUserID(ctx context.Context, db *gorm.DB, microsoftUserID string) (*db_model.UsersIdp, error) {
+	var record db_model.UsersIdp
+	if err := db.First(&record, "microsoft_user_id = ?", microsoftUserID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrUserNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+	return &record, nil
+}
+
+func (r user) SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.UsersIdp) (*db_model.UsersIdp, error) {
+	if err := db.Save(userIdp).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return userIdp, nil
+}
