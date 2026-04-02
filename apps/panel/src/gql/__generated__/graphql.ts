@@ -1169,6 +1169,66 @@ export type User = {
   teams: Array<Team>;
 };
 
+export type GetPanelGroupsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPanelGroupsQuery = { __typename?: 'Query', groups: Array<{ __typename?: 'Group', id: string, name: string }> };
+
+export type GetPanelGroupQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name: string, email: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+
+export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string } }> };
+
+export type GetPanelCompetitionQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelCompetitionQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string, name: string }>, matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }> } };
+
+export type GetPanelImagesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPanelImagesQuery = { __typename?: 'Query', images: Array<{ __typename?: 'Image', id: string, url?: string | null, status: string }> };
+
+export type GetPanelImageQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelImageQuery = { __typename?: 'Query', image: { __typename?: 'Image', id: string, url?: string | null, status: string } };
+
+export type GetPanelInformationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPanelInformationsQuery = { __typename?: 'Query', Informations: Array<{ __typename?: 'Information', id: string, title: string, content: string }> };
+
+export type GetPanelInformationQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelInformationQuery = { __typename?: 'Query', Information: { __typename?: 'Information', id: string, title: string, content: string } };
+
+export type GetPanelLocationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPanelLocationsQuery = { __typename?: 'Query', locations: Array<{ __typename?: 'Location', id: string, name: string }> };
+
+export type GetPanelLocationQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typename?: 'Location', id: string, name: string } };
+
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1200,6 +1260,18 @@ export type GetPanelSportCompetitionsQueryVariables = Exact<{
 
 export type GetPanelSportCompetitionsQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string, sportScenes: Array<{ __typename?: 'SportScene', id: string }> }, entries: Array<{ __typename?: 'SportEntry', id: string, team: { __typename?: 'Team', id: string, name: string } }> }> | null } };
 
+export type GetPanelScenesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPanelScenesQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string }> };
+
+export type GetPanelSceneQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelSceneQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, name: string } };
+
 export type GetPanelTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1211,6 +1283,11 @@ export type GetPanelTeamQueryVariables = Exact<{
 
 
 export type GetPanelTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name: string, email: string }> } };
+
+export type GetPanelMeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPanelMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, name: string, email: string, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type GetPanelUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1225,6 +1302,455 @@ export type GetPanelUserQueryVariables = Exact<{
 export type GetPanelUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name: string, email: string, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 
+export const GetPanelGroupsDocument = gql`
+    query GetPanelGroups {
+  groups {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetPanelGroupsQuery__
+ *
+ * To run a query within a React component, call `useGetPanelGroupsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelGroupsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelGroupsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPanelGroupsQuery(baseOptions?: Apollo.QueryHookOptions<GetPanelGroupsQuery, GetPanelGroupsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelGroupsQuery, GetPanelGroupsQueryVariables>(GetPanelGroupsDocument, options);
+      }
+export function useGetPanelGroupsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelGroupsQuery, GetPanelGroupsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelGroupsQuery, GetPanelGroupsQueryVariables>(GetPanelGroupsDocument, options);
+        }
+export function useGetPanelGroupsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelGroupsQuery, GetPanelGroupsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelGroupsQuery, GetPanelGroupsQueryVariables>(GetPanelGroupsDocument, options);
+        }
+export type GetPanelGroupsQueryHookResult = ReturnType<typeof useGetPanelGroupsQuery>;
+export type GetPanelGroupsLazyQueryHookResult = ReturnType<typeof useGetPanelGroupsLazyQuery>;
+export type GetPanelGroupsSuspenseQueryHookResult = ReturnType<typeof useGetPanelGroupsSuspenseQuery>;
+export type GetPanelGroupsQueryResult = Apollo.QueryResult<GetPanelGroupsQuery, GetPanelGroupsQueryVariables>;
+export const GetPanelGroupDocument = gql`
+    query GetPanelGroup($id: ID!) {
+  group(id: $id) {
+    id
+    name
+    users {
+      id
+      name
+      email
+    }
+    teams {
+      id
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetPanelGroupQuery__
+ *
+ * To run a query within a React component, call `useGetPanelGroupQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelGroupQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelGroupQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPanelGroupQuery(baseOptions: Apollo.QueryHookOptions<GetPanelGroupQuery, GetPanelGroupQueryVariables> & ({ variables: GetPanelGroupQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelGroupQuery, GetPanelGroupQueryVariables>(GetPanelGroupDocument, options);
+      }
+export function useGetPanelGroupLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelGroupQuery, GetPanelGroupQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelGroupQuery, GetPanelGroupQueryVariables>(GetPanelGroupDocument, options);
+        }
+export function useGetPanelGroupSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelGroupQuery, GetPanelGroupQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelGroupQuery, GetPanelGroupQueryVariables>(GetPanelGroupDocument, options);
+        }
+export type GetPanelGroupQueryHookResult = ReturnType<typeof useGetPanelGroupQuery>;
+export type GetPanelGroupLazyQueryHookResult = ReturnType<typeof useGetPanelGroupLazyQuery>;
+export type GetPanelGroupSuspenseQueryHookResult = ReturnType<typeof useGetPanelGroupSuspenseQuery>;
+export type GetPanelGroupQueryResult = Apollo.QueryResult<GetPanelGroupQuery, GetPanelGroupQueryVariables>;
+export const GetPanelCompetitionsDocument = gql`
+    query GetPanelCompetitions {
+  competitions {
+    id
+    name
+    type
+    scene {
+      id
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetPanelCompetitionsQuery__
+ *
+ * To run a query within a React component, call `useGetPanelCompetitionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelCompetitionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelCompetitionsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPanelCompetitionsQuery(baseOptions?: Apollo.QueryHookOptions<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>(GetPanelCompetitionsDocument, options);
+      }
+export function useGetPanelCompetitionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>(GetPanelCompetitionsDocument, options);
+        }
+export function useGetPanelCompetitionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>(GetPanelCompetitionsDocument, options);
+        }
+export type GetPanelCompetitionsQueryHookResult = ReturnType<typeof useGetPanelCompetitionsQuery>;
+export type GetPanelCompetitionsLazyQueryHookResult = ReturnType<typeof useGetPanelCompetitionsLazyQuery>;
+export type GetPanelCompetitionsSuspenseQueryHookResult = ReturnType<typeof useGetPanelCompetitionsSuspenseQuery>;
+export type GetPanelCompetitionsQueryResult = Apollo.QueryResult<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>;
+export const GetPanelCompetitionDocument = gql`
+    query GetPanelCompetition($id: ID!) {
+  competition(id: $id) {
+    id
+    name
+    type
+    scene {
+      id
+      name
+    }
+    teams {
+      id
+      name
+    }
+    matches {
+      id
+      time
+      status
+      location {
+        id
+        name
+      }
+      entries {
+        id
+        team {
+          id
+          name
+        }
+        score
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetPanelCompetitionQuery__
+ *
+ * To run a query within a React component, call `useGetPanelCompetitionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelCompetitionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelCompetitionQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPanelCompetitionQuery(baseOptions: Apollo.QueryHookOptions<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables> & ({ variables: GetPanelCompetitionQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>(GetPanelCompetitionDocument, options);
+      }
+export function useGetPanelCompetitionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>(GetPanelCompetitionDocument, options);
+        }
+export function useGetPanelCompetitionSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>(GetPanelCompetitionDocument, options);
+        }
+export type GetPanelCompetitionQueryHookResult = ReturnType<typeof useGetPanelCompetitionQuery>;
+export type GetPanelCompetitionLazyQueryHookResult = ReturnType<typeof useGetPanelCompetitionLazyQuery>;
+export type GetPanelCompetitionSuspenseQueryHookResult = ReturnType<typeof useGetPanelCompetitionSuspenseQuery>;
+export type GetPanelCompetitionQueryResult = Apollo.QueryResult<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>;
+export const GetPanelImagesDocument = gql`
+    query GetPanelImages {
+  images {
+    id
+    url
+    status
+  }
+}
+    `;
+
+/**
+ * __useGetPanelImagesQuery__
+ *
+ * To run a query within a React component, call `useGetPanelImagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelImagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelImagesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPanelImagesQuery(baseOptions?: Apollo.QueryHookOptions<GetPanelImagesQuery, GetPanelImagesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelImagesQuery, GetPanelImagesQueryVariables>(GetPanelImagesDocument, options);
+      }
+export function useGetPanelImagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelImagesQuery, GetPanelImagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelImagesQuery, GetPanelImagesQueryVariables>(GetPanelImagesDocument, options);
+        }
+export function useGetPanelImagesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelImagesQuery, GetPanelImagesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelImagesQuery, GetPanelImagesQueryVariables>(GetPanelImagesDocument, options);
+        }
+export type GetPanelImagesQueryHookResult = ReturnType<typeof useGetPanelImagesQuery>;
+export type GetPanelImagesLazyQueryHookResult = ReturnType<typeof useGetPanelImagesLazyQuery>;
+export type GetPanelImagesSuspenseQueryHookResult = ReturnType<typeof useGetPanelImagesSuspenseQuery>;
+export type GetPanelImagesQueryResult = Apollo.QueryResult<GetPanelImagesQuery, GetPanelImagesQueryVariables>;
+export const GetPanelImageDocument = gql`
+    query GetPanelImage($id: ID!) {
+  image(id: $id) {
+    id
+    url
+    status
+  }
+}
+    `;
+
+/**
+ * __useGetPanelImageQuery__
+ *
+ * To run a query within a React component, call `useGetPanelImageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelImageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelImageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPanelImageQuery(baseOptions: Apollo.QueryHookOptions<GetPanelImageQuery, GetPanelImageQueryVariables> & ({ variables: GetPanelImageQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelImageQuery, GetPanelImageQueryVariables>(GetPanelImageDocument, options);
+      }
+export function useGetPanelImageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelImageQuery, GetPanelImageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelImageQuery, GetPanelImageQueryVariables>(GetPanelImageDocument, options);
+        }
+export function useGetPanelImageSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelImageQuery, GetPanelImageQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelImageQuery, GetPanelImageQueryVariables>(GetPanelImageDocument, options);
+        }
+export type GetPanelImageQueryHookResult = ReturnType<typeof useGetPanelImageQuery>;
+export type GetPanelImageLazyQueryHookResult = ReturnType<typeof useGetPanelImageLazyQuery>;
+export type GetPanelImageSuspenseQueryHookResult = ReturnType<typeof useGetPanelImageSuspenseQuery>;
+export type GetPanelImageQueryResult = Apollo.QueryResult<GetPanelImageQuery, GetPanelImageQueryVariables>;
+export const GetPanelInformationsDocument = gql`
+    query GetPanelInformations {
+  Informations {
+    id
+    title
+    content
+  }
+}
+    `;
+
+/**
+ * __useGetPanelInformationsQuery__
+ *
+ * To run a query within a React component, call `useGetPanelInformationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelInformationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelInformationsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPanelInformationsQuery(baseOptions?: Apollo.QueryHookOptions<GetPanelInformationsQuery, GetPanelInformationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelInformationsQuery, GetPanelInformationsQueryVariables>(GetPanelInformationsDocument, options);
+      }
+export function useGetPanelInformationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelInformationsQuery, GetPanelInformationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelInformationsQuery, GetPanelInformationsQueryVariables>(GetPanelInformationsDocument, options);
+        }
+export function useGetPanelInformationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelInformationsQuery, GetPanelInformationsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelInformationsQuery, GetPanelInformationsQueryVariables>(GetPanelInformationsDocument, options);
+        }
+export type GetPanelInformationsQueryHookResult = ReturnType<typeof useGetPanelInformationsQuery>;
+export type GetPanelInformationsLazyQueryHookResult = ReturnType<typeof useGetPanelInformationsLazyQuery>;
+export type GetPanelInformationsSuspenseQueryHookResult = ReturnType<typeof useGetPanelInformationsSuspenseQuery>;
+export type GetPanelInformationsQueryResult = Apollo.QueryResult<GetPanelInformationsQuery, GetPanelInformationsQueryVariables>;
+export const GetPanelInformationDocument = gql`
+    query GetPanelInformation($id: ID!) {
+  Information(id: $id) {
+    id
+    title
+    content
+  }
+}
+    `;
+
+/**
+ * __useGetPanelInformationQuery__
+ *
+ * To run a query within a React component, call `useGetPanelInformationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelInformationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelInformationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPanelInformationQuery(baseOptions: Apollo.QueryHookOptions<GetPanelInformationQuery, GetPanelInformationQueryVariables> & ({ variables: GetPanelInformationQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelInformationQuery, GetPanelInformationQueryVariables>(GetPanelInformationDocument, options);
+      }
+export function useGetPanelInformationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelInformationQuery, GetPanelInformationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelInformationQuery, GetPanelInformationQueryVariables>(GetPanelInformationDocument, options);
+        }
+export function useGetPanelInformationSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelInformationQuery, GetPanelInformationQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelInformationQuery, GetPanelInformationQueryVariables>(GetPanelInformationDocument, options);
+        }
+export type GetPanelInformationQueryHookResult = ReturnType<typeof useGetPanelInformationQuery>;
+export type GetPanelInformationLazyQueryHookResult = ReturnType<typeof useGetPanelInformationLazyQuery>;
+export type GetPanelInformationSuspenseQueryHookResult = ReturnType<typeof useGetPanelInformationSuspenseQuery>;
+export type GetPanelInformationQueryResult = Apollo.QueryResult<GetPanelInformationQuery, GetPanelInformationQueryVariables>;
+export const GetPanelLocationsDocument = gql`
+    query GetPanelLocations {
+  locations {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetPanelLocationsQuery__
+ *
+ * To run a query within a React component, call `useGetPanelLocationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelLocationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelLocationsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPanelLocationsQuery(baseOptions?: Apollo.QueryHookOptions<GetPanelLocationsQuery, GetPanelLocationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelLocationsQuery, GetPanelLocationsQueryVariables>(GetPanelLocationsDocument, options);
+      }
+export function useGetPanelLocationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelLocationsQuery, GetPanelLocationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelLocationsQuery, GetPanelLocationsQueryVariables>(GetPanelLocationsDocument, options);
+        }
+export function useGetPanelLocationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelLocationsQuery, GetPanelLocationsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelLocationsQuery, GetPanelLocationsQueryVariables>(GetPanelLocationsDocument, options);
+        }
+export type GetPanelLocationsQueryHookResult = ReturnType<typeof useGetPanelLocationsQuery>;
+export type GetPanelLocationsLazyQueryHookResult = ReturnType<typeof useGetPanelLocationsLazyQuery>;
+export type GetPanelLocationsSuspenseQueryHookResult = ReturnType<typeof useGetPanelLocationsSuspenseQuery>;
+export type GetPanelLocationsQueryResult = Apollo.QueryResult<GetPanelLocationsQuery, GetPanelLocationsQueryVariables>;
+export const GetPanelLocationDocument = gql`
+    query GetPanelLocation($id: ID!) {
+  location(id: $id) {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetPanelLocationQuery__
+ *
+ * To run a query within a React component, call `useGetPanelLocationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelLocationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelLocationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPanelLocationQuery(baseOptions: Apollo.QueryHookOptions<GetPanelLocationQuery, GetPanelLocationQueryVariables> & ({ variables: GetPanelLocationQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelLocationQuery, GetPanelLocationQueryVariables>(GetPanelLocationDocument, options);
+      }
+export function useGetPanelLocationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelLocationQuery, GetPanelLocationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelLocationQuery, GetPanelLocationQueryVariables>(GetPanelLocationDocument, options);
+        }
+export function useGetPanelLocationSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelLocationQuery, GetPanelLocationQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelLocationQuery, GetPanelLocationQueryVariables>(GetPanelLocationDocument, options);
+        }
+export type GetPanelLocationQueryHookResult = ReturnType<typeof useGetPanelLocationQuery>;
+export type GetPanelLocationLazyQueryHookResult = ReturnType<typeof useGetPanelLocationLazyQuery>;
+export type GetPanelLocationSuspenseQueryHookResult = ReturnType<typeof useGetPanelLocationSuspenseQuery>;
+export type GetPanelLocationQueryResult = Apollo.QueryResult<GetPanelLocationQuery, GetPanelLocationQueryVariables>;
 export const GetPanelMatchesDocument = gql`
     query GetPanelMatches {
   matches {
@@ -1536,6 +2062,87 @@ export type GetPanelSportCompetitionsQueryHookResult = ReturnType<typeof useGetP
 export type GetPanelSportCompetitionsLazyQueryHookResult = ReturnType<typeof useGetPanelSportCompetitionsLazyQuery>;
 export type GetPanelSportCompetitionsSuspenseQueryHookResult = ReturnType<typeof useGetPanelSportCompetitionsSuspenseQuery>;
 export type GetPanelSportCompetitionsQueryResult = Apollo.QueryResult<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables>;
+export const GetPanelScenesDocument = gql`
+    query GetPanelScenes {
+  scenes {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetPanelScenesQuery__
+ *
+ * To run a query within a React component, call `useGetPanelScenesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelScenesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelScenesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPanelScenesQuery(baseOptions?: Apollo.QueryHookOptions<GetPanelScenesQuery, GetPanelScenesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelScenesQuery, GetPanelScenesQueryVariables>(GetPanelScenesDocument, options);
+      }
+export function useGetPanelScenesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelScenesQuery, GetPanelScenesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelScenesQuery, GetPanelScenesQueryVariables>(GetPanelScenesDocument, options);
+        }
+export function useGetPanelScenesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelScenesQuery, GetPanelScenesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelScenesQuery, GetPanelScenesQueryVariables>(GetPanelScenesDocument, options);
+        }
+export type GetPanelScenesQueryHookResult = ReturnType<typeof useGetPanelScenesQuery>;
+export type GetPanelScenesLazyQueryHookResult = ReturnType<typeof useGetPanelScenesLazyQuery>;
+export type GetPanelScenesSuspenseQueryHookResult = ReturnType<typeof useGetPanelScenesSuspenseQuery>;
+export type GetPanelScenesQueryResult = Apollo.QueryResult<GetPanelScenesQuery, GetPanelScenesQueryVariables>;
+export const GetPanelSceneDocument = gql`
+    query GetPanelScene($id: ID!) {
+  scene(id: $id) {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetPanelSceneQuery__
+ *
+ * To run a query within a React component, call `useGetPanelSceneQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelSceneQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelSceneQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPanelSceneQuery(baseOptions: Apollo.QueryHookOptions<GetPanelSceneQuery, GetPanelSceneQueryVariables> & ({ variables: GetPanelSceneQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelSceneQuery, GetPanelSceneQueryVariables>(GetPanelSceneDocument, options);
+      }
+export function useGetPanelSceneLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelSceneQuery, GetPanelSceneQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelSceneQuery, GetPanelSceneQueryVariables>(GetPanelSceneDocument, options);
+        }
+export function useGetPanelSceneSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelSceneQuery, GetPanelSceneQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelSceneQuery, GetPanelSceneQueryVariables>(GetPanelSceneDocument, options);
+        }
+export type GetPanelSceneQueryHookResult = ReturnType<typeof useGetPanelSceneQuery>;
+export type GetPanelSceneLazyQueryHookResult = ReturnType<typeof useGetPanelSceneLazyQuery>;
+export type GetPanelSceneSuspenseQueryHookResult = ReturnType<typeof useGetPanelSceneSuspenseQuery>;
+export type GetPanelSceneQueryResult = Apollo.QueryResult<GetPanelSceneQuery, GetPanelSceneQueryVariables>;
 export const GetPanelTeamsDocument = gql`
     query GetPanelTeams {
   teams {
@@ -1634,6 +2241,55 @@ export type GetPanelTeamQueryHookResult = ReturnType<typeof useGetPanelTeamQuery
 export type GetPanelTeamLazyQueryHookResult = ReturnType<typeof useGetPanelTeamLazyQuery>;
 export type GetPanelTeamSuspenseQueryHookResult = ReturnType<typeof useGetPanelTeamSuspenseQuery>;
 export type GetPanelTeamQueryResult = Apollo.QueryResult<GetPanelTeamQuery, GetPanelTeamQueryVariables>;
+export const GetPanelMeDocument = gql`
+    query GetPanelMe {
+  me {
+    id
+    name
+    email
+    groups {
+      id
+      name
+    }
+    teams {
+      id
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetPanelMeQuery__
+ *
+ * To run a query within a React component, call `useGetPanelMeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelMeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelMeQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetPanelMeQuery(baseOptions?: Apollo.QueryHookOptions<GetPanelMeQuery, GetPanelMeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelMeQuery, GetPanelMeQueryVariables>(GetPanelMeDocument, options);
+      }
+export function useGetPanelMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelMeQuery, GetPanelMeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelMeQuery, GetPanelMeQueryVariables>(GetPanelMeDocument, options);
+        }
+export function useGetPanelMeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelMeQuery, GetPanelMeQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelMeQuery, GetPanelMeQueryVariables>(GetPanelMeDocument, options);
+        }
+export type GetPanelMeQueryHookResult = ReturnType<typeof useGetPanelMeQuery>;
+export type GetPanelMeLazyQueryHookResult = ReturnType<typeof useGetPanelMeLazyQuery>;
+export type GetPanelMeSuspenseQueryHookResult = ReturnType<typeof useGetPanelMeSuspenseQuery>;
+export type GetPanelMeQueryResult = Apollo.QueryResult<GetPanelMeQuery, GetPanelMeQueryVariables>;
 export const GetPanelUsersDocument = gql`
     query GetPanelUsers {
   users {

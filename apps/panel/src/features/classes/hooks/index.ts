@@ -1,50 +1,26 @@
-import {useState} from "react";
-import {Class, classFactory} from "../../../models/ClassModel";
-import {useAsyncRetry} from "react-use";
+import {
+  useGetPanelGroupsQuery,
+  useGetPanelGroupQuery,
+} from "@/src/gql/__generated__/graphql";
 
+// classes = groups（同義語）。ClassRepository → Group クエリにマッピング
 export const useFetchClasses = () => {
-    const [classes, setClasses] = useState<Class[]>([])
-    const [isFetching, setIsFetching] = useState(true)
+  const { data, loading, refetch } = useGetPanelGroupsQuery();
+  return {
+    classes: data?.groups ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await classFactory().index();
-            setClasses(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        classes: classes,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-export const useFetchClass = (id: number) => {
-    const [classModel, setClassModel] = useState<Class>()
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-            const data = await classFactory().show(id);
-            setClassModel(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    }, [id])
-
-    return {
-        classModel: classModel,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchClass = (id: string) => {
+  const { data, loading, refetch } = useGetPanelGroupQuery({
+    variables: { id },
+    skip: !id,
+  });
+  return {
+    classModel: data?.group,
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
