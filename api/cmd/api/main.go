@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"sports-day/api"
+	"sports-day/api/authorization"
 	"sports-day/api/graph"
 	apihandler "sports-day/api/handler"
 	"sports-day/api/middleware"
@@ -66,6 +67,7 @@ func main() {
 
 	// repository
 	userRepository := repository.NewUser()
+	userRoleRepository := repository.NewUserRole()
 	groupRepository := repository.NewGroup()
 	sportRepository := repository.NewSports()
 	teamRepository := repository.NewTeam()
@@ -122,8 +124,14 @@ func main() {
 	imageService := service.NewImage(db, imageRepository, s3Client, env.Get().Storage.Bucket, env.Get().Storage.Endpoint)
 	sportService := service.NewSports(db, sportRepository, &imageService)
 
+	// authorization
+	authorizerInstance := authorization.NewStaticAuthorizer()
+	roleCache := authorization.NewRoleCache()
+	directiveHandler := authorization.NewDirective(authorizerInstance, roleCache, userRoleRepository, db)
+
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService)}
+	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService, userRoleRepository, userRepository, roleCache, authorizerInstance, db)}
+	config.Directives.HasPermission = directiveHandler.HasPermission
 	srv := handler.New(graph.NewExecutableSchema(config))
 
 	srv.AddTransport(transport.Options{})

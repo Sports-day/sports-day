@@ -1,7 +1,17 @@
+enum Role {
+  ADMIN
+  ORGANIZER
+  PARTICIPANT
+}
+
 type User {
   id: ID!
+  sub: ID!
   name: String!
+  displayName: String!
   email: String!
+  role: Role!
+  permissions: [String!]!
   groups: [Group!]!
   teams: [Team!]!
   judgments: [Judgment!]!

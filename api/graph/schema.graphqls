@@ -1,3 +1,5 @@
+directive @hasPermission(permission: String!) on FIELD_DEFINITION
+
 input CreateUserInput {
   name: String!
   email: String!
@@ -272,7 +274,7 @@ input UpdateRuleInput {
 }
 
 type Query {
-  users: [User!]!
+  users: [User!]! @hasPermission(permission: "user:read")
   user(id: ID!): User!
   me: User!
   groups: [Group!]!
@@ -585,4 +587,8 @@ type Mutation {
   スポーツエントリーを削除する
   """
   deleteSportEntry(id: ID!): SportEntry!
+  """
+  ユーザーのロールを更新する（user:manage パーミッションが必要）
+  """
+  updateUserRole(sub: ID!, role: Role!): User! @hasPermission(permission: "user:manage")
 }

@@ -6,9 +6,11 @@ type Group struct {
 }
 
 type User struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID          string `json:"id"`
+	Sub         string `json:"sub"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Email       string `json:"email"`
 }
 
 type Team struct {

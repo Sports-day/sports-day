@@ -6,9 +6,9 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	pkgauth "sports-day/api/pkg/auth"
 	"sports-day/api/pkg/errors"
 )
 
@@ -682,6 +682,62 @@ func (r *mutationResolver) DeleteSportEntry(ctx context.Context, id string) (*mo
 	return model.FormatSportEntryResponse(res), nil
 }
 
+// UpdateUserRole is the resolver for the updateUserRole field.
+// @hasPermission(permission: "user:manage") ディレクティブで保護済み。
+func (r *mutationResolver) UpdateUserRole(ctx context.Context, sub string, role model.Role) (*model.User, error) {
+	claims, ok := pkgauth.GetClaims(ctx)
+	if !ok {
+		return nil, errors.ErrUnauthorized
+	}
+
+	// バリデーション 1: 自己降格防止
+	if claims.Sub == sub {
+		return nil, errors.NewError("SELF_ROLE_CHANGE", "自分自身のロールは変更できません")
+	}
+
+	// バリデーション 2: 最後の admin 保護
+	currentRecord, err := r.UserRoleRepo.GetBySub(ctx, r.DB, sub)
+	if err != nil && !errors.Is(err, errors.ErrUserNotFound) {
+		return nil, err
+	}
+
+	if currentRecord != nil && currentRecord.Role == "admin" && role != model.RoleAdmin {
+		count, err := r.UserRoleRepo.CountAdmins(ctx, r.DB)
+		if err != nil {
+			return nil, err
+		}
+		if count <= 1 {
+			return nil, errors.NewError("LAST_ADMIN_PROTECTED", "最低1人のadminが必要です")
+		}
+	}
+
+	// ロール更新
+	roleStr := roleToString(role)
+	if _, err := r.UserRoleRepo.Upsert(ctx, r.DB, &db_model.UserRole{
+		Sub:  sub,
+		Role: roleStr,
+	}); err != nil {
+		return nil, err
+	}
+
+	// キャッシュ無効化
+	r.RoleCache.Delete(sub)
+
+	// 更新後のユーザー情報を返す
+	idpRecord, err := r.UserRepo.FindUserIdpBySub(ctx, r.DB, sub)
+	if err != nil {
+		return nil, err
+	}
+	user, err := r.UserService.Get(ctx, idpRecord.UserID)
+	if err != nil {
+		return nil, err
+	}
+	res := model.FormatUserResponse(user)
+	res.Sub = sub
+	res.DisplayName = res.Name
+	return res, nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -711,7 +767,32 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatUserResponse(user), nil
+
+	claims, ok := pkgauth.GetClaims(ctx)
+	if !ok {
+		return nil, errors.ErrUnauthorized
+	}
+
+	res := model.FormatUserResponse(user)
+	res.Sub = claims.Sub
+	res.DisplayName = res.Name
+
+	// ロールが未割当の場合は participant をデフォルト付与
+	_, err = r.UserRoleRepo.GetBySub(ctx, r.DB, claims.Sub)
+	if err != nil {
+		if errors.Is(err, errors.ErrUserNotFound) {
+			if _, upsertErr := r.UserRoleRepo.Upsert(ctx, r.DB, &db_model.UserRole{
+				Sub:  claims.Sub,
+				Role: "participant",
+			}); upsertErr != nil {
+				return nil, upsertErr
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	return res, nil
 }
 
 // Groups is the resolver for the groups field.

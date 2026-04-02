@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -657,6 +656,58 @@ func (r *tournamentSlotResolver) SourceMatch(ctx context.Context, obj *model.Tou
 	return model.FormatMatchResponse(matches[0]), nil
 }
 
+// Role is the resolver for the role field.
+func (r *userResolver) Role(ctx context.Context, obj *model.User) (model.Role, error) {
+	if obj.Sub == "" {
+		return model.RoleParticipant, nil
+	}
+
+	// キャッシュからロールを取得
+	role, hit := r.RoleCache.Get(obj.Sub)
+	if !hit {
+		record, err := r.UserRoleRepo.GetBySub(ctx, r.DB, obj.Sub)
+		if err != nil {
+			if errors.Is(err, errors.ErrUserNotFound) {
+				return model.RoleParticipant, nil
+			}
+			return model.RoleParticipant, err
+		}
+		role = record.Role
+		r.RoleCache.Set(obj.Sub, role)
+	}
+
+	switch role {
+	case "admin":
+		return model.RoleAdmin, nil
+	case "organizer":
+		return model.RoleOrganizer, nil
+	default:
+		return model.RoleParticipant, nil
+	}
+}
+
+// Permissions is the resolver for the permissions field.
+func (r *userResolver) Permissions(ctx context.Context, obj *model.User) ([]string, error) {
+	if obj.Sub == "" {
+		return r.Authorizer.PermissionsFor("participant"), nil
+	}
+
+	role, hit := r.RoleCache.Get(obj.Sub)
+	if !hit {
+		record, err := r.UserRoleRepo.GetBySub(ctx, r.DB, obj.Sub)
+		if err != nil {
+			if errors.Is(err, errors.ErrUserNotFound) {
+				return r.Authorizer.PermissionsFor("participant"), nil
+			}
+			return nil, err
+		}
+		role = record.Role
+		r.RoleCache.Set(obj.Sub, role)
+	}
+
+	return r.Authorizer.PermissionsFor(role), nil
+}
+
 // Groups is the resolver for the groups field.
 func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Group, error) {
 	groupUsers, err := loader.LoadUserGroups(ctx, obj.ID)
@@ -775,3 +826,4 @@ type tournamentResolver struct{ *Resolver }
 type tournamentRankingResolver struct{ *Resolver }
 type tournamentSlotResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
