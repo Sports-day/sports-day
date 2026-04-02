@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@mui/material'
 import { useState } from 'react'
-import { MOCK_SELECTABLE_USERS } from '../mock'
+import { useGetAdminUsersQuery } from '@/gql/__generated__/graphql'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 type Props = {
@@ -23,6 +23,13 @@ type Props = {
 
 export function AddMemberDialog({ open, onClose, onAdd }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const { data } = useGetAdminUsersQuery({ skip: !open })
+  const users = (data?.users ?? []).map(u => ({
+    id: u.id,
+    userName: u.name,
+    gender: '男性' as string, // 【未確定】GraphQL User に gender はない
+    studentId: u.email,
+  }))
 
   const toggle = (id: string) => {
     setSelectedIds((prev) =>
@@ -68,7 +75,7 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_SELECTABLE_USERS.map((user) => (
+            {users.map((user) => (
               <TableRow
                 key={user.id}
                 hover

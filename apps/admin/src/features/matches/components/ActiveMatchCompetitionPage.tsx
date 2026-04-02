@@ -1,6 +1,6 @@
 import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, Typography } from '@mui/material'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import { MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION } from '@/features/competitions/mock'
+import { useGetAdminCompetitionQuery, useGetAdminTournamentsQuery } from '@/gql/__generated__/graphql'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 const ITEM_BUTTON_SX = {
@@ -27,8 +27,17 @@ type Props = {
 }
 
 export function ActiveMatchCompetitionPage({ competitionId, competitionName, onBack, onSelectLeague, onSelectTournament }: Props) {
-  const leagues = MOCK_LEAGUES_BY_COMPETITION[competitionId] ?? []
-  const tournaments = MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] ?? []
+  const { data: compData } = useGetAdminCompetitionQuery({
+    variables: { id: competitionId },
+    skip: !competitionId,
+  })
+  const { data: tournamentsData } = useGetAdminTournamentsQuery({
+    variables: { competitionId },
+    skip: !competitionId,
+  })
+  // codegen 実行後に competition.league の型が解決される
+  const leagues = compData?.competition?.league ? [compData.competition.league] : []
+  const tournaments = tournamentsData?.tournaments ?? []
 
   return (
     <Box>

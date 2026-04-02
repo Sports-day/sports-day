@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import type { MockTMatch } from '@/features/competitions/mock'
+import type { MockTMatch } from '@/features/competitions/types'
 import { SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 const STATUS_OPTIONS: { value: MockTMatch['status']; label: string }[] = [

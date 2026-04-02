@@ -1,7 +1,7 @@
 import { Box, Chip, LinearProgress, Typography } from '@mui/material'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import AccountTreeIcon from '@mui/icons-material/AccountTree'
-import type { MockBracket, MockTMatch, MockTSlot } from '../mock'
+import type { MockBracket, MockTMatch, MockTSlot } from '../types'
 
 // ─── Layout constants ────────────────────────────────────
 const MATCH_W = 224

@@ -1,23 +1,20 @@
 import { useState } from 'react'
 import { useUpdateAdminMatchResultMutation, MatchStatus } from '@/gql/__generated__/graphql'
-import type { MockTMatch } from '@/features/competitions/mock'
+import type { MockTMatch } from '@/features/competitions/types'
 
 export function useTournamentMatchEdit() {
   const [selectedMatch, setSelectedMatch] = useState<MockTMatch | null>(null)
-  const [tournamentId, setTournamentId] = useState<string>('')
   const [score1, setScore1] = useState('0')
   const [score2, setScore2] = useState('0')
   const [status, setStatus] = useState<MockTMatch['status']>('STANDBY')
 
   const [updateMatchResult] = useUpdateAdminMatchResultMutation()
 
-  const openMatch = (match: MockTMatch, tId: string) => {
+  const openMatch = (match: MockTMatch, _tId: string) => {
     setSelectedMatch(match)
-    setTournamentId(tId)
     setScore1(match.score1 != null ? String(match.score1) : '0')
     setScore2(match.score2 != null ? String(match.score2) : '0')
     setStatus(match.status)
-    void tId  // tournamentId を将来の使用に備えて保持
   }
 
   const closeMatch = () => setSelectedMatch(null)
