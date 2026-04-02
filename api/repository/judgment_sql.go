@@ -87,3 +87,13 @@ func (r judgment) BatchGetJudgmentsByGroupIDs(ctx context.Context, db *gorm.DB, 
 	}
 	return judgments, nil
 }
+
+func (r judgment) SaveBatch(ctx context.Context, db *gorm.DB, judgments []*db_model.Judgment) error {
+	if len(judgments) == 0 {
+		return nil
+	}
+	if err := db.WithContext(ctx).CreateInBatches(judgments, 100).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
