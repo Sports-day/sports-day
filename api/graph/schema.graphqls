@@ -275,7 +275,7 @@ input UpdateRuleInput {
 
 type Query {
   users: [User!]! @hasPermission(permission: "user:read")
-  user(id: ID!): User!
+  user(id: ID!): User! @hasPermission(permission: "user:read")
   me: User!
   groups: [Group!]!
   group(id: ID!): Group!
@@ -379,214 +379,214 @@ type ImageUploadURL {
 }
 
 type Mutation {
-  createUser(input: CreateUserInput!): User!
-  createGroup(input: CreateGroupInput!): Group!
-  deleteGroup(id: ID!): Group!
-  updateGroup(id: ID!, input: UpdateGroupInput!): Group!
-  addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
-  removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group!
-  createSports(input: CreateSportsInput!): Sport!
-  deleteSports(id: ID!): Sport!
-  updateSports(id: ID!, input: UpdateSportsInput!): Sport!
+  createUser(input: CreateUserInput!): User! @hasPermission(permission: "user:write")
+  createGroup(input: CreateGroupInput!): Group! @hasPermission(permission: "group:write")
+  deleteGroup(id: ID!): Group! @hasPermission(permission: "group:write")
+  updateGroup(id: ID!, input: UpdateGroupInput!): Group! @hasPermission(permission: "group:write")
+  addGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group! @hasPermission(permission: "group:write")
+  removeGroupUsers(id: ID!, input: UpdateGroupUsersInput!): Group! @hasPermission(permission: "group:write")
+  createSports(input: CreateSportsInput!): Sport! @hasPermission(permission: "sport:write")
+  deleteSports(id: ID!): Sport! @hasPermission(permission: "sport:write")
+  updateSports(id: ID!, input: UpdateSportsInput!): Sport! @hasPermission(permission: "sport:write")
   """
   チームを作成する
   """
-  createTeam(input: CreateTeamInput!): Team!
+  createTeam(input: CreateTeamInput!): Team! @hasPermission(permission: "team:write")
   """
   チームを削除する
   """
-  deleteTeam(id: ID!): Team!
+  deleteTeam(id: ID!): Team! @hasPermission(permission: "team:write")
   """
   チームの情報を更新する
   """
-  updateTeam(id: ID!, input: UpdateTeamInput!): Team!
+  updateTeam(id: ID!, input: UpdateTeamInput!): Team! @hasPermission(permission: "team:write")
   """
   チームメンバーを更新する
   """
-  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team!
+  updateTeamUsers(id: ID!, input: UpdateTeamUsersInput!): Team! @hasPermission(permission: "team:write")
   """
   場所を追加する
   """
-  createLocation(input: CreateLocationInput!): Location!
+  createLocation(input: CreateLocationInput!): Location! @hasPermission(permission: "location:write")
   """
   場所の情報を更新する
   """
-  updateLocation(id: ID!, input: UpdateLocationInput!): Location!
+  updateLocation(id: ID!, input: UpdateLocationInput!): Location! @hasPermission(permission: "location:write")
   """
   場所を削除する
   """
-  deleteLocation(id: ID!): Location!
-  createScene(input: CreateSceneInput!): Scene!
-  updateScene(id: ID!, input: UpdateSceneInput!): Scene!
-  deleteScene(id: ID!): Scene!
-  createInformation(input: CreateInformationInput!): Information!
-  deleteInformation(id: ID!): Information!
-  updateInformation(id: ID!, input: UpdateInformationInput!): Information!
+  deleteLocation(id: ID!): Location! @hasPermission(permission: "location:write")
+  createScene(input: CreateSceneInput!): Scene! @hasPermission(permission: "scene:write")
+  updateScene(id: ID!, input: UpdateSceneInput!): Scene! @hasPermission(permission: "scene:write")
+  deleteScene(id: ID!): Scene! @hasPermission(permission: "scene:write")
+  createInformation(input: CreateInformationInput!): Information! @hasPermission(permission: "information:write")
+  deleteInformation(id: ID!): Information! @hasPermission(permission: "information:write")
+  updateInformation(id: ID!, input: UpdateInformationInput!): Information! @hasPermission(permission: "information:write")
   """
   大会を作成する
   """
-  createCompetition(input: CreateCompetitionInput!): Competition!
+  createCompetition(input: CreateCompetitionInput!): Competition! @hasPermission(permission: "tournament:write")
   """
   大会の情報を更新する
   """
-  updateCompetition(id: ID!, input: UpdateCompetitionInput!): Competition!
+  updateCompetition(id: ID!, input: UpdateCompetitionInput!): Competition! @hasPermission(permission: "tournament:write")
   """
   大会を削除する
   """
-  deleteCompetition(id: ID!): Competition!
+  deleteCompetition(id: ID!): Competition! @hasPermission(permission: "tournament:write")
   """
   大会にチームエントリーを追加する
   """
   addCompetitionEntries(
     id: ID!
     input: UpdateCompetitionEntriesInput!
-  ): Competition!
+  ): Competition! @hasPermission(permission: "tournament:write")
   """
   大会からチームエントリーを削除する
   """
   deleteCompetitionEntries(
     id: ID!
     input: UpdateCompetitionEntriesInput!
-  ): Competition!
+  ): Competition! @hasPermission(permission: "tournament:write")
   """
   試合を作成する
   """
-  createMatch(input: CreateMatchInput!): Match!
+  createMatch(input: CreateMatchInput!): Match! @hasPermission(permission: "match:write")
   """
   試合の詳細情報を更新する
   """
-  updateMatchDetail(id: ID!, input: UpdateMatchDetailInput!): Match!
+  updateMatchDetail(id: ID!, input: UpdateMatchDetailInput!): Match! @hasPermission(permission: "match:write")
   """
   試合結果を更新する
   """
-  updateMatchResult(id: ID!, input: UpdateMatchResultInput!): Match!
+  updateMatchResult(id: ID!, input: UpdateMatchResultInput!): Match! @hasPermission(permission: "match:write")
   """
   試合を削除する
   """
-  deleteMatch(id: ID!): Match!
+  deleteMatch(id: ID!): Match! @hasPermission(permission: "match:write")
   """
   試合にチームエントリーを追加する
   """
-  addMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
+  addMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match! @hasPermission(permission: "match:write")
   """
   試合からチームエントリーを削除する
   """
-  deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match!
+  deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match! @hasPermission(permission: "match:write")
   """
   審判の情報を更新する
   """
-  updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment!
+  updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment! @hasPermission(permission: "match:write")
   """
   リーグを追加する
   """
-  createLeague(input: CreateLeagueInput!): League!
+  createLeague(input: CreateLeagueInput!): League! @hasPermission(permission: "tournament:write")
   """
   リーグのルールを更新する
   """
-  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League!
+  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League! @hasPermission(permission: "tournament:write")
   """
   リーグを削除する
   """
-  deleteLeague(id: ID!): League!
+  deleteLeague(id: ID!): League! @hasPermission(permission: "tournament:write")
   """
   リーグの総当たり戦を自動生成する
   """
-  generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]!
+  generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]! @hasPermission(permission: "tournament:write")
   """
   スポーツのランキングルールを設定する（全削除→再挿入）
   """
-  setRankingRules(sportId: ID!, rules: [RankingRuleInput!]!): Sport!
+  setRankingRules(sportId: ID!, rules: [RankingRuleInput!]!): Sport! @hasPermission(permission: "sport:write")
   """
   リーグのタイブレーク優先度を設定する
   """
-  setTiebreakPriorities(leagueId: ID!, priorities: [TiebreakPriorityInput!]!): [TiebreakPriority!]!
+  setTiebreakPriorities(leagueId: ID!, priorities: [TiebreakPriorityInput!]!): [TiebreakPriority!]! @hasPermission(permission: "tournament:write")
   """
   進出ルールを作成する
   """
-  createPromotionRule(input: CreatePromotionRuleInput!): PromotionRule!
+  createPromotionRule(input: CreatePromotionRuleInput!): PromotionRule! @hasPermission(permission: "tournament:write")
   """
   進出ルールを更新する
   """
-  updatePromotionRule(id: ID!, input: UpdatePromotionRuleInput!): PromotionRule!
+  updatePromotionRule(id: ID!, input: UpdatePromotionRuleInput!): PromotionRule! @hasPermission(permission: "tournament:write")
   """
   進出ルールを削除する
   """
-  deletePromotionRule(id: ID!): PromotionRule!
+  deletePromotionRule(id: ID!): PromotionRule! @hasPermission(permission: "tournament:write")
   """
   ブラケット自動生成（MAIN + オプショナルSUB）
   """
-  generateBracket(input: GenerateBracketInput!): [Tournament!]!
+  generateBracket(input: GenerateBracketInput!): [Tournament!]! @hasPermission(permission: "tournament:write")
   """
   SUBブラケット手動追加
   """
-  createTournament(input: CreateTournamentInput!): Tournament!
+  createTournament(input: CreateTournamentInput!): Tournament! @hasPermission(permission: "tournament:write")
   """
   トーナメント（ブラケット）を更新する
   """
-  updateTournament(id: ID!, input: UpdateTournamentInput!): Tournament!
+  updateTournament(id: ID!, input: UpdateTournamentInput!): Tournament! @hasPermission(permission: "tournament:write")
   """
   ブラケット削除（SUBのみ。MAIN削除不可）
   """
-  deleteTournament(id: ID!): Tournament!
+  deleteTournament(id: ID!): Tournament! @hasPermission(permission: "tournament:write")
   """
   ブラケット内試合追加
   """
-  createTournamentMatch(input: CreateTournamentMatchInput!): Match!
+  createTournamentMatch(input: CreateTournamentMatchInput!): Match! @hasPermission(permission: "tournament:write")
   """
   ブラケット内試合削除
   """
-  deleteTournamentMatch(matchId: ID!): Match!
+  deleteTournamentMatch(matchId: ID!): Match! @hasPermission(permission: "tournament:write")
   """
   スロット接続変更
   """
-  updateSlotConnection(input: UpdateSlotConnectionInput!): TournamentSlot!
+  updateSlotConnection(input: UpdateSlotConnectionInput!): TournamentSlot! @hasPermission(permission: "tournament:write")
   """
   seed_number 振り直し
   """
-  updateSeedNumbers(tournamentId: ID!, seeds: [SeedNumberInput!]!): [TournamentSlot!]!
+  updateSeedNumbers(tournamentId: ID!, seeds: [SeedNumberInput!]!): [TournamentSlot!]! @hasPermission(permission: "tournament:write")
   """
   トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持）
   """
-  resetTournamentBrackets(competitionId: ID!): Competition!
+  resetTournamentBrackets(competitionId: ID!): Competition! @hasPermission(permission: "tournament:write")
   """
   SEEDスロットへのチーム手動配置（teamId=null でクリア）
   """
-  assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot!
-  createRule(input: CreateRuleInput!): Rule!
-  updateRule(id: ID!, input: UpdateRuleInput!): Rule!
-  deleteRule(id: ID!): Rule!
+  assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot! @hasPermission(permission: "tournament:write")
+  createRule(input: CreateRuleInput!): Rule! @hasPermission(permission: "rule:write")
+  updateRule(id: ID!, input: UpdateRuleInput!): Rule! @hasPermission(permission: "rule:write")
+  deleteRule(id: ID!): Rule! @hasPermission(permission: "rule:write")
   """
   画像アップロード用のURLを発行する
   """
-  createImageUploadURL(input: CreateImageUploadURLInput!): ImageUploadURL!
+  createImageUploadURL(input: CreateImageUploadURLInput!): ImageUploadURL! @hasPermission(permission: "image:write")
   """
   画像を削除する（S3ファイルとDBレコードを両方削除）
   """
-  deleteImage(id: ID!): Image!
+  deleteImage(id: ID!): Image! @hasPermission(permission: "image:write")
   """
   シーンにスポーツを一括追加する
   """
-  addSportScenes(id: ID!, input: AddSportScenesInput!): Scene!
+  addSportScenes(id: ID!, input: AddSportScenesInput!): Scene! @hasPermission(permission: "scene:write")
   """
   シーンからスポーツを一括削除する
   """
-  deleteSportScenes(id: ID!, input: DeleteSportScenesInput!): Scene!
+  deleteSportScenes(id: ID!, input: DeleteSportScenesInput!): Scene! @hasPermission(permission: "scene:write")
   """
   スポーツシーンを削除する
   """
-  deleteSportScene(id: ID!): SportScene!
+  deleteSportScene(id: ID!): SportScene! @hasPermission(permission: "scene:write")
   """
   スポーツシーンにチームエントリーを一括追加する
   """
-  addSportEntries(id: ID!, input: AddSportEntriesInput!): SportScene!
+  addSportEntries(id: ID!, input: AddSportEntriesInput!): SportScene! @hasPermission(permission: "scene:write")
   """
   スポーツシーンからチームエントリーを一括削除する
   """
-  deleteSportEntries(id: ID!, input: DeleteSportEntriesInput!): SportScene!
+  deleteSportEntries(id: ID!, input: DeleteSportEntriesInput!): SportScene! @hasPermission(permission: "scene:write")
   """
   スポーツエントリーを削除する
   """
-  deleteSportEntry(id: ID!): SportEntry!
+  deleteSportEntry(id: ID!): SportEntry! @hasPermission(permission: "scene:write")
   """
   ユーザーのロールを更新する（user:manage パーミッションが必要）
   """
