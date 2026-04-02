@@ -1,4 +1,4 @@
-package authorization
+package authz
 
 // Authorizer は認可判定を行うインターフェース。
 type Authorizer interface {

@@ -1,4 +1,4 @@
-package authorization
+package graph
 
 import (
 	"context"
@@ -8,22 +8,23 @@ import (
 
 	"sports-day/api"
 	"sports-day/api/pkg/auth"
+	"sports-day/api/pkg/authz"
 	"sports-day/api/pkg/errors"
 	"sports-day/api/repository"
 )
 
 // Directive は gqlgen のカスタムディレクティブハンドラを提供する構造体。
 type Directive struct {
-	authorizer   Authorizer
-	roleCache    *RoleCache
+	authorizer   authz.Authorizer
+	roleCache    *authz.RoleCache
 	userRoleRepo repository.UserRole
 	db           *gorm.DB
 }
 
 // NewDirective は Directive を初期化して返す。
 func NewDirective(
-	authorizer Authorizer,
-	roleCache *RoleCache,
+	authorizer authz.Authorizer,
+	roleCache *authz.RoleCache,
 	userRoleRepo repository.UserRole,
 	db *gorm.DB,
 ) *Directive {
@@ -39,10 +40,10 @@ func NewDirective(
 // contextのclaimsからsubを取得し、キャッシュ→DBでロールを解決して認可判定を行う。
 func (d *Directive) HasPermission(
 	ctx context.Context,
-	obj interface{},
+	obj any,
 	next graphql.Resolver,
 	permission string,
-) (interface{}, error) {
+) (any, error) {
 	claims, ok := auth.GetClaims(ctx)
 	if !ok || claims.Sub == "" {
 		return nil, errors.ErrUnauthorized

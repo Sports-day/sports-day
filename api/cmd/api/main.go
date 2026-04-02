@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"sports-day/api"
-	"sports-day/api/authorization"
 	"sports-day/api/graph"
+	"sports-day/api/pkg/authz"
 	apihandler "sports-day/api/handler"
 	"sports-day/api/middleware"
 	"sports-day/api/pkg/auth"
@@ -125,9 +125,9 @@ func main() {
 	sportService := service.NewSports(db, sportRepository, &imageService)
 
 	// authorization
-	authorizerInstance := authorization.NewStaticAuthorizer()
-	roleCache := authorization.NewRoleCache()
-	directiveHandler := authorization.NewDirective(authorizerInstance, roleCache, userRoleRepository, db)
+	authorizerInstance := authz.NewStaticAuthorizer()
+	roleCache := authz.NewRoleCache()
+	directiveHandler := graph.NewDirective(authorizerInstance, roleCache, userRoleRepository, db)
 
 	// graphql
 	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService, userRoleRepository, userRepository, roleCache, authorizerInstance, db)}

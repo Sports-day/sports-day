@@ -5,9 +5,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"sports-day/api/authorization"
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	"sports-day/api/pkg/authz"
 	"sports-day/api/repository"
 	"sports-day/api/service"
 )
@@ -36,8 +36,8 @@ type Resolver struct {
 	// 認可関連
 	UserRoleRepo repository.UserRole
 	UserRepo     repository.User
-	RoleCache    *authorization.RoleCache
-	Authorizer   authorization.Authorizer
+	RoleCache    *authz.RoleCache
+	Authorizer   authz.Authorizer
 	DB           *gorm.DB
 }
 
@@ -82,8 +82,8 @@ func NewResolver(
 	imageService service.Image,
 	userRoleRepo repository.UserRole,
 	userRepo repository.User,
-	roleCache *authorization.RoleCache,
-	authorizer authorization.Authorizer,
+	roleCache *authz.RoleCache,
+	authorizer authz.Authorizer,
 	db *gorm.DB,
 ) *Resolver {
 	return &Resolver{
