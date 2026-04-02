@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import {
-  MOCK_TOURNAMENTS_BY_COMPETITION,
-  MOCK_TOURNAMENT_DETAILS,
-  persistCompetitionsData,
-} from '../mock'
+import { useCreateAdminTournamentMutation, BracketType, PlacementMethod } from '@/gql/__generated__/graphql'
 import type { MockBracket, MockTMatch, MockTSlot, MockTournamentDetailData } from '../mock'
 
 // ─── Types ───────────────────────────────────────────────
@@ -312,8 +308,16 @@ export function generateTournamentData(
 
 // ─── Hook ────────────────────────────────────────────────
 
+const PLACEMENT_MAP: Record<TournamentCreateForm['placementMethod'], PlacementMethod> = {
+  SEED_OPTIMIZED: PlacementMethod.SeedOptimized,
+  BALANCED: PlacementMethod.Balanced,
+  RANDOM: PlacementMethod.Random,
+  MANUAL: PlacementMethod.Manual,
+}
+
 export function useTournamentCreate(competitionId: string, onSave: () => void) {
   const [form, setForm] = useState<TournamentCreateForm>(INITIAL_FORM)
+  const [createTournament] = useCreateAdminTournamentMutation()
 
   const handleChange =
     (field: keyof TournamentCreateForm) =>
@@ -326,19 +330,17 @@ export function useTournamentCreate(competitionId: string, onSave: () => void) {
     if (!form.name.trim()) return
     if (form.teamCount < 2) return
 
-    const newId = `tournament_${Date.now()}`
-
-    // モックデータにブラケット構造を自動生成して登録
-    MOCK_TOURNAMENT_DETAILS[newId] = generateTournamentData(form, newId)
-
-    // トーナメント一覧に追加
-    if (!MOCK_TOURNAMENTS_BY_COMPETITION[competitionId]) {
-      MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] = []
-    }
-    MOCK_TOURNAMENTS_BY_COMPETITION[competitionId].push({ id: newId, name: form.name })
-
-    persistCompetitionsData()
-    onSave()
+    createTournament({
+      variables: {
+        input: {
+          name: form.name,
+          competitionId,
+          bracketType: BracketType.SingleElimination,
+          placementMethod: PLACEMENT_MAP[form.placementMethod],
+        },
+      },
+      refetchQueries: ['GetAdminTournaments'],
+    }).then(() => onSave()).catch(() => {})
   }
 
   return { form, handleChange, handleSubmit }

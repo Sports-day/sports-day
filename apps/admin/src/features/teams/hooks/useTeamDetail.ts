@@ -1,18 +1,36 @@
 import { useState } from 'react'
-import { MOCK_TEAMS, MOCK_TEAM_MEMBERS, MOCK_SELECTABLE_USERS, persistTeams } from '../mock'
-import { propagateTeamNameChange } from '@/lib/autoSync'
-import { notifyTeamListeners } from './useTeams'
-import type { TeamMember } from '../types'
+import {
+  useGetAdminTeamQuery,
+  useGetAdminAllUsersForTeamsQuery,
+  useUpdateAdminTeamMutation,
+  useDeleteAdminTeamMutation,
+  useUpdateAdminTeamUsersMutation,
+} from '@/gql/__generated__/graphql'
+import type { TeamMember, SelectableUser } from '../types'
 
 export function useTeamDetail(teamId: string) {
-  const team = MOCK_TEAMS.find((t) => t.id === teamId)
+  const { data, loading, error } = useGetAdminTeamQuery({
+    variables: { id: teamId },
+    skip: !teamId,
+  })
+  const { data: usersData } = useGetAdminAllUsersForTeamsQuery()
+
+  const team = data?.team
   const [name, setName] = useState(team?.name ?? '')
-  const [teamClass, setTeamClass] = useState(team?.class ?? '')
-  const [members, setMembers] = useState<TeamMember[]>(
-    MOCK_TEAM_MEMBERS[teamId] ?? []
-  )
+  const [teamClass, setTeamClass] = useState(team?.group.name ?? '')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  // チームメンバーは GraphQL User として管理
+  const members: TeamMember[] = (team?.users ?? []).map(u => ({
+    studentId: u.id,
+    name: u.name,
+    gender: '男性' as const,  // 【未確定】 GraphQL User に gender フィールドなし
+  }))
+
+  const [updateTeam] = useUpdateAdminTeamMutation()
+  const [deleteTeam] = useDeleteAdminTeamMutation()
+  const [updateTeamUsers] = useUpdateAdminTeamUsersMutation()
 
   const handleOpenDialog = () => setDialogOpen(true)
   const handleCloseDialog = () => setDialogOpen(false)
@@ -20,41 +38,56 @@ export function useTeamDetail(teamId: string) {
   const handleCloseDeleteDialog = () => setDeleteDialogOpen(false)
 
   const handleAddMembers = (selectedIds: string[]) => {
-    const newMembers: TeamMember[] = selectedIds.flatMap((id) => {
-      const user = MOCK_SELECTABLE_USERS.find((u) => u.id === id)
-      if (!user) return []
-      return [{
-        studentId: user.studentId,
-        name: user.userName,
-        gender: user.gender,
-      }]
-    })
-    setMembers((prev) => [...prev, ...newMembers])
+    updateTeamUsers({
+      variables: {
+        id: teamId,
+        input: { addUserIds: selectedIds },
+      },
+      refetchQueries: ['GetAdminTeam'],
+    }).catch(() => {})
     setDialogOpen(false)
   }
 
-  const handleDeleteMember = (index: number) => {
-    setMembers((prev) => prev.filter((_, i) => i !== index))
+  const handleDeleteMember = (_index: number) => {
+    const userId = team?.users[_index]?.id
+    if (!userId) return
+    updateTeamUsers({
+      variables: {
+        id: teamId,
+        input: { removeUserIds: [userId] },
+      },
+      refetchQueries: ['GetAdminTeam'],
+    }).catch(() => {})
   }
 
   const handleSave = () => {
-    const t = MOCK_TEAMS.find((t) => t.id === teamId)
-    if (t) {
-      t.name = name
-      t.class = teamClass
-    }
-    MOCK_TEAM_MEMBERS[teamId] = members
-    persistTeams()
-    notifyTeamListeners()
-    propagateTeamNameChange(teamId, name)
+    updateTeam({
+      variables: {
+        id: teamId,
+        input: { name },
+        // 【未確定】 groupId は group名からの逆引きが必要
+      },
+      refetchQueries: ['GetAdminTeams', 'GetAdminTeam'],
+    }).catch(() => {})
   }
 
   const handleDeleteTeam = () => {
-    const index = MOCK_TEAMS.findIndex((t) => t.id === teamId)
-    if (index !== -1) MOCK_TEAMS.splice(index, 1)
-    persistTeams()
-    notifyTeamListeners()
+    deleteTeam({
+      variables: { id: teamId },
+      refetchQueries: ['GetAdminTeams'],
+    }).catch(() => {})
   }
+
+  // 追加可能なユーザー（現チームメンバー以外）
+  const currentMemberIds = new Set((team?.users ?? []).map(u => u.id))
+  const selectableUsers: SelectableUser[] = (usersData?.users ?? [])
+    .filter(u => !currentMemberIds.has(u.id))
+    .map(u => ({
+      id: u.id,
+      userName: u.name,
+      gender: '男性' as const,  // 【未確定】 GraphQL User に gender フィールドなし
+      studentId: u.id,
+    }))
 
   return {
     name,
@@ -73,7 +106,8 @@ export function useTeamDetail(teamId: string) {
     handleOpenDeleteDialog,
     handleCloseDeleteDialog,
     teamName: team?.name ?? '',
-    loading: false,
-    error: null,
+    selectableUsers,
+    loading,
+    error: error ?? null,
   }
 }

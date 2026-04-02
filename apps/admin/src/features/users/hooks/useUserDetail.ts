@@ -1,34 +1,29 @@
 import { useState } from 'react'
-import { MOCK_USERS, persistUsers } from '../mock'
-import { notifyUserListeners } from './useUsers'
+import { useGetAdminUserQuery } from '@/gql/__generated__/graphql'
 
 const GENDER_OPTIONS = ['男性', '女性']
 const CLASS_OPTIONS = ['Class A', 'Class B', 'Class C']
 const ROLE_OPTIONS = ['管理者', '一般', 'ゲスト']
 
 export function useUserDetail(userId: string) {
-  const user = MOCK_USERS.find((u) => u.id === userId)
-  const [gender, setGender] = useState(user?.gender ?? '')
-  const [userClass, setUserClass] = useState(user?.class ?? '')
-  const [role, setRole] = useState(user?.role ?? '')
+  const { data, loading, error } = useGetAdminUserQuery({
+    variables: { id: userId },
+    skip: !userId,
+  })
+  const user = data?.user
+
+  // 【未確定】 gender, class, role は GraphQL User に存在しないためローカル状態で管理
+  const [gender, setGender] = useState('')
+  const [userClass, setUserClass] = useState(user?.groups[0]?.name ?? '')
+  const [role, setRole] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const handleSave = () => {
-    const u = MOCK_USERS.find((u) => u.id === userId)
-    if (u) {
-      u.gender = gender as '男性' | '女性'
-      u.class = userClass
-      u.role = role
-    }
-    persistUsers()
-    notifyUserListeners()
+    // 【未確定】 GraphQL に gender/class/role 更新 mutation が必要
   }
 
   const handleDeleteUser = () => {
-    const index = MOCK_USERS.findIndex((u) => u.id === userId)
-    if (index !== -1) MOCK_USERS.splice(index, 1)
-    persistUsers()
-    notifyUserListeners()
+    // 【未確定】 deleteUser mutation が GraphQL スキーマに存在しないため未実装
   }
 
   return {
@@ -47,7 +42,7 @@ export function useUserDetail(userId: string) {
     genderOptions: GENDER_OPTIONS,
     classOptions: CLASS_OPTIONS,
     roleOptions: ROLE_OPTIONS,
-    loading: false,
-    error: null,
+    loading,
+    error: error ?? null,
   }
 }

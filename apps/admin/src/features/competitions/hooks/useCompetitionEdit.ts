@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { MOCK_COMPETITIONS, persistCompetitionsData } from '../mock'
-import { inheritCompetitionTag } from '@/lib/autoSync'
+import {
+  useGetAdminCompetitionQuery,
+  useUpdateAdminCompetitionMutation,
+  useDeleteAdminCompetitionMutation,
+} from '@/gql/__generated__/graphql'
 
 type EditForm = {
   name: string
@@ -11,35 +14,46 @@ type EditForm = {
 }
 
 export function useCompetitionEdit(competitionId: string) {
-  const competition = MOCK_COMPETITIONS.find((c) => c.id === competitionId)
+  const { data } = useGetAdminCompetitionQuery({
+    variables: { id: competitionId },
+    skip: !competitionId,
+  })
+  const competition = data?.competition
+
   const [form, setForm] = useState<EditForm>({
     name: competition?.name ?? '',
-    description: competition?.description ?? '',
-    icon: competition?.icon ?? '',
-    tag: competition?.tag ?? '',
+    description: '',
+    icon: competition?.type.toLowerCase() ?? '',
+    tag: competition?.scene.name ?? '',
   })
+
+  const [updateCompetition] = useUpdateAdminCompetitionMutation()
+  const [deleteCompetition] = useDeleteAdminCompetitionMutation()
 
   const handleChange = (field: keyof EditForm) => (e: ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
   const handleSave = () => {
-    const target = MOCK_COMPETITIONS.find((c) => c.id === competitionId)
-    if (!target || !form.name.trim()) return
-    target.name = form.name.trim()
-    target.description = form.description
-    target.icon = form.icon
-    target.tag = form.tag
-    persistCompetitionsData()
-    inheritCompetitionTag(competitionId)
+    if (!form.name.trim()) return
+    updateCompetition({
+      variables: {
+        id: competitionId,
+        input: { name: form.name.trim() },
+      },
+      refetchQueries: ['GetAdminCompetitions', 'GetAdminCompetition'],
+    }).catch(() => {
+      // エラーハンドリングは後続タスクで対応
+    })
   }
 
   const handleDelete = () => {
-    const index = MOCK_COMPETITIONS.findIndex((c) => c.id === competitionId)
-    if (index !== -1) {
-      MOCK_COMPETITIONS.splice(index, 1)
-      persistCompetitionsData()
-    }
+    deleteCompetition({
+      variables: { id: competitionId },
+      refetchQueries: ['GetAdminCompetitions'],
+    }).catch(() => {
+      // エラーハンドリングは後続タスクで対応
+    })
   }
 
   return { form, handleChange, handleSave, handleDelete }
