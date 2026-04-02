@@ -7,11 +7,6 @@ type User {
   judgments: [Judgment!]!
 }
 
-type AuthResponse {
-  token: String!
-  user: User!
-}
-
 type Group {
   id: ID!
   name: String!

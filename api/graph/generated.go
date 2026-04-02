@@ -65,11 +65,6 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	AuthResponse struct {
-		Token func(childComplexity int) int
-		User  func(childComplexity int) int
-	}
-
 	Competition struct {
 		ID          func(childComplexity int) int
 		League      func(childComplexity int) int
@@ -187,7 +182,6 @@ type ComplexityRoot struct {
 		DeleteTournamentMatch    func(childComplexity int, matchID string) int
 		GenerateBracket          func(childComplexity int, input model.GenerateBracketInput) int
 		GenerateRoundRobin       func(childComplexity int, id string, input model.GenerateRoundRobinInput) int
-		Login                    func(childComplexity int, input model.LoginInput) int
 		RemoveGroupUsers         func(childComplexity int, id string, input model.UpdateGroupUsersInput) int
 		ResetTournamentBrackets  func(childComplexity int, competitionID string) int
 		SetRankingRules          func(childComplexity int, sportID string, rules []*model.RankingRuleInput) int
@@ -401,7 +395,6 @@ type MatchResolver interface {
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
-	Login(ctx context.Context, input model.LoginInput) (*model.AuthResponse, error)
 	CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error)
 	DeleteGroup(ctx context.Context, id string) (*model.Group, error)
 	UpdateGroup(ctx context.Context, id string, input model.UpdateGroupInput) (*model.Group, error)
@@ -570,20 +563,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "AuthResponse.token":
-		if e.complexity.AuthResponse.Token == nil {
-			break
-		}
-
-		return e.complexity.AuthResponse.Token(childComplexity), true
-
-	case "AuthResponse.user":
-		if e.complexity.AuthResponse.User == nil {
-			break
-		}
-
-		return e.complexity.AuthResponse.User(childComplexity), true
 
 	case "Competition.id":
 		if e.complexity.Competition.ID == nil {
@@ -1401,18 +1380,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.GenerateRoundRobin(childComplexity, args["id"].(string), args["input"].(model.GenerateRoundRobinInput)), true
-
-	case "Mutation.login":
-		if e.complexity.Mutation.Login == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_login_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
 
 	case "Mutation.removeGroupUsers":
 		if e.complexity.Mutation.RemoveGroupUsers == nil {
@@ -2556,7 +2523,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputGenerateBracketInput,
 		ec.unmarshalInputGenerateRoundRobinInput,
 		ec.unmarshalInputJudgmentEntry,
-		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputMatchResultInput,
 		ec.unmarshalInputRankingRuleInput,
 		ec.unmarshalInputSeedNumberInput,
@@ -3866,29 +3832,6 @@ func (ec *executionContext) field_Mutation_generateRoundRobin_argsInput(
 	}
 
 	var zeroVal model.GenerateRoundRobinInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_login_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_login_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.LoginInput, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNLoginInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐLoginInput(ctx, tmp)
-	}
-
-	var zeroVal model.LoginInput
 	return zeroVal, nil
 }
 
@@ -5276,108 +5219,6 @@ func (ec *executionContext) field___Type_fields_argsIncludeDeprecated(
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
-
-func (ec *executionContext) _AuthResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.AuthResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthResponse_token(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Token, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthResponse_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AuthResponse_user(ctx context.Context, field graphql.CollectedField, obj *model.AuthResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthResponse_user(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.User, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthResponse_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "groups":
-				return ec.fieldContext_User_groups(ctx, field)
-			case "teams":
-				return ec.fieldContext_User_teams(ctx, field)
-			case "judgments":
-				return ec.fieldContext_User_judgments(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
 
 func (ec *executionContext) _Competition_id(ctx context.Context, field graphql.CollectedField, obj *model.Competition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Competition_id(ctx, field)
@@ -7584,67 +7425,6 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_login(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Login(rctx, fc.Args["input"].(model.LoginInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.AuthResponse)
-	fc.Result = res
-	return ec.marshalNAuthResponse2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐAuthResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "token":
-				return ec.fieldContext_AuthResponse_token(ctx, field)
-			case "user":
-				return ec.fieldContext_AuthResponse_user(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type AuthResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -20762,40 +20542,6 @@ func (ec *executionContext) unmarshalInputJudgmentEntry(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj any) (model.LoginInput, error) {
-	var it model.LoginInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"code", "redirectURL"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "code":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("code"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Code = data
-		case "redirectURL":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("redirectURL"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RedirectURL = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputMatchResultInput(ctx context.Context, obj any) (model.MatchResultInput, error) {
 	var it model.MatchResultInput
 	asMap := map[string]any{}
@@ -21680,50 +21426,6 @@ func (ec *executionContext) unmarshalInputUpdateTournamentInput(ctx context.Cont
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
-
-var authResponseImplementors = []string{"AuthResponse"}
-
-func (ec *executionContext) _AuthResponse(ctx context.Context, sel ast.SelectionSet, obj *model.AuthResponse) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, authResponseImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("AuthResponse")
-		case "token":
-			out.Values[i] = ec._AuthResponse_token(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "user":
-			out.Values[i] = ec._AuthResponse_user(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
 
 var competitionImplementors = []string{"Competition"}
 
@@ -22830,13 +22532,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createUser(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "login":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_login(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -26103,20 +25798,6 @@ func (ec *executionContext) unmarshalNAssignSeedTeamInput2sportsᚑdayᚋapiᚋg
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAuthResponse2sportsᚑdayᚋapiᚋgraphᚋmodelᚐAuthResponse(ctx context.Context, sel ast.SelectionSet, v model.AuthResponse) graphql.Marshaler {
-	return ec._AuthResponse(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNAuthResponse2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐAuthResponse(ctx context.Context, sel ast.SelectionSet, v *model.AuthResponse) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._AuthResponse(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -26757,11 +26438,6 @@ func (ec *executionContext) marshalNLocation2ᚖsportsᚑdayᚋapiᚋgraphᚋmod
 		return graphql.Null
 	}
 	return ec._Location(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNLoginInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
-	res, err := ec.unmarshalInputLoginInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNMatch2sportsᚑdayᚋapiᚋgraphᚋmodelᚐMatch(ctx context.Context, sel ast.SelectionSet, v model.Match) graphql.Marshaler {

@@ -13,6 +13,7 @@ func CORS() *cors.Cors {
 			"Origin",
 			"Accept",
 			"Content-Type",
+			"Authorization",
 		},
 		AllowedOrigins: env.Get().Server.CORSOrigins,
 		Debug:          false,

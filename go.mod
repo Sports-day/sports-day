@@ -12,7 +12,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.1
 	github.com/coreos/go-oidc/v3 v3.12.0
 	github.com/go-sql-driver/mysql v1.8.1
-	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/joho/godotenv v1.5.1
 	github.com/justinas/alice v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -25,7 +24,6 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.22
 	github.com/vikstrous/dataloadgen v0.0.6
 	github.com/xo/xo v1.0.2
-	golang.org/x/oauth2 v0.25.0
 	golang.org/x/tools v0.39.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
@@ -129,6 +127,7 @@ require (
 	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 // indirect
 	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/telemetry v0.0.0-20251111182119-bc8e575c7b54 // indirect

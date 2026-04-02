@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -52,27 +51,18 @@ func main() {
 			Msg("Failed to connect to database")
 	}
 
-	// setup oidc
-	oidcRedirectURLs := strings.Split(env.Get().Auth.OIDC.RedirectURL, ",")
-	oidc, err := auth.NewOIDC(
+	// setup verifier (IdP Access Token検証用)
+	verifier, err := auth.NewVerifier(
 		context.Background(),
-		env.Get().Auth.OIDC.IssuerURL,
-		env.Get().Auth.OIDC.ClientID,
-		env.Get().Auth.OIDC.SecretKey,
-		oidcRedirectURLs,
+		env.Get().Auth.IssuerURL,
+		env.Get().Auth.ClientID,
 	)
 	if err != nil {
 		api.Logger.Fatal().
 			Err(err).
 			Str("label", "auth").
-			Msg("Failed to create oidc service")
+			Msg("Failed to create AT service")
 	}
-
-	// setup jwt
-	jwt := auth.NewJWT(
-		[]byte(env.Get().Auth.JWT.SecretKey),
-		env.Get().Auth.JWT.ExpirySeconds,
-	)
 
 	// repository
 	userRepository := repository.NewUser()
@@ -112,7 +102,7 @@ func main() {
 
 	// service
 	userService := service.NewUser(db, userRepository)
-	authService := service.NewAuthService(db, userRepository, oidc, jwt)
+	authService := service.NewAuthService(db, userRepository)
 	groupService := service.NewGroup(db, groupRepository, userRepository)
 	teamService := service.NewTeam(db, teamRepository, userRepository)
 	locationService := service.NewLocation(db, locationRepository)
@@ -149,7 +139,7 @@ func main() {
 	if env.Get().Debug {
 		mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	}
-	mux.Handle("/query", middleware.SetupMiddleware(srv, jwt, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService, imageService, sceneService))
+	mux.Handle("/query", middleware.SetupMiddleware(srv, verifier, authService, userService, groupService, teamService, competitionService, locationService, matchService, judgmentService, leagueService, tournamentService, sportService, ruleService, imageService, sceneService))
 	mux.Handle(
 		"/internal/webhooks/upload",
 		apihandler.HandleUploadWebhook(
