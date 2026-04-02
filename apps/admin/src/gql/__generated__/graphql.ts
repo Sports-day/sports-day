@@ -1,0 +1,1168 @@
+import { gql } from '@apollo/client';
+export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+/** All built-in and custom scalars, mapped to their actual values */
+export type Scalars = {
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+};
+
+export type AddSportEntriesInput = {
+  teamIds: Array<Scalars['ID']['input']>;
+};
+
+export type AddSportScenesInput = {
+  sportIds: Array<Scalars['ID']['input']>;
+};
+
+/** SEEDスロットへのチーム手動配置 */
+export type AssignSeedTeamInput = {
+  slotId: Scalars['ID']['input'];
+  teamId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export enum BracketState {
+  Building = 'BUILDING',
+  Completed = 'COMPLETED',
+  InProgress = 'IN_PROGRESS',
+  Ready = 'READY'
+}
+
+export enum BracketType {
+  Main = 'MAIN',
+  Sub = 'SUB'
+}
+
+export type Competition = {
+  __typename?: 'Competition';
+  id: Scalars['ID']['output'];
+  league?: Maybe<League>;
+  matches: Array<Match>;
+  name: Scalars['String']['output'];
+  scene: Scene;
+  teams: Array<Team>;
+  tournaments: Array<Tournament>;
+  type: CompetitionType;
+};
+
+export enum CompetitionType {
+  League = 'LEAGUE',
+  Tournament = 'TOURNAMENT'
+}
+
+export type CreateCompetitionInput = {
+  name: Scalars['String']['input'];
+  sceneId: Scalars['ID']['input'];
+  type: CompetitionType;
+};
+
+export type CreateGroupInput = {
+  name: Scalars['String']['input'];
+};
+
+export type CreateImageUploadUrlInput = {
+  filename: Scalars['String']['input'];
+};
+
+export type CreateInformationInput = {
+  content: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
+export type CreateJudgmentInput = {
+  entry: JudgmentEntry;
+  id: Scalars['ID']['input'];
+};
+
+export type CreateLeagueInput = {
+  defaultLocationId?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+};
+
+export type CreateLocationInput = {
+  name: Scalars['String']['input'];
+};
+
+export type CreateMatchInput = {
+  competitionId: Scalars['ID']['input'];
+  judgment?: InputMaybe<JudgmentEntry>;
+  locationId?: InputMaybe<Scalars['ID']['input']>;
+  status: MatchStatus;
+  teamIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  time: Scalars['String']['input'];
+};
+
+export type CreatePromotionRuleInput = {
+  rankSpec: Scalars['String']['input'];
+  slot?: InputMaybe<Scalars['Int']['input']>;
+  sourceCompetitionId: Scalars['ID']['input'];
+  targetCompetitionId: Scalars['ID']['input'];
+};
+
+export type CreateRuleInput = {
+  rule: Scalars['String']['input'];
+  sportId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type CreateSceneInput = {
+  name: Scalars['String']['input'];
+};
+
+export type CreateSportsInput = {
+  name: Scalars['String']['input'];
+};
+
+export type CreateTeamInput = {
+  groupId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  userIds: Array<Scalars['ID']['input']>;
+};
+
+/** SUBブラケット手動追加 */
+export type CreateTournamentInput = {
+  bracketType: BracketType;
+  competitionId: Scalars['ID']['input'];
+  displayOrder?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['String']['input'];
+  placementMethod?: InputMaybe<PlacementMethod>;
+};
+
+/** ブラケット内試合追加 */
+export type CreateTournamentMatchInput = {
+  judgment?: InputMaybe<JudgmentEntry>;
+  slot1: SlotInput;
+  slot2: SlotInput;
+  time?: InputMaybe<Scalars['String']['input']>;
+  tournamentId: Scalars['ID']['input'];
+};
+
+export type CreateUserInput = {
+  email: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
+export type DeleteSportEntriesInput = {
+  teamIds: Array<Scalars['ID']['input']>;
+};
+
+export type DeleteSportScenesInput = {
+  sportIds: Array<Scalars['ID']['input']>;
+};
+
+/** ブラケット自動生成 */
+export type GenerateBracketInput = {
+  competitionId: Scalars['ID']['input'];
+  placementMethod?: InputMaybe<PlacementMethod>;
+  subBrackets?: InputMaybe<Array<SubBracketInput>>;
+  teamCount: Scalars['Int']['input'];
+};
+
+export type GenerateRoundRobinInput = {
+  breakDuration: Scalars['Int']['input'];
+  locationId?: InputMaybe<Scalars['ID']['input']>;
+  matchDuration: Scalars['Int']['input'];
+  startTime: Scalars['String']['input'];
+};
+
+export type Group = {
+  __typename?: 'Group';
+  id: Scalars['ID']['output'];
+  judgments: Array<Judgment>;
+  name: Scalars['String']['output'];
+  teams: Array<Team>;
+  users: Array<User>;
+};
+
+export type Image = {
+  __typename?: 'Image';
+  id: Scalars['ID']['output'];
+  status: Scalars['String']['output'];
+  url?: Maybe<Scalars['String']['output']>;
+};
+
+export type ImageUploadUrl = {
+  __typename?: 'ImageUploadURL';
+  imageId: Scalars['ID']['output'];
+  uploadUrl: Scalars['String']['output'];
+};
+
+export type Information = {
+  __typename?: 'Information';
+  content: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type Judgment = {
+  __typename?: 'Judgment';
+  group?: Maybe<Group>;
+  id: Scalars['ID']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  team?: Maybe<Team>;
+  user?: Maybe<User>;
+};
+
+/**
+ * 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
+ * 1 つも指定しない、または 2 つ以上同時に指定した場合、サーバーは BAD_REQUEST を返します。
+ */
+export type JudgmentEntry = {
+  groupId?: InputMaybe<Scalars['ID']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  teamId?: InputMaybe<Scalars['ID']['input']>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type League = {
+  __typename?: 'League';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  teams: Array<Team>;
+};
+
+export type Location = {
+  __typename?: 'Location';
+  id: Scalars['ID']['output'];
+  matches: Array<Match>;
+  name: Scalars['String']['output'];
+};
+
+export type Match = {
+  __typename?: 'Match';
+  competition: Competition;
+  entries: Array<MatchEntry>;
+  id: Scalars['ID']['output'];
+  judgment?: Maybe<Judgment>;
+  location?: Maybe<Location>;
+  status: MatchStatus;
+  time: Scalars['String']['output'];
+  winnerTeam?: Maybe<Team>;
+};
+
+export type MatchEntry = {
+  __typename?: 'MatchEntry';
+  id: Scalars['ID']['output'];
+  score: Scalars['Int']['output'];
+  team?: Maybe<Team>;
+};
+
+export type MatchResultInput = {
+  score: Scalars['Int']['input'];
+  teamId: Scalars['ID']['input'];
+};
+
+export enum MatchStatus {
+  Canceled = 'CANCELED',
+  Finished = 'FINISHED',
+  Ongoing = 'ONGOING',
+  Standby = 'STANDBY'
+}
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  /** 大会にチームエントリーを追加する */
+  addCompetitionEntries: Competition;
+  addGroupUsers: Group;
+  /** 試合にチームエントリーを追加する */
+  addMatchEntries: Match;
+  /** スポーツシーンにチームエントリーを一括追加する */
+  addSportEntries: SportScene;
+  /** シーンにスポーツを一括追加する */
+  addSportScenes: Scene;
+  /** SEEDスロットへのチーム手動配置（teamId=null でクリア） */
+  assignSeedTeam: TournamentSlot;
+  /** 大会を作成する */
+  createCompetition: Competition;
+  createGroup: Group;
+  /** 画像アップロード用のURLを発行する */
+  createImageUploadURL: ImageUploadUrl;
+  createInformation: Information;
+  /** リーグを追加する */
+  createLeague: League;
+  /** 場所を追加する */
+  createLocation: Location;
+  /** 試合を作成する */
+  createMatch: Match;
+  /** 進出ルールを作成する */
+  createPromotionRule: PromotionRule;
+  createRule: Rule;
+  createScene: Scene;
+  createSports: Sport;
+  /** チームを作成する */
+  createTeam: Team;
+  /** SUBブラケット手動追加 */
+  createTournament: Tournament;
+  /** ブラケット内試合追加 */
+  createTournamentMatch: Match;
+  createUser: User;
+  /** 大会を削除する */
+  deleteCompetition: Competition;
+  /** 大会からチームエントリーを削除する */
+  deleteCompetitionEntries: Competition;
+  deleteGroup: Group;
+  /** 画像を削除する（S3ファイルとDBレコードを両方削除） */
+  deleteImage: Image;
+  deleteInformation: Information;
+  /** リーグを削除する */
+  deleteLeague: League;
+  /** 場所を削除する */
+  deleteLocation: Location;
+  /** 試合を削除する */
+  deleteMatch: Match;
+  /** 試合からチームエントリーを削除する */
+  deleteMatchEntries: Match;
+  /** 進出ルールを削除する */
+  deletePromotionRule: PromotionRule;
+  deleteRule: Rule;
+  deleteScene: Scene;
+  /** スポーツシーンからチームエントリーを一括削除する */
+  deleteSportEntries: SportScene;
+  /** スポーツエントリーを削除する */
+  deleteSportEntry: SportEntry;
+  /** スポーツシーンを削除する */
+  deleteSportScene: SportScene;
+  /** シーンからスポーツを一括削除する */
+  deleteSportScenes: Scene;
+  deleteSports: Sport;
+  /** チームを削除する */
+  deleteTeam: Team;
+  /** ブラケット削除（SUBのみ。MAIN削除不可） */
+  deleteTournament: Tournament;
+  /** ブラケット内試合削除 */
+  deleteTournamentMatch: Match;
+  /** ブラケット自動生成（MAIN + オプショナルSUB） */
+  generateBracket: Array<Tournament>;
+  /** リーグの総当たり戦を自動生成する */
+  generateRoundRobin: Array<Match>;
+  removeGroupUsers: Group;
+  /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
+  resetTournamentBrackets: Competition;
+  /** スポーツのランキングルールを設定する（全削除→再挿入） */
+  setRankingRules: Sport;
+  /** リーグのタイブレーク優先度を設定する */
+  setTiebreakPriorities: Array<TiebreakPriority>;
+  /** 大会の情報を更新する */
+  updateCompetition: Competition;
+  updateGroup: Group;
+  updateInformation: Information;
+  /** 審判の情報を更新する */
+  updateJudgment: Judgment;
+  /** リーグのルールを更新する */
+  updateLeagueRule: League;
+  /** 場所の情報を更新する */
+  updateLocation: Location;
+  /** 試合の詳細情報を更新する */
+  updateMatchDetail: Match;
+  /** 試合結果を更新する */
+  updateMatchResult: Match;
+  /** 進出ルールを更新する */
+  updatePromotionRule: PromotionRule;
+  updateRule: Rule;
+  updateScene: Scene;
+  /** seed_number 振り直し */
+  updateSeedNumbers: Array<TournamentSlot>;
+  /** スロット接続変更 */
+  updateSlotConnection: TournamentSlot;
+  updateSports: Sport;
+  /** チームの情報を更新する */
+  updateTeam: Team;
+  /** チームメンバーを更新する */
+  updateTeamUsers: Team;
+  /** トーナメント（ブラケット）を更新する */
+  updateTournament: Tournament;
+};
+
+
+export type MutationAddCompetitionEntriesArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateCompetitionEntriesInput;
+};
+
+
+export type MutationAddGroupUsersArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateGroupUsersInput;
+};
+
+
+export type MutationAddMatchEntriesArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateMatchEntriesInput;
+};
+
+
+export type MutationAddSportEntriesArgs = {
+  id: Scalars['ID']['input'];
+  input: AddSportEntriesInput;
+};
+
+
+export type MutationAddSportScenesArgs = {
+  id: Scalars['ID']['input'];
+  input: AddSportScenesInput;
+};
+
+
+export type MutationAssignSeedTeamArgs = {
+  input: AssignSeedTeamInput;
+};
+
+
+export type MutationCreateCompetitionArgs = {
+  input: CreateCompetitionInput;
+};
+
+
+export type MutationCreateGroupArgs = {
+  input: CreateGroupInput;
+};
+
+
+export type MutationCreateImageUploadUrlArgs = {
+  input: CreateImageUploadUrlInput;
+};
+
+
+export type MutationCreateInformationArgs = {
+  input: CreateInformationInput;
+};
+
+
+export type MutationCreateLeagueArgs = {
+  input: CreateLeagueInput;
+};
+
+
+export type MutationCreateLocationArgs = {
+  input: CreateLocationInput;
+};
+
+
+export type MutationCreateMatchArgs = {
+  input: CreateMatchInput;
+};
+
+
+export type MutationCreatePromotionRuleArgs = {
+  input: CreatePromotionRuleInput;
+};
+
+
+export type MutationCreateRuleArgs = {
+  input: CreateRuleInput;
+};
+
+
+export type MutationCreateSceneArgs = {
+  input: CreateSceneInput;
+};
+
+
+export type MutationCreateSportsArgs = {
+  input: CreateSportsInput;
+};
+
+
+export type MutationCreateTeamArgs = {
+  input: CreateTeamInput;
+};
+
+
+export type MutationCreateTournamentArgs = {
+  input: CreateTournamentInput;
+};
+
+
+export type MutationCreateTournamentMatchArgs = {
+  input: CreateTournamentMatchInput;
+};
+
+
+export type MutationCreateUserArgs = {
+  input: CreateUserInput;
+};
+
+
+export type MutationDeleteCompetitionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCompetitionEntriesArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateCompetitionEntriesInput;
+};
+
+
+export type MutationDeleteGroupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteImageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteInformationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteLeagueArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteLocationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMatchArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMatchEntriesArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateMatchEntriesInput;
+};
+
+
+export type MutationDeletePromotionRuleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteRuleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSceneArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSportEntriesArgs = {
+  id: Scalars['ID']['input'];
+  input: DeleteSportEntriesInput;
+};
+
+
+export type MutationDeleteSportEntryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSportSceneArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSportScenesArgs = {
+  id: Scalars['ID']['input'];
+  input: DeleteSportScenesInput;
+};
+
+
+export type MutationDeleteSportsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTeamArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTournamentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTournamentMatchArgs = {
+  matchId: Scalars['ID']['input'];
+};
+
+
+export type MutationGenerateBracketArgs = {
+  input: GenerateBracketInput;
+};
+
+
+export type MutationGenerateRoundRobinArgs = {
+  id: Scalars['ID']['input'];
+  input: GenerateRoundRobinInput;
+};
+
+
+export type MutationRemoveGroupUsersArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateGroupUsersInput;
+};
+
+
+export type MutationResetTournamentBracketsArgs = {
+  competitionId: Scalars['ID']['input'];
+};
+
+
+export type MutationSetRankingRulesArgs = {
+  rules: Array<RankingRuleInput>;
+  sportId: Scalars['ID']['input'];
+};
+
+
+export type MutationSetTiebreakPrioritiesArgs = {
+  leagueId: Scalars['ID']['input'];
+  priorities: Array<TiebreakPriorityInput>;
+};
+
+
+export type MutationUpdateCompetitionArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateCompetitionInput;
+};
+
+
+export type MutationUpdateGroupArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateGroupInput;
+};
+
+
+export type MutationUpdateInformationArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateInformationInput;
+};
+
+
+export type MutationUpdateJudgmentArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateJudgmentInput;
+};
+
+
+export type MutationUpdateLeagueRuleArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateLeagueRuleInput;
+};
+
+
+export type MutationUpdateLocationArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateLocationInput;
+};
+
+
+export type MutationUpdateMatchDetailArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateMatchDetailInput;
+};
+
+
+export type MutationUpdateMatchResultArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateMatchResultInput;
+};
+
+
+export type MutationUpdatePromotionRuleArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdatePromotionRuleInput;
+};
+
+
+export type MutationUpdateRuleArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateRuleInput;
+};
+
+
+export type MutationUpdateSceneArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateSceneInput;
+};
+
+
+export type MutationUpdateSeedNumbersArgs = {
+  seeds: Array<SeedNumberInput>;
+  tournamentId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateSlotConnectionArgs = {
+  input: UpdateSlotConnectionInput;
+};
+
+
+export type MutationUpdateSportsArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateSportsInput;
+};
+
+
+export type MutationUpdateTeamArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateTeamInput;
+};
+
+
+export type MutationUpdateTeamUsersArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateTeamUsersInput;
+};
+
+
+export type MutationUpdateTournamentArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateTournamentInput;
+};
+
+export enum PlacementMethod {
+  Balanced = 'BALANCED',
+  Manual = 'MANUAL',
+  Random = 'RANDOM',
+  SeedOptimized = 'SEED_OPTIMIZED'
+}
+
+export type PromotionRule = {
+  __typename?: 'PromotionRule';
+  id: Scalars['ID']['output'];
+  rankSpec: Scalars['String']['output'];
+  slot?: Maybe<Scalars['Int']['output']>;
+  sourceCompetition: Competition;
+  targetCompetition: Competition;
+};
+
+export type PromotionStatus = {
+  __typename?: 'PromotionStatus';
+  currentEntryCount: Scalars['Int']['output'];
+  expectedTeamCount: Scalars['Int']['output'];
+  targetCompetitionId: Scalars['ID']['output'];
+};
+
+export type Query = {
+  __typename?: 'Query';
+  Information: Information;
+  Informations: Array<Information>;
+  /** ID指定で大会を取得する */
+  competition: Competition;
+  /** 大会をまとめて取得する */
+  competitions: Array<Competition>;
+  group: Group;
+  groups: Array<Group>;
+  /** ID指定で画像を取得する */
+  image: Image;
+  /** 画像一覧を取得する */
+  images: Array<Image>;
+  /** ID指定で試合を取得する */
+  judgment: Judgment;
+  /** 審判をまとめて取得する */
+  judgments: Array<Judgment>;
+  /** ID指定でリーグを取得する */
+  league: League;
+  /** リーグの順位表をリアルタイム計算で取得する */
+  leagueStandings: Array<Standing>;
+  /** リーグをまとめて取得する */
+  leagues: Array<League>;
+  /** ID指定で場所を取得する */
+  location: Location;
+  /** 場所をまとめて取得する */
+  locations: Array<Location>;
+  /** ID指定で試合を取得する */
+  match: Match;
+  /** 試合をまとめて取得する */
+  matches: Array<Match>;
+  me: User;
+  /** 進出ルールを取得する（進出元の大会IDで絞り込み） */
+  promotionRules: Array<PromotionRule>;
+  /** 進出先の期待チーム数と現在のエントリー数を取得する */
+  promotionStatus: PromotionStatus;
+  rule: Rule;
+  rules: Array<Maybe<Rule>>;
+  scene: Scene;
+  scenes: Array<Scene>;
+  sport: Sport;
+  sports: Array<Sport>;
+  /** ID指定でチームを取得する */
+  team: Team;
+  /** チームをまとめて取得する */
+  teams: Array<Team>;
+  /** ブラケット単体取得 */
+  tournament: Tournament;
+  /** トーナメント順位（全ブラケット統合） */
+  tournamentRanking: Array<TournamentRanking>;
+  /** competition内の全ブラケット取得 */
+  tournaments: Array<Tournament>;
+  user: User;
+  users: Array<User>;
+};
+
+
+export type QueryInformationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCompetitionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGroupArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryImageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryJudgmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryLeagueArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryLeagueStandingsArgs = {
+  leagueId: Scalars['ID']['input'];
+};
+
+
+export type QueryLocationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMatchArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPromotionRulesArgs = {
+  sourceCompetitionId: Scalars['ID']['input'];
+};
+
+
+export type QueryPromotionStatusArgs = {
+  targetCompetitionId: Scalars['ID']['input'];
+};
+
+
+export type QueryRuleArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySceneArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySportArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryTeamArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryTournamentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryTournamentRankingArgs = {
+  competitionId: Scalars['ID']['input'];
+};
+
+
+export type QueryTournamentsArgs = {
+  competitionId: Scalars['ID']['input'];
+};
+
+
+export type QueryUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export enum RankingConditionKey {
+  AdminDecision = 'ADMIN_DECISION',
+  GoalDiff = 'GOAL_DIFF',
+  HeadToHead = 'HEAD_TO_HEAD',
+  TotalGoals = 'TOTAL_GOALS',
+  WinPoints = 'WIN_POINTS'
+}
+
+export type RankingRule = {
+  __typename?: 'RankingRule';
+  conditionKey: RankingConditionKey;
+  priority: Scalars['Int']['output'];
+};
+
+export type RankingRuleInput = {
+  conditionKey: RankingConditionKey;
+  priority: Scalars['Int']['input'];
+};
+
+export type Rule = {
+  __typename?: 'Rule';
+  id?: Maybe<Scalars['ID']['output']>;
+  rule: Scalars['String']['output'];
+  sport?: Maybe<Sport>;
+};
+
+export type Scene = {
+  __typename?: 'Scene';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  sportScenes: Array<SportScene>;
+};
+
+/** seed_number 振り直し */
+export type SeedNumberInput = {
+  seedNumber: Scalars['Int']['input'];
+  slotId: Scalars['ID']['input'];
+};
+
+/** スロットのソース指定 */
+export type SlotInput = {
+  seedNumber?: InputMaybe<Scalars['Int']['input']>;
+  sourceMatchId?: InputMaybe<Scalars['ID']['input']>;
+  sourceType: SlotSourceType;
+};
+
+export enum SlotSourceType {
+  MatchLoser = 'MATCH_LOSER',
+  MatchWinner = 'MATCH_WINNER',
+  Seed = 'SEED'
+}
+
+export type Sport = {
+  __typename?: 'Sport';
+  id: Scalars['ID']['output'];
+  image?: Maybe<Image>;
+  name: Scalars['String']['output'];
+  rankingRules: Array<RankingRule>;
+  rules: Array<Rule>;
+  scene?: Maybe<Array<SportScene>>;
+  weight: Scalars['Int']['output'];
+};
+
+export type SportEntry = {
+  __typename?: 'SportEntry';
+  id: Scalars['ID']['output'];
+  sportScene: SportScene;
+  team: Team;
+};
+
+export type SportScene = {
+  __typename?: 'SportScene';
+  entries: Array<SportEntry>;
+  id: Scalars['ID']['output'];
+  scene: Scene;
+  sport: Sport;
+};
+
+export type Standing = {
+  __typename?: 'Standing';
+  draw: Scalars['Int']['output'];
+  goalDiff: Scalars['Int']['output'];
+  goalsAgainst: Scalars['Int']['output'];
+  goalsFor: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  lose: Scalars['Int']['output'];
+  matchesPlayed: Scalars['Int']['output'];
+  points: Scalars['Int']['output'];
+  rank: Scalars['Int']['output'];
+  team: Team;
+  win: Scalars['Int']['output'];
+};
+
+/** SUBブラケット定義（自動生成用） */
+export type SubBracketInput = {
+  name: Scalars['String']['input'];
+  sourceRound: Scalars['Int']['input'];
+};
+
+export type Team = {
+  __typename?: 'Team';
+  competitions: Array<Competition>;
+  group: Group;
+  id: Scalars['ID']['output'];
+  judgments: Array<Judgment>;
+  leagues: Array<League>;
+  matches: Array<Match>;
+  name: Scalars['String']['output'];
+  users: Array<User>;
+};
+
+export type TiebreakPriority = {
+  __typename?: 'TiebreakPriority';
+  priority: Scalars['Int']['output'];
+  team: Team;
+};
+
+export type TiebreakPriorityInput = {
+  priority: Scalars['Int']['input'];
+  teamId: Scalars['ID']['input'];
+};
+
+export type Tournament = {
+  __typename?: 'Tournament';
+  bracketType: BracketType;
+  competition: Competition;
+  displayOrder: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  matches: Array<Match>;
+  name: Scalars['String']['output'];
+  placementMethod?: Maybe<PlacementMethod>;
+  progress: Scalars['Float']['output'];
+  slots: Array<TournamentSlot>;
+  state: BracketState;
+};
+
+export type TournamentRanking = {
+  __typename?: 'TournamentRanking';
+  isTied: Scalars['Boolean']['output'];
+  rank: Scalars['Int']['output'];
+  team: Team;
+};
+
+export type TournamentSlot = {
+  __typename?: 'TournamentSlot';
+  id: Scalars['ID']['output'];
+  matchEntry: MatchEntry;
+  seedNumber?: Maybe<Scalars['Int']['output']>;
+  sourceMatch?: Maybe<Match>;
+  sourceType: SlotSourceType;
+  tournament: Tournament;
+};
+
+export type UpdateCompetitionEntriesInput = {
+  teamIds: Array<Scalars['ID']['input']>;
+};
+
+export type UpdateCompetitionInput = {
+  imageId?: InputMaybe<Scalars['ID']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateGroupInput = {
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateGroupUsersInput = {
+  userIds: Array<Scalars['ID']['input']>;
+};
+
+export type UpdateInformationInput = {
+  content?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateJudgmentInput = {
+  entry?: InputMaybe<JudgmentEntry>;
+};
+
+export type UpdateLeagueRuleInput = {
+  drawPt?: InputMaybe<Scalars['Int']['input']>;
+  losePt?: InputMaybe<Scalars['Int']['input']>;
+  winPt?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type UpdateLocationInput = {
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateMatchDetailInput = {
+  locationId?: InputMaybe<Scalars['ID']['input']>;
+  time?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateMatchEntriesInput = {
+  teamIds: Array<Scalars['ID']['input']>;
+};
+
+export type UpdateMatchEntryScoreInput = {
+  score: Scalars['Int']['input'];
+  teamId: Scalars['ID']['input'];
+};
+
+export type UpdateMatchResultInput = {
+  results?: InputMaybe<Array<MatchResultInput>>;
+  status?: InputMaybe<MatchStatus>;
+  winnerTeamId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type UpdatePromotionRuleInput = {
+  rankSpec?: InputMaybe<Scalars['String']['input']>;
+  slot?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type UpdateRuleInput = {
+  rule?: InputMaybe<Scalars['String']['input']>;
+  sportId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type UpdateSceneInput = {
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** スロット接続変更 */
+export type UpdateSlotConnectionInput = {
+  seedNumber?: InputMaybe<Scalars['Int']['input']>;
+  slotId: Scalars['ID']['input'];
+  sourceMatchId?: InputMaybe<Scalars['ID']['input']>;
+  sourceType: SlotSourceType;
+};
+
+export type UpdateSportsInput = {
+  imageId?: InputMaybe<Scalars['ID']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  weight?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type UpdateTeamInput = {
+  groupId?: InputMaybe<Scalars['ID']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateTeamUsersInput = {
+  addUserIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  removeUserIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+/** トーナメント（ブラケット）更新 */
+export type UpdateTournamentInput = {
+  displayOrder?: InputMaybe<Scalars['Int']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type User = {
+  __typename?: 'User';
+  email: Scalars['String']['output'];
+  groups: Array<Group>;
+  id: Scalars['ID']['output'];
+  judgments: Array<Judgment>;
+  name: Scalars['String']['output'];
+  teams: Array<Team>;
+};
