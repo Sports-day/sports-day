@@ -205,3 +205,30 @@ func (r *matchRepository) UpdateMatchEntryTeamID(ctx context.Context, db *gorm.D
 	}
 	return nil
 }
+
+func (r *matchRepository) SaveMatchEntry(ctx context.Context, db *gorm.DB, entry *db_model.MatchEntry) (*db_model.MatchEntry, error) {
+	if err := db.WithContext(ctx).Save(entry).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return entry, nil
+}
+
+func (r *matchRepository) SaveBatch(ctx context.Context, db *gorm.DB, matches []*db_model.Match) error {
+	if len(matches) == 0 {
+		return nil
+	}
+	if err := db.WithContext(ctx).CreateInBatches(matches, 100).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (r *matchRepository) SaveMatchEntriesBatch(ctx context.Context, db *gorm.DB, entries []*db_model.MatchEntry) error {
+	if len(entries) == 0 {
+		return nil
+	}
+	if err := db.WithContext(ctx).CreateInBatches(entries, 100).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}

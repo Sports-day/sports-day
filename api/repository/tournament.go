@@ -31,6 +31,8 @@ type Tournament interface {
 	GetSeedSlot(ctx context.Context, db *gorm.DB, tournamentID string, seedNumber int64) (*db_model.TournamentSlot, error)
 	ListSeedSlotsByTournamentID(ctx context.Context, db *gorm.DB, tournamentID string) ([]*db_model.TournamentSlot, error)
 
+	SaveSlotsBatch(ctx context.Context, db *gorm.DB, slots []*db_model.TournamentSlot) error
+
 	// Match queries via tournament_slots
 	ListMatchesByTournamentIDs(ctx context.Context, db *gorm.DB, tournamentIDs []string) ([]*db_model.Match, error)
 }

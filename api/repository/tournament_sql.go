@@ -188,6 +188,16 @@ func (r *tournamentRepository) ListSeedSlotsByTournamentID(ctx context.Context, 
 	return slots, nil
 }
 
+func (r *tournamentRepository) SaveSlotsBatch(ctx context.Context, db *gorm.DB, slots []*db_model.TournamentSlot) error {
+	if len(slots) == 0 {
+		return nil
+	}
+	if err := db.WithContext(ctx).CreateInBatches(slots, 100).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
 func (r *tournamentRepository) ListMatchesByTournamentIDs(ctx context.Context, db *gorm.DB, tournamentIDs []string) ([]*db_model.Match, error) {
 	var matches []*db_model.Match
 	if err := db.WithContext(ctx).

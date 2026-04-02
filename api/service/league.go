@@ -55,7 +55,7 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 			Type: string(model.CompetitionTypeLeague),
 		}
 
-		if err := tx.Save(competition).Error; err != nil {
+		if _, err := s.competitionRepository.Save(ctx, tx, competition); err != nil {
 			return errors.Wrap(err)
 		}
 
@@ -64,7 +64,7 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 			ID: competitionID,
 		}
 
-		if err := tx.Save(league).Error; err != nil {
+		if _, err := s.leagueRepository.Save(ctx, tx, league); err != nil {
 			return errors.Wrap(err)
 		}
 

@@ -462,25 +462,17 @@ func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB
 	}
 
 	// バルクINSERT
-	if len(allMatches) > 0 {
-		if err := tx.CreateInBatches(allMatches, 100).Error; err != nil {
-			return nil, errors.Wrap(err)
-		}
+	if err := s.matchRepository.SaveBatch(ctx, tx, allMatches); err != nil {
+		return nil, errors.Wrap(err)
 	}
-	if len(allEntries) > 0 {
-		if err := tx.CreateInBatches(allEntries, 100).Error; err != nil {
-			return nil, errors.Wrap(err)
-		}
+	if err := s.matchRepository.SaveMatchEntriesBatch(ctx, tx, allEntries); err != nil {
+		return nil, errors.Wrap(err)
 	}
-	if len(allSlots) > 0 {
-		if err := tx.CreateInBatches(allSlots, 100).Error; err != nil {
-			return nil, errors.Wrap(err)
-		}
+	if err := s.tournamentRepository.SaveSlotsBatch(ctx, tx, allSlots); err != nil {
+		return nil, errors.Wrap(err)
 	}
-	if len(allJudgments) > 0 {
-		if err := tx.CreateInBatches(allJudgments, 100).Error; err != nil {
-			return nil, errors.Wrap(err)
-		}
+	if err := s.judgmentRepository.SaveBatch(ctx, tx, allJudgments); err != nil {
+		return nil, errors.Wrap(err)
 	}
 
 	return allMatchInfos, nil
@@ -546,10 +538,10 @@ func (s *Tournament) createTournamentMatchRecord(ctx context.Context, tx *gorm.D
 		Score:   0,
 	}
 
-	if err := tx.Save(entry1).Error; err != nil {
+	if _, err := s.matchRepository.SaveMatchEntry(ctx, tx, entry1); err != nil {
 		return nil, nil, nil, errors.Wrap(err)
 	}
-	if err := tx.Save(entry2).Error; err != nil {
+	if _, err := s.matchRepository.SaveMatchEntry(ctx, tx, entry2); err != nil {
 		return nil, nil, nil, errors.Wrap(err)
 	}
 
@@ -983,7 +975,10 @@ func (s *Tournament) DeleteTournament(ctx context.Context, id string) (*db_model
 			return err
 		}
 
-		matchIDs := collectMatchIDsFromSlots(ctx, tx, s.matchRepository, slots)
+		matchIDs, err := collectMatchIDsFromSlots(ctx, tx, s.matchRepository, slots)
+		if err != nil {
+			return err
+		}
 
 		// tournament を削除（slots は CASCADE）
 		t, err = s.tournamentRepository.Delete(ctx, tx, id)
@@ -1054,10 +1049,10 @@ func (s *Tournament) CreateTournamentMatch(ctx context.Context, input *model.Cre
 		// MatchEntries (2つ)
 		entry1 := &db_model.MatchEntry{ID: ulid.Make(), MatchID: m.ID, TeamID: sql.NullString{Valid: false}, Score: 0}
 		entry2 := &db_model.MatchEntry{ID: ulid.Make(), MatchID: m.ID, TeamID: sql.NullString{Valid: false}, Score: 0}
-		if err := tx.Save(entry1).Error; err != nil {
+		if _, err := s.matchRepository.SaveMatchEntry(ctx, tx, entry1); err != nil {
 			return errors.Wrap(err)
 		}
-		if err := tx.Save(entry2).Error; err != nil {
+		if _, err := s.matchRepository.SaveMatchEntry(ctx, tx, entry2); err != nil {
 			return errors.Wrap(err)
 		}
 
@@ -1380,7 +1375,10 @@ func (s *Tournament) ResetTournamentBrackets(ctx context.Context, competitionID 
 			if err != nil {
 				return err
 			}
-			ids := collectMatchIDsFromSlots(ctx, tx, s.matchRepository, slots)
+			ids, err := collectMatchIDsFromSlots(ctx, tx, s.matchRepository, slots)
+			if err != nil {
+				return err
+			}
 			for _, id := range ids {
 				if !matchIDSet[id] {
 					matchIDSet[id] = true
@@ -1663,9 +1661,9 @@ func (s *Tournament) CheckTournamentCompetition(ctx context.Context, competition
 
 // --- ヘルパー ---
 
-func collectMatchIDsFromSlots(ctx context.Context, tx *gorm.DB, matchRepo repository.Match, slots []*db_model.TournamentSlot) []string {
+func collectMatchIDsFromSlots(ctx context.Context, tx *gorm.DB, matchRepo repository.Match, slots []*db_model.TournamentSlot) ([]string, error) {
 	if len(slots) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	entryIDs := make([]string, len(slots))
@@ -1673,21 +1671,21 @@ func collectMatchIDsFromSlots(ctx context.Context, tx *gorm.DB, matchRepo reposi
 		entryIDs[i] = sl.MatchEntryID
 	}
 
-	// match_entries からmatch_idを取得
+	// entry_id → match を辿るために match_entries を Repository 経由で取得
+	entries, err := matchRepo.BatchGetMatchEntriesByIDs(ctx, tx, entryIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	matchIDSet := make(map[string]bool)
 	var matchIDs []string
-
-	// entry_id → match を辿るために match_entries テーブルを直接クエリ
-	var entries []*db_model.MatchEntry
-	tx.Where("id IN ?", entryIDs).Find(&entries)
-
 	for _, e := range entries {
 		if !matchIDSet[e.MatchID] {
 			matchIDSet[e.MatchID] = true
 			matchIDs = append(matchIDs, e.MatchID)
 		}
 	}
-	return matchIDs
+	return matchIDs, nil
 }
 
 // GetMatchEntry は match_entry_id から MatchEntry を取得する

@@ -17,4 +17,5 @@ type Judgment interface {
 	BatchGetJudgmentsByUserIDs(ctx context.Context, db *gorm.DB, userIds []string) ([]*db_model.Judgment, error)
 	BatchGetJudgmentsByTeamIDs(ctx context.Context, db *gorm.DB, teamIds []string) ([]*db_model.Judgment, error)
 	BatchGetJudgmentsByGroupIDs(ctx context.Context, db *gorm.DB, groupIds []string) ([]*db_model.Judgment, error)
+	SaveBatch(ctx context.Context, db *gorm.DB, judgments []*db_model.Judgment) error
 }
