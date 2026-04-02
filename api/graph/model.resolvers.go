@@ -6,11 +6,11 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
+	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/slices"
 )
 
@@ -68,6 +68,9 @@ func (r *competitionResolver) League(ctx context.Context, obj *model.Competition
 	competitions, err := loader.LoadCompetitions(ctx, []string{obj.ID})
 	if err != nil {
 		return nil, err
+	}
+	if len(competitions) == 0 || competitions[0] == nil {
+		return nil, errors.ErrCompetitionNotFound
 	}
 
 	return model.FormatLeagueResponse(leagues[0], competitions[0]), nil
@@ -232,6 +235,9 @@ func (r *matchResolver) Competition(ctx context.Context, obj *model.Match) (*mod
 	if err != nil {
 		return nil, err
 	}
+	if len(competitions) == 0 || competitions[0] == nil {
+		return nil, errors.ErrCompetitionNotFound
+	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
 
@@ -243,6 +249,9 @@ func (r *matchResolver) WinnerTeam(ctx context.Context, obj *model.Match) (*mode
 	teams, err := loader.LoadTeams(ctx, []string{obj.WinnerTeamId})
 	if err != nil {
 		return nil, err
+	}
+	if len(teams) == 0 || teams[0] == nil {
+		return nil, errors.ErrTeamNotFound
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -424,7 +433,7 @@ func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*mode
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, err
+		return nil, errors.ErrTeamNotFound
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -434,6 +443,9 @@ func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group
 	groups, err := loader.LoadGroups(ctx, []string{obj.GroupID})
 	if err != nil {
 		return nil, err
+	}
+	if len(groups) == 0 || groups[0] == nil {
+		return nil, errors.ErrGroupNotFound
 	}
 	return model.FormatGroupResponse(groups[0]), nil
 }
@@ -567,7 +579,7 @@ func (r *tournamentResolver) Competition(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, fmt.Errorf("competition not found: %s", obj.CompetitionID)
+		return nil, errors.ErrCompetitionNotFound
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -601,7 +613,7 @@ func (r *tournamentRankingResolver) Team(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, fmt.Errorf("team not found: %s", obj.TeamID)
+		return nil, errors.ErrTeamNotFound
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -613,7 +625,7 @@ func (r *tournamentSlotResolver) Tournament(ctx context.Context, obj *model.Tour
 		return nil, err
 	}
 	if len(tournaments) == 0 || tournaments[0] == nil {
-		return nil, fmt.Errorf("tournament not found: %s", obj.TournamentID)
+		return nil, errors.ErrTournamentNotFound
 	}
 	return r.computeBracketStateForTournament(ctx, tournaments[0])
 }

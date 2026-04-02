@@ -18,6 +18,9 @@ func NewRule() Rule {
 func (r rule) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Rule, error) {
 	var rule db_model.Rule
 	if err := db.First(&rule, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrRuleNotFound
+		}
 		return nil, errors.Wrap(err)
 	}
 	return &rule, nil
@@ -41,6 +44,9 @@ func (r rule) Save(ctx context.Context, db *gorm.DB, rule *db_model.Rule) (*db_m
 func (r rule) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Rule, error) {
 	var rule db_model.Rule
 	if err := db.First(&rule, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrRuleNotFound
+		}
 		return nil, errors.Wrap(err)
 	}
 	if err := db.Delete(&rule).Error; err != nil {
