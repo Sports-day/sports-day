@@ -1,5 +1,5 @@
 import { useGetAdminTournamentQuery } from '@/gql/__generated__/graphql'
-import type { MockTournamentDetailData } from '../mock'
+import type { MockTournamentDetailData } from '../types'
 
 export function useTournamentDetail(tournamentId: string, tournamentName: string): MockTournamentDetailData {
   // 【未確定】 GraphQL Tournament → MockTournamentDetailData への完全マッピングは後続タスク

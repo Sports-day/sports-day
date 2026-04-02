@@ -1,28 +1,46 @@
-import { useState } from 'react'
-import { MOCK_TAGS, persistTags } from '../mock'
-import { notifyTagListeners } from './useTags'
+import { useState, useEffect } from 'react'
+import {
+  useGetAdminSceneForTagQuery,
+  useUpdateAdminSceneForTagMutation,
+  useDeleteAdminSceneForTagMutation,
+  GetAdminScenesForTagsDocument,
+} from '@/gql/__generated__/graphql'
 
 export function useTagDetail(tagId: string) {
-  const tag = MOCK_TAGS.find((t) => t.id === tagId)
-  const [name, setName] = useState(tag?.name ?? '')
-  const [enabled, setEnabled] = useState(tag?.enabled ?? true)
+  const { data, loading, error } = useGetAdminSceneForTagQuery({ variables: { id: tagId } })
+  const scene = data?.scene
 
-  const handleSave = () => {
-    const t = MOCK_TAGS.find((t) => t.id === tagId)
-    if (t) {
-      t.name = name
-      t.enabled = enabled
-    }
-    persistTags()
-    notifyTagListeners()
+  const [name, setName] = useState('')
+  const [enabled, setEnabled] = useState(true) // 【未確定】GraphQL Scene に enabled はない
+
+  useEffect(() => {
+    if (scene?.name !== undefined) setName(scene.name)
+  }, [scene?.name])
+
+  const [updateScene] = useUpdateAdminSceneForTagMutation({
+    refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
+  })
+  const [deleteScene] = useDeleteAdminSceneForTagMutation({
+    refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
+  })
+
+  const handleSave = async () => {
+    await updateScene({ variables: { id: tagId, input: { name } } })
   }
 
-  const handleDelete = () => {
-    const index = MOCK_TAGS.findIndex((t) => t.id === tagId)
-    if (index !== -1) MOCK_TAGS.splice(index, 1)
-    persistTags()
-    notifyTagListeners()
+  const handleDelete = async () => {
+    await deleteScene({ variables: { id: tagId } })
   }
 
-  return { name, setName, enabled, setEnabled, handleSave, handleDelete, tagName: tag?.name ?? '', loading: false, error: null }
+  return {
+    name,
+    setName,
+    enabled,
+    setEnabled,
+    handleSave,
+    handleDelete,
+    tagName: scene?.name ?? '',
+    loading,
+    error: error ?? null,
+  }
 }

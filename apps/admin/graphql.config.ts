@@ -17,6 +17,9 @@ const config: CodegenConfig = {
                 "typescript-operations",
                 "typescript-react-apollo",
             ],
+            config: {
+                enumsAsConst: true,
+            },
         },
     },
 };

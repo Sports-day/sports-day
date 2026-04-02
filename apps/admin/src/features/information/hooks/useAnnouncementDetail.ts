@@ -1,37 +1,45 @@
-import { useState } from 'react'
-import { MOCK_ANNOUNCEMENTS, persistAnnouncements } from '../mock'
-import { notifyAnnouncementListeners } from './useAnnouncements'
+import { useState, useEffect } from 'react'
+import {
+  useGetAdminInformationQuery,
+  useUpdateAdminInformationMutation,
+  useDeleteAdminInformationMutation,
+  GetAdminInformationsDocument,
+} from '@/gql/__generated__/graphql'
 import type { Announcement } from '../types'
 
 export function useAnnouncementDetail(id: string) {
-  const item = MOCK_ANNOUNCEMENTS.find(a => a.id === id)
-  const [name, setName] = useState(item?.name ?? '')
-  const [content, setContent] = useState(item?.content ?? '')
-  const [status, setStatus] = useState<Announcement['status']>(item?.status ?? 'draft')
-  const [scheduledAt, setScheduledAt] = useState(item?.scheduledAt ?? '')
+  const { data, loading, error } = useGetAdminInformationQuery({ variables: { id } })
+  const item = data?.Information
 
-  const handleSave = () => {
-    const target = MOCK_ANNOUNCEMENTS.find(a => a.id === id)
-    if (target) {
-      target.name = name
-      target.content = content
-      target.status = status
-      target.scheduledAt = scheduledAt || undefined
-      target.updatedAt = new Date().toISOString()
+  const [name, setName] = useState('')
+  const [content, setContent] = useState('')
+  const [status, setStatus] = useState<Announcement['status']>('draft') // 【未確定】GQL に status はない
+  const [scheduledAt, setScheduledAt] = useState('') // 【未確定】GQL に scheduledAt はない
+
+  useEffect(() => {
+    if (item) {
+      setName(item.title)
+      setContent(item.content)
     }
-    persistAnnouncements()
-    notifyAnnouncementListeners()
+  }, [item?.title, item?.content])
+
+  const [updateInformation] = useUpdateAdminInformationMutation({
+    refetchQueries: [{ query: GetAdminInformationsDocument }],
+  })
+  const [deleteInformation] = useDeleteAdminInformationMutation({
+    refetchQueries: [{ query: GetAdminInformationsDocument }],
+  })
+
+  const handleSave = async () => {
+    await updateInformation({ variables: { id, input: { title: name, content } } })
   }
 
-  const handleDelete = () => {
-    const index = MOCK_ANNOUNCEMENTS.findIndex(a => a.id === id)
-    if (index !== -1) MOCK_ANNOUNCEMENTS.splice(index, 1)
-    persistAnnouncements()
-    notifyAnnouncementListeners()
+  const handleDelete = async () => {
+    await deleteInformation({ variables: { id } })
   }
 
   return {
-    announcementName: item?.name ?? '',
+    announcementName: item?.title ?? '',
     name,
     setName,
     content,
@@ -40,11 +48,11 @@ export function useAnnouncementDetail(id: string) {
     setStatus,
     scheduledAt,
     setScheduledAt,
-    createdAt: item?.createdAt ?? '',
-    updatedAt: item?.updatedAt ?? '',
+    createdAt: '', // 【未確定】GQL に createdAt はない
+    updatedAt: '', // 【未確定】GQL に updatedAt はない
     handleSave,
     handleDelete,
-    loading: false,
-    error: null,
+    loading,
+    error: error ?? null,
   }
 }

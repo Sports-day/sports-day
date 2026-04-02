@@ -45,7 +45,7 @@ export function useLeagueCreate(competitionId: string, type: 'league' | 'tournam
           input: {
             name: form.name,
             competitionId,
-            bracketType: BracketType.SingleElimination,
+            bracketType: BracketType.Main,
           },
         },
         refetchQueries: ['GetAdminTournaments'],

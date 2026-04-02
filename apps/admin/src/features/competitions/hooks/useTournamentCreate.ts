@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCreateAdminTournamentMutation, BracketType, PlacementMethod } from '@/gql/__generated__/graphql'
-import type { MockBracket, MockTMatch, MockTSlot, MockTournamentDetailData } from '../mock'
+import type { MockBracket, MockTMatch, MockTSlot, MockTournamentDetailData } from '../types'
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -335,7 +335,7 @@ export function useTournamentCreate(competitionId: string, onSave: () => void) {
         input: {
           name: form.name,
           competitionId,
-          bracketType: BracketType.SingleElimination,
+          bracketType: BracketType.Main,
           placementMethod: PLACEMENT_MAP[form.placementMethod],
         },
       },

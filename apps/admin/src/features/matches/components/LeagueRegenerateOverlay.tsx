@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
-import { MOCK_LOCATIONS } from '@/features/locations/mock'
+import { useLocations } from '@/features/locations/hooks/useLocations'
 import { LeagueRegenerateConfirmDialog } from './LeagueRegenerateConfirmDialog'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
@@ -45,6 +45,7 @@ export function LeagueRegenerateOverlay({
   onConfirmClose,
   onConfirmSave,
 }: Props) {
+  const { data: locations } = useLocations()
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
@@ -83,7 +84,7 @@ export function LeagueRegenerateOverlay({
               renderValue={(val) =>
                 val ? (
                   <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-                    {MOCK_LOCATIONS.find((l) => l.id === val)?.name ?? val}
+                    {locations.find((l) => l.id === val)?.name ?? val}
                   </Typography>
                 ) : (
                   <Typography sx={{ fontSize: '13px', color: 'rgba(47, 60, 140, 0.7)' }}>未選択</Typography>
@@ -100,7 +101,7 @@ export function LeagueRegenerateOverlay({
               <MenuItem value="">
                 <Typography sx={{ fontSize: '13px', color: 'rgba(47, 60, 140, 0.7)' }}>未選択</Typography>
               </MenuItem>
-              {MOCK_LOCATIONS.map((loc) => (
+              {locations.map((loc) => (
                 <MenuItem key={loc.id} value={loc.id}>
                   <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{loc.name}</Typography>
                 </MenuItem>

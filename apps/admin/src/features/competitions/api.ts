@@ -19,6 +19,7 @@ export const GET_ADMIN_COMPETITION = gql`
       type
       scene { id name }
       teams { id name group { id name } }
+      league { id name }
     }
   }
 `

@@ -30,7 +30,6 @@ import {
 } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
 import { TAG_OPTIONS } from '../constants'
-import { MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
 import { useTournamentDetail } from '../hooks/useTournamentDetail'
 import { useTournamentEdit } from '../hooks/useTournamentEdit'
 import { useSeedAssignment } from '@/hooks/useSeedAssignment'
@@ -56,7 +55,7 @@ type Props = {
 export function TournamentDetailPage({
   tournamentId,
   tournamentName,
-  competitionId,
+  competitionId: _competitionId,
   competitionName,
   onBackToList,
   onBackToDetail,
@@ -90,9 +89,7 @@ export function TournamentDetailPage({
 
   const onConfirmDelete = () => {
     setDeleteDialogOpen(false)
-    const list = MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] ?? []
-    MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] = list.filter((t) => t.id !== tournamentId)
-    persistCompetitionsData()
+    // 【未確定】deleteTournament ミューテーションは GraphQL API 未実装
     onDeleted?.()
     showToast('トーナメントを削除しました')
   }
