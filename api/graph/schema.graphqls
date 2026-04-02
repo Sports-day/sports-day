@@ -274,8 +274,8 @@ input UpdateRuleInput {
 }
 
 type Query {
-  users: [User!]! @hasPermission(permission: "user:read")
-  user(id: ID!): User! @hasPermission(permission: "user:read")
+  users: [User!]!
+  user(id: ID!): User!
   me: User!
   groups: [Group!]!
   group(id: ID!): Group!
