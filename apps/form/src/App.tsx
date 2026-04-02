@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import AppProviders from "@/components/AppProviders"
 import { AppErrorBoundary } from "@/components/layouts/AppErrorBoundary"
+import ProtectedRoute from "@/components/ProtectedRoute"
+import AuthCallbackPage from "@/pages/AuthCallbackPage"
 import HomePage from "@/app/page"
 import ConfirmPage from "@/app/confirm/page"
 import SubmitPage from "@/app/submit/page"
@@ -14,12 +16,15 @@ export default function App() {
       <AppErrorBoundary>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/confirm" element={<ConfirmPage />} />
-            <Route path="/submit" element={<SubmitPage />} />
-            <Route path="/weather/:type" element={<WeatherPage />} />
-            <Route path="/weather/:type/sport/:sports" element={<SportPage />} />
-            <Route path="/weather/:type/sport/:sports/team/:teams" element={<TeamPage />} />
+            <Route path="/callback" element={<AuthCallbackPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/confirm" element={<ConfirmPage />} />
+              <Route path="/submit" element={<SubmitPage />} />
+              <Route path="/weather/:type" element={<WeatherPage />} />
+              <Route path="/weather/:type/sport/:sports" element={<SportPage />} />
+              <Route path="/weather/:type/sport/:sports/team/:teams" element={<TeamPage />} />
+            </Route>
           </Routes>
         </BrowserRouter>
       </AppErrorBoundary>
