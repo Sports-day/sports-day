@@ -14,13 +14,13 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tokenString, err := auth.GetTokenFromRequest(r)
 			if err != nil {
-				writeErrorResponse(w, http.StatusUnauthorized, errors.ErrTokenMissing)
+				http.Error(w, errors.ErrTokenMissing.Error(), http.StatusUnauthorized)
 				return
 			}
 
 			token, err := verifier.Verify(r.Context(), tokenString)
 			if err != nil {
-				writeErrorResponse(w, http.StatusUnauthorized, errors.ErrTokenInvalid)
+				http.Error(w, errors.ErrTokenInvalid.Error(), http.StatusUnauthorized)
 				return
 			}
 
@@ -31,12 +31,12 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 			}
 
 			if err := token.Claims(&claims); err != nil {
-				writeErrorResponse(w, http.StatusUnauthorized, errors.ErrTokenClaimsInvalid)
+				http.Error(w, errors.ErrTokenClaimsInvalid.Error(), http.StatusUnauthorized)
 				return
 			}
 
 			if claims.Sub == "" {
-				writeErrorResponse(w, http.StatusUnauthorized, errors.ErrTokenClaimsInvalid)
+				http.Error(w, errors.ErrTokenClaimsInvalid.Error(), http.StatusUnauthorized)
 				return
 			}
 

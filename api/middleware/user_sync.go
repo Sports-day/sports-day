@@ -12,10 +12,10 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if err := authService.SyncUser(r.Context()); err != nil {
 				if authErr, ok := err.(pkgerrors.Error); ok {
-					writeErrorResponse(w, http.StatusUnauthorized, authErr)
+					http.Error(w, authErr.Error(), http.StatusUnauthorized)
 					return
 				}
-				writeErrorResponse(w, http.StatusInternalServerError, pkgerrors.ErrUserSyncFailed)
+				http.Error(w, pkgerrors.ErrUserSyncFailed.Error(), http.StatusInternalServerError)
 				return
 			}
 			next.ServeHTTP(w, r)
