@@ -7,7 +7,7 @@ import { gql, useQuery } from "@apollo/client";
 import CircularUnderLoad from "@/features/Loading";
 
 const SPORTDATA_GET = gql`
-  query GetSport($sportId: ID!, $sceneId: ID!) {
+  query GetSportDetail($sportId: ID!, $sceneId: ID!) {
     sport(id: $sportId) {
       name
     }

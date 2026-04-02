@@ -22,8 +22,10 @@ export type CheckPopupBaseProps = {
 };
 
 const DELETE_TEAM = gql`
-  mutation DeleteTeam($deleteTeamId: ID!) {
-    deleteTeam(id: $deleteTeamId)
+  mutation DeleteTeamFromPopup($deleteTeamId: ID!) {
+    deleteTeam(id: $deleteTeamId) {
+      id
+    }
   }
 `;
 
