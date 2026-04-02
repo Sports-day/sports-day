@@ -14,4 +14,7 @@ type User interface {
 	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.User, error)
 	FindByEmail(ctx context.Context, db *gorm.DB, email string) (*db_model.User, error)
 	Save(ctx context.Context, db *gorm.DB, user *db_model.User) (*db_model.User, error)
+	FindUserIdpBySub(ctx context.Context, db *gorm.DB, sub string) (*db_model.UsersIdp, error)
+	FindUserIdpByMicrosoftUserID(ctx context.Context, db *gorm.DB, microsoftUserID string) (*db_model.UsersIdp, error)
+	SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.UsersIdp) (*db_model.UsersIdp, error)
 }

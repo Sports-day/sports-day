@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 
 	"sports-day/api/db_model"
@@ -28,65 +27,86 @@ func NewAuthService(db *gorm.DB, userRepo repository.User) AuthService {
 	}
 }
 
+// findUserIdp claimsのsub / microsoft_user_idでusers_idpを検索する
+// sub検索がヒットしない場合はmicrosoft_user_idでフォールバックし、
+// 見つかった場合はsubを書き込んで更新する（管理者事前登録ユーザーの初回ログイン対応）
+func (s *AuthService) findUserIdp(ctx context.Context, claims *auth.Claims) (*db_model.UsersIdp, error) {
+	if claims.Sub != "" {
+		record, err := s.userRepo.FindUserIdpBySub(ctx, s.db, claims.Sub)
+		if err == nil {
+			return record, nil
+		}
+		if !errors.Is(err, errors.ErrUserNotFound) {
+			return nil, err
+		}
+		// sub で見つからない場合は microsoft_user_id でフォールバック
+		if claims.MicrosoftUserID != "" {
+			record, err = s.userRepo.FindUserIdpByMicrosoftUserID(ctx, s.db, claims.MicrosoftUserID)
+			if err == nil {
+				record.Sub.String = claims.Sub
+				record.Sub.Valid = true
+				return s.userRepo.SaveUserIdp(ctx, s.db, record)
+			}
+		}
+		return nil, errors.ErrUserNotFound
+	}
+	return s.userRepo.FindUserIdpByMicrosoftUserID(ctx, s.db, claims.MicrosoftUserID)
+}
+
 // SyncUser 認証済みのユーザー情報をDBと同期する
-// 今後subで実装する予定があるため大幅変更予定
 func (s *AuthService) SyncUser(ctx context.Context) error {
 	claims, ok := auth.GetClaims(ctx)
 	if !ok {
 		return errors.ErrUnauthorized
 	}
 
-	if claims.Email == "" {
-		log.Error().Msg("email not found in token")
-		return errors.ErrUnauthorized
+	_, err := s.findUserIdp(ctx, claims)
+	if err == nil {
+		// 既存ユーザー — 何もしない
+		return nil
+	}
+	if !errors.Is(err, errors.ErrUserNotFound) {
+		return fmt.Errorf("failed to find user idp: %w", err)
 	}
 
-	user, err := s.userRepo.FindByEmail(ctx, s.db, claims.Email)
-	if err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("failed to find user")
+	// users_idpに存在しない → usersとusers_idpをトランザクションで新規作成
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		newUser := &db_model.User{ID: ulid.Make()}
+		if _, err := s.userRepo.Save(ctx, tx, newUser); err != nil {
+			return fmt.Errorf("failed to create user: %w", err)
 		}
 
-		// if user not found, create new user
-		user = &db_model.User{
-			ID:    ulid.Make(),
-			Name:  claims.Name,
-			Email: claims.Email,
+		newIdp := &db_model.UsersIdp{
+			UserID:   newUser.ID,
+			Provider: "microsoft",
 		}
-		_, err = s.userRepo.Save(ctx, s.db, user)
-		if err != nil {
-			return fmt.Errorf("failed to create user")
-		}
-	} else {
-		// if user exists, update name (if necessary)
-		if user.Name != claims.Name {
-			user.Name = claims.Name
-			_, err = s.userRepo.Save(ctx, s.db, user)
-			if err != nil {
-				return fmt.Errorf("failed to update user")
-			}
-		}
-	}
+		newIdp.Sub.String = claims.Sub
+		newIdp.Sub.Valid = claims.Sub != ""
+		newIdp.MicrosoftUserID.String = claims.MicrosoftUserID
+		newIdp.MicrosoftUserID.Valid = claims.MicrosoftUserID != ""
 
-	return nil
+		if _, err := s.userRepo.SaveUserIdp(ctx, tx, newIdp); err != nil {
+			return fmt.Errorf("failed to create user idp: %w", err)
+		}
+
+		return nil
+	})
 }
 
 // GetCurrentUser 現在のユーザー情報を取得
 func (s *AuthService) GetCurrentUser(ctx context.Context) (*db_model.User, error) {
-	// get user id from middleware
 	claims, ok := auth.GetClaims(ctx)
 	if !ok {
 		return nil, errors.ErrUnauthorized
 	}
 
-	// get user info by id
-	user, err := s.userRepo.FindByEmail(ctx, s.db, claims.Email)
+	idpRecord, err := s.findUserIdp(ctx, claims)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, errors.ErrUserNotFound) {
 			return nil, errors.ErrUserNotFound
 		}
 		return nil, err
 	}
 
-	return user, nil
+	return s.userRepo.Get(ctx, s.db, idpRecord.UserID)
 }
