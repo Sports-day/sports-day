@@ -1,9 +1,19 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LinearProgress, Box, Typography } from '@mui/material'
+import { gql, useMutation } from '@apollo/client'
+
+const LOGIN_MUTATION = gql`
+  mutation Login($code: String!, $redirectURL: String!) {
+    login(input: { code: $code, redirectURL: $redirectURL }) {
+      token
+    }
+  }
+`
 
 export default function AuthCallbackPage() {
     const navigate = useNavigate()
+    const [login] = useMutation(LOGIN_MUTATION)
 
     useEffect(() => {
         const code = new URLSearchParams(window.location.search).get('code')
@@ -12,18 +22,18 @@ export default function AuthCallbackPage() {
             return
         }
 
-        fetch(`${import.meta.env.VITE_API_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                code,
-                redirect_uri: import.meta.env.VITE_OIDC_REDIRECT_URL,
-            }),
-        })
-            .then(() => navigate('/'))
+        const redirectURL = import.meta.env.VITE_OIDC_REDIRECT_URL
+
+        login({ variables: { code, redirectURL } })
+            .then(({ data }) => {
+                const token = data?.login?.token
+                if (token) {
+                    document.cookie = `token=${token}; path=/`
+                }
+                navigate('/', { replace: true })
+            })
             .catch(() => navigate('/login'))
-    }, [navigate])
+    }, [navigate, login])
 
     return (
         <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh" gap={2}>
