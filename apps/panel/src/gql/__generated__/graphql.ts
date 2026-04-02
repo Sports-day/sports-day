@@ -1184,7 +1184,7 @@ export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: '
 export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string } }> };
+export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string }> }> };
 
 export type GetPanelCompetitionQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1232,14 +1232,14 @@ export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typena
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }> };
+export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', team?: { __typename?: 'Team', id: string } | null } | null }> };
 
 export type GetPanelMatchQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, user?: { __typename?: 'User', id: string, name: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null } | null } };
+export type GetPanelMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, user?: { __typename?: 'User', id: string, name: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null } | null } };
 
 export type GetPanelSportsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1401,6 +1401,9 @@ export const GetPanelCompetitionsDocument = gql`
     scene {
       id
       name
+    }
+    teams {
+      id
     }
   }
 }
@@ -1764,6 +1767,9 @@ export const GetPanelMatchesDocument = gql`
     competition {
       id
       name
+      scene {
+        id
+      }
     }
     winnerTeam {
       id
@@ -1776,6 +1782,11 @@ export const GetPanelMatchesDocument = gql`
         name
       }
       score
+    }
+    judgment {
+      team {
+        id
+      }
     }
   }
 }
@@ -1825,6 +1836,9 @@ export const GetPanelMatchDocument = gql`
     competition {
       id
       name
+      scene {
+        id
+      }
     }
     winnerTeam {
       id

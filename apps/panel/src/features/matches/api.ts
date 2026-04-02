@@ -13,6 +13,9 @@ export const GET_MATCHES = gql`
       competition {
         id
         name
+        scene {
+          id
+        }
       }
       winnerTeam {
         id
@@ -25,6 +28,11 @@ export const GET_MATCHES = gql`
           name
         }
         score
+      }
+      judgment {
+        team {
+          id
+        }
       }
     }
   }
@@ -43,6 +51,9 @@ export const GET_MATCH = gql`
       competition {
         id
         name
+        scene {
+          id
+        }
       }
       winnerTeam {
         id

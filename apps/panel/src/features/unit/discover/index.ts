@@ -1,112 +1,125 @@
-import {useFetchUsers} from "@/src/features/users/hook";
-import {useFetchTeams} from "@/src/features/teams/hook";
-import {useFetchGames} from "@/src/features/games/hook";
-import {useFetchSports} from "@/src/features/sports/hook";
-import {Class} from "@/src/models/ClassModel";
-import {Team} from "@/src/models/TeamModel";
-import {Sport} from "@/src/models/SportModel";
-import {Game} from "@/src/models/GameModel";
-import {useState} from "react";
-import {useFetchClasses} from "@/src/features/classes/hooks";
-import {User} from "@/src/models/UserModel";
-import {Match} from "@/src/models/MatchModel";
-import {useFetchMatches} from "@/src/features/matches/hook";
-import {useFetchUserinfo} from "@/src/features/userinfo/hook";
+import { useFetchUsers } from "@/src/features/users/hook";
+import { useFetchTeams } from "@/src/features/teams/hook";
+import { useFetchSports } from "@/src/features/sports/hook";
+import { useFetchMatches } from "@/src/features/matches/hook";
+import { useFetchUserinfo } from "@/src/features/userinfo/hook";
+import { useState } from "react";
+import {
+  GetPanelMatchesQuery,
+  GetPanelTeamsQuery,
+  GetPanelUsersQuery,
+  GetPanelSportsQuery,
+  GetPanelMeQuery,
+  MatchStatus,
+} from "@/src/gql/__generated__/graphql";
+
+// GraphQL 生成型エイリアス
+type GqlMatch = GetPanelMatchesQuery["matches"][0];
+type GqlTeam = GetPanelTeamsQuery["teams"][0];
+type GqlUser = GetPanelUsersQuery["users"][0];
+type GqlSport = GetPanelSportsQuery["sports"][0];
+type GqlGroup = GetPanelMeQuery["me"]["groups"][0]; // class = group の同義語
 
 export type MatchSet = {
-    match: Match,
-    team: Team,
-    members: User[],
-    sport: Sport,
-    game: Game,
-}
+  match: GqlMatch;
+  team: GqlTeam;
+  members: GqlTeam["users"];
+  sport: GqlSport;
+  game: GqlMatch["competition"]; // game = competition の同義語
+};
 
 export type TeamSetsInMyClassResponse = {
-    isFetching: boolean
-    isSuccessful: boolean
-    myClass: Class | undefined
-    users: User[]
-    matchSets: MatchSet[]
-}
+  isFetching: boolean;
+  isSuccessful: boolean;
+  myClass: GqlGroup | undefined; // class = group の同義語
+  users: GqlUser[];
+  matchSets: MatchSet[];
+};
 
 export const useFetchTeamSetsInMyClass = () => {
-    const {users, isFetching: isFetchingUsers} = useFetchUsers()
-    const {teams, isFetching: isFetchingTeams} = useFetchTeams()
-    const {games, isFetching: isFetchingGames} = useFetchGames(true)
-    const {sports, isFetching: isFetchingSports} = useFetchSports(true)
-    const {matches, isFetching: isFetchingMatches} = useFetchMatches()
-    const {classes, isFetching: isFetchingClasses} = useFetchClasses()
-    const {user, isFetching: isFetchingMyUser} = useFetchUserinfo()
+  const { users, isFetching: isFetchingUsers } = useFetchUsers();
+  const { teams, isFetching: isFetchingTeams } = useFetchTeams();
+  const { sports, isFetching: isFetchingSports } = useFetchSports(true);
+  const { matches, isFetching: isFetchingMatches } = useFetchMatches();
+  const { user, isFetching: isFetchingMyUser } = useFetchUserinfo();
 
-    //  state
-    const [isFetching, setIsFetching] = useState<boolean>(true)
-    const [isSuccessfulState, setIsSuccessfulState] = useState<boolean>(false)
-    const [myClassState, setMyClassState] = useState<Class | undefined>(undefined)
-    const [matchSetListState, setMatchSetListState] = useState<MatchSet[]>([])
+  const [isFetching, setIsFetching] = useState<boolean>(true);
+  const [isSuccessfulState, setIsSuccessfulState] = useState<boolean>(false);
+  const [myClassState, setMyClassState] = useState<GqlGroup | undefined>(undefined);
+  const [matchSetListState, setMatchSetListState] = useState<MatchSet[]>([]);
 
-    if (!isFetchingUsers && !isFetchingTeams && !isFetchingGames && !isFetchingSports && !isFetchingMatches && !isFetchingClasses && !isFetchingMyUser && isFetching) {
-        fetchBlock: {
-            if (!user) break fetchBlock
-            const findMyClass = classes.find((c) => c.id === user?.classId)
-            if (!findMyClass) break fetchBlock
-            setMyClassState(findMyClass)
+  if (
+    !isFetchingUsers &&
+    !isFetchingTeams &&
+    !isFetchingSports &&
+    !isFetchingMatches &&
+    !isFetchingMyUser &&
+    isFetching
+  ) {
+    fetchBlock: {
+      if (!user) break fetchBlock;
 
-            //  find teams belong to same class
-            const findTeams = teams.filter((t) => t.classId === findMyClass.id)
+      // me.groups[0] → 自分のグループ（= クラス）
+      const myGroup = user.groups[0];
+      if (!myGroup) break fetchBlock;
+      setMyClassState(myGroup);
 
-            const matchSetList: MatchSet[] = []
+      // 同じグループに属するチームを抽出
+      const findTeams = teams.filter((t) => t.group.id === myGroup.id);
 
-            for (const team of findTeams) {
-                //  find members
-                const findMembers = users.filter((u) => team.userIds.includes(u.id))
-                //  find matches
-                const findMatches = matches
-                    .filter((m) => m.leftTeamId === team.id || m.rightTeamId === team.id)
-                    .filter((m) => m.status !== "finished")
+      const matchSetList: MatchSet[] = [];
 
-                //  construct match set
-                for (const match of findMatches) {
-                    //  find sport and game
-                    const findSport = sports.find((s) => s.id === match.sportId)
-                    const findGame = games.find((g) => g.id === match.gameId)
+      for (const team of findTeams) {
+        // チームのメンバーは team.users から取得（REST の userIds 廃止）
+        const findMembers = team.users;
 
-                    if (!findSport || !findGame) {
-                        continue
-                    }
+        // チームが参加する未終了の試合を抽出
+        const findMatches = matches
+          .filter((m) =>
+            m.entries.some((e) => e.team?.id === team.id)
+          )
+          .filter((m) => m.status !== MatchStatus.Finished);
 
-                    //  construct match set
-                    const matchSet = {
-                        match,
-                        team,
-                        members: findMembers,
-                        sport: findSport,
-                        game: findGame,
-                    } as MatchSet
+        for (const match of findMatches) {
+          // competition.scene.id → sport を逆引き
+          const sceneId = match.competition.scene.id;
+          const findSport = sports.find((s) =>
+            s.scene?.some((ss) => ss.scene.id === sceneId)
+          );
 
-                    //  push
-                    matchSetList.push(matchSet)
-                }
-            }
+          if (!findSport) {
+            continue;
+          }
 
-            //  sort by match start time
-            const sortedMatchSetList = matchSetList.sort((a, b) => {
-                return a.match.startAt.localeCompare(b.match.startAt)
-            })
+          const matchSet: MatchSet = {
+            match,
+            team,
+            members: findMembers,
+            sport: findSport,
+            game: match.competition, // game = competition
+          };
 
-            //  set state
-            setMatchSetListState(sortedMatchSetList)
-
-            setIsSuccessfulState(true)
+          matchSetList.push(matchSet);
         }
+      }
 
-        setIsFetching(false)
+      // 試合開始時刻でソート（startAt → time に変更）
+      const sortedMatchSetList = matchSetList.sort((a, b) =>
+        a.match.time.localeCompare(b.match.time)
+      );
+
+      setMatchSetListState(sortedMatchSetList);
+      setIsSuccessfulState(true);
     }
 
-    return {
-        isFetching,
-        isSuccessful: isSuccessfulState,
-        myClass: myClassState,
-        users: users,
-        matchSets: matchSetListState,
-    } as TeamSetsInMyClassResponse
-}
+    setIsFetching(false);
+  }
+
+  return {
+    isFetching,
+    isSuccessful: isSuccessfulState,
+    myClass: myClassState,
+    users: users,
+    matchSets: matchSetListState,
+  } as TeamSetsInMyClassResponse;
+};
