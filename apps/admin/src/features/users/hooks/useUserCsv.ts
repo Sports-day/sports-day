@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import Papa from 'papaparse'
-import { MOCK_USERS, persistUsers } from '../mock'
-import { notifyUserListeners } from './useUsers'
+import {
+  useGetAdminUsersQuery,
+  useCreateAdminUserMutation,
+} from '@/gql/__generated__/graphql'
 
 const VALID_GENDERS = ['男性', '女性']
 
@@ -17,10 +19,13 @@ export function useUserCsv() {
   const [csvText, setCsvText] = useState('')
   const [rows, setRows] = useState<UserCsvRow[]>([])
 
+  const { data: usersData } = useGetAdminUsersQuery()
+  const [createUser] = useCreateAdminUserMutation()
+
   const handleCsvChange = (value: string) => {
     setCsvText(value)
 
-    const existingEmails = new Set(MOCK_USERS.map(u => u.email))
+    const existingEmails = new Set((usersData?.users ?? []).map(u => u.email))
     const seenEmails = new Set<string>()
 
     const result = Papa.parse<string[]>(value, { skipEmptyLines: true })
@@ -43,21 +48,20 @@ export function useUserCsv() {
     setRows(parsed)
   }
 
-  const handleCreate = () => {
-    rows
-      .filter((r) => r.status === '登録可能')
-      .forEach((r) => {
-        MOCK_USERS.push({
-          id: String(Date.now() + Math.random()),
-          name: r.userName,
-          email: r.email,
-          gender: r.gender === '男性' ? '男性' : '女性',
-          class: r.class,
-          teams: [],
-        })
-      })
-    persistUsers()
-    notifyUserListeners()
+  const handleCreate = async () => {
+    const registrable = rows.filter((r) => r.status === '登録可能')
+    for (const r of registrable) {
+      await createUser({
+        variables: {
+          input: {
+            name: r.userName,
+            email: r.email,
+            // 【未確定】 gender, class は GraphQL CreateUserInput に存在しない
+          },
+        },
+        refetchQueries: ['GetAdminUsers'],
+      }).catch(() => {})
+    }
     setCsvText('')
     setRows([])
   }

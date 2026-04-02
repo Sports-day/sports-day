@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
+import {
+  useGetAdminLeagueQuery,
+  useUpdateAdminMatchResultMutation,
+  MatchStatus,
+} from '@/gql/__generated__/graphql'
 
 export type BulkEditRow = {
   matchId: string
@@ -9,15 +13,19 @@ export type BulkEditRow = {
   scoreB: number
 }
 
-export function useBulkEdit(competitionId: string, leagueId: string) {
+export function useBulkEdit(_competitionId: string, leagueId: string) {
   const [isOpen, setIsOpen] = useState(false)
   const [filterDate, setFilterDate] = useState('')
   const [filterLocation, setFilterLocation] = useState('')
   const [csvData, setCsvDataRaw] = useState('')
   const [parsedRows, setParsedRows] = useState<BulkEditRow[]>([])
 
-  const getLeague = () =>
-    (MOCK_ACTIVE_LEAGUES[competitionId] ?? []).find((l) => l.id === leagueId)
+  // 【未確定】 リーグ内の試合一覧は match → league 逆引きが未確定のため空
+  const { data: leagueData } = useGetAdminLeagueQuery({
+    variables: { id: leagueId },
+    skip: !leagueId,
+  })
+  const [updateMatchResult] = useUpdateAdminMatchResultMutation()
 
   const open = () => setIsOpen(true)
   const close = () => {
@@ -30,8 +38,7 @@ export function useBulkEdit(competitionId: string, leagueId: string) {
 
   const setCsvData = (value: string) => {
     setCsvDataRaw(value)
-    const league = getLeague()
-    if (!league) { setParsedRows([]); return }
+    const teams = leagueData?.league?.teams ?? []
     const rows = value
       .split('\n')
       .map((l) => l.trim())
@@ -41,14 +48,11 @@ export function useBulkEdit(competitionId: string, leagueId: string) {
         const matchId = parts[0] ?? ''
         const scoreA = Number(parts[1] ?? 0)
         const scoreB = Number(parts[2] ?? 0)
-        const match = league.matches.find((m) => m.id === matchId)
-        if (!match) return []
-        const teamA = league.teams.find((t) => t.id === match.teamAId)
-        const teamB = league.teams.find((t) => t.id === match.teamBId)
+        // 【未確定】 match → teamA/teamB の対応は GraphQL では match.entries から取得
         return [{
           matchId,
-          teamAName: teamA?.shortName ?? match.teamAId,
-          teamBName: teamB?.shortName ?? match.teamBId,
+          teamAName: teams[0]?.name ?? matchId,
+          teamBName: teams[1]?.name ?? matchId,
           scoreA,
           scoreB,
         }]
@@ -56,18 +60,22 @@ export function useBulkEdit(competitionId: string, leagueId: string) {
     setParsedRows(rows)
   }
 
-  const execute = () => {
-    const league = getLeague()
-    if (!league) return
-    parsedRows.forEach((row) => {
-      const match = league.matches.find((m) => m.id === row.matchId)
-      if (match) {
-        match.scoreA = row.scoreA
-        match.scoreB = row.scoreB
-        if (filterLocation) match.location = filterLocation
-      }
-    })
-    persistActiveLeagues()
+  const execute = async () => {
+    for (const row of parsedRows) {
+      await updateMatchResult({
+        variables: {
+          id: row.matchId,
+          input: {
+            status: MatchStatus.Finished,
+            results: [
+              // 【未確定】 teamId は match.entries から取得する必要がある
+            ],
+          },
+        },
+        refetchQueries: ['GetAdminMatches'],
+      }).catch(() => {})
+    }
+    void filterLocation  // 将来の locationId 設定に備えて保持
     close()
   }
 

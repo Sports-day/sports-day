@@ -1,17 +1,24 @@
 import { useState } from 'react'
-import { MOCK_TOURNAMENT_DETAILS, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
+import { useGetAdminTournamentQuery } from '@/gql/__generated__/graphql'
 import { generateTournamentData } from './useTournamentCreate'
 
 type PlacementMethod = 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
 
 export function useTournamentEdit(tournamentId: string) {
-  const detail = MOCK_TOURNAMENT_DETAILS[tournamentId]
+  // 【未確定】 updateTournament mutation が GraphQL スキーマに存在しないため保存は未実装
+  const { data } = useGetAdminTournamentQuery({
+    variables: { id: tournamentId },
+    skip: !tournamentId,
+  })
+  const tournament = data?.tournament
 
-  const [name, setName] = useState(detail?.name ?? '')
-  const [description, setDescription] = useState(detail?.description ?? '')
-  const [teamCount, setTeamCount] = useState(detail?.teamCount ?? 4)
-  const [placementMethod, setPlacementMethod] = useState<PlacementMethod>(detail?.placementMethod ?? 'SEED_OPTIMIZED')
-  const [tag, setTag] = useState(detail?.tag ?? '')
+  const [name, setName] = useState(tournament?.name ?? '')
+  const [description, setDescription] = useState('')
+  const [teamCount, setTeamCount] = useState(tournament?.slots.length ?? 4)
+  const [placementMethod, setPlacementMethod] = useState<PlacementMethod>(
+    (tournament?.placementMethod ?? 'SEED_OPTIMIZED') as PlacementMethod
+  )
+  const [tag, setTag] = useState('')
 
   const handleChange =
     (field: 'name' | 'description' | 'tag' | 'teamCount' | 'placementMethod') =>
@@ -24,26 +31,9 @@ export function useTournamentEdit(tournamentId: string) {
     }
 
   const handleSave = () => {
-    if (!detail) return
-
-    // ブラケット構造を再生成して全フィールドを更新
-    const newData = generateTournamentData(
-      { name, description, teamCount, placementMethod, tag },
-      tournamentId,
-    )
-    detail.name = newData.name
-    detail.description = newData.description
-    detail.teamCount = newData.teamCount
-    detail.placementMethod = newData.placementMethod
-    detail.tag = newData.tag
-    detail.brackets = newData.brackets
-
-    // MOCK_TOURNAMENTS_BY_COMPETITION の name も更新
-    for (const list of Object.values(MOCK_TOURNAMENTS_BY_COMPETITION)) {
-      const t = list.find((t) => t.id === tournamentId)
-      if (t) { t.name = name; break }
-    }
-    persistCompetitionsData()
+    // 【未確定】 updateTournament mutation が実装されたら以下で置き換え
+    // ブラケット生成ロジックはローカルで保持
+    generateTournamentData({ name, description, teamCount, placementMethod, tag }, tournamentId)
   }
 
   return {
