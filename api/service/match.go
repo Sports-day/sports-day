@@ -299,6 +299,7 @@ func (s *Match) AddEntries(ctx context.Context, matchId string, teamIds []string
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrMatchNotFound
 		}
+		return nil, errors.Wrap(err)
 	}
 
 	if _, err := s.matchRepository.AddMatchEntries(ctx, s.db, matchId, teamIds); err != nil {
@@ -313,7 +314,7 @@ func (s *Match) AddEntries(ctx context.Context, matchId string, teamIds []string
 }
 
 func (s *Match) DeleteEntries(ctx context.Context, matchId string, teamIds []string) (*db_model.Match, error) {
-	match, err := s.matchRepository.Get(ctx, s.db, matchId)
+	_, err := s.matchRepository.Get(ctx, s.db, matchId)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -321,6 +322,11 @@ func (s *Match) DeleteEntries(ctx context.Context, matchId string, teamIds []str
 	_, err = s.matchRepository.DeleteMatchEntries(ctx, s.db, matchId, teamIds)
 	if err != nil {
 		return nil, errors.ErrDeleteMatchEntry
+	}
+
+	match, err := s.matchRepository.Get(ctx, s.db, matchId)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
 	return match, nil
 }

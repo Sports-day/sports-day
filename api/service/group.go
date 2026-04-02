@@ -101,12 +101,17 @@ func (s *Group) AddUsers(ctx context.Context, groupId string, userIds []string) 
 }
 
 func (s *Group) DeleteUsers(ctx context.Context, groupId string, userIds []string) (*db_model.Group, error) {
-	group, err := s.groupRepository.Get(ctx, s.db, groupId)
+	_, err := s.groupRepository.Get(ctx, s.db, groupId)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
 	_, err = s.groupRepository.DeleteGroupUsers(ctx, s.db, groupId, userIds)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	group, err := s.groupRepository.Get(ctx, s.db, groupId)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}

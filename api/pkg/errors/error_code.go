@@ -19,6 +19,7 @@ var (
 	ErrLeagueNotFound      = NewError("LEAGUE_NOT_FOUND", "リーグが見つかりません")
 	ErrSportSceneNotFound  = NewError("SPORT_SCENE_NOT_FOUND", "スポーツシーンが見つかりません")
 	ErrSportEntryNotFound  = NewError("SPORT_ENTRY_NOT_FOUND", "スポーツエントリーが見つかりません")
+	ErrRuleNotFound        = NewError("RULE_NOT_FOUND", "ルールが見つかりません")
 
 	/*
 		Validation

@@ -106,6 +106,7 @@ func (s *Team) AddUsers(ctx context.Context, teamId string, userIds []string) (*
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrTeamNotFound
 		}
+		return nil, errors.Wrap(err)
 	}
 
 	if _, err := s.teamRepository.AddTeamUsers(ctx, s.db, teamId, userIds); err != nil {
@@ -120,7 +121,7 @@ func (s *Team) AddUsers(ctx context.Context, teamId string, userIds []string) (*
 }
 
 func (s *Team) DeleteUsers(ctx context.Context, teamId string, userIds []string) (*db_model.Team, error) {
-	team, err := s.teamRepository.Get(ctx, s.db, teamId)
+	_, err := s.teamRepository.Get(ctx, s.db, teamId)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -128,6 +129,11 @@ func (s *Team) DeleteUsers(ctx context.Context, teamId string, userIds []string)
 	_, err = s.teamRepository.DeleteTeamUsers(ctx, s.db, teamId, userIds)
 	if err != nil {
 		return nil, errors.ErrDeleteTeamUser
+	}
+
+	team, err := s.teamRepository.Get(ctx, s.db, teamId)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
 	return team, nil
 }
