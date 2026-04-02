@@ -16,5 +16,6 @@ type User interface {
 	Save(ctx context.Context, db *gorm.DB, user *db_model.User) (*db_model.User, error)
 	FindUserIdpBySub(ctx context.Context, db *gorm.DB, sub string) (*db_model.UsersIdp, error)
 	FindUserIdpByMicrosoftUserID(ctx context.Context, db *gorm.DB, microsoftUserID string) (*db_model.UsersIdp, error)
+	BatchFindUserIdpByUserIDs(ctx context.Context, db *gorm.DB, userIDs []string) ([]*db_model.UsersIdp, error)
 	SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.UsersIdp) (*db_model.UsersIdp, error)
 }

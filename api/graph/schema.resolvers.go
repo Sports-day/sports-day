@@ -745,9 +745,28 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 		return nil, err
 	}
 
+	// user_id → sub を一括取得してフィールドリゾルバーでのロール解決に使う（N+1防止）
+	userIDs := make([]string, len(users))
+	for i, u := range users {
+		userIDs[i] = u.ID
+	}
+	idpRecords, err := r.UserRepo.BatchFindUserIdpByUserIDs(ctx, r.DB, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	subByUserID := make(map[string]string, len(idpRecords))
+	for _, rec := range idpRecords {
+		if rec.Sub.Valid {
+			subByUserID[rec.UserID] = rec.Sub.String
+		}
+	}
+
 	res := make([]*model.User, 0, len(users))
 	for _, user := range users {
-		res = append(res, model.FormatUserResponse(user))
+		u := model.FormatUserResponse(user)
+		u.Sub = subByUserID[user.ID]
+		u.DisplayName = u.Name
+		res = append(res, u)
 	}
 	return res, nil
 }

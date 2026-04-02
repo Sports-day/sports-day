@@ -77,6 +77,14 @@ func (r user) FindUserIdpByMicrosoftUserID(ctx context.Context, db *gorm.DB, mic
 	return &record, nil
 }
 
+func (r user) BatchFindUserIdpByUserIDs(ctx context.Context, db *gorm.DB, userIDs []string) ([]*db_model.UsersIdp, error) {
+	var records []*db_model.UsersIdp
+	if err := db.Where("user_id IN (?)", userIDs).Find(&records).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return records, nil
+}
+
 func (r user) SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.UsersIdp) (*db_model.UsersIdp, error) {
 	if err := db.Save(userIdp).Error; err != nil {
 		return nil, errors.Wrap(err)
