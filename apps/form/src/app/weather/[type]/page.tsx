@@ -14,9 +14,11 @@ const GET_SPORTS = gql`
   query GetSport($sceneId: ID!) {
     scene(id: $sceneId) {
       name
-      sports {
-        id
-        name
+      sportScenes {
+        sport {
+          id
+          name
+        }
       }
     }
   }
@@ -37,7 +39,7 @@ export default function SportChoice() {
     throw error;
   }
   const weatherType = data?.scene?.name ?? "不明な種別";
-  const sportData = data?.scene?.sports ?? [];
+  const sportData = data?.scene?.sportScenes?.map((ss: any) => ss.sport) ?? [];
 
   return (
     <Box

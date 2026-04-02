@@ -13,15 +13,17 @@ export const GET_SCENE_ID = gql`
 
 export const GET_SCENE_USERS = gql`
   query GetSceneUsers {
-    sportScenes {
-      scene {
-        id
-      }
-      entries {
-        team {
-          users {
-            id
-            name
+    scenes {
+      sportScenes {
+        scene {
+          id
+        }
+        entries {
+          team {
+            users {
+              id
+              name
+            }
           }
         }
       }

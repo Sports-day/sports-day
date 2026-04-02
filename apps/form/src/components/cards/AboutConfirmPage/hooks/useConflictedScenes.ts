@@ -24,7 +24,7 @@ export function useConflictedScenes(): HookResult {
 
   const items = useMemo(() => {
     const scenes = sceneData?.scenes ?? [];
-    const sportScenes = sportSceneData?.sportScenes ?? [];
+    const sportScenes = sportSceneData?.scenes?.flatMap((s: any) => s.sportScenes) ?? [];
     const sceneUserNamesMap = new Map<string, string[]>();
 
     sportScenes.forEach((sportScene: any) => {
@@ -51,7 +51,7 @@ export function useConflictedScenes(): HookResult {
         users: Object.keys(nameCount).filter((name: string) => nameCount[name] > 1),
       };
     });
-  }, [sceneData?.scenes, sportSceneData?.sportScenes]);
+  }, [sceneData?.scenes, sportSceneData?.scenes]);
 
   return { items, loading, error };
 }

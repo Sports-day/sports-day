@@ -36,14 +36,7 @@ type SportSceneNode = {
 };
 
 type SportSceneEntriesData = {
-  sportScene: {
-    id: string;
-    entries: { team: TeamNode }[];
-  } | null;
-};
-
-type SportSceneEntriesVars = {
-  sportSceneId: string;
+  scenes: { sportScenes: { id: string; entries: { team: TeamNode }[] }[] }[];
 };
 
 type GetUsersData = {
@@ -51,7 +44,7 @@ type GetUsersData = {
 };
 
 type GetSportSceneData = {
-  sportScenes: SportSceneNode[];
+  scenes: { sportScenes: SportSceneNode[] }[];
 };
 
 type GetTeamData = {
@@ -89,16 +82,15 @@ export function useTeamEdit() {
   );
 
   const sportScene = useMemo(() => {
-    return sportSceneData?.sportScenes?.find(
-      (d) => d.sport.id === sports && d.scene.id === type,
-    );
+    return sportSceneData?.scenes
+      ?.flatMap((s) => s.sportScenes)
+      ?.find((d) => d.sport.id === sports && d.scene.id === type);
   }, [sportSceneData, sports, type]);
 
   const sportSceneId = sportScene?.id ?? "";
   const { data: sportSceneEntriesData, loading: sportSceneEntriesLoading } = useQuery<
-    SportSceneEntriesData,
-    SportSceneEntriesVars
-  >(GET_SPORTSCENE_ENTRIES, sportSceneId ? { variables: { sportSceneId } } : { skip: true });
+    SportSceneEntriesData
+  >(GET_SPORTSCENE_ENTRIES);
   const loading =
     usersLoading ||
     sportSceneLoading ||
@@ -122,10 +114,12 @@ export function useTeamEdit() {
     () => selectedMember.map((s) => s.studentId),
     [selectedMember],
   );
-  const teamCount = useMemo(
-    () => sportSceneEntriesData?.sportScene?.entries?.length ?? 0,
-    [sportSceneEntriesData?.sportScene?.entries],
-  );
+  const teamCount = useMemo(() => {
+    const sc = sportSceneEntriesData?.scenes
+      ?.flatMap((s) => s.sportScenes)
+      ?.find((ss) => ss.id === sportSceneId);
+    return sc?.entries?.length ?? 0;
+  }, [sportSceneEntriesData, sportSceneId]);
 
   const filteredUsers = useMemo(() => {
     if (!userData?.users) return [];
@@ -141,7 +135,8 @@ export function useTeamEdit() {
 
   const alreadyInAnyTeam = useMemo(() => {
     const myTeamUserIdSet = new Set(myTeamUserIds);
-    const all = sportSceneData?.sportScenes
+    const all = sportSceneData?.scenes
+      ?.flatMap((s) => s.sportScenes)
       ?.filter((sportScene) => sportScene.scene.id === type)
       .flatMap((sportScene) =>
         sportScene.entries?.flatMap((entry) => entry.team?.users ?? []) ?? [],
@@ -188,10 +183,8 @@ export function useTeamEdit() {
   const entryTeam = async (teamId: string, sportSceneIdValue: string) => {
     await createSportEntryMutation({
       variables: {
-        input: {
-          teamId,
-          sportSceneId: sportSceneIdValue,
-        },
+        sportSceneId: sportSceneIdValue,
+        teamId,
       },
     });
   };
