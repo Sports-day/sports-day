@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import {Fragment} from "react";
-import {Match} from "@/src/models/MatchModel";
+import type { Match } from "@/src/gql/__generated__/graphql";
 import {
     HiArrowRight,
     HiClock,

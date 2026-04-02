@@ -1,12 +1,12 @@
 import {Stack} from "@mui/material";
 import * as React from "react";
 import {GamePointBar} from "./GamePointBar";
-import {Game} from "@/src/models/GameModel";
+import type { Competition } from "@/src/gql/__generated__/graphql";
 import {useContext} from "react";
 import {MatchesContext} from "../../context";
 
 export type GameListContentProps = {
-    game: Game
+    game: Competition
     myTeamId?: number
 }
 

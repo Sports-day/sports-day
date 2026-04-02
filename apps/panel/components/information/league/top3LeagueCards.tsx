@@ -3,8 +3,11 @@ import {Card, Stack, SvgIcon, Typography} from "@mui/material";
 import {HiChartBar} from "react-icons/hi2";
 import * as React from "react";
 import {useState} from "react";
-import {Game, gameFactory, LeagueResult, LeagueTeamResult} from "@/src/models/GameModel";
-import {Team, teamFactory} from "@/src/models/TeamModel";
+import type { Competition as Game, Team } from "@/src/gql/__generated__/graphql";
+
+// 【未確定】REST → GraphQL 移行中
+type LeagueTeamResult = { teamId: string; score: number; rank: number }
+type LeagueResult = { gameId: string; finished: boolean; teams: LeagueTeamResult[]; createdAt: string }
 import {useAsync} from "react-use";
 
 export type Top3LeagueCardsProps = {
@@ -21,11 +24,12 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
     const [results, setResults] = useState<ExtendedLeagueTeamResult[]>([])
 
     useAsync(async () => {
-        const teams = await teamFactory().index()
+        // 【未確定】leagueStandings GraphQL クエリへの移行は後続タスクで対応
+        const teams: Team[] = await (async () => [])()
 
         const leagueResults: LeagueResult[] = []
         for (const game of props.games) {
-            const leagueResult = await gameFactory().getLeagueResult(game.id)
+            const leagueResult: LeagueResult = await (async () => ({teams: [], createdAt: "", finished: false, gameId: game.id}))()
             leagueResults.push(leagueResult)
         }
 

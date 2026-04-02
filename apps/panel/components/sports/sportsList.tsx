@@ -1,4 +1,4 @@
-import {Sport} from "@/src/models/SportModel";
+import type { Sport } from "@/src/gql/__generated__/graphql";
 import {SportCard} from "@/components/sports/sportsCard"
 import {Stack} from "@mui/material";
 

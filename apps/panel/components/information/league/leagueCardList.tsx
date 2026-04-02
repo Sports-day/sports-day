@@ -1,9 +1,12 @@
 import React, {useState} from 'react';
 import { Grid as Grid2 } from "@mui/material";
-import {Game, gameFactory, LeagueResult, LeagueTeamResult} from "@/src/models/GameModel";
-import {Team, teamFactory} from "@/src/models/TeamModel";
+import type { Competition as Game, Team } from "@/src/gql/__generated__/graphql";
 import {useAsync} from "react-use";
 import LeagueCard from "@/components/information/league/leagueCard";
+
+// 【未確定】REST → GraphQL 移行中
+type LeagueTeamResult = { teamId: string; score: number; rank: number }
+type LeagueResult = { gameId: string; finished: boolean; teams: LeagueTeamResult[]; createdAt: string }
 
 export type LeagueCardListProps = {
     games: Game[]
@@ -19,11 +22,12 @@ export default function LeagueCardList(props: LeagueCardListProps) {
     const [results, setResults] = useState<ExtendedLeagueTeamResult[]>([])
 
     useAsync(async () => {
-        const teams = await teamFactory().index()
+        // 【未確定】leagueStandings GraphQL クエリへの移行は後続タスクで対応
+        const teams: Team[] = await (async () => [])()
 
         const leagueResults: LeagueResult[] = []
         for (const game of props.games) {
-            const leagueResult = await gameFactory().getLeagueResult(game.id)
+            const leagueResult: LeagueResult = await (async () => ({teams: [], createdAt: "", finished: false, gameId: game.id}))()
             leagueResults.push(leagueResult)
         }
 

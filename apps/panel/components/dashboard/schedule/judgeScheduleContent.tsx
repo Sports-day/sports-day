@@ -9,7 +9,7 @@ import {
 import * as React from "react";
 import {useContext} from "react";
 import {LocationsContext, TeamsContext} from "../../context";
-import {Match} from "@/src/models/MatchModel";
+import type { Match } from "@/src/gql/__generated__/graphql";
 import {
     HiClock,
     HiMapPin,

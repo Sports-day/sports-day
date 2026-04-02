@@ -9,10 +9,7 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import {HiOutlineExclamationTriangle, HiUser} from "react-icons/hi2";
-import {User} from "@/src/models/UserModel";
-import {Game} from "@/src/models/GameModel";
-import {Team} from "@/src/models/TeamModel";
-import {Match} from "@/src/models/MatchModel";
+import type { User, Competition, Team, Match } from "@/src/gql/__generated__/graphql";
 import {UserMatchList} from "@/components/match/userMatchList";
 import {useFetchSports} from "@/src/features/sports/hook";
 import {useFetchImages} from "@/src/features/images/hook";
@@ -20,7 +17,7 @@ import {useFetchImages} from "@/src/features/images/hook";
 
 export type DiscoverUserProps = {
     user: User
-    games: Game[]
+    games: Competition[]
     teams: Team[]
     matches: Match[]
 }

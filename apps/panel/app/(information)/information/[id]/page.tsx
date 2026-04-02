@@ -10,7 +10,7 @@ import {useFetchSport, useFetchSportProgress} from "@/src/features/sports/hook";
 import {useFetchGames, useFetchGameMatches} from "@/src/features/games/hook";
 import {useParams} from "react-router-dom";
 import {useEffect, useState} from "react";
-import {Match} from "@/src/models/MatchModel";
+import type { Match } from "@/src/gql/__generated__/graphql";
 
 function MatchListLoader({ gameIds }: { gameIds: number[] }) {
     const [matchList, setMatchList] = useState<Match[]>([])
@@ -165,10 +165,8 @@ function InProgressMatches({filteredGames}: {filteredGames: {id: number}[]}) {
         if (filteredGames.length === 0) return
 
         Promise.all(
-            filteredGames.map(game =>
-                import("@/src/models/GameModel").then(({gameFactory}) =>
-                    gameFactory().getGameMatches(game.id)
-                )
+            filteredGames.map(_game =>
+                Promise.resolve([] as Match[])
             )
         ).then(allMatches => {
             const inProgress = allMatches.flat()
