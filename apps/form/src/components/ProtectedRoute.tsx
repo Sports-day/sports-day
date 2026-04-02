@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { User } from 'oidc-client-ts'
-import { userManager } from '@/src/lib/userManager'
+import { userManager } from '@/lib/userManager'
 
 export default function ProtectedRoute() {
-  const location = useLocation()
   const [status, setStatus] = useState<'loading' | 'ok' | 'nologin'>('loading')
 
   useEffect(() => {
@@ -15,6 +14,9 @@ export default function ProtectedRoute() {
   }, [])
 
   if (status === 'loading') return null
-  if (status === 'nologin') return <Navigate to="/login" state={{ from: location }} replace />
+  if (status === 'nologin') {
+    userManager.signinRedirect()
+    return null
+  }
   return <Outlet />
 }

@@ -7,10 +7,11 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { GlobalToast } from "@/components/ui/GlobalToast";
 import { registerNavigate } from "@/hooks/useAppNavigation";
 import { useAuth } from "@/hooks/useAuth";
-import { login, logout, hasPermission } from "@/lib/auth";
+import { userManager } from "@/lib/userManager";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/PrivacyPolicyPage"));
+const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage"));
 const CompetitionsPage = lazy(() => import("@/pages/CompetitionsPage"));
 const TeamsPage = lazy(() => import("@/pages/TeamsPage"));
 const UsersPage = lazy(() => import("@/pages/UsersPage"));
@@ -40,8 +41,14 @@ function keyToPath(key: string): string {
 function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { loggedIn } = useAuth()
+  const { loggedIn, loading } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  useEffect(() => {
+    registerNavigate((page: string) => navigate(keyToPath(page)))
+  }, [navigate])
+
+  if (loading) return <PageFallback />
 
   // 未ログインならログインページへリダイレクト
   if (!loggedIn) {
@@ -50,13 +57,10 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
 
   const selected = pathToKey(location.pathname)
 
-  useEffect(() => {
-    registerNavigate((page: string) => navigate(keyToPath(page)))
-  }, [navigate])
-
   const handleLogout = () => {
-    logout()
-    navigate("/login")
+    userManager.signoutRedirect().catch(() => {
+      userManager.removeUser().then(() => navigate("/login"))
+    })
   }
 
   return (
@@ -76,7 +80,7 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
         onMobileClose={() => setMobileOpen(false)}
         onLogout={handleLogout}
         onHome={onPrivacy}
-        checkPermission={hasPermission}
+        checkPermission={() => true}
       />
       <Box
         component="main"
@@ -112,8 +116,9 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
 }
 
 function LoginRoute({ onPrivacy }: { onPrivacy: () => void }) {
-  const navigate = useNavigate()
-  const { loggedIn } = useAuth()
+  const { loggedIn, loading } = useAuth()
+
+  if (loading) return <PageFallback />
 
   if (loggedIn) {
     return <Navigate to="/competitions" replace />
@@ -122,7 +127,7 @@ function LoginRoute({ onPrivacy }: { onPrivacy: () => void }) {
   return (
     <Suspense fallback={<PageFallback />}>
       <LoginPage
-        onLogin={() => { login(); navigate("/competitions") }}
+        onLogin={() => userManager.signinRedirect()}
         onPrivacy={onPrivacy}
       />
     </Suspense>
@@ -141,6 +146,14 @@ export default function App() {
       </Suspense>
       <Routes>
         <Route path="/login" element={<LoginRoute onPrivacy={() => setShowPrivacy(true)} />} />
+        <Route
+          path="/callback"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <AuthCallbackPage />
+            </Suspense>
+          }
+        />
         <Route path="/*" element={<AppShell onPrivacy={() => setShowPrivacy(true)} />} />
       </Routes>
     </BrowserRouter>

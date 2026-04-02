@@ -1,13 +1,22 @@
-import { useSyncExternalStore } from 'react'
-import { getAuth, subscribeAuth, getCurrentRole, hasPermission } from '@/lib/auth'
+import { useState, useEffect } from 'react'
+import { userManager } from '@/lib/userManager'
+import type { User } from 'oidc-client-ts'
 
 export function useAuth() {
-  const auth = useSyncExternalStore(subscribeAuth, getAuth)
+  const [user, setUser] = useState<User | null | undefined>(undefined)
+
+  useEffect(() => {
+    userManager.getUser().then(setUser)
+    userManager.events.addUserLoaded(setUser)
+    userManager.events.addUserUnloaded(() => setUser(null))
+    return () => {
+      userManager.events.removeUserLoaded(setUser)
+    }
+  }, [])
 
   return {
-    loggedIn: auth.loggedIn,
-    roleId: auth.roleId,
-    role: getCurrentRole(),
-    hasPermission,
+    loggedIn: !!(user && !user.expired),
+    loading: user === undefined,
+    user,
   }
 }

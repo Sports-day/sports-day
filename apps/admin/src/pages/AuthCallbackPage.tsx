@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LinearProgress, Box, Typography } from '@mui/material'
-import { userManager } from '@/src/lib/userManager'
+import { userManager } from '@/lib/userManager'
 
 export default function AuthCallbackPage() {
   const isRunning = useRef(false)
@@ -16,7 +16,7 @@ export default function AuthCallbackPage() {
     isRunning.current = true
 
     userManager.signinRedirectCallback()
-      .then(() => navigate('/', { replace: true }))
+      .then(() => navigate('/competitions', { replace: true }))
       .catch(() => navigate('/login'))
   }, [navigate])
 
