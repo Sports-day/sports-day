@@ -1,9 +1,9 @@
 import {Card, CardContent, Stack, Typography}from "@mui/material";
-import {Game} from "../../../src/models/GameModel";
+import type { Competition } from "@/src/gql/__generated__/graphql";
 import {GameBestList} from "./GameBestList";
 
 export type GameBestProps = {
-    games: Game[]
+    games: Competition[]
     gameId: number | null
 }
 

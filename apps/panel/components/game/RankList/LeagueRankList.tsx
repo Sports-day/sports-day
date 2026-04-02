@@ -1,33 +1,37 @@
 import {LeagueRankListCard} from "@/components/game/RankList/LeagueRankListCard";
 import {useTheme, Box, Card, Stack, Typography} from "@mui/material";
-import {Team} from "@/src/models/TeamModel";
+import type { Team } from "@/src/gql/__generated__/graphql";
 import * as React from "react";
 import {useState} from "react";
 import {useAsync} from "react-use";
-import {gameFactory, LeagueResult} from "@/src/models/GameModel";
+
+// 【未確定】leagueStandings GraphQL クエリへの移行は後続タスクで対応
+type LeagueTeamResult = { teamId: string; score: number; rank: number }
+type LeagueResult = { gameId: string; finished: boolean; teams: LeagueTeamResult[]; createdAt: string }
 
 export type LeagueRankListProps = {
     dashboard?: boolean,
     myTeamRank?: number,
     myTeam?: Team,
-    gameId?: number,
+    gameId?: string,
 }
 
 export const LeagueRankList = (props: LeagueRankListProps) => {
     const theme = useTheme();
 
     const [teams, setTeams] = useState<Team[]>([]);
-    const [leagueResult, setLeagueResult] = useState<LeagueResult>({teams: [], createdAt: "", finished: false, gameId: 0});
+    const [leagueResult, setLeagueResult] = useState<LeagueResult>({teams: [], createdAt: "", finished: false, gameId: ""});
     useAsync(async () => {
         if (!props.gameId) {
             return;
         }
 
         try {
-            setTeams(await gameFactory().getGameEntries(props.gameId))
-            setLeagueResult(await gameFactory().getLeagueResult(props.gameId))
+            // 【未確定】REST → GraphQL 移行中
+            setTeams(await (async () => [] as Team[])())
+            setLeagueResult(await (async () => ({teams: [], createdAt: "", finished: false, gameId: props.gameId ?? ""}))())
         } catch (e) {
-            setLeagueResult({teams: [], createdAt: "", finished: false, gameId: 0});
+            setLeagueResult({teams: [], createdAt: "", finished: false, gameId: ""});
             setTeams([])
         }
     })

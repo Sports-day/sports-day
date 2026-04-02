@@ -3,7 +3,7 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import {ScheduleContent} from "./judgeScheduleContent";
-import {Match} from "../../../src/models/MatchModel";
+import type { Match } from "@/src/gql/__generated__/graphql";
 
 export type JudgeScheduleProps = {
     sportId: number

@@ -13,21 +13,18 @@ import {
     HiChartBar,
     HiOutlineExclamationTriangle, HiUser
 } from "react-icons/hi2";
-import {Sport} from "@/src/models/SportModel";
-import {Team} from "@/src/models/TeamModel";
-import {User} from "@/src/models/UserModel";
+import type { Sport, Team, User, Competition } from "@/src/gql/__generated__/graphql";
 import {Fragment, useState} from "react";
 import * as React from "react";
 import { Link } from "react-router-dom";
 import Rank from "./Rank"
 import {useTheme} from "@mui/material/styles";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
-import {Game} from "@/src/models/GameModel";
 
 
 export type OverviewProps = {
     mySport: Sport;
-    myGame: Game;
+    myGame: Competition;
     myTeam: Team;
     myTeamUsers: User[];
     myTeamRank: number;
