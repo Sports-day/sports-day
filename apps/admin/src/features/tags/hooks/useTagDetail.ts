@@ -3,6 +3,7 @@ import {
   useGetAdminSceneForTagQuery,
   useUpdateAdminSceneForTagMutation,
   useDeleteAdminSceneForTagMutation,
+  useRestoreAdminSceneForTagMutation,
   GetAdminScenesForTagsDocument,
 } from '@/gql/__generated__/graphql'
 
@@ -11,7 +12,6 @@ export function useTagDetail(tagId: string) {
   const scene = data?.scene
 
   const [name, setName] = useState('')
-  const [enabled, setEnabled] = useState(true) // 【未確定】GraphQL Scene に enabled はない
 
   useEffect(() => {
     if (scene?.name !== undefined) setName(scene.name)
@@ -23,6 +23,9 @@ export function useTagDetail(tagId: string) {
   const [deleteScene] = useDeleteAdminSceneForTagMutation({
     refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
   })
+  const [restoreScene] = useRestoreAdminSceneForTagMutation({
+    refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
+  })
 
   const handleSave = async () => {
     await updateScene({ variables: { id: tagId, input: { name } } })
@@ -32,13 +35,17 @@ export function useTagDetail(tagId: string) {
     await deleteScene({ variables: { id: tagId } })
   }
 
+  const handleRestore = async () => {
+    await restoreScene({ variables: { id: tagId } })
+  }
+
   return {
     name,
     setName,
-    enabled,
-    setEnabled,
+    isDeleted: scene?.isDeleted ?? false,
     handleSave,
     handleDelete,
+    handleRestore,
     tagName: scene?.name ?? '',
     loading,
     error: error ?? null,

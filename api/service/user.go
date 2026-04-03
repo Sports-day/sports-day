@@ -43,6 +43,34 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 	user.Name.Valid = input.Name != ""
 	user.Email.String = input.Email
 	user.Email.Valid = input.Email != ""
+	if input.Gender != nil {
+		user.Gender.String = *input.Gender
+		user.Gender.Valid = *input.Gender != ""
+	}
+	row, err := s.userRepository.Save(ctx, s.db, user)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return row, nil
+}
+
+func (s *User) Update(ctx context.Context, id string, input *model.UpdateUserInput) (*db_model.User, error) {
+	user, err := s.userRepository.Get(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if input.Name != nil {
+		user.Name.String = *input.Name
+		user.Name.Valid = *input.Name != ""
+	}
+	if input.Email != nil {
+		user.Email.String = *input.Email
+		user.Email.Valid = *input.Email != ""
+	}
+	if input.Gender != nil {
+		user.Gender.String = *input.Gender
+		user.Gender.Valid = *input.Gender != ""
+	}
 	row, err := s.userRepository.Save(ctx, s.db, user)
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -74,6 +102,17 @@ func (s *User) GetRoleMapByUserIDs(ctx context.Context, userIDs []string) (map[s
 		roleMap[rec.UserID] = rec.Role
 	}
 	return roleMap, nil
+}
+
+func (s *User) Delete(ctx context.Context, id string) (*db_model.User, error) {
+	user, err := s.userRepository.Get(ctx, s.db, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if err := s.userRepository.Delete(ctx, s.db, id); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return user, nil
 }
 
 func (s *User) GetUsersMapByIDs(ctx context.Context, userIDs []string) (map[string]*db_model.User, error) {

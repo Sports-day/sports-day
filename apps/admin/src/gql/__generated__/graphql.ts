@@ -355,6 +355,7 @@ export type Mutation = {
   removeGroupUsers: Group;
   /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
   resetTournamentBrackets: Competition;
+  restoreScene: Scene;
   /** スポーツのランキングルールを設定する（全削除→再挿入） */
   setRankingRules: Sport;
   /** リーグのタイブレーク優先度を設定する */
@@ -624,6 +625,11 @@ export type MutationRemoveGroupUsersArgs = {
 
 export type MutationResetTournamentBracketsArgs = {
   competitionId: Scalars['ID']['input'];
+};
+
+
+export type MutationRestoreSceneArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -945,6 +951,7 @@ export type Rule = {
 export type Scene = {
   __typename?: 'Scene';
   id: Scalars['ID']['output'];
+  isDeleted: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   sportScenes: Array<SportScene>;
 };
@@ -1457,14 +1464,14 @@ export type GetAdminMeQuery = { __typename?: 'Query', me: { __typename?: 'User',
 export type GetAdminScenesForTagsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminScenesForTagsQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string }> };
+export type GetAdminScenesForTagsQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, isDeleted: boolean }> };
 
 export type GetAdminSceneForTagQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminSceneForTagQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, name: string } };
+export type GetAdminSceneForTagQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, name: string, isDeleted: boolean } };
 
 export type CreateAdminSceneForTagMutationVariables = Exact<{
   input: CreateSceneInput;
@@ -1487,6 +1494,13 @@ export type DeleteAdminSceneForTagMutationVariables = Exact<{
 
 
 export type DeleteAdminSceneForTagMutation = { __typename?: 'Mutation', deleteScene: { __typename?: 'Scene', id: string } };
+
+export type RestoreAdminSceneForTagMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type RestoreAdminSceneForTagMutation = { __typename?: 'Mutation', restoreScene: { __typename?: 'Scene', id: string, name: string, isDeleted: boolean } };
 
 export type GetAdminTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -3217,6 +3231,7 @@ export const GetAdminScenesForTagsDocument = gql`
   scenes {
     id
     name
+    isDeleted
   }
 }
     `;
@@ -3257,6 +3272,7 @@ export const GetAdminSceneForTagDocument = gql`
   scene(id: $id) {
     id
     name
+    isDeleted
   }
 }
     `;
@@ -3395,6 +3411,41 @@ export function useDeleteAdminSceneForTagMutation(baseOptions?: Apollo.MutationH
 export type DeleteAdminSceneForTagMutationHookResult = ReturnType<typeof useDeleteAdminSceneForTagMutation>;
 export type DeleteAdminSceneForTagMutationResult = Apollo.MutationResult<DeleteAdminSceneForTagMutation>;
 export type DeleteAdminSceneForTagMutationOptions = Apollo.BaseMutationOptions<DeleteAdminSceneForTagMutation, DeleteAdminSceneForTagMutationVariables>;
+export const RestoreAdminSceneForTagDocument = gql`
+    mutation RestoreAdminSceneForTag($id: ID!) {
+  restoreScene(id: $id) {
+    id
+    name
+    isDeleted
+  }
+}
+    `;
+export type RestoreAdminSceneForTagMutationFn = Apollo.MutationFunction<RestoreAdminSceneForTagMutation, RestoreAdminSceneForTagMutationVariables>;
+
+/**
+ * __useRestoreAdminSceneForTagMutation__
+ *
+ * To run a mutation, you first call `useRestoreAdminSceneForTagMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRestoreAdminSceneForTagMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [restoreAdminSceneForTagMutation, { data, loading, error }] = useRestoreAdminSceneForTagMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRestoreAdminSceneForTagMutation(baseOptions?: Apollo.MutationHookOptions<RestoreAdminSceneForTagMutation, RestoreAdminSceneForTagMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RestoreAdminSceneForTagMutation, RestoreAdminSceneForTagMutationVariables>(RestoreAdminSceneForTagDocument, options);
+      }
+export type RestoreAdminSceneForTagMutationHookResult = ReturnType<typeof useRestoreAdminSceneForTagMutation>;
+export type RestoreAdminSceneForTagMutationResult = Apollo.MutationResult<RestoreAdminSceneForTagMutation>;
+export type RestoreAdminSceneForTagMutationOptions = Apollo.BaseMutationOptions<RestoreAdminSceneForTagMutation, RestoreAdminSceneForTagMutationVariables>;
 export const GetAdminTeamsDocument = gql`
     query GetAdminTeams {
   teams {

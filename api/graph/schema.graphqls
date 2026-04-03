@@ -3,6 +3,13 @@ directive @hasPermission(permission: String!) on FIELD_DEFINITION
 input CreateUserInput {
   name: String!
   email: String!
+  gender: String
+}
+
+input UpdateUserInput {
+  name: String
+  email: String
+  gender: String
 }
 
 input CreateGroupInput {
@@ -382,6 +389,8 @@ type ImageUploadURL {
 
 type Mutation {
   createUser(input: CreateUserInput!): User! @hasPermission(permission: "user:write")
+  updateUser(id: ID!, input: UpdateUserInput!): User! @hasPermission(permission: "user:write")
+  deleteUser(id: ID!): User! @hasPermission(permission: "user:write")
   createGroup(input: CreateGroupInput!): Group! @hasPermission(permission: "group:write")
   deleteGroup(id: ID!): Group! @hasPermission(permission: "group:write")
   updateGroup(id: ID!, input: UpdateGroupInput!): Group! @hasPermission(permission: "group:write")
@@ -421,6 +430,7 @@ type Mutation {
   createScene(input: CreateSceneInput!): Scene! @hasPermission(permission: "scene:write")
   updateScene(id: ID!, input: UpdateSceneInput!): Scene! @hasPermission(permission: "scene:write")
   deleteScene(id: ID!): Scene! @hasPermission(permission: "scene:write")
+  restoreScene(id: ID!): Scene! @hasPermission(permission: "scene:write")
   createInformation(input: CreateInformationInput!): Information! @hasPermission(permission: "information:write")
   deleteInformation(id: ID!): Information! @hasPermission(permission: "information:write")
   updateInformation(id: ID!, input: UpdateInformationInput!): Information! @hasPermission(permission: "information:write")

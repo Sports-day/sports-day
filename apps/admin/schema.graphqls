@@ -2,6 +2,7 @@ type User {
   id: ID!
   name: String!
   email: String!
+  gender: String
   groups: [Group!]!
   teams: [Team!]!
   judgments: [Judgment!]!
@@ -145,6 +146,7 @@ type Image {
 type Scene {
   id: ID!
   name: String!
+  isDeleted: Boolean!
   sportScenes: [SportScene!]!
 }
 
@@ -237,6 +239,13 @@ type Rule {
 input CreateUserInput {
   name: String!
   email: String!
+  gender: String
+}
+
+input UpdateUserInput {
+  name: String
+  email: String
+  gender: String
 }
 
 input CreateGroupInput {
@@ -618,6 +627,8 @@ type ImageUploadURL {
 
 type Mutation {
   createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): User!
   createGroup(input: CreateGroupInput!): Group!
   deleteGroup(id: ID!): Group!
   updateGroup(id: ID!, input: UpdateGroupInput!): Group!
@@ -657,6 +668,7 @@ type Mutation {
   createScene(input: CreateSceneInput!): Scene!
   updateScene(id: ID!, input: UpdateSceneInput!): Scene!
   deleteScene(id: ID!): Scene!
+  restoreScene(id: ID!): Scene!
   createInformation(input: CreateInformationInput!): Information!
   deleteInformation(id: ID!): Information!
   updateInformation(id: ID!, input: UpdateInformationInput!): Information!

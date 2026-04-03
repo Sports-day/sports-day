@@ -13,6 +13,7 @@ type User {
   id: ID!
   name: String!
   email: String!
+  gender: String
   identify: UserIdentify!
   role: Role!
   groups: [Group!]!
@@ -157,6 +158,7 @@ type Image {
 type Scene {
   id: ID!
   name: String!
+  isDeleted: Boolean!
   sportScenes: [SportScene!]!
 }
 

@@ -38,9 +38,24 @@ func (r scene) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Sc
 	return &scene, nil
 }
 
+func (r scene) Restore(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error) {
+	var scene db_model.Scene
+	if err := db.First(&scene, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrSceneNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+	scene.IsDeleted = false
+	if err := db.Save(&scene).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return &scene, nil
+}
+
 func (r scene) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error) {
 	var scene db_model.Scene
-	if err := db.First(&scene, "id = ? AND is_deleted = ?", id, false).Error; err != nil {
+	if err := db.First(&scene, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrSceneNotFound
 		}
@@ -51,7 +66,7 @@ func (r scene) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene
 
 func (r scene) List(ctx context.Context, db *gorm.DB) ([]*db_model.Scene, error) {
 	var scenes []*db_model.Scene
-	if err := db.Where("is_deleted = ?", false).Find(&scenes).Error; err != nil {
+	if err := db.Find(&scenes).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return scenes, nil

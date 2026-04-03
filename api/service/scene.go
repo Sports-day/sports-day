@@ -88,6 +88,10 @@ func (s *Scene) Delete(ctx context.Context, id string) (*db_model.Scene, error) 
 	return s.sceneRepo.Delete(ctx, s.db, id)
 }
 
+func (s *Scene) Restore(ctx context.Context, id string) (*db_model.Scene, error) {
+	return s.sceneRepo.Restore(ctx, s.db, id)
+}
+
 func (s *Scene) AddSportScenes(ctx context.Context, sceneID string, sportIDs []string) (*db_model.Scene, error) {
 	scene, err := s.sceneRepo.Get(ctx, s.db, sceneID)
 	if err != nil {

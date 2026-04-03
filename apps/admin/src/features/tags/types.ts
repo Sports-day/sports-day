@@ -1,5 +1,5 @@
 export type Tag = {
   id: string
   name: string
-  enabled: boolean
+  isDeleted: boolean
 }

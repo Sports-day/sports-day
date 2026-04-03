@@ -7,7 +7,7 @@ export function useUsers() {
     id: u.id,
     name: u.name,
     email: u.email,
-    gender: '男性' as '男性' | '女性',  // 【未確定】 GraphQL User に gender フィールドなし
+    gender: (u.gender ?? '') as '男性' | '女性',
     class: u.groups[0]?.name ?? '',
     teams: u.teams.map(t => t.id),
     role: undefined,

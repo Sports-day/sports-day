@@ -1,13 +1,14 @@
 import { gql } from '@apollo/client'
 
 // tags feature は GraphQL の scenes にマッピングされる
-// Tag.id/name → Scene.id/name、Tag.enabled は GraphQL に存在しない（ローカル状態）
+// Tag.id/name/isDeleted → Scene.id/name/isDeleted
 
 export const GET_ADMIN_SCENES_FOR_TAGS = gql`
   query GetAdminScenesForTags {
     scenes {
       id
       name
+      isDeleted
     }
   }
 `
@@ -17,6 +18,7 @@ export const GET_ADMIN_SCENE_FOR_TAG = gql`
     scene(id: $id) {
       id
       name
+      isDeleted
     }
   }
 `
@@ -43,6 +45,16 @@ export const DELETE_ADMIN_SCENE_FOR_TAG = gql`
   mutation DeleteAdminSceneForTag($id: ID!) {
     deleteScene(id: $id) {
       id
+    }
+  }
+`
+
+export const RESTORE_ADMIN_SCENE_FOR_TAG = gql`
+  mutation RestoreAdminSceneForTag($id: ID!) {
+    restoreScene(id: $id) {
+      id
+      name
+      isDeleted
     }
   }
 `

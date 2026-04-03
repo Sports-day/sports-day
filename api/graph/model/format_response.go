@@ -7,10 +7,15 @@ import (
 )
 
 func FormatUserResponse(user *db_model.User) *User {
+	var gender *string
+	if user.Gender.Valid {
+		gender = &user.Gender.String
+	}
 	return &User{
-		ID:    user.ID,
-		Name:  user.Name.String,
-		Email: user.Email.String,
+		ID:     user.ID,
+		Name:   user.Name.String,
+		Email:  user.Email.String,
+		Gender: gender,
 	}
 }
 
@@ -32,8 +37,9 @@ func FormatInformationResponse(information *db_model.Information) *Information {
 
 func FormatSceneResponse(scene *db_model.Scene) *Scene {
 	return &Scene{
-		ID:   scene.ID,
-		Name: scene.Name,
+		ID:        scene.ID,
+		Name:      scene.Name,
+		IsDeleted: scene.IsDeleted,
 	}
 }
 

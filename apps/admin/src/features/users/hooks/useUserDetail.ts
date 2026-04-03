@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import { useGetAdminUserQuery } from '@/gql/__generated__/graphql'
+import {
+  useGetAdminUserQuery,
+  useUpdateAdminUserMutation,
+  useDeleteAdminUserMutation,
+  GetAdminUsersDocument,
+} from '@/gql/__generated__/graphql'
 
 const GENDER_OPTIONS = ['男性', '女性']
 const CLASS_OPTIONS = ['Class A', 'Class B', 'Class C']
@@ -12,18 +17,37 @@ export function useUserDetail(userId: string) {
   })
   const user = data?.user
 
-  // 【未確定】 gender, class, role は GraphQL User に存在しないためローカル状態で管理
-  const [gender, setGender] = useState('')
+  const [gender, setGender] = useState(user?.gender ?? '')
   const [userClass, setUserClass] = useState(user?.groups[0]?.name ?? '')
   const [role, setRole] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  const handleSave = () => {
-    // 【未確定】 GraphQL に gender/class/role 更新 mutation が必要
+  const [updateUser] = useUpdateAdminUserMutation({
+    refetchQueries: [{ query: GetAdminUsersDocument }],
+  })
+
+  const [deleteUser] = useDeleteAdminUserMutation({
+    refetchQueries: [{ query: GetAdminUsersDocument }],
+  })
+
+  const handleSave = async () => {
+    if (!userId) return
+    await updateUser({
+      variables: {
+        id: userId,
+        input: {
+          name: user?.name,
+          email: user?.email,
+          gender: gender || undefined,
+        },
+      },
+    })
   }
 
-  const handleDeleteUser = () => {
-    // 【未確定】 deleteUser mutation が GraphQL スキーマに存在しないため未実装
+  const handleDeleteUser = async () => {
+    if (!userId) return
+    await deleteUser({ variables: { id: userId } })
+    setDeleteDialogOpen(false)
   }
 
   return {

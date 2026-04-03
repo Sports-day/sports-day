@@ -6,9 +6,10 @@ type Group struct {
 }
 
 type User struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID     string  `json:"id"`
+	Name   string  `json:"name"`
+	Email  string  `json:"email"`
+	Gender *string `json:"gender"`
 }
 
 type Team struct {
@@ -106,8 +107,9 @@ type Rule struct {
 }
 
 type Scene struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	IsDeleted bool   `json:"isDeleted"`
 }
 
 type Sport struct {

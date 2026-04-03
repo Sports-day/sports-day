@@ -3,7 +3,7 @@ import {
   Button,
   Card,
   CardContent,
-  Checkbox,
+  Chip,
   CircularProgress,
   Table,
   TableBody,
@@ -50,7 +50,7 @@ type Props = {
 }
 
 export function TagListPage({ onCreateClick, onTagClick }: Props) {
-  const { data: tags, loading, error, toggleTag } = useTags()
+  const { data: tags, loading, error } = useTags()
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <Typography sx={{ color: '#D71212', mt: 2 }}>データの取得に失敗しました</Typography>
@@ -83,7 +83,7 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
               <TableRow>
                 <TableCell sx={TABLE_HEAD_SX}>タグID</TableCell>
                 <TableCell sx={TABLE_HEAD_SX}>名前</TableCell>
-                <TableCell sx={TABLE_HEAD_SX}>有効</TableCell>
+                <TableCell sx={TABLE_HEAD_SX}>状態</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -98,11 +98,14 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
                   <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onTagClick(tag.id)}>{tag.id}</TableCell>
                   <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onTagClick(tag.id)}>{tag.name}</TableCell>
                   <TableCell sx={TABLE_CELL_SX}>
-                    <Checkbox
-                      checked={tag.enabled}
+                    <Chip
+                      label={tag.isDeleted ? '無効' : '有効'}
                       size="small"
-                      onChange={() => toggleTag(tag.id)}
-                      sx={{ p: 0, color: '#9E9E9E', '&.Mui-checked': { color: '#3949AB' } }}
+                      sx={{
+                        fontSize: '11px',
+                        backgroundColor: tag.isDeleted ? '#F5F5F5' : '#E8F5E9',
+                        color: tag.isDeleted ? '#9E9E9E' : '#2E7D32',
+                      }}
                     />
                   </TableCell>
                 </TableRow>

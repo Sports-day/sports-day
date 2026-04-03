@@ -6,10 +6,11 @@ package graph
 
 import (
 	"context"
+	"errors"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
-	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/slices"
 )
 

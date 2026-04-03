@@ -1,4 +1,4 @@
-import { Box, Breadcrumbs, Button, ButtonBase, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, TextField, Typography } from '@mui/material'
+import { Box, Breadcrumbs, Button, ButtonBase, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
@@ -12,7 +12,7 @@ type Props = {
 }
 
 export function TagDetailPage({ tagId, onBack }: Props) {
-  const { name, setName, enabled, setEnabled, handleSave, handleDelete, tagName } = useTagDetail(tagId)
+  const { name, setName, isDeleted, handleSave, handleDelete, handleRestore, tagName } = useTagDetail(tagId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [dirty, setDirty] = useState(false)
   useUnsavedWarning(dirty)
@@ -29,6 +29,11 @@ export function TagDetailPage({ tagId, onBack }: Props) {
     handleDelete()
     showToast('タグを削除しました')
     onBack()
+  }
+
+  const onRestore = () => {
+    handleRestore()
+    showToast('タグを復元しました')
   }
 
   return (
@@ -53,28 +58,31 @@ export function TagDetailPage({ tagId, onBack }: Props) {
             onChange={(e) => setName(e.target.value)}
             sx={{ ...CARD_FIELD_SX, width: 200 }}
           />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
-                size="small"
-                sx={{ color: '#5B6DC6', '&.Mui-checked': { color: '#5B6DC6' } }}
-              />
-            }
-            label={<Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>有効</Typography>}
-            sx={{ ml: 0 }}
-          />
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            onClick={() => setDeleteDialogOpen(true)}
-            sx={DELETE_BUTTON_SX}
-          >
-            このタグを削除
-          </Button>
+          {isDeleted ? (
+            <Button
+              variant="outlined"
+              onClick={onRestore}
+              sx={{
+                fontSize: '13px',
+                color: '#2E7D32',
+                borderColor: '#2E7D32',
+                '&:hover': { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' },
+              }}
+            >
+              このタグを復元
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              onClick={() => setDeleteDialogOpen(true)}
+              sx={DELETE_BUTTON_SX}
+            >
+              このタグを削除
+            </Button>
+          )}
           <Button
             variant="contained"
             fullWidth
@@ -99,7 +107,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
         </DialogTitle>
         <DialogContent sx={{ pb: 1 }}>
           <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-            「{tagName}」を削除します。この操作は元に戻せません。
+            「{tagName}」を削除します。削除後は一覧から無効として表示されます。
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 2, pb: 2, gap: 1 }}>
