@@ -35,9 +35,10 @@ func (s *Information) Create(ctx context.Context, input *model.CreateInformation
 	var scheduledAt sql.NullTime
 	if input.ScheduledAt != nil && *input.ScheduledAt != "" {
 		t, err := time.Parse(time.RFC3339, *input.ScheduledAt)
-		if err == nil {
-			scheduledAt = sql.NullTime{Time: t, Valid: true}
+		if err != nil {
+			return nil, errors.Wrap(err)
 		}
+		scheduledAt = sql.NullTime{Time: t, Valid: true}
 	}
 
 	information := &db_model.Information{
@@ -85,9 +86,10 @@ func (s *Information) Update(ctx context.Context, input model.UpdateInformationI
 			information.ScheduledAt = sql.NullTime{Valid: false}
 		} else {
 			t, err := time.Parse(time.RFC3339, *input.ScheduledAt)
-			if err == nil {
-				information.ScheduledAt = sql.NullTime{Time: t, Valid: true}
+			if err != nil {
+				return nil, errors.Wrap(err)
 			}
+			information.ScheduledAt = sql.NullTime{Time: t, Valid: true}
 		}
 	}
 
