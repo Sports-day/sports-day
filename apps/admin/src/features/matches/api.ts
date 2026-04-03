@@ -8,6 +8,7 @@ export const GET_ADMIN_MATCHES = gql`
       status
       location { id name }
       competition { id name }
+      winnerTeam { id }
       entries { id team { id name } score }
     }
   }

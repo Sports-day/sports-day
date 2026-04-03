@@ -20,7 +20,6 @@ export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
   const closeConfirm = () => setIsConfirmOpen(false)
 
   const confirmSave = () => {
-    // 【未確定】 startTime, matchDuration, breakDuration は UI から取得する必要がある
     generateRoundRobin({
       variables: {
         id: leagueId,
@@ -28,7 +27,7 @@ export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
           startTime: new Date().toISOString(),
           matchDuration: 15,
           breakDuration: 5,
-          // locationId: 【未確定】 selectedLocation から ID への変換が必要
+          locationId: selectedLocation || undefined,
         },
       },
       refetchQueries: ['GetAdminMatches'],

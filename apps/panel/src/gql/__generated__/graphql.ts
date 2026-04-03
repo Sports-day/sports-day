@@ -1184,7 +1184,21 @@ export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: '
 export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string }> }> };
+export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string }>, league?: { __typename?: 'League', id: string } | null }> };
+
+export type GetPanelLeagueStandingsQueryVariables = Exact<{
+  leagueId: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelLeagueStandingsQuery = { __typename?: 'Query', leagueStandings: Array<{ __typename?: 'Standing', id: string, rank: number, points: number, win: number, draw: number, lose: number, team: { __typename?: 'Team', id: string } }> };
+
+export type GetPanelTournamentRankingQueryVariables = Exact<{
+  competitionId: Scalars['ID']['input'];
+}>;
+
+
+export type GetPanelTournamentRankingQuery = { __typename?: 'Query', tournamentRanking: Array<{ __typename?: 'TournamentRanking', rank: number, isTied: boolean, team: { __typename?: 'Team', id: string } }> };
 
 export type GetPanelCompetitionQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1405,6 +1419,9 @@ export const GetPanelCompetitionsDocument = gql`
     teams {
       id
     }
+    league {
+      id
+    }
   }
 }
     `;
@@ -1440,6 +1457,98 @@ export type GetPanelCompetitionsQueryHookResult = ReturnType<typeof useGetPanelC
 export type GetPanelCompetitionsLazyQueryHookResult = ReturnType<typeof useGetPanelCompetitionsLazyQuery>;
 export type GetPanelCompetitionsSuspenseQueryHookResult = ReturnType<typeof useGetPanelCompetitionsSuspenseQuery>;
 export type GetPanelCompetitionsQueryResult = Apollo.QueryResult<GetPanelCompetitionsQuery, GetPanelCompetitionsQueryVariables>;
+export const GetPanelLeagueStandingsDocument = gql`
+    query GetPanelLeagueStandings($leagueId: ID!) {
+  leagueStandings(leagueId: $leagueId) {
+    id
+    team {
+      id
+    }
+    rank
+    points
+    win
+    draw
+    lose
+  }
+}
+    `;
+
+/**
+ * __useGetPanelLeagueStandingsQuery__
+ *
+ * To run a query within a React component, call `useGetPanelLeagueStandingsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelLeagueStandingsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelLeagueStandingsQuery({
+ *   variables: {
+ *      leagueId: // value for 'leagueId'
+ *   },
+ * });
+ */
+export function useGetPanelLeagueStandingsQuery(baseOptions: Apollo.QueryHookOptions<GetPanelLeagueStandingsQuery, GetPanelLeagueStandingsQueryVariables> & ({ variables: GetPanelLeagueStandingsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelLeagueStandingsQuery, GetPanelLeagueStandingsQueryVariables>(GetPanelLeagueStandingsDocument, options);
+      }
+export function useGetPanelLeagueStandingsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelLeagueStandingsQuery, GetPanelLeagueStandingsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelLeagueStandingsQuery, GetPanelLeagueStandingsQueryVariables>(GetPanelLeagueStandingsDocument, options);
+        }
+export function useGetPanelLeagueStandingsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelLeagueStandingsQuery, GetPanelLeagueStandingsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelLeagueStandingsQuery, GetPanelLeagueStandingsQueryVariables>(GetPanelLeagueStandingsDocument, options);
+        }
+export type GetPanelLeagueStandingsQueryHookResult = ReturnType<typeof useGetPanelLeagueStandingsQuery>;
+export type GetPanelLeagueStandingsLazyQueryHookResult = ReturnType<typeof useGetPanelLeagueStandingsLazyQuery>;
+export type GetPanelLeagueStandingsSuspenseQueryHookResult = ReturnType<typeof useGetPanelLeagueStandingsSuspenseQuery>;
+export type GetPanelLeagueStandingsQueryResult = Apollo.QueryResult<GetPanelLeagueStandingsQuery, GetPanelLeagueStandingsQueryVariables>;
+export const GetPanelTournamentRankingDocument = gql`
+    query GetPanelTournamentRanking($competitionId: ID!) {
+  tournamentRanking(competitionId: $competitionId) {
+    rank
+    team {
+      id
+    }
+    isTied
+  }
+}
+    `;
+
+/**
+ * __useGetPanelTournamentRankingQuery__
+ *
+ * To run a query within a React component, call `useGetPanelTournamentRankingQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPanelTournamentRankingQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPanelTournamentRankingQuery({
+ *   variables: {
+ *      competitionId: // value for 'competitionId'
+ *   },
+ * });
+ */
+export function useGetPanelTournamentRankingQuery(baseOptions: Apollo.QueryHookOptions<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables> & ({ variables: GetPanelTournamentRankingQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables>(GetPanelTournamentRankingDocument, options);
+      }
+export function useGetPanelTournamentRankingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables>(GetPanelTournamentRankingDocument, options);
+        }
+export function useGetPanelTournamentRankingSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables>(GetPanelTournamentRankingDocument, options);
+        }
+export type GetPanelTournamentRankingQueryHookResult = ReturnType<typeof useGetPanelTournamentRankingQuery>;
+export type GetPanelTournamentRankingLazyQueryHookResult = ReturnType<typeof useGetPanelTournamentRankingLazyQuery>;
+export type GetPanelTournamentRankingSuspenseQueryHookResult = ReturnType<typeof useGetPanelTournamentRankingSuspenseQuery>;
+export type GetPanelTournamentRankingQueryResult = Apollo.QueryResult<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables>;
 export const GetPanelCompetitionDocument = gql`
     query GetPanelCompetition($id: ID!) {
   competition(id: $id) {

@@ -1,7 +1,13 @@
 import {
   useGetPanelCompetitionsQuery,
   useGetPanelCompetitionQuery,
+  useGetPanelLeagueStandingsQuery,
+  useGetPanelTournamentRankingQuery,
+  CompetitionType,
+  GetPanelCompetitionsQuery,
 } from "@/src/gql/__generated__/graphql";
+
+type GqlCompetition = GetPanelCompetitionsQuery["competitions"][0];
 
 // games = competitions（同義語）。GameRepository → Competition クエリにマッピング
 
@@ -50,20 +56,55 @@ export const useFetchGameEntries = (gameId: string) => {
   };
 };
 
-// 【未確定】leagueStandings / tournamentRanking クエリへの移行は TASK-005 で対応
-export const useFetchGameResult = (_gameId: string) => {
+export const useFetchGameResult = (gameId: string) => {
+  const { data: compData, loading: isCompFetching } = useGetPanelCompetitionQuery({
+    variables: { id: gameId },
+    skip: !gameId,
+  });
+  const competition = compData?.competition;
+  const leagueId = (competition as GqlCompetition | undefined)?.league?.id ?? '';
+  const isLeague = competition?.type === CompetitionType.League;
+
+  const { data: standingsData, loading: isStandingsFetching } = useGetPanelLeagueStandingsQuery({
+    variables: { leagueId },
+    skip: !leagueId || !isLeague,
+  });
+  const { data: rankingData, loading: isRankingFetching } = useGetPanelTournamentRankingQuery({
+    variables: { competitionId: gameId },
+    skip: !gameId || isLeague,
+  });
+
+  const result = isLeague
+    ? (standingsData?.leagueStandings ?? undefined)
+    : (rankingData?.tournamentRanking ?? undefined);
+
   return {
-    result: undefined,
-    isFetching: false,
+    result,
+    isFetching: isCompFetching || isStandingsFetching || isRankingFetching,
     refresh: () => {},
   };
 };
 
-// 【未確定】leagueStandings / tournamentRanking クエリへの移行は TASK-005 で対応
-export const useFetchGameResultWithoutFetchGame = (_game: unknown, _restrict: boolean = true) => {
+export const useFetchGameResultWithoutFetchGame = (game: GqlCompetition | null | undefined, _restrict: boolean = true) => {
+  const leagueId = game?.league?.id ?? '';
+  const isLeague = game?.type === CompetitionType.League;
+
+  const { data: standingsData, loading: isStandingsFetching } = useGetPanelLeagueStandingsQuery({
+    variables: { leagueId },
+    skip: !leagueId || !isLeague,
+  });
+  const { data: rankingData, loading: isRankingFetching } = useGetPanelTournamentRankingQuery({
+    variables: { competitionId: game?.id ?? '' },
+    skip: !game?.id || isLeague,
+  });
+
+  const result = isLeague
+    ? (standingsData?.leagueStandings ?? undefined)
+    : (rankingData?.tournamentRanking ?? undefined);
+
   return {
-    result: undefined,
-    isFetching: false,
+    result,
+    isFetching: isStandingsFetching || isRankingFetching,
     refresh: () => {},
   };
 };

@@ -89,6 +89,7 @@ export const GET_ADMIN_TOURNAMENT = gql`
         id
         time
         status
+        winnerTeam { id }
         entries { id team { id name } score }
       }
       slots {
@@ -98,6 +99,54 @@ export const GET_ADMIN_TOURNAMENT = gql`
         sourceMatch { id }
         matchEntry { id team { id name } score }
       }
+    }
+  }
+`
+
+export const UPDATE_ADMIN_TOURNAMENT = gql`
+  mutation UpdateAdminTournament($id: ID!, $input: UpdateTournamentInput!) {
+    updateTournament(id: $id, input: $input) {
+      id
+      name
+      displayOrder
+    }
+  }
+`
+
+export const DELETE_ADMIN_TOURNAMENT = gql`
+  mutation DeleteAdminTournament($id: ID!) {
+    deleteTournament(id: $id) {
+      id
+    }
+  }
+`
+
+export const GET_ADMIN_PROMOTION_RULES = gql`
+  query GetAdminPromotionRules($sourceCompetitionId: ID!) {
+    promotionRules(sourceCompetitionId: $sourceCompetitionId) {
+      id
+      sourceCompetition { id }
+      targetCompetition { id name type }
+      rankSpec
+      slot
+    }
+  }
+`
+
+export const CREATE_ADMIN_PROMOTION_RULE = gql`
+  mutation CreateAdminPromotionRule($input: CreatePromotionRuleInput!) {
+    createPromotionRule(input: $input) {
+      id
+      rankSpec
+      targetCompetition { id name type }
+    }
+  }
+`
+
+export const DELETE_ADMIN_PROMOTION_RULE = gql`
+  mutation DeleteAdminPromotionRule($id: ID!) {
+    deletePromotionRule(id: $id) {
+      id
     }
   }
 `
