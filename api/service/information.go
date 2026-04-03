@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"time"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -25,10 +27,25 @@ func NewInformation(db *gorm.DB, informationRepository repository.Information) I
 }
 
 func (s *Information) Create(ctx context.Context, input *model.CreateInformationInput) (*db_model.Information, error) {
+	status := "draft"
+	if input.Status != nil && *input.Status != "" {
+		status = *input.Status
+	}
+
+	var scheduledAt sql.NullTime
+	if input.ScheduledAt != nil && *input.ScheduledAt != "" {
+		t, err := time.Parse(time.RFC3339, *input.ScheduledAt)
+		if err == nil {
+			scheduledAt = sql.NullTime{Time: t, Valid: true}
+		}
+	}
+
 	information := &db_model.Information{
-		ID:      ulid.Make(),
-		Title:   input.Title,
-		Content: input.Content,
+		ID:          ulid.Make(),
+		Title:       input.Title,
+		Content:     input.Content,
+		Status:      status,
+		ScheduledAt: scheduledAt,
 	}
 	information, err := s.informationRepository.Save(ctx, s.db, information)
 	if err != nil {
@@ -57,6 +74,21 @@ func (s *Information) Update(ctx context.Context, input model.UpdateInformationI
 
 	if input.Content != nil {
 		information.Content = *input.Content
+	}
+
+	if input.Status != nil {
+		information.Status = *input.Status
+	}
+
+	if input.ScheduledAt != nil {
+		if *input.ScheduledAt == "" {
+			information.ScheduledAt = sql.NullTime{Valid: false}
+		} else {
+			t, err := time.Parse(time.RFC3339, *input.ScheduledAt)
+			if err == nil {
+				information.ScheduledAt = sql.NullTime{Time: t, Valid: true}
+			}
+		}
 	}
 
 	information, err = s.informationRepository.Save(ctx, s.db, information)
