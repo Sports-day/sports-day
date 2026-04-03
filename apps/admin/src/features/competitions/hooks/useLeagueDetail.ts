@@ -1,10 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
-import { MOCK_TEAMS } from '../../teams/mock'
-import { MOCK_LEAGUE_DETAILS, MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
-import { syncLeagueName } from '@/lib/autoSync'
-import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '@/features/matches/mock'
-import type { ActiveMatch, ActiveTeam } from '@/features/matches/types'
+import {
+  useGetAdminLeagueQuery,
+  useGetAdminTeamsQuery,
+  useGetAdminCompetitionsQuery,
+  useGetAdminPromotionRulesQuery,
+  useUpdateAdminLeagueRuleMutation,
+  useCreateAdminPromotionRuleMutation,
+  useDeleteAdminPromotionRuleMutation,
+  GetAdminPromotionRulesDocument,
+  CompetitionType,
+} from '@/gql/__generated__/graphql'
 
 type LeagueForm = {
   name: string
@@ -33,138 +39,87 @@ export type ProgressionTarget = {
   type: 'league' | 'tournament'
 }
 
-const INITIAL_ENTRIES: LeagueEntry[] = [
-  { id: 1, teamName: 'Team A-1', teamClass: 'Class A' },
-  { id: 2, teamName: 'Team A-2', teamClass: 'Class A' },
-  { id: 3, teamName: 'Team B-1', teamClass: 'Class B' },
-]
-
-/**
- * エントリーからラウンドロビンの試合リストを生成し MOCK_ACTIVE_LEAGUES に反映する。
- * 既存の試合結果は、同じ対戦カードが残っていれば保持する。
- */
-function syncActiveLeagueMatches(
-  competitionId: string,
-  leagueId: string,
-  leagueName: string,
-  entries: LeagueEntry[],
-) {
-  if (!MOCK_ACTIVE_LEAGUES[competitionId]) {
-    MOCK_ACTIVE_LEAGUES[competitionId] = []
-  }
-  const leagues = MOCK_ACTIVE_LEAGUES[competitionId]
-  const league = leagues.find((l) => l.id === leagueId)
-
-  // チーム情報を構築
-  const teams: ActiveTeam[] = entries.map((e) => ({
-    id: e.teamId ?? `entry_${e.id}`,
-    name: e.teamName,
-    shortName: e.teamName,
-  }))
-
-  // 既存の試合マップ（対戦カードのキーで検索可能にする）
-  const existingMatchMap = new Map<string, ActiveMatch>()
-  if (league) {
-    for (const m of league.matches) {
-      const key = [m.teamAId, m.teamBId].sort().join(':')
-      existingMatchMap.set(key, m)
-    }
-  }
-
-  // ラウンドロビン試合を生成
-  const matches: ActiveMatch[] = []
-  let counter = 0
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      const key = [teams[i].id, teams[j].id].sort().join(':')
-      const existing = existingMatchMap.get(key)
-      if (existing) {
-        matches.push(existing)
-      } else {
-        counter++
-        matches.push({
-          id: `${leagueId}_m${counter}`,
-          teamAId: teams[i].id,
-          teamBId: teams[j].id,
-          scoreA: 0,
-          scoreB: 0,
-          status: 'standby',
-        })
-      }
-    }
-  }
-
-  if (league) {
-    league.name = leagueName
-    league.teams = teams
-    league.matches = matches
-  } else {
-    leagues.push({ id: leagueId, name: leagueName, teams, matches })
-  }
-
-  persistActiveLeagues()
-}
-
-/**
- * targetId から進出先を再帰的に辿り、sourceId に戻るかチェックする。
- */
-function wouldCreateCycle(sourceId: string, targetId: string): boolean {
-  const visited = new Set<string>()
-  let current = targetId
-  while (current) {
-    if (current === sourceId) return true
-    if (visited.has(current)) return false
-    visited.add(current)
-    const detail = MOCK_LEAGUE_DETAILS[current]
-    const targets = detail?.progressionRules?.map((r: ProgressionRule) => r.targetId).filter(Boolean) ?? []
-    if (targets.length === 0) return false
-    // 複数の進出先がある場合、いずれかが循環していれば循環とみなす
-    if (targets.length === 1) {
-      current = targets[0]
-    } else {
-      return targets.some((t: string) => t === sourceId || wouldCreateCycle(sourceId, t))
-    }
-  }
-  return false
-}
-
 export function useLeagueDetail(leagueId: string, leagueName: string, competitionId: string) {
-  const saved = MOCK_LEAGUE_DETAILS[leagueId]
-  const [form, setForm] = useState<LeagueForm>({
-    name: saved?.name ?? leagueName,
-    description: saved?.description ?? '',
-    weight: saved?.weight ?? '0',
-    matchFormat: saved?.matchFormat ?? 'sunny',
-    resultJudgments: saved?.resultJudgments ?? ['score'],
-    tag: saved?.tag ?? '',
+  const { data: leagueData, loading, error } = useGetAdminLeagueQuery({
+    variables: { id: leagueId },
+    skip: !leagueId,
   })
-  const [entries, setEntries] = useState<LeagueEntry[]>(saved?.entries ?? INITIAL_ENTRIES)
+  const { data: teamsData } = useGetAdminTeamsQuery()
+  const { data: competitionsData } = useGetAdminCompetitionsQuery()
+  const { data: promotionRulesData } = useGetAdminPromotionRulesQuery({
+    variables: { sourceCompetitionId: competitionId },
+    skip: !competitionId,
+  })
+
+  const league = leagueData?.league
+
+  const [form, setForm] = useState<LeagueForm>({
+    name: league?.name ?? leagueName,
+    description: '',
+    weight: '0',
+    matchFormat: 'sunny',
+    resultJudgments: ['score'],
+    tag: '',
+  })
+
+  // GraphQL のリーグチームをエントリーとして使用
+  const [entries, setEntries] = useState<LeagueEntry[]>(
+    (league?.teams ?? []).map((t, i) => ({
+      id: i + 1,
+      teamName: t.name,
+      teamClass: t.group.name,
+      teamId: t.id,
+    }))
+  )
+
   const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [progressionEnabled, setProgressionEnabled] = useState(saved?.progressionEnabled ?? false)
-  const [progressionMaxRank, setProgressionMaxRank] = useState(saved?.progressionMaxRank ?? 3)
-  const [progressionRules, setProgressionRules] = useState<ProgressionRule[]>(saved?.progressionRules ?? [])
+  const [progressionEnabled, setProgressionEnabled] = useState(false)
+  const [progressionMaxRank, setProgressionMaxRank] = useState(3)
+  const [progressionRules, setProgressionRules] = useState<ProgressionRule[]>([])
+  // GQL PromotionRule.id を rank でひけるようにする
+  const [ruleIdByRank, setRuleIdByRank] = useState<Record<number, string>>({})
 
-  // 変更のたびに自動保存（前回値と比較して実際に変更があった場合のみ）
-  const prevDetailRef = useRef<string>('')
-  useEffect(() => {
-    const snapshot = JSON.stringify({ ...form, entries, progressionEnabled, progressionMaxRank, progressionRules })
-    if (snapshot === prevDetailRef.current) return
-    prevDetailRef.current = snapshot
-    MOCK_LEAGUE_DETAILS[leagueId] = { ...form, entries, progressionEnabled, progressionMaxRank, progressionRules }
-    persistCompetitionsData()
-    syncLeagueName(leagueId, form.name)
-  }, [form, entries, leagueId, progressionEnabled, progressionMaxRank, progressionRules])
+  const [updateLeagueRule] = useUpdateAdminLeagueRuleMutation()
+  const [createPromotionRule] = useCreateAdminPromotionRuleMutation({
+    refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
+  })
+  const [deletePromotionRule] = useDeleteAdminPromotionRuleMutation({
+    refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
+  })
 
-  // エントリー変更時にアクティブリーグの試合データも同期
-  const prevEntriesRef = useRef<string>('')
+  // GQL データで初期化
   useEffect(() => {
-    const snapshot = JSON.stringify({ entries, competitionId, leagueId, name: form.name })
-    if (snapshot === prevEntriesRef.current) return
-    prevEntriesRef.current = snapshot
-    if (entries.length >= 2) {
-      syncActiveLeagueMatches(competitionId, leagueId, form.name, entries)
+    if (league?.name !== undefined) {
+      setForm(prev => ({ ...prev, name: league.name }))
     }
-  }, [entries, competitionId, leagueId, form.name])
+  }, [league?.name])
+
+  useEffect(() => {
+    if (league?.teams !== undefined) {
+      setEntries(league.teams.map((t, i) => ({
+        id: i + 1,
+        teamName: t.name,
+        teamClass: t.group.name,
+        teamId: t.id,
+      })))
+    }
+  }, [league?.teams])
+
+  useEffect(() => {
+    if (promotionRulesData?.promotionRules) {
+      const rules = promotionRulesData.promotionRules
+      setProgressionRules(rules.map(r => ({
+        rank: parseInt(r.rankSpec),
+        targetId: r.targetCompetition.id,
+      })))
+      setProgressionEnabled(rules.length > 0)
+      const idMap: Record<number, string> = {}
+      for (const r of rules) {
+        idMap[parseInt(r.rankSpec)] = r.id
+      }
+      setRuleIdByRank(idMap)
+    }
+  }, [promotionRulesData?.promotionRules])
 
   const handleChange = (field: keyof Omit<LeagueForm, 'resultJudgments'>) => (e: ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -172,6 +127,10 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
 
   const handleScoringChange = (resultJudgments: string[]) => {
     setForm(prev => ({ ...prev, resultJudgments }))
+    // 【未確定】 UpdateLeagueRuleInput は win/draw/lose ポイントのみ対応
+    updateLeagueRule({
+      variables: { id: leagueId, input: {} },
+    }).catch(() => {})
   }
 
   const handleDeleteEntry = (id: number) => {
@@ -182,16 +141,39 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   const handleCloseAddDialog = () => setAddDialogOpen(false)
 
   const handleAddEntries = (selectedIds: string[]) => {
+    const allTeams = teamsData?.teams ?? []
     const newEntries = selectedIds.flatMap((id, i) => {
-      const team = MOCK_TEAMS.find(t => t.id === id)
+      const team = allTeams.find(t => t.id === id)
       if (!team) return []
-      return [{ id: entries.length + i + 1, teamName: team.name, teamClass: team.class, teamId: id }]
+      return [{
+        id: entries.length + i + 1,
+        teamName: team.name,
+        teamClass: team.group.name,
+        teamId: id,
+      }]
     })
     setEntries(prev => [...prev, ...newEntries])
+    setAddDialogOpen(false)
   }
 
-  const handleProgressionRuleChange = (rank: number, targetId: string) => {
-    if (targetId && wouldCreateCycle(leagueId, targetId)) return
+  const handleProgressionRuleChange = async (rank: number, targetId: string) => {
+    // 既存ルールがあれば削除してから再作成
+    const existingId = ruleIdByRank[rank]
+    if (existingId) {
+      await deletePromotionRule({ variables: { id: existingId } }).catch(() => {})
+    }
+    if (targetId) {
+      await createPromotionRule({
+        variables: {
+          input: {
+            sourceCompetitionId: competitionId,
+            targetCompetitionId: targetId,
+            rankSpec: String(rank),
+          },
+        },
+      }).catch(() => {})
+    }
+    // ローカル state も即時更新
     setProgressionRules(prev => {
       const existing = prev.find(r => r.rank === rank)
       if (existing) return prev.map(r => r.rank === rank ? { ...r, targetId } : r)
@@ -199,14 +181,14 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     })
   }
 
-  // 同じcompetitionの他のリーグ・トーナメントを進出先候補として返す
-  const availableProgressionTargets: ProgressionTarget[] = [
-    ...(MOCK_LEAGUES_BY_COMPETITION[competitionId] ?? [])
-      .filter(l => l.id !== leagueId)
-      .map(l => ({ id: l.id, name: l.name, type: 'league' as const })),
-    ...(MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] ?? [])
-      .map(t => ({ id: t.id, name: t.name, type: 'tournament' as const })),
-  ]
+  // 同一 competitionId の他リーグ・トーナメントを候補として提示
+  const availableProgressionTargets: ProgressionTarget[] = (competitionsData?.competitions ?? [])
+    .filter(c => c.id !== competitionId)
+    .map(c => ({
+      id: c.id,
+      name: c.name,
+      type: c.type === CompetitionType.League ? 'league' : 'tournament',
+    }))
 
   return {
     form,
@@ -225,7 +207,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     setProgressionEnabled,
     setProgressionMaxRank,
     handleProgressionRuleChange,
-    loading: false,
-    error: null,
+    loading,
+    error: error ?? null,
   }
 }

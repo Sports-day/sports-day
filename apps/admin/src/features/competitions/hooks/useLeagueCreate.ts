@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { MOCK_LEAGUES_BY_COMPETITION, MOCK_LEAGUE_DETAILS, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
-import { getCompetitionTag } from '@/lib/autoSync'
+import {
+  useCreateAdminLeagueMutation,
+  useCreateAdminTournamentMutation,
+  BracketType,
+} from '@/gql/__generated__/graphql'
 
 type CreateForm = {
   name: string
@@ -23,6 +26,9 @@ const INITIAL_FORM: CreateForm = {
 export function useLeagueCreate(competitionId: string, type: 'league' | 'tournament', onSave: () => void) {
   const [form, setForm] = useState<CreateForm>(INITIAL_FORM)
 
+  const [createLeague] = useCreateAdminLeagueMutation()
+  const [createTournament] = useCreateAdminTournamentMutation()
+
   const handleChange = (field: keyof CreateForm) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -32,25 +38,26 @@ export function useLeagueCreate(competitionId: string, type: 'league' | 'tournam
 
   const handleSubmit = () => {
     if (!form.name.trim()) return
-    const newId = String(Date.now())
+
     if (type === 'tournament') {
-      if (!MOCK_TOURNAMENTS_BY_COMPETITION[competitionId]) {
-        MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] = []
-      }
-      MOCK_TOURNAMENTS_BY_COMPETITION[competitionId].push({ id: newId, name: form.name })
+      createTournament({
+        variables: {
+          input: {
+            name: form.name,
+            competitionId,
+            bracketType: BracketType.Main,
+          },
+        },
+        refetchQueries: ['GetAdminTournaments'],
+      }).then(() => onSave()).catch(() => {})
     } else {
-      if (!MOCK_LEAGUES_BY_COMPETITION[competitionId]) {
-        MOCK_LEAGUES_BY_COMPETITION[competitionId] = []
-      }
-      MOCK_LEAGUES_BY_COMPETITION[competitionId].push({ id: newId, name: form.name })
-      MOCK_LEAGUE_DETAILS[newId] = {
-        name: form.name, description: form.description, weight: String(form.weight),
-        matchFormat: form.format || 'sunny', resultJudgments: [form.scoringFormat || 'score'],
-        tag: getCompetitionTag(competitionId),
-      }
+      createLeague({
+        variables: {
+          input: { name: form.name },
+        },
+        refetchQueries: ['GetAdminLeagues'],
+      }).then(() => onSave()).catch(() => {})
     }
-    persistCompetitionsData()
-    onSave()
   }
 
   return { form, handleChange, handleSubmit }

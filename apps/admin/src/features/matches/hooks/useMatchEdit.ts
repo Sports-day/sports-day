@@ -1,9 +1,16 @@
 import { useState } from 'react'
 import type { ActiveMatch } from '../types'
-import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
+import { useUpdateAdminMatchResultMutation, MatchStatus } from '@/gql/__generated__/graphql'
 
 export type WinnerType = 'teamA' | 'draw' | 'teamB' | null
 export type MatchStatusType = 'cancelled' | 'standby' | 'ongoing' | 'finished' | null
+
+const STATUS_MAP: Record<NonNullable<MatchStatusType>, MatchStatus> = {
+  cancelled: MatchStatus.Canceled,
+  standby: MatchStatus.Standby,
+  ongoing: MatchStatus.Ongoing,
+  finished: MatchStatus.Finished,
+}
 
 export function useMatchEdit() {
   const [selectedMatch, setSelectedMatch] = useState<ActiveMatch | null>(null)
@@ -11,6 +18,8 @@ export function useMatchEdit() {
   const [scoreB, setScoreB] = useState<string>('0')
   const [winner, setWinner] = useState<WinnerType>(null)
   const [matchStatus, setMatchStatus] = useState<MatchStatusType>('standby')
+
+  const [updateMatchResult] = useUpdateAdminMatchResultMutation()
 
   const openMatch = (match: ActiveMatch) => {
     setSelectedMatch(match)
@@ -20,9 +29,7 @@ export function useMatchEdit() {
     setMatchStatus(match.status ?? 'standby')
   }
 
-  const closeMatch = () => {
-    setSelectedMatch(null)
-  }
+  const closeMatch = () => setSelectedMatch(null)
 
   const resetMatch = () => {
     if (!selectedMatch) return
@@ -34,25 +41,32 @@ export function useMatchEdit() {
 
   const saveMatch = () => {
     if (!selectedMatch) return
-    for (const leagues of Object.values(MOCK_ACTIVE_LEAGUES)) {
-      for (const league of leagues) {
-        const match = league.matches.find((m) => m.id === selectedMatch.id)
-        if (match) {
-          const parsedA = Number(scoreA)
-          const parsedB = Number(scoreB)
-          match.scoreA = scoreA === '' ? null : (Number.isFinite(parsedA) && parsedA >= 0 ? parsedA : null)
-          match.scoreB = scoreB === '' ? null : (Number.isFinite(parsedB) && parsedB >= 0 ? parsedB : null)
-          if (matchStatus) match.status = matchStatus
-          // winner フィールドがある場合は保存（明示的な勝敗指定）
-          if (winner === 'teamA') match.winner = 'teamA'
-          else if (winner === 'teamB') match.winner = 'teamB'
-          else if (winner === 'draw') match.winner = 'draw'
-          else match.winner = undefined
-        }
-      }
-    }
-    persistActiveLeagues()
-    closeMatch()
+
+    const parsedA = Number(scoreA)
+    const parsedB = Number(scoreB)
+    const scoreAVal = scoreA === '' ? 0 : (Number.isFinite(parsedA) && parsedA >= 0 ? parsedA : 0)
+    const scoreBVal = scoreB === '' ? 0 : (Number.isFinite(parsedB) && parsedB >= 0 ? parsedB : 0)
+
+    // winner からチーム ID を解決
+    const winnerTeamId =
+      winner === 'teamA' ? selectedMatch.teamAId :
+      winner === 'teamB' ? selectedMatch.teamBId :
+      null
+
+    updateMatchResult({
+      variables: {
+        id: selectedMatch.id,
+        input: {
+          status: matchStatus ? STATUS_MAP[matchStatus] : undefined,
+          winnerTeamId,
+          results: [
+            { teamId: selectedMatch.teamAId, score: scoreAVal },
+            { teamId: selectedMatch.teamBId, score: scoreBVal },
+          ],
+        },
+      },
+      refetchQueries: ['GetAdminMatches'],
+    }).then(() => closeMatch()).catch(() => {})
   }
 
   return {

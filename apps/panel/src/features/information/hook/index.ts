@@ -1,56 +1,28 @@
-import {useState} from "react";
-import {Information, informationFactory} from "../../../models/InformationModel";
-import {useAsyncRetry} from "react-use";
-
+import {
+  useGetPanelInformationsQuery,
+  useGetPanelInformationQuery,
+} from "@/src/gql/__generated__/graphql";
 
 export const useFetchAllInformation = () => {
-    const [allInformation, setAllInformation] = useState<Information[]>([]);
-    const [isFetching, setIsFetching] = useState(true);
+  const { data, loading, refetch } = useGetPanelInformationsQuery();
+  const allInformation = (data?.Informations ?? []).filter(
+    (i) => i.status === "published"
+  );
+  return {
+    allInformation,
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await informationFactory().index();
-            setAllInformation(data);
-        }
-        catch (e) {
-            console.log(e);
-        }
-        finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        allInformation: allInformation,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-export const useFetchInformation = (informationId: number) => {
-    const [information, setInformation] = useState<Information>();
-    const [isFetching, setIsFetching] = useState(true);
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await informationFactory().show(informationId);
-            setInformation(data);
-        }
-        catch (e) {
-            console.log(e);
-        }
-        finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        information: information,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchInformation = (informationId: string) => {
+  const { data, loading, refetch } = useGetPanelInformationQuery({
+    variables: { id: informationId },
+    skip: !informationId,
+  });
+  return {
+    information: data?.Information,
+    isFetching: loading,
+    refresh: refetch,
+  };
+};

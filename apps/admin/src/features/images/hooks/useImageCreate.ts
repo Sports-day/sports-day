@@ -1,21 +1,19 @@
 import { useState } from 'react'
-import { MOCK_IMAGES, persistImages } from '../mock'
-import { notifyImageListeners } from './useImages'
+import { useCreateAdminImageUploadUrlMutation, GetAdminImagesDocument } from '@/gql/__generated__/graphql'
 
 export function useImageCreate() {
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
 
-  const handleCreate = () => {
-    try {
-      const parsed = new URL(url)
-      if (!['http:', 'https:'].includes(parsed.protocol)) return
-    } catch {
-      return
-    }
-    MOCK_IMAGES.push({ id: String(Date.now()), name, url })
-    persistImages()
-    notifyImageListeners()
+  const [createImageUploadUrl] = useCreateAdminImageUploadUrlMutation({
+    refetchQueries: [{ query: GetAdminImagesDocument }],
+  })
+
+  const handleCreate = async () => {
+    if (!name.trim()) return
+    // 【未確定】S3プレサインドURLフロー未実装。filename を name から生成して uploadUrl を取得後、
+    // PUT でファイルをアップロードする UI への移行が必要。
+    await createImageUploadUrl({ variables: { input: { filename: name } } })
     setName('')
     setUrl('')
   }

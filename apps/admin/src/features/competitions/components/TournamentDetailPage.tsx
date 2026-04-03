@@ -30,7 +30,6 @@ import {
 } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
 import { TAG_OPTIONS } from '../constants'
-import { MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
 import { useTournamentDetail } from '../hooks/useTournamentDetail'
 import { useTournamentEdit } from '../hooks/useTournamentEdit'
 import { useSeedAssignment } from '@/hooks/useSeedAssignment'
@@ -56,7 +55,7 @@ type Props = {
 export function TournamentDetailPage({
   tournamentId,
   tournamentName,
-  competitionId,
+  competitionId: _competitionId,
   competitionName,
   onBackToList,
   onBackToDetail,
@@ -73,6 +72,7 @@ export function TournamentDetailPage({
     tag,
     handleChange,
     handleSave,
+    handleDelete,
   } = useTournamentEdit(tournamentId)
 
   const { seedNumbers, assignments, teams, setAssignment, saveAssignments } = useSeedAssignment(tournamentId)
@@ -88,11 +88,9 @@ export function TournamentDetailPage({
     showToast('トーナメントを保存しました')
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    const list = MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] ?? []
-    MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] = list.filter((t) => t.id !== tournamentId)
-    persistCompetitionsData()
+    await handleDelete()
     onDeleted?.()
     showToast('トーナメントを削除しました')
   }

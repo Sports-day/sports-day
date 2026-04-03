@@ -11,19 +11,21 @@ export const GET_USERS = gql`
 
 export const GET_SPORTSCENE = gql`
   query GetSportscene {
-    sportScenes {
-      id
-      sport {
+    scenes {
+      sportScenes {
         id
-      }
-      scene {
-        id
-      }
-      entries {
-        team {
+        sport {
           id
-          users {
+        }
+        scene {
+          id
+        }
+        entries {
+          team {
             id
+            users {
+              id
+            }
           }
         }
       }
@@ -32,14 +34,16 @@ export const GET_SPORTSCENE = gql`
 `;
 
 export const GET_SPORTSCENE_ENTRIES = gql`
-  query GetSportsceneEntries($sportSceneId: ID!) {
-    sportScene(id: $sportSceneId) {
-      id
-      entries {
-        team {
-          id
-          users {
+  query GetSportsceneEntries {
+    scenes {
+      sportScenes {
+        id
+        entries {
+          team {
             id
+            users {
+              id
+            }
           }
         }
       }
@@ -68,15 +72,15 @@ export const CREATE_TEAM = gql`
 
 export const ADD_TEAM_MEMBER = gql`
   mutation AddTeamMember($userIds: [ID!]!, $teamId: ID!) {
-    addTeamMember(userIds: $userIds, teamId: $teamId) {
+    updateTeamUsers(id: $teamId, input: { addUserIds: $userIds }) {
       id
     }
   }
 `;
 
 export const CREATE_SPORT_ENTRY = gql`
-  mutation CreateSportEntry($input: CreateSportEntryInput!) {
-    createSportEntry(input: $input) {
+  mutation CreateSportEntry($sportSceneId: ID!, $teamId: ID!) {
+    addSportEntries(id: $sportSceneId, input: { teamIds: [$teamId] }) {
       id
     }
   }
@@ -84,7 +88,7 @@ export const CREATE_SPORT_ENTRY = gql`
 
 export const DELETE_MEMBER = gql`
   mutation DeleteMember($teamId: ID!, $userIds: [ID!]!) {
-    removeTeamMember(teamId: $teamId, userIds: $userIds) {
+    updateTeamUsers(id: $teamId, input: { removeUserIds: $userIds }) {
       id
     }
   }
@@ -92,6 +96,8 @@ export const DELETE_MEMBER = gql`
 
 export const DELETE_TEAM = gql`
   mutation DeleteTeam($deleteTeamId: ID!) {
-    deleteTeam(id: $deleteTeamId)
+    deleteTeam(id: $deleteTeamId) {
+      id
+    }
   }
 `;

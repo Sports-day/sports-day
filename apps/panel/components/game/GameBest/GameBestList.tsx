@@ -1,11 +1,11 @@
-import {Game} from "../../../src/models/GameModel";
+import type { Competition } from "@/src/gql/__generated__/graphql";
 import {useFetchGameResultWithoutFetchGame} from "../../../src/features/games/hook";
 import {GameBestContent} from "./GameBestContent";
 import {useContext} from "react";
 import {TeamsContext} from "../../context";
 
 export type GameBestListProps = {
-    game: Game,
+    game: Competition,
     visible: boolean
 }
 

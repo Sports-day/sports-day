@@ -3,11 +3,11 @@ import * as React from "react";
 import {GameListContent} from "./GameListContent";
 import {useEffect} from "react";
 import {motion} from "framer-motion";
-import {Game} from "@/src/models/GameModel";
+import type { Competition } from "@/src/gql/__generated__/graphql";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
 
 export type GameListProps = {
-    games: Game[]
+    games: Competition[]
     gameId: number | null
     setGameId: (gameId: number) => void
     myTeamId?: number

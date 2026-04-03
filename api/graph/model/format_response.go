@@ -26,6 +26,7 @@ func FormatInformationResponse(information *db_model.Information) *Information {
 		ID:      information.ID,
 		Title:   information.Title,
 		Content: information.Content,
+		Status:  information.Status,
 	}
 }
 

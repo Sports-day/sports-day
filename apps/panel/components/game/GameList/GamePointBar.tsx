@@ -15,7 +15,7 @@ import {HiClock, HiFlag} from "react-icons/hi2";
 import {useContext} from "react";
 import {TeamsContext} from "../../context";
 import {MatchDetail} from "@/components/game/GameList/matchDetail";
-import {Match} from "@/src/models/MatchModel";
+import type { Match } from "@/src/gql/__generated__/graphql";
 
 export type GamePointBarProps = {
     leftScore: number,

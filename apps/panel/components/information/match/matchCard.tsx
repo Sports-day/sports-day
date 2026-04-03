@@ -1,6 +1,6 @@
 import {Box, Card, Stack, SvgIcon, Typography} from "@mui/material";
 import * as React from "react";
-import {Match} from "@/src/models/MatchModel";
+import type { Match } from "@/src/gql/__generated__/graphql";
 import {HiClock, HiMapPin} from "react-icons/hi2";
 import { Grid as Grid2 } from "@mui/material";
 import {useFetchGame} from "@/src/features/games/hook";

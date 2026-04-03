@@ -1,50 +1,25 @@
-import {Match, matchFactory} from "../../../models/MatchModel";
-import {useAsync, useAsyncRetry} from "react-use";
-import {useState} from "react";
+import {
+  useGetPanelMatchesQuery,
+  useGetPanelMatchQuery,
+} from "@/src/gql/__generated__/graphql";
+
 export const useFetchMatches = () => {
-    const [matches, setMatches] = useState<Match[]>([])
-    const [isFetching, setIsFetching] = useState(true)
+  const { data, loading, refetch } = useGetPanelMatchesQuery();
+  return {
+    matches: data?.matches ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await matchFactory().index();
-            setMatches(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        matches: matches,
-        isFetching: isFetching,
-        refresh: state.retry
-    }
-}
-
-export const useFetchMatch = (matchId: number) => {
-    const [match, setMatch] = useState<Match>()
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await matchFactory().show(matchId);
-            setMatch(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        match: match,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchMatch = (matchId: string) => {
+  const { data, loading, refetch } = useGetPanelMatchQuery({
+    variables: { id: matchId },
+    skip: !matchId,
+  });
+  return {
+    match: data?.match,
+    isFetching: loading,
+    refresh: refetch,
+  };
+};

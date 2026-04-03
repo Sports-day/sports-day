@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import {Match} from "@/src/models/MatchModel";
+import type { Match } from "@/src/gql/__generated__/graphql";
 import MatchCard from "@/components/information/match/matchCard";
 
 export type MatchListProps = {

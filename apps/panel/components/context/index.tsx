@@ -1,10 +1,5 @@
 import {createContext} from "react";
-import { User } from "@/src/models/UserModel";
-import {Team} from "@/src/models/TeamModel";
-import {Game} from "@/src/models/GameModel";
-import {Match} from "@/src/models/MatchModel";
-import {Location} from "@/src/models/LocationModel";
-import {Image} from "@/src/models/ImageModel";
+import type { User, Team, Competition, Match, Location, Image } from "@/src/gql/__generated__/graphql";
 
 export type GenericContextType<T> = {
     data: T
@@ -23,7 +18,7 @@ export const TeamsContext = createContext<TeamsContextType>({
     refresh: () => {}
 })
 
-export type GamesContextType = GenericContextType<Game[]>
+export type GamesContextType = GenericContextType<Competition[]>
 export const GamesContext = createContext<GamesContextType>({
     data: [],
     refresh: () => {}

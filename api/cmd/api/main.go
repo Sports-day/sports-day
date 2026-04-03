@@ -160,6 +160,10 @@ func main() {
 	// channel to confirm server shutdown
 	shutdownChan := make(chan struct{}, 1)
 
+	// create channel for graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+
 	// start server in another goroutine
 	go func() {
 		api.Logger.Info().Msgf("Starting server on http://%s", address)
@@ -170,10 +174,6 @@ func main() {
 		}
 		shutdownChan <- struct{}{}
 	}()
-
-	// create channel for graceful shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
 	// wait for signal
 	<-quit

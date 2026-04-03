@@ -1,5 +1,5 @@
 import {Avatar, Box, Button, Stack, Typography, useTheme} from "@mui/material";
-import {Sport} from "@/src/models/SportModel";
+import type { Sport } from "@/src/gql/__generated__/graphql";
 import { Link } from "react-router-dom";
 import {HiOutlineExclamationTriangle} from "react-icons/hi2";
 import * as React from "react";

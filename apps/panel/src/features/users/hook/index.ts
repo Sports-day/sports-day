@@ -1,55 +1,25 @@
-import {User, userFactory} from "@/src/models/UserModel";
-import {useState} from "react";
-import {useAsyncRetry} from "react-use";
+import {
+  useGetPanelUsersQuery,
+  useGetPanelUserQuery,
+} from "@/src/gql/__generated__/graphql";
 
 export const useFetchUsers = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [isFetching, setIsFetching] = useState(true);
+  const { data, loading, refetch } = useGetPanelUsersQuery();
+  return {
+    users: data?.users ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await userFactory().index();
-            setUsers(data);
-        }
-        catch (e) {
-            console.log(e);
-        }
-        finally {
-            setIsFetching(false);
-        }
-    });
-
-    return {
-        users: users,
-        isFetching: isFetching,
-        refresh: state.retry,
-    };
-}
-
-export const useFetchUser = (userId: number) => {
-    const [user, setUser] = useState<User>();
-    const [isFetching, setIsFetching] = useState(true);
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await userFactory().show(userId);
-            setUser(data);
-        }
-        catch (e) {
-            console.log(e);
-        }
-        finally {
-            setIsFetching(false);
-        }
-    });
-
-    return {
-        user: user,
-        isFetching: isFetching,
-        refresh: state.retry,
-    };
-}
+export const useFetchUser = (userId: string) => {
+  const { data, loading, refetch } = useGetPanelUserQuery({
+    variables: { id: userId },
+    skip: !userId,
+  });
+  return {
+    user: data?.user,
+    isFetching: loading,
+    refresh: refetch,
+  };
+};

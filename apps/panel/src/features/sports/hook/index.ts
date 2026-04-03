@@ -1,164 +1,91 @@
-import {useContext, useState} from "react";
-import {Sport, sportFactory} from "../../../models/SportModel";
-import {useAsync, useAsyncRetry} from "react-use";
-import {Game, gameFactory, LeagueTeamResult} from "../../../models/GameModel";
-import {Team} from "../../../models/TeamModel";
-import {GamesContext, TeamsContext} from "../../../../components/context";
+import {
+  useGetPanelSportsQuery,
+  useGetPanelSportQuery,
+  useGetPanelSportCompetitionsQuery,
+  useGetPanelMatchesQuery,
+  MatchStatus,
+} from "@/src/gql/__generated__/graphql";
 
 /**
  * Fetches all sports
+ * NOTE: filter パラメータは旧 REST API 用。GraphQL では未使用だが、
+ * 呼び出し元の互換性のためシグネチャを維持する。
  */
-export const useFetchSports = (filter: boolean = false) => {
-    const [sports, setSports] = useState<Sport[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await sportFactory().index(filter);
-            setSports(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        sports: sports,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchSports = (_filter: boolean = false) => {
+  const { data, loading, refetch } = useGetPanelSportsQuery();
+  return {
+    sports: data?.sports ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
 /**
- * Fetches a sports
- * @param sportId
+ * Fetches a sport by ID
  */
-export const useFetchSport = (sportId: number) => {
-    const [sport, setSport] = useState<Sport>()
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await sportFactory().show(sportId);
-            setSport(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        sport: sport,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchSport = (sportId: string) => {
+  const { data, loading, refetch } = useGetPanelSportQuery({
+    variables: { id: sportId },
+    skip: !sportId,
+  });
+  return {
+    sport: data?.sport,
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
 /**
- * Fetches the games of a sports
- * @param sportId
- * @param filter
+ * Fetches the competitions (games) of a sport.
+ * 旧 Game モデルは新スキーマの Competition に相当する。
+ * 返す型は GraphQL の SportScene（competition 情報を含む）。
+ *
+ * NOTE: filter パラメータは旧 REST API 用。GraphQL では未使用。
  */
-export const useFetchSportGames = (sportId: number, filter: boolean = false) => {
-    const [games, setGames] = useState<Game[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const sport = await sportFactory().show(sportId);
-
-            const result = await gameFactory().index(filter)
-                .then(values =>
-                    values.filter(value => sport.gameIds.includes(value.id))
-                )
-            setGames(result)
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        games: games,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+export const useFetchSportGames = (sportId: string, _filter: boolean = false) => {
+  const { data, loading, refetch } = useGetPanelSportCompetitionsQuery({
+    variables: { id: sportId },
+    skip: !sportId,
+  });
+  // 旧 Game → 新 SportScene のマッピング。呼び出し元は型変更への対応が必要。
+  return {
+    games: data?.sport?.scene ?? [],
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
 export type BestTeam = {
-    team: Team
-    rank: number
-}
+  team: { id: string; name: string };
+  rank: number;
+};
 
 export const useFetchSportBest3 = () => {
-    const [bestTeams, setBestTeams] = useState<BestTeam[]>([])
-    const [isFetching, setIsFetching] = useState(true)
+  // sport をまたいだランキング集計は未実装のため空実装とする
+  return {
+    bestTeams: [] as BestTeam[],
+    isFetching: false,
+  };
+};
 
-    const {data: games} = useContext(GamesContext)
-    const {data: teams} = useContext(TeamsContext)
+export const useFetchSportProgress = (sportId: string | number) => {
+  const sportIdStr = String(sportId)
+  const { sport, isFetching: isSportFetching } = useFetchSport(sportIdStr)
+  const { data: matchesData, loading: isMatchesFetching } = useGetPanelMatchesQuery()
 
-    useAsync(async () => {
-        try {
-            const teamResults: LeagueTeamResult[] = []
-            // Get all league result
-            for (const game of games) {
-                if (game.type == "tournament") continue
-                //  fetch
-                const result = await gameFactory().getLeagueResult(game.id)
-                result.teams.forEach(team => teamResults.push(team))
-            }
+  // sport.scene[].scene.id に一致する competition の match を抽出
+  const sceneIds = new Set((sport?.scene ?? []).map(ss => ss.scene.id))
+  const sportMatches = (matchesData?.matches ?? []).filter(m =>
+    sceneIds.has(m.competition.scene.id)
+  )
 
-            //  sort
-            teamResults.sort((a, b) => b.score - a.score)
+  const total = sportMatches.length
+  const finished = sportMatches.filter(m => m.status === MatchStatus.Finished).length
+  const progress = total > 0 ? finished / total : 0
 
-            setBestTeams(teamResults.slice(0, 3).map((teamResult, index) => {
-                return {
-                    team: teams.find(team => team.id == teamResult.teamId),
-                    rank: index + 1
-                } as BestTeam
-            }))
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        bestTeams: bestTeams,
-        isFetching: isFetching,
-    }
-}
-
-export const useFetchSportProgress = (sportId: number) => {
-    const [progress, setProgress] = useState<number>(0)
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await sportFactory().getProgress(sportId);
-            setProgress(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        progress: progress,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+  return {
+    progress,
+    isFetching: isSportFetching || isMatchesFetching,
+    refresh: () => Promise.resolve({}),
+  };
+};

@@ -2,7 +2,7 @@ import { Box, Breadcrumbs, Card, CardContent, Divider, Typography } from '@mui/m
 import { ButtonBase } from '@mui/material'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
-import { MOCK_TOURNAMENT_DETAILS } from '@/features/competitions/mock'
+import { useTournamentDetail } from '@/features/competitions/hooks/useTournamentDetail'
 import { TournamentBracketView } from '@/features/competitions/components/TournamentBracketView'
 import { TournamentMatchEditDialog } from './TournamentMatchEditDialog'
 import { useTournamentMatchEdit } from '../hooks/useTournamentMatchEdit'
@@ -22,7 +22,7 @@ export function ActiveMatchTournamentPage({
   onBackToList,
   onBackToCompetition,
 }: Props) {
-  const data = MOCK_TOURNAMENT_DETAILS[tournamentId] ?? { id: tournamentId, name: tournamentName, brackets: [] }
+  const data = useTournamentDetail(tournamentId, tournamentName)
   const sortedBrackets = [...data.brackets].sort((a, b) => a.displayOrder - b.displayOrder)
 
   const { selectedMatch, score1, score2, status, setScore1, setScore2, setStatus, openMatch, closeMatch, saveMatch } =

@@ -30,8 +30,8 @@ import {
 } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
 import { ICON_OPTIONS, TAG_OPTIONS } from '../constants'
-import { MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION } from '../mock'
 import { useCompetitionEdit } from '../hooks/useCompetitionEdit'
+import { useGetAdminCompetitionQuery, useGetAdminTournamentsQuery } from '@/gql/__generated__/graphql'
 
 const ENTRY_BUTTON_SX = {
   backgroundColor: '#EFF0F8',
@@ -70,8 +70,17 @@ export function CompetitionDetailPage({
   onSaved,
   onDeleted,
 }: Props) {
-  const leagues = MOCK_LEAGUES_BY_COMPETITION[competitionId] ?? []
-  const tournaments = MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] ?? []
+  const { data: compData } = useGetAdminCompetitionQuery({
+    variables: { id: competitionId },
+    skip: !competitionId,
+  })
+  const { data: tournamentsData } = useGetAdminTournamentsQuery({
+    variables: { competitionId },
+    skip: !competitionId,
+  })
+  // codegen 実行後に competition.league の型が解決される
+  const leagues = compData?.competition?.league ? [compData.competition.league] : []
+  const tournaments = tournamentsData?.tournaments ?? []
   const { form, handleChange, handleSave, handleDelete } = useCompetitionEdit(competitionId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [dirty, setDirty] = useState(false)

@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { MOCK_TAGS, persistTags } from '../mock'
-import { notifyTagListeners } from './useTags'
+import { useCreateAdminSceneForTagMutation, GetAdminScenesForTagsDocument } from '@/gql/__generated__/graphql'
 
 export function useTagCreate() {
   const [name, setName] = useState('')
+  const [createScene] = useCreateAdminSceneForTagMutation({
+    refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
+  })
 
-  const handleCreate = () => {
-    const newId = String(Date.now())
-    MOCK_TAGS.push({ id: newId, name, enabled: true })
-    persistTags()
-    notifyTagListeners()
+  const handleCreate = async () => {
+    if (!name.trim()) return
+    await createScene({ variables: { input: { name } } })
     setName('')
   }
 

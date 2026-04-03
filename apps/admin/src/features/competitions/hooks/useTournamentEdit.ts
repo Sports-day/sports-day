@@ -1,17 +1,48 @@
-import { useState } from 'react'
-import { MOCK_TOURNAMENT_DETAILS, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
-import { generateTournamentData } from './useTournamentCreate'
+import { useState, useEffect } from 'react'
+import {
+  useGetAdminTournamentQuery,
+  useUpdateAdminTournamentMutation,
+  useDeleteAdminTournamentMutation,
+  GetAdminTournamentsDocument,
+} from '@/gql/__generated__/graphql'
 
 type PlacementMethod = 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
 
 export function useTournamentEdit(tournamentId: string) {
-  const detail = MOCK_TOURNAMENT_DETAILS[tournamentId]
+  const { data } = useGetAdminTournamentQuery({
+    variables: { id: tournamentId },
+    skip: !tournamentId,
+  })
+  const tournament = data?.tournament
 
-  const [name, setName] = useState(detail?.name ?? '')
-  const [description, setDescription] = useState(detail?.description ?? '')
-  const [teamCount, setTeamCount] = useState(detail?.teamCount ?? 4)
-  const [placementMethod, setPlacementMethod] = useState<PlacementMethod>(detail?.placementMethod ?? 'SEED_OPTIMIZED')
-  const [tag, setTag] = useState(detail?.tag ?? '')
+  const [name, setName] = useState(tournament?.name ?? '')
+  const [description, setDescription] = useState('')
+  const [teamCount, setTeamCount] = useState(tournament?.slots.length ?? 4)
+  const [placementMethod, setPlacementMethod] = useState<PlacementMethod>(
+    (tournament?.placementMethod ?? 'SEED_OPTIMIZED') as PlacementMethod
+  )
+  const [tag, setTag] = useState('')
+
+  useEffect(() => {
+    if (tournament?.name !== undefined) setName(tournament.name)
+  }, [tournament?.name])
+
+  useEffect(() => {
+    if (tournament?.slots !== undefined) setTeamCount(tournament.slots.length)
+  }, [tournament?.slots])
+
+  useEffect(() => {
+    if (tournament?.placementMethod !== undefined) {
+      setPlacementMethod(tournament.placementMethod as PlacementMethod)
+    }
+  }, [tournament?.placementMethod])
+
+  const [updateTournament] = useUpdateAdminTournamentMutation()
+  const [deleteTournament] = useDeleteAdminTournamentMutation({
+    refetchQueries: tournament?.competition?.id
+      ? [{ query: GetAdminTournamentsDocument, variables: { competitionId: tournament.competition.id } }]
+      : [],
+  })
 
   const handleChange =
     (field: 'name' | 'description' | 'tag' | 'teamCount' | 'placementMethod') =>
@@ -23,27 +54,14 @@ export function useTournamentEdit(tournamentId: string) {
       else if (field === 'placementMethod') setPlacementMethod(e.target.value as PlacementMethod)
     }
 
-  const handleSave = () => {
-    if (!detail) return
+  const handleSave = async () => {
+    await updateTournament({
+      variables: { id: tournamentId, input: { name } },
+    })
+  }
 
-    // ブラケット構造を再生成して全フィールドを更新
-    const newData = generateTournamentData(
-      { name, description, teamCount, placementMethod, tag },
-      tournamentId,
-    )
-    detail.name = newData.name
-    detail.description = newData.description
-    detail.teamCount = newData.teamCount
-    detail.placementMethod = newData.placementMethod
-    detail.tag = newData.tag
-    detail.brackets = newData.brackets
-
-    // MOCK_TOURNAMENTS_BY_COMPETITION の name も更新
-    for (const list of Object.values(MOCK_TOURNAMENTS_BY_COMPETITION)) {
-      const t = list.find((t) => t.id === tournamentId)
-      if (t) { t.name = name; break }
-    }
-    persistCompetitionsData()
+  const handleDelete = async () => {
+    await deleteTournament({ variables: { id: tournamentId } })
   }
 
   return {
@@ -54,5 +72,6 @@ export function useTournamentEdit(tournamentId: string) {
     tag,
     handleChange,
     handleSave,
+    handleDelete,
   }
 }
