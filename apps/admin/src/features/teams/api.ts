@@ -65,7 +65,17 @@ export const GET_ADMIN_ALL_USERS_FOR_TEAMS = gql`
       id
       name
       email
+      gender
       groups { id name }
+    }
+  }
+`
+
+export const GET_ADMIN_GROUPS = gql`
+  query GetAdminGroups {
+    groups {
+      id
+      name
     }
   }
 `

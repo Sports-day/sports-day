@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ChangeEvent } from 'react'
 import {
   useCreateAdminCompetitionMutation,
+  useGetAdminScenesQuery,
   CompetitionType,
 } from '@/gql/__generated__/graphql'
 
@@ -10,7 +11,6 @@ type CompetitionCreateForm = {
   description: string
   icon: string
   tag: string
-  // 【未確定】 GraphQL API に合わせた項目 — UI 側の対応は後続タスク
   sceneId: string
   competitionType: CompetitionType
 }
@@ -26,6 +26,8 @@ export function useCompetitionCreate(onSuccess: (name: string) => void) {
   })
 
   const [createCompetition] = useCreateAdminCompetitionMutation()
+  const { data: scenesData } = useGetAdminScenesQuery()
+  const scenes = scenesData?.scenes ?? []
 
   const handleChange = (field: keyof CompetitionCreateForm) => (e: ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -33,7 +35,6 @@ export function useCompetitionCreate(onSuccess: (name: string) => void) {
 
   const handleSubmit = () => {
     if (!form.name.trim()) return
-    // 【未確定】 sceneId は scenes クエリから取得する UI が必要
     createCompetition({
       variables: {
         input: {
@@ -50,5 +51,5 @@ export function useCompetitionCreate(onSuccess: (name: string) => void) {
     })
   }
 
-  return { form, handleChange, handleSubmit }
+  return { form, handleChange, handleSubmit, scenes, sceneId: form.sceneId, setSceneId: (id: string) => setForm(prev => ({ ...prev, sceneId: id })) }
 }

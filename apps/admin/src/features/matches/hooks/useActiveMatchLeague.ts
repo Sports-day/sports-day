@@ -86,7 +86,7 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
         status: toActiveStatus(m.status),
         winner,
         time: m.time,
-        location: m.location?.name,
+        locationId: m.location?.id,
       }
     })
 

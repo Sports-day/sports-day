@@ -153,6 +153,7 @@ export type CreateTournamentMatchInput = {
 
 export type CreateUserInput = {
   email: Scalars['String']['input'];
+  gender?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
 };
 
@@ -348,6 +349,7 @@ export type Mutation = {
   deleteTournament: Tournament;
   /** ブラケット内試合削除 */
   deleteTournamentMatch: Match;
+  deleteUser: User;
   /** ブラケット自動生成（MAIN + オプショナルSUB） */
   generateBracket: Array<Tournament>;
   /** リーグの総当たり戦を自動生成する */
@@ -389,6 +391,7 @@ export type Mutation = {
   updateTeamUsers: Team;
   /** トーナメント（ブラケット）を更新する */
   updateTournament: Tournament;
+  updateUser: User;
 };
 
 
@@ -606,6 +609,11 @@ export type MutationDeleteTournamentMatchArgs = {
 };
 
 
+export type MutationDeleteUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationGenerateBracketArgs = {
   input: GenerateBracketInput;
 };
@@ -743,6 +751,12 @@ export type MutationUpdateTeamUsersArgs = {
 export type MutationUpdateTournamentArgs = {
   id: Scalars['ID']['input'];
   input: UpdateTournamentInput;
+};
+
+
+export type MutationUpdateUserArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateUserInput;
 };
 
 export const PlacementMethod = {
@@ -1179,9 +1193,16 @@ export type UpdateTournamentInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateUserInput = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
+  gender?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   judgments: Array<Judgment>;
@@ -1428,6 +1449,11 @@ export type DeleteAdminLocationMutationVariables = Exact<{
 
 export type DeleteAdminLocationMutation = { __typename?: 'Mutation', deleteLocation: { __typename?: 'Location', id: string } };
 
+export type GetAdminLocationsForMatchesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAdminLocationsForMatchesQuery = { __typename?: 'Query', locations: Array<{ __typename?: 'Location', id: string, name: string }> };
+
 export type GetAdminMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1547,26 +1573,46 @@ export type UpdateAdminTeamUsersMutation = { __typename?: 'Mutation', updateTeam
 export type GetAdminAllUsersForTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminAllUsersForTeamsQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string, email: string, groups: Array<{ __typename?: 'Group', id: string, name: string }> }> };
+export type GetAdminAllUsersForTeamsQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string, email: string, gender?: string | null, groups: Array<{ __typename?: 'Group', id: string, name: string }> }> };
+
+export type GetAdminGroupsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAdminGroupsQuery = { __typename?: 'Query', groups: Array<{ __typename?: 'Group', id: string, name: string }> };
 
 export type GetAdminUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string, email: string, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
+export type GetAdminUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string, email: string, gender?: string | null, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
 
 export type GetAdminUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name: string, email: string, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetAdminUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name: string, email: string, gender?: string | null, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type CreateAdminUserMutationVariables = Exact<{
   input: CreateUserInput;
 }>;
 
 
-export type CreateAdminUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'User', id: string, name: string, email: string } };
+export type CreateAdminUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'User', id: string, name: string, email: string, gender?: string | null } };
+
+export type UpdateAdminUserMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateUserInput;
+}>;
+
+
+export type UpdateAdminUserMutation = { __typename?: 'Mutation', updateUser: { __typename?: 'User', id: string, name: string, email: string, gender?: string | null } };
+
+export type DeleteAdminUserMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteAdminUserMutation = { __typename?: 'Mutation', deleteUser: { __typename?: 'User', id: string } };
 
 
 export const GetAdminCompetitionsDocument = gql`
@@ -2977,6 +3023,46 @@ export function useDeleteAdminLocationMutation(baseOptions?: Apollo.MutationHook
 export type DeleteAdminLocationMutationHookResult = ReturnType<typeof useDeleteAdminLocationMutation>;
 export type DeleteAdminLocationMutationResult = Apollo.MutationResult<DeleteAdminLocationMutation>;
 export type DeleteAdminLocationMutationOptions = Apollo.BaseMutationOptions<DeleteAdminLocationMutation, DeleteAdminLocationMutationVariables>;
+export const GetAdminLocationsForMatchesDocument = gql`
+    query GetAdminLocationsForMatches {
+  locations {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetAdminLocationsForMatchesQuery__
+ *
+ * To run a query within a React component, call `useGetAdminLocationsForMatchesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAdminLocationsForMatchesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAdminLocationsForMatchesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAdminLocationsForMatchesQuery(baseOptions?: Apollo.QueryHookOptions<GetAdminLocationsForMatchesQuery, GetAdminLocationsForMatchesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAdminLocationsForMatchesQuery, GetAdminLocationsForMatchesQueryVariables>(GetAdminLocationsForMatchesDocument, options);
+      }
+export function useGetAdminLocationsForMatchesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAdminLocationsForMatchesQuery, GetAdminLocationsForMatchesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAdminLocationsForMatchesQuery, GetAdminLocationsForMatchesQueryVariables>(GetAdminLocationsForMatchesDocument, options);
+        }
+export function useGetAdminLocationsForMatchesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAdminLocationsForMatchesQuery, GetAdminLocationsForMatchesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAdminLocationsForMatchesQuery, GetAdminLocationsForMatchesQueryVariables>(GetAdminLocationsForMatchesDocument, options);
+        }
+export type GetAdminLocationsForMatchesQueryHookResult = ReturnType<typeof useGetAdminLocationsForMatchesQuery>;
+export type GetAdminLocationsForMatchesLazyQueryHookResult = ReturnType<typeof useGetAdminLocationsForMatchesLazyQuery>;
+export type GetAdminLocationsForMatchesSuspenseQueryHookResult = ReturnType<typeof useGetAdminLocationsForMatchesSuspenseQuery>;
+export type GetAdminLocationsForMatchesQueryResult = Apollo.QueryResult<GetAdminLocationsForMatchesQuery, GetAdminLocationsForMatchesQueryVariables>;
 export const GetAdminMatchesDocument = gql`
     query GetAdminMatches {
   matches {
@@ -3700,6 +3786,7 @@ export const GetAdminAllUsersForTeamsDocument = gql`
     id
     name
     email
+    gender
     groups {
       id
       name
@@ -3739,12 +3826,53 @@ export type GetAdminAllUsersForTeamsQueryHookResult = ReturnType<typeof useGetAd
 export type GetAdminAllUsersForTeamsLazyQueryHookResult = ReturnType<typeof useGetAdminAllUsersForTeamsLazyQuery>;
 export type GetAdminAllUsersForTeamsSuspenseQueryHookResult = ReturnType<typeof useGetAdminAllUsersForTeamsSuspenseQuery>;
 export type GetAdminAllUsersForTeamsQueryResult = Apollo.QueryResult<GetAdminAllUsersForTeamsQuery, GetAdminAllUsersForTeamsQueryVariables>;
+export const GetAdminGroupsDocument = gql`
+    query GetAdminGroups {
+  groups {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetAdminGroupsQuery__
+ *
+ * To run a query within a React component, call `useGetAdminGroupsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAdminGroupsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAdminGroupsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAdminGroupsQuery(baseOptions?: Apollo.QueryHookOptions<GetAdminGroupsQuery, GetAdminGroupsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAdminGroupsQuery, GetAdminGroupsQueryVariables>(GetAdminGroupsDocument, options);
+      }
+export function useGetAdminGroupsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAdminGroupsQuery, GetAdminGroupsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAdminGroupsQuery, GetAdminGroupsQueryVariables>(GetAdminGroupsDocument, options);
+        }
+export function useGetAdminGroupsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAdminGroupsQuery, GetAdminGroupsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAdminGroupsQuery, GetAdminGroupsQueryVariables>(GetAdminGroupsDocument, options);
+        }
+export type GetAdminGroupsQueryHookResult = ReturnType<typeof useGetAdminGroupsQuery>;
+export type GetAdminGroupsLazyQueryHookResult = ReturnType<typeof useGetAdminGroupsLazyQuery>;
+export type GetAdminGroupsSuspenseQueryHookResult = ReturnType<typeof useGetAdminGroupsSuspenseQuery>;
+export type GetAdminGroupsQueryResult = Apollo.QueryResult<GetAdminGroupsQuery, GetAdminGroupsQueryVariables>;
 export const GetAdminUsersDocument = gql`
     query GetAdminUsers {
   users {
     id
     name
     email
+    gender
     groups {
       id
       name
@@ -3794,6 +3922,7 @@ export const GetAdminUserDocument = gql`
     id
     name
     email
+    gender
     groups {
       id
       name
@@ -3844,6 +3973,7 @@ export const CreateAdminUserDocument = gql`
     id
     name
     email
+    gender
   }
 }
     `;
@@ -3873,3 +4003,73 @@ export function useCreateAdminUserMutation(baseOptions?: Apollo.MutationHookOpti
 export type CreateAdminUserMutationHookResult = ReturnType<typeof useCreateAdminUserMutation>;
 export type CreateAdminUserMutationResult = Apollo.MutationResult<CreateAdminUserMutation>;
 export type CreateAdminUserMutationOptions = Apollo.BaseMutationOptions<CreateAdminUserMutation, CreateAdminUserMutationVariables>;
+export const UpdateAdminUserDocument = gql`
+    mutation UpdateAdminUser($id: ID!, $input: UpdateUserInput!) {
+  updateUser(id: $id, input: $input) {
+    id
+    name
+    email
+    gender
+  }
+}
+    `;
+export type UpdateAdminUserMutationFn = Apollo.MutationFunction<UpdateAdminUserMutation, UpdateAdminUserMutationVariables>;
+
+/**
+ * __useUpdateAdminUserMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminUserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminUserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminUserMutation, { data, loading, error }] = useUpdateAdminUserMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminUserMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminUserMutation, UpdateAdminUserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminUserMutation, UpdateAdminUserMutationVariables>(UpdateAdminUserDocument, options);
+      }
+export type UpdateAdminUserMutationHookResult = ReturnType<typeof useUpdateAdminUserMutation>;
+export type UpdateAdminUserMutationResult = Apollo.MutationResult<UpdateAdminUserMutation>;
+export type UpdateAdminUserMutationOptions = Apollo.BaseMutationOptions<UpdateAdminUserMutation, UpdateAdminUserMutationVariables>;
+export const DeleteAdminUserDocument = gql`
+    mutation DeleteAdminUser($id: ID!) {
+  deleteUser(id: $id) {
+    id
+  }
+}
+    `;
+export type DeleteAdminUserMutationFn = Apollo.MutationFunction<DeleteAdminUserMutation, DeleteAdminUserMutationVariables>;
+
+/**
+ * __useDeleteAdminUserMutation__
+ *
+ * To run a mutation, you first call `useDeleteAdminUserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteAdminUserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteAdminUserMutation, { data, loading, error }] = useDeleteAdminUserMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteAdminUserMutation(baseOptions?: Apollo.MutationHookOptions<DeleteAdminUserMutation, DeleteAdminUserMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteAdminUserMutation, DeleteAdminUserMutationVariables>(DeleteAdminUserDocument, options);
+      }
+export type DeleteAdminUserMutationHookResult = ReturnType<typeof useDeleteAdminUserMutation>;
+export type DeleteAdminUserMutationResult = Apollo.MutationResult<DeleteAdminUserMutation>;
+export type DeleteAdminUserMutationOptions = Apollo.BaseMutationOptions<DeleteAdminUserMutation, DeleteAdminUserMutationVariables>;

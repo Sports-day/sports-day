@@ -5,6 +5,7 @@ import {
   useUpdateAdminTeamMutation,
   useDeleteAdminTeamMutation,
   useUpdateAdminTeamUsersMutation,
+  useGetAdminGroupsQuery,
 } from '@/gql/__generated__/graphql'
 import type { TeamMember, SelectableUser } from '../types'
 
@@ -14,18 +15,21 @@ export function useTeamDetail(teamId: string) {
     skip: !teamId,
   })
   const { data: usersData } = useGetAdminAllUsersForTeamsQuery()
+  const { data: groupsData } = useGetAdminGroupsQuery()
 
   const team = data?.team
   const [name, setName] = useState(team?.name ?? '')
-  const [teamClass, setTeamClass] = useState(team?.group.name ?? '')
+  const [groupId, setGroupId] = useState(team?.group.id ?? '')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  const groups = groupsData?.groups ?? []
 
   // チームメンバーは GraphQL User として管理
   const members: TeamMember[] = (team?.users ?? []).map(u => ({
     studentId: u.id,
     name: u.name,
-    gender: '男性' as const,  // 【未確定】 GraphQL User に gender フィールドなし
+    gender: u.gender ?? '',
   }))
 
   const [updateTeam] = useUpdateAdminTeamMutation()
@@ -64,8 +68,7 @@ export function useTeamDetail(teamId: string) {
     updateTeam({
       variables: {
         id: teamId,
-        input: { name },
-        // 【未確定】 groupId は group名からの逆引きが必要
+        input: { name, groupId },
       },
       refetchQueries: ['GetAdminTeams', 'GetAdminTeam'],
     }).catch(() => {})
@@ -85,15 +88,16 @@ export function useTeamDetail(teamId: string) {
     .map(u => ({
       id: u.id,
       userName: u.name,
-      gender: '男性' as const,  // 【未確定】 GraphQL User に gender フィールドなし
+      gender: u.gender ?? '',
       studentId: u.id,
     }))
 
   return {
     name,
     setName,
-    teamClass,
-    setTeamClass,
+    groupId,
+    setGroupId,
+    groups,
     members,
     dialogOpen,
     handleOpenDialog,

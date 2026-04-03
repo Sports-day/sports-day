@@ -1,5 +1,14 @@
 import { gql } from '@apollo/client'
 
+export const GET_ADMIN_LOCATIONS_FOR_MATCHES = gql`
+  query GetAdminLocationsForMatches {
+    locations {
+      id
+      name
+    }
+  }
+`
+
 export const GET_ADMIN_MATCHES = gql`
   query GetAdminMatches {
     matches {

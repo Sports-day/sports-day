@@ -56,7 +56,7 @@ export function useUserCsv() {
           input: {
             name: r.userName,
             email: r.email,
-            // 【未確定】 gender, class は GraphQL CreateUserInput に存在しない
+            gender: r.gender,
           },
         },
         refetchQueries: ['GetAdminUsers'],

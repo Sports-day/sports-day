@@ -3,6 +3,10 @@ import {
   Breadcrumbs,
   Button,
   ButtonBase,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -40,8 +44,9 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
   const {
     name,
     setName,
-    teamClass,
-    setTeamClass,
+    groupId,
+    setGroupId,
+    groups,
     members,
     dialogOpen,
     handleOpenDialog,
@@ -108,15 +113,19 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
           sx={{ ...CARD_FIELD_SX, mb: 2 }}
         />
 
-        {/* 所属クラス */}
-        <TextField
-          label="所属クラス"
-          fullWidth
-          size="small"
-          value={teamClass}
-          onChange={(e) => setTeamClass(e.target.value)}
-          sx={{ ...CARD_FIELD_SX, mb: 2 }}
-        />
+        {/* 所属グループ */}
+        <FormControl fullWidth size="small" sx={{ ...CARD_FIELD_SX, mb: 2 }}>
+          <InputLabel>所属グループ</InputLabel>
+          <Select
+            value={groupId}
+            label="所属グループ"
+            onChange={(e) => setGroupId(e.target.value)}
+          >
+            {groups.map((g) => (
+              <MenuItem key={g.id} value={g.id}>{g.name}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         {/* チームメンバー */}
         <Box

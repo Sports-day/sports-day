@@ -27,7 +27,7 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
   const users = (data?.users ?? []).map(u => ({
     id: u.id,
     userName: u.name,
-    gender: '男性' as string, // 【未確定】GraphQL User に gender はない
+    gender: u.gender ?? '',
     studentId: u.email,
   }))
 

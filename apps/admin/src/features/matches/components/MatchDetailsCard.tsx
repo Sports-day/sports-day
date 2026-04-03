@@ -39,9 +39,8 @@ type Props = {
 export function MatchDetailsCard({ match }: Props) {
   const {
     open, setOpen,
-    note, setNote,
-    referee, setReferee,
-    location, setLocation,
+    locationId, setLocationId,
+    locations,
     startTime, setStartTime,
     handleSave, handleReset,
   } = useMatchDetails(match)
@@ -85,61 +84,18 @@ export function MatchDetailsCard({ match }: Props) {
         {/* 展開コンテンツ */}
         <Collapse in={open} timeout={300}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {/* 補足 */}
-            <Box>
-              <Typography sx={DETAIL_LABEL_SX}>補足</Typography>
-              <TextField
-                size="small"
-                fullWidth
-                placeholder="補足情報を入力してください(任意)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                sx={{
-                  ...DETAIL_FIELD_SX,
-                  '& .MuiInputBase-input::placeholder': { color: '#2F3C8C', opacity: 0.6 },
-                }}
-              />
-            </Box>
-
-            {/* 審判 */}
-            <Box>
-              <Typography sx={DETAIL_LABEL_SX}>審判</Typography>
-              <Select
-                value={referee}
-                displayEmpty
-                size="small"
-                fullWidth
-                onChange={(e) => setReferee(e.target.value)}
-                renderValue={(val) => (
-                  <Typography sx={{ fontSize: '13px', color: val ? '#2F3C8C' : '#9e9e9e' }}>
-                    {val || '審判'}
-                  </Typography>
-                )}
-                sx={{
-                  backgroundColor: 'transparent',
-                  '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                  '&:hover fieldset': { borderColor: '#5B6DC6' },
-                  '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                }}
-              >
-                <MenuItem value=""><Typography sx={{ fontSize: '13px', color: '#9e9e9e' }}>審判</Typography></MenuItem>
-                <MenuItem value="r1"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>審判員 A</Typography></MenuItem>
-                <MenuItem value="r2"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>審判員 B</Typography></MenuItem>
-              </Select>
-            </Box>
-
             {/* 試合の場所 */}
             <Box>
               <Typography sx={{ ...DETAIL_LABEL_SX, mb: 1.5 }}>試合の場所</Typography>
               <FormControl size="small" fullWidth>
                 <InputLabel shrink sx={{ fontSize: '13px', color: '#2F3C8C' }}>場所</InputLabel>
                 <Select
-                  value={location}
+                  value={locationId}
                   label="場所"
                   notched
                   size="small"
                   fullWidth
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => setLocationId(e.target.value)}
                   sx={{
                     backgroundColor: 'transparent',
                     '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
@@ -147,9 +103,11 @@ export function MatchDetailsCard({ match }: Props) {
                     '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
                   }}
                 >
-                  <MenuItem value="1"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>1 - Soccer Field 1</Typography></MenuItem>
-                  <MenuItem value="2"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>2 - Soccer Field 2</Typography></MenuItem>
-                  <MenuItem value="3"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>3 - 体育館</Typography></MenuItem>
+                  {locations.map((loc) => (
+                    <MenuItem key={loc.id} value={loc.id}>
+                      <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{loc.name}</Typography>
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Box>
