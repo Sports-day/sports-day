@@ -6,11 +6,10 @@ package graph
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	"sports-day/api/pkg/errors"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -24,12 +23,20 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 
 // UpdateUser is the resolver for the updateUser field.
 func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
+	user, err := r.UserService.Update(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatUserResponse(user), nil
 }
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
+	user, err := r.UserService.Delete(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatUserResponse(user), nil
 }
 
 // CreateGroup is the resolver for the createGroup field.
@@ -219,7 +226,11 @@ func (r *mutationResolver) DeleteScene(ctx context.Context, id string) (*model.S
 
 // RestoreScene is the resolver for the restoreScene field.
 func (r *mutationResolver) RestoreScene(ctx context.Context, id string) (*model.Scene, error) {
-	panic(fmt.Errorf("not implemented: RestoreScene - restoreScene"))
+	scene, err := r.SceneService.Restore(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
 }
 
 // CreateInformation is the resolver for the createInformation field.
