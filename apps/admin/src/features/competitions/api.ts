@@ -231,3 +231,22 @@ export const CREATE_ADMIN_TOURNAMENT = gql`
     }
   }
 `
+
+export const ASSIGN_SEED_TEAM = gql`
+  mutation AssignAdminSeedTeam($input: AssignSeedTeamInput!) {
+    assignSeedTeam(input: $input) {
+      id
+      seedNumber
+      matchEntry { id team { id name } score }
+    }
+  }
+`
+
+export const UPDATE_SEED_NUMBERS = gql`
+  mutation UpdateAdminSeedNumbers($tournamentId: ID!, $seeds: [SeedNumberInput!]!) {
+    updateSeedNumbers(tournamentId: $tournamentId, seeds: $seeds) {
+      id
+      seedNumber
+    }
+  }
+`

@@ -1355,6 +1355,21 @@ export type CreateAdminTournamentMutationVariables = Exact<{
 
 export type CreateAdminTournamentMutation = { __typename?: 'Mutation', createTournament: { __typename?: 'Tournament', id: string, name: string, bracketType: BracketType } };
 
+export type AssignAdminSeedTeamMutationVariables = Exact<{
+  input: AssignSeedTeamInput;
+}>;
+
+
+export type AssignAdminSeedTeamMutation = { __typename?: 'Mutation', assignSeedTeam: { __typename?: 'TournamentSlot', id: string, seedNumber?: number | null, matchEntry: { __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null } } };
+
+export type UpdateAdminSeedNumbersMutationVariables = Exact<{
+  tournamentId: Scalars['ID']['input'];
+  seeds: Array<SeedNumberInput> | SeedNumberInput;
+}>;
+
+
+export type UpdateAdminSeedNumbersMutation = { __typename?: 'Mutation', updateSeedNumbers: Array<{ __typename?: 'TournamentSlot', id: string, seedNumber?: number | null }> };
+
 export type GetAdminImagesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -2499,6 +2514,83 @@ export function useCreateAdminTournamentMutation(baseOptions?: Apollo.MutationHo
 export type CreateAdminTournamentMutationHookResult = ReturnType<typeof useCreateAdminTournamentMutation>;
 export type CreateAdminTournamentMutationResult = Apollo.MutationResult<CreateAdminTournamentMutation>;
 export type CreateAdminTournamentMutationOptions = Apollo.BaseMutationOptions<CreateAdminTournamentMutation, CreateAdminTournamentMutationVariables>;
+export const AssignAdminSeedTeamDocument = gql`
+    mutation AssignAdminSeedTeam($input: AssignSeedTeamInput!) {
+  assignSeedTeam(input: $input) {
+    id
+    seedNumber
+    matchEntry {
+      id
+      team {
+        id
+        name
+      }
+      score
+    }
+  }
+}
+    `;
+export type AssignAdminSeedTeamMutationFn = Apollo.MutationFunction<AssignAdminSeedTeamMutation, AssignAdminSeedTeamMutationVariables>;
+
+/**
+ * __useAssignAdminSeedTeamMutation__
+ *
+ * To run a mutation, you first call `useAssignAdminSeedTeamMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAssignAdminSeedTeamMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [assignAdminSeedTeamMutation, { data, loading, error }] = useAssignAdminSeedTeamMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAssignAdminSeedTeamMutation(baseOptions?: Apollo.MutationHookOptions<AssignAdminSeedTeamMutation, AssignAdminSeedTeamMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AssignAdminSeedTeamMutation, AssignAdminSeedTeamMutationVariables>(AssignAdminSeedTeamDocument, options);
+      }
+export type AssignAdminSeedTeamMutationHookResult = ReturnType<typeof useAssignAdminSeedTeamMutation>;
+export type AssignAdminSeedTeamMutationResult = Apollo.MutationResult<AssignAdminSeedTeamMutation>;
+export type AssignAdminSeedTeamMutationOptions = Apollo.BaseMutationOptions<AssignAdminSeedTeamMutation, AssignAdminSeedTeamMutationVariables>;
+export const UpdateAdminSeedNumbersDocument = gql`
+    mutation UpdateAdminSeedNumbers($tournamentId: ID!, $seeds: [SeedNumberInput!]!) {
+  updateSeedNumbers(tournamentId: $tournamentId, seeds: $seeds) {
+    id
+    seedNumber
+  }
+}
+    `;
+export type UpdateAdminSeedNumbersMutationFn = Apollo.MutationFunction<UpdateAdminSeedNumbersMutation, UpdateAdminSeedNumbersMutationVariables>;
+
+/**
+ * __useUpdateAdminSeedNumbersMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminSeedNumbersMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminSeedNumbersMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminSeedNumbersMutation, { data, loading, error }] = useUpdateAdminSeedNumbersMutation({
+ *   variables: {
+ *      tournamentId: // value for 'tournamentId'
+ *      seeds: // value for 'seeds'
+ *   },
+ * });
+ */
+export function useUpdateAdminSeedNumbersMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminSeedNumbersMutation, UpdateAdminSeedNumbersMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminSeedNumbersMutation, UpdateAdminSeedNumbersMutationVariables>(UpdateAdminSeedNumbersDocument, options);
+      }
+export type UpdateAdminSeedNumbersMutationHookResult = ReturnType<typeof useUpdateAdminSeedNumbersMutation>;
+export type UpdateAdminSeedNumbersMutationResult = Apollo.MutationResult<UpdateAdminSeedNumbersMutation>;
+export type UpdateAdminSeedNumbersMutationOptions = Apollo.BaseMutationOptions<UpdateAdminSeedNumbersMutation, UpdateAdminSeedNumbersMutationVariables>;
 export const GetAdminImagesDocument = gql`
     query GetAdminImages {
   images {
