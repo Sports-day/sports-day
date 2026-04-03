@@ -7,4 +7,5 @@ type Information struct {
 	ID      string `json:"id"`      // ID
 	Title   string `json:"title"`   // タイトル
 	Content string `json:"content"` // コメント
+	Status  string `json:"status"`  // ステータス
 }

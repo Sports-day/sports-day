@@ -6,6 +6,7 @@ export const GET_INFORMATIONS = gql`
       id
       title
       content
+      status
     }
   }
 `;
@@ -16,6 +17,7 @@ export const GET_INFORMATION = gql`
       id
       title
       content
+      status
     }
   }
 `;

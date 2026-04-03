@@ -104,6 +104,8 @@ type Information {
   id: ID!
   title: String!
   content: String!
+  status: String!
+  scheduledAt: String
 }
 
 enum RankingConditionKey {
@@ -252,11 +254,15 @@ input UpdateGroupUsersInput {
 input CreateInformationInput {
   title: String!
   content: String!
+  status: String
+  scheduledAt: String
 }
 
 input UpdateInformationInput {
   title: String
   content: String
+  status: String
+  scheduledAt: String
 }
 
 input CreateSceneInput {

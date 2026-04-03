@@ -5,8 +5,11 @@ import {
 
 export const useFetchAllInformation = () => {
   const { data, loading, refetch } = useGetPanelInformationsQuery();
+  const allInformation = (data?.Informations ?? []).filter(
+    (i) => i.status === "published"
+  );
   return {
-    allInformation: data?.Informations ?? [],
+    allInformation,
     isFetching: loading,
     refresh: refetch,
   };

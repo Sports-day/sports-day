@@ -79,11 +79,11 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.content}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>
                         <Chip
-                          label={item.status === 'published' ? '公開中' : item.status === 'scheduled' ? '公開予約' : '下書き'}
+                          label={item.status === 'published' ? '公開中' : '下書き'}
                           size="small"
                           sx={{
-                            bgcolor: item.status === 'published' ? '#E8EAF6' : item.status === 'scheduled' ? '#E3F2FD' : '#F5F5F5',
-                            color: item.status === 'published' ? '#3949AB' : item.status === 'scheduled' ? '#1565C0' : '#9E9E9E',
+                            bgcolor: item.status === 'published' ? '#E8EAF6' : '#F5F5F5',
+                            color: item.status === 'published' ? '#3949AB' : '#9E9E9E',
                             fontSize: '11px',
                             fontWeight: 600,
                             height: 22,

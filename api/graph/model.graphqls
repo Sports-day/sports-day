@@ -117,6 +117,7 @@ type Information {
   id: ID!
   title: String!
   content: String!
+  status: String!
 }
 
 enum RankingConditionKey {

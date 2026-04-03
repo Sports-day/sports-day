@@ -20,11 +20,13 @@ input UpdateGroupUsersInput {
 input CreateInformationInput {
   title: String!
   content: String!
+  status: String
 }
 
 input UpdateInformationInput {
   title: String
   content: String
+  status: String
 }
 
 input CreateSceneInput {
