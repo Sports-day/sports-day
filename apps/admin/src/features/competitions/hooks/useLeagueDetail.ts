@@ -1,9 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 import {
   useGetAdminLeagueQuery,
   useGetAdminTeamsQuery,
+  useGetAdminCompetitionsQuery,
+  useGetAdminPromotionRulesQuery,
   useUpdateAdminLeagueRuleMutation,
+  useCreateAdminPromotionRuleMutation,
+  useDeleteAdminPromotionRuleMutation,
+  GetAdminPromotionRulesDocument,
+  CompetitionType,
 } from '@/gql/__generated__/graphql'
 
 type LeagueForm = {
@@ -33,12 +39,17 @@ export type ProgressionTarget = {
   type: 'league' | 'tournament'
 }
 
-export function useLeagueDetail(leagueId: string, leagueName: string, _competitionId: string) {
+export function useLeagueDetail(leagueId: string, leagueName: string, competitionId: string) {
   const { data: leagueData, loading, error } = useGetAdminLeagueQuery({
     variables: { id: leagueId },
     skip: !leagueId,
   })
   const { data: teamsData } = useGetAdminTeamsQuery()
+  const { data: competitionsData } = useGetAdminCompetitionsQuery()
+  const { data: promotionRulesData } = useGetAdminPromotionRulesQuery({
+    variables: { sourceCompetitionId: competitionId },
+    skip: !competitionId,
+  })
 
   const league = leagueData?.league
 
@@ -62,12 +73,53 @@ export function useLeagueDetail(leagueId: string, leagueName: string, _competiti
   )
 
   const [addDialogOpen, setAddDialogOpen] = useState(false)
-  // 【未確定】 progression rules は GraphQL PromotionRule へ移行が必要
   const [progressionEnabled, setProgressionEnabled] = useState(false)
   const [progressionMaxRank, setProgressionMaxRank] = useState(3)
   const [progressionRules, setProgressionRules] = useState<ProgressionRule[]>([])
+  // GQL PromotionRule.id を rank でひけるようにする
+  const [ruleIdByRank, setRuleIdByRank] = useState<Record<number, string>>({})
 
   const [updateLeagueRule] = useUpdateAdminLeagueRuleMutation()
+  const [createPromotionRule] = useCreateAdminPromotionRuleMutation({
+    refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
+  })
+  const [deletePromotionRule] = useDeleteAdminPromotionRuleMutation({
+    refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
+  })
+
+  // GQL データで初期化
+  useEffect(() => {
+    if (league?.name !== undefined) {
+      setForm(prev => ({ ...prev, name: league.name }))
+    }
+  }, [league?.name])
+
+  useEffect(() => {
+    if (league?.teams !== undefined) {
+      setEntries(league.teams.map((t, i) => ({
+        id: i + 1,
+        teamName: t.name,
+        teamClass: t.group.name,
+        teamId: t.id,
+      })))
+    }
+  }, [league?.teams])
+
+  useEffect(() => {
+    if (promotionRulesData?.promotionRules) {
+      const rules = promotionRulesData.promotionRules
+      setProgressionRules(rules.map(r => ({
+        rank: parseInt(r.rankSpec),
+        targetId: r.targetCompetition.id,
+      })))
+      setProgressionEnabled(rules.length > 0)
+      const idMap: Record<number, string> = {}
+      for (const r of rules) {
+        idMap[parseInt(r.rankSpec)] = r.id
+      }
+      setRuleIdByRank(idMap)
+    }
+  }, [promotionRulesData?.promotionRules])
 
   const handleChange = (field: keyof Omit<LeagueForm, 'resultJudgments'>) => (e: ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -104,7 +156,24 @@ export function useLeagueDetail(leagueId: string, leagueName: string, _competiti
     setAddDialogOpen(false)
   }
 
-  const handleProgressionRuleChange = (rank: number, targetId: string) => {
+  const handleProgressionRuleChange = async (rank: number, targetId: string) => {
+    // 既存ルールがあれば削除してから再作成
+    const existingId = ruleIdByRank[rank]
+    if (existingId) {
+      await deletePromotionRule({ variables: { id: existingId } }).catch(() => {})
+    }
+    if (targetId) {
+      await createPromotionRule({
+        variables: {
+          input: {
+            sourceCompetitionId: competitionId,
+            targetCompetitionId: targetId,
+            rankSpec: String(rank),
+          },
+        },
+      }).catch(() => {})
+    }
+    // ローカル state も即時更新
     setProgressionRules(prev => {
       const existing = prev.find(r => r.rank === rank)
       if (existing) return prev.map(r => r.rank === rank ? { ...r, targetId } : r)
@@ -112,8 +181,14 @@ export function useLeagueDetail(leagueId: string, leagueName: string, _competiti
     })
   }
 
-  // 【未確定】 同一 competition の他リーグ・トーナメントは後続タスクで対応
-  const availableProgressionTargets: ProgressionTarget[] = []
+  // 同一 competitionId の他リーグ・トーナメントを候補として提示
+  const availableProgressionTargets: ProgressionTarget[] = (competitionsData?.competitions ?? [])
+    .filter(c => c.id !== competitionId)
+    .map(c => ({
+      id: c.id,
+      name: c.name,
+      type: c.type === CompetitionType.League ? 'league' : 'tournament',
+    }))
 
   return {
     form,

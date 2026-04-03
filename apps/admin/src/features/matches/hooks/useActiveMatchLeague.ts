@@ -1,4 +1,4 @@
-import { useGetAdminLeagueQuery, useGetAdminLeagueStandingsQuery } from '@/gql/__generated__/graphql'
+import { useGetAdminLeagueQuery, useGetAdminLeagueStandingsQuery, useGetAdminMatchesQuery } from '@/gql/__generated__/graphql'
 import type { ActiveLeague, ActiveMatch, ActiveTeam } from '../types'
 
 export type GridCell =
@@ -27,7 +27,14 @@ export function statusLabel(status: ActiveMatch['status']): string {
   return '未登録'
 }
 
-export function useActiveMatchLeague(_competitionId: string, leagueId: string) {
+function toActiveStatus(s: string): ActiveMatch['status'] {
+  if (s === 'ONGOING') return 'ongoing'
+  if (s === 'FINISHED') return 'finished'
+  if (s === 'CANCELED') return 'cancelled'
+  return 'standby'
+}
+
+export function useActiveMatchLeague(competitionId: string, leagueId: string) {
   const { data: leagueData, loading, error } = useGetAdminLeagueQuery({
     variables: { id: leagueId },
     skip: !leagueId,
@@ -36,6 +43,7 @@ export function useActiveMatchLeague(_competitionId: string, leagueId: string) {
     variables: { leagueId },
     skip: !leagueId,
   })
+  const { data: matchesData } = useGetAdminMatchesQuery()
 
   if (!leagueData?.league) {
     return {
@@ -59,8 +67,28 @@ export function useActiveMatchLeague(_competitionId: string, leagueId: string) {
     shortName: t.name,
   }))
 
-  // 【未確定】 リーグ内の試合一覧は graphQL から取得する方法が未確定（match → league の逆引きが必要）
-  const activeMatches: ActiveMatch[] = []
+  // competition.matches から league 内の試合を取得（competition.id で絞り込み）
+  const activeMatches: ActiveMatch[] = (matchesData?.matches ?? [])
+    .filter(m => m.competition.id === competitionId)
+    .map(m => {
+      const entry0 = m.entries[0]
+      const entry1 = m.entries[1]
+      const winnerTeamId = m.winnerTeam?.id ?? null
+      let winner: ActiveMatch['winner']
+      if (winnerTeamId && entry0?.team?.id === winnerTeamId) winner = 'teamA'
+      else if (winnerTeamId && entry1?.team?.id === winnerTeamId) winner = 'teamB'
+      return {
+        id: m.id,
+        teamAId: entry0?.team?.id ?? '',
+        teamBId: entry1?.team?.id ?? '',
+        scoreA: entry0?.score ?? null,
+        scoreB: entry1?.score ?? null,
+        status: toActiveStatus(m.status),
+        winner,
+        time: m.time,
+        location: m.location?.name,
+      }
+    })
 
   const league: ActiveLeague = {
     id: gqlLeague.id,
@@ -92,24 +120,27 @@ export function useActiveMatchLeague(_competitionId: string, leagueId: string) {
     rankLabels.set(standing.team.id, `${standing.rank}位`)
   }
 
-  // 【未確定】 試合グリッドは activeMatches が空のため空になる
   const grid: GridCell[][] = activeTeams.map(rowTeam =>
     activeTeams.map(colTeam => {
       if (rowTeam.id === colTeam.id) return { type: 'diagonal' }
+      const match = activeMatches.find(m =>
+        (m.teamAId === rowTeam.id && m.teamBId === colTeam.id) ||
+        (m.teamAId === colTeam.id && m.teamBId === rowTeam.id)
+      )
+      const homeScore = match?.teamAId === rowTeam.id ? (match?.scoreA ?? 0) : (match?.scoreB ?? 0)
+      const awayScore = match?.teamBId === colTeam.id ? (match?.scoreB ?? 0) : (match?.scoreA ?? 0)
       return {
         type: 'match',
-        match: undefined,
+        match,
         rowTeam,
         colTeam,
-        homeScore: 0,
-        awayScore: 0,
+        homeScore: homeScore ?? 0,
+        awayScore: awayScore ?? 0,
       }
     })
   )
 
-  const allFinished = standings.length > 0 && activeMatches.length === 0
-    ? false
-    : activeMatches.every(m => m.status === 'finished')
+  const allFinished = activeMatches.length > 0 && activeMatches.every(m => m.status === 'finished')
 
   return { league, grid, allFinished, statsMap, rankLabels, loading, error: error ?? null }
 }

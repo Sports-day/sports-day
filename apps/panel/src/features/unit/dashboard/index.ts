@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFetchLocations } from "@/src/features/locations/hook";
 import { useFetchTeams } from "@/src/features/teams/hook";
 import { useFetchSports } from "@/src/features/sports/hook";
@@ -16,6 +16,9 @@ import {
   GetPanelUsersQuery,
   GetPanelCompetitionsQuery,
   GetPanelMeQuery,
+  CompetitionType,
+  useGetPanelLeagueStandingsQuery,
+  useGetPanelTournamentRankingQuery,
 } from "@/src/gql/__generated__/graphql";
 
 // GraphQL 生成型エイリアス
@@ -65,6 +68,27 @@ export const useFetchDashboard = () => {
   const [myTeamUsersState, setMyTeamUsers] = useState<GqlTeam["users"]>([]);
   const [myTeamRankState, setMyTeamRank] = useState<number>(0);
   const [myJudgeMatchesState, setMyJudgeMatches] = useState<GqlMatch[]>([]);
+
+  // myGame が確定したら standings / ranking を取得してランクを更新
+  const myGameLeagueId = myGameState?.league?.id ?? '';
+  const isLeagueGame = myGameState?.type === CompetitionType.League;
+
+  const { data: standingsData } = useGetPanelLeagueStandingsQuery({
+    variables: { leagueId: myGameLeagueId },
+    skip: !myGameLeagueId || !isLeagueGame,
+  });
+  const { data: rankingData } = useGetPanelTournamentRankingQuery({
+    variables: { competitionId: myGameState?.id ?? '' },
+    skip: !myGameState?.id || isLeagueGame,
+  });
+
+  useEffect(() => {
+    if (!myTeamState) return;
+    const leagueRank = standingsData?.leagueStandings.find(s => s.team.id === myTeamState.id)?.rank;
+    const tournamentRank = rankingData?.tournamentRanking.find(r => r.team.id === myTeamState.id)?.rank;
+    const rank = leagueRank ?? tournamentRank;
+    if (rank !== undefined) setMyTeamRank(rank);
+  }, [standingsData, rankingData, myTeamState]);
 
   if (
     !isFetchingImages &&
@@ -131,8 +155,7 @@ export const useFetchDashboard = () => {
       );
       setMyTeamMatches(myTeamMatches);
 
-      // 【未確定】league/tournament 順位は leagueStandings / tournamentRanking クエリで対応予定（TASK-005+）
-      setMyTeamRank(0);
+      // 順位は useEffect 内で leagueStandings / tournamentRanking から更新される
 
       // 自分のチームが審判を担当する試合
       const myJudgeMatches = matches.filter(

@@ -72,6 +72,7 @@ export function TournamentDetailPage({
     tag,
     handleChange,
     handleSave,
+    handleDelete,
   } = useTournamentEdit(tournamentId)
 
   const { seedNumbers, assignments, teams, setAssignment, saveAssignments } = useSeedAssignment(tournamentId)
@@ -87,9 +88,9 @@ export function TournamentDetailPage({
     showToast('トーナメントを保存しました')
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    // 【未確定】deleteTournament ミューテーションは GraphQL API 未実装
+    await handleDelete()
     onDeleted?.()
     showToast('トーナメントを削除しました')
   }

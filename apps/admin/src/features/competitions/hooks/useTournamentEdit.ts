@@ -1,11 +1,14 @@
-import { useState } from 'react'
-import { useGetAdminTournamentQuery } from '@/gql/__generated__/graphql'
-import { generateTournamentData } from './useTournamentCreate'
+import { useState, useEffect } from 'react'
+import {
+  useGetAdminTournamentQuery,
+  useUpdateAdminTournamentMutation,
+  useDeleteAdminTournamentMutation,
+  GetAdminTournamentsDocument,
+} from '@/gql/__generated__/graphql'
 
 type PlacementMethod = 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
 
 export function useTournamentEdit(tournamentId: string) {
-  // 【未確定】 updateTournament mutation が GraphQL スキーマに存在しないため保存は未実装
   const { data } = useGetAdminTournamentQuery({
     variables: { id: tournamentId },
     skip: !tournamentId,
@@ -20,6 +23,27 @@ export function useTournamentEdit(tournamentId: string) {
   )
   const [tag, setTag] = useState('')
 
+  useEffect(() => {
+    if (tournament?.name !== undefined) setName(tournament.name)
+  }, [tournament?.name])
+
+  useEffect(() => {
+    if (tournament?.slots !== undefined) setTeamCount(tournament.slots.length)
+  }, [tournament?.slots])
+
+  useEffect(() => {
+    if (tournament?.placementMethod !== undefined) {
+      setPlacementMethod(tournament.placementMethod as PlacementMethod)
+    }
+  }, [tournament?.placementMethod])
+
+  const [updateTournament] = useUpdateAdminTournamentMutation()
+  const [deleteTournament] = useDeleteAdminTournamentMutation({
+    refetchQueries: tournament?.competition?.id
+      ? [{ query: GetAdminTournamentsDocument, variables: { competitionId: tournament.competition.id } }]
+      : [],
+  })
+
   const handleChange =
     (field: 'name' | 'description' | 'tag' | 'teamCount' | 'placementMethod') =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -30,10 +54,14 @@ export function useTournamentEdit(tournamentId: string) {
       else if (field === 'placementMethod') setPlacementMethod(e.target.value as PlacementMethod)
     }
 
-  const handleSave = () => {
-    // 【未確定】 updateTournament mutation が実装されたら以下で置き換え
-    // ブラケット生成ロジックはローカルで保持
-    generateTournamentData({ name, description, teamCount, placementMethod, tag }, tournamentId)
+  const handleSave = async () => {
+    await updateTournament({
+      variables: { id: tournamentId, input: { name } },
+    })
+  }
+
+  const handleDelete = async () => {
+    await deleteTournament({ variables: { id: tournamentId } })
   }
 
   return {
@@ -44,5 +72,6 @@ export function useTournamentEdit(tournamentId: string) {
     tag,
     handleChange,
     handleSave,
+    handleDelete,
   }
 }
