@@ -4,8 +4,7 @@ import { useCreateAdminInformationMutation, GetAdminInformationsDocument } from 
 export function useInformationCreate(onSave: () => void) {
   const [name, setName] = useState('')
   const [content, setContent] = useState('')
-  const [status, setStatus] = useState<'published' | 'scheduled' | 'draft'>('draft')
-  const [scheduledAt, setScheduledAt] = useState('')
+  const [status, setStatus] = useState<'published' | 'draft'>('draft')
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [createInformation] = useCreateAdminInformationMutation({
@@ -16,14 +15,7 @@ export function useInformationCreate(onSave: () => void) {
     if (!name.trim()) return
     try {
       await createInformation({
-        variables: {
-          input: {
-            title: name,
-            content,
-            status,
-            scheduledAt: scheduledAt !== '' ? scheduledAt : undefined,
-          },
-        },
+        variables: { input: { title: name, content, status } },
       })
       setMutationError(null)
       onSave()
@@ -32,5 +24,5 @@ export function useInformationCreate(onSave: () => void) {
     }
   }
 
-  return { name, setName, content, setContent, status, setStatus, scheduledAt, setScheduledAt, handleCreate, error: mutationError }
+  return { name, setName, content, setContent, status, setStatus, handleCreate, error: mutationError }
 }

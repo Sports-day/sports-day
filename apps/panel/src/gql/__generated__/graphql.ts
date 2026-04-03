@@ -200,7 +200,6 @@ export type Information = {
   __typename?: 'Information';
   content: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  scheduledAt?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
@@ -1224,14 +1223,14 @@ export type GetPanelImageQuery = { __typename?: 'Query', image: { __typename?: '
 export type GetPanelInformationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelInformationsQuery = { __typename?: 'Query', Informations: Array<{ __typename?: 'Information', id: string, title: string, content: string, status: string, scheduledAt?: string | null }> };
+export type GetPanelInformationsQuery = { __typename?: 'Query', Informations: Array<{ __typename?: 'Information', id: string, title: string, content: string, status: string }> };
 
 export type GetPanelInformationQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelInformationQuery = { __typename?: 'Query', Information: { __typename?: 'Information', id: string, title: string, content: string, status: string, scheduledAt?: string | null } };
+export type GetPanelInformationQuery = { __typename?: 'Query', Information: { __typename?: 'Information', id: string, title: string, content: string, status: string } };
 
 export type GetPanelLocationsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1708,7 +1707,6 @@ export const GetPanelInformationsDocument = gql`
     title
     content
     status
-    scheduledAt
   }
 }
     `;
@@ -1751,7 +1749,6 @@ export const GetPanelInformationDocument = gql`
     title
     content
     status
-    scheduledAt
   }
 }
     `;

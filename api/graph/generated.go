@@ -8,11 +8,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sports-day/api/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
-
-	"sports-day/api/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -96,11 +95,10 @@ type ComplexityRoot struct {
 	}
 
 	Information struct {
-		Content     func(childComplexity int) int
-		ID          func(childComplexity int) int
-		ScheduledAt func(childComplexity int) int
-		Status      func(childComplexity int) int
-		Title       func(childComplexity int) int
+		Content func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Status  func(childComplexity int) int
+		Title   func(childComplexity int) int
 	}
 
 	Judgment struct {
@@ -705,13 +703,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Information.ID(childComplexity), true
-
-	case "Information.scheduledAt":
-		if e.complexity.Information.ScheduledAt == nil {
-			break
-		}
-
-		return e.complexity.Information.ScheduledAt(childComplexity), true
 
 	case "Information.status":
 		if e.complexity.Information.Status == nil {
@@ -6316,47 +6307,6 @@ func (ec *executionContext) fieldContext_Information_status(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Information_scheduledAt(ctx context.Context, field graphql.CollectedField, obj *model.Information) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Information_scheduledAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ScheduledAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Information_scheduledAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Information",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Judgment_id(ctx context.Context, field graphql.CollectedField, obj *model.Judgment) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Judgment_id(ctx, field)
 	if err != nil {
@@ -8797,8 +8747,6 @@ func (ec *executionContext) fieldContext_Mutation_createInformation(ctx context.
 				return ec.fieldContext_Information_content(ctx, field)
 			case "status":
 				return ec.fieldContext_Information_status(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_Information_scheduledAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Information", field.Name)
 		},
@@ -8864,8 +8812,6 @@ func (ec *executionContext) fieldContext_Mutation_deleteInformation(ctx context.
 				return ec.fieldContext_Information_content(ctx, field)
 			case "status":
 				return ec.fieldContext_Information_status(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_Information_scheduledAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Information", field.Name)
 		},
@@ -8931,8 +8877,6 @@ func (ec *executionContext) fieldContext_Mutation_updateInformation(ctx context.
 				return ec.fieldContext_Information_content(ctx, field)
 			case "status":
 				return ec.fieldContext_Information_status(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_Information_scheduledAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Information", field.Name)
 		},
@@ -13083,8 +13027,6 @@ func (ec *executionContext) fieldContext_Query_Informations(_ context.Context, f
 				return ec.fieldContext_Information_content(ctx, field)
 			case "status":
 				return ec.fieldContext_Information_status(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_Information_scheduledAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Information", field.Name)
 		},
@@ -13139,8 +13081,6 @@ func (ec *executionContext) fieldContext_Query_Information(ctx context.Context, 
 				return ec.fieldContext_Information_content(ctx, field)
 			case "status":
 				return ec.fieldContext_Information_status(ctx, field)
-			case "scheduledAt":
-				return ec.fieldContext_Information_scheduledAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Information", field.Name)
 		},
@@ -19960,7 +19900,7 @@ func (ec *executionContext) unmarshalInputCreateInformationInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"title", "content", "status", "scheduledAt"}
+	fieldsInOrder := [...]string{"title", "content", "status"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19988,13 +19928,6 @@ func (ec *executionContext) unmarshalInputCreateInformationInput(ctx context.Con
 				return it, err
 			}
 			it.Status = data
-		case "scheduledAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scheduledAt"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ScheduledAt = data
 		}
 	}
 
@@ -21010,7 +20943,7 @@ func (ec *executionContext) unmarshalInputUpdateInformationInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"title", "content", "status", "scheduledAt"}
+	fieldsInOrder := [...]string{"title", "content", "status"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21038,13 +20971,6 @@ func (ec *executionContext) unmarshalInputUpdateInformationInput(ctx context.Con
 				return it, err
 			}
 			it.Status = data
-		case "scheduledAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("scheduledAt"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ScheduledAt = data
 		}
 	}
 
@@ -22075,8 +22001,6 @@ func (ec *executionContext) _Information(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "scheduledAt":
-			out.Values[i] = ec._Information_scheduledAt(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

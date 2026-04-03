@@ -19,14 +19,12 @@ input CreateInformationInput {
   title: String!
   content: String!
   status: String
-  scheduledAt: String
 }
 
 input UpdateInformationInput {
   title: String
   content: String
   status: String
-  scheduledAt: String
 }
 
 input CreateSceneInput {

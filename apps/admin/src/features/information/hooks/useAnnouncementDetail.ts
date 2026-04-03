@@ -7,12 +7,8 @@ import {
 } from '@/gql/__generated__/graphql'
 import type { Announcement } from '../types'
 
-const VALID_STATUSES = ['published', 'scheduled', 'draft'] as const
-
 function parseStatus(s: string | null | undefined): Announcement['status'] {
-  if (s && (VALID_STATUSES as readonly string[]).includes(s)) {
-    return s as Announcement['status']
-  }
+  if (s === 'published') return 'published'
   return 'draft'
 }
 
@@ -23,7 +19,6 @@ export function useAnnouncementDetail(id: string) {
   const [name, setName] = useState('')
   const [content, setContent] = useState('')
   const [status, setStatus] = useState<Announcement['status']>('draft')
-  const [scheduledAt, setScheduledAt] = useState('')
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
   useEffect(() => {
@@ -31,9 +26,8 @@ export function useAnnouncementDetail(id: string) {
       setName(item.title)
       setContent(item.content)
       setStatus(parseStatus(item.status))
-      setScheduledAt(item.scheduledAt ?? '')
     }
-  }, [item?.title, item?.content, item?.status, item?.scheduledAt])
+  }, [item?.title, item?.content, item?.status])
 
   const [updateInformation] = useUpdateAdminInformationMutation({
     refetchQueries: [{ query: GetAdminInformationsDocument }],
@@ -45,15 +39,7 @@ export function useAnnouncementDetail(id: string) {
   const handleSave = async () => {
     try {
       await updateInformation({
-        variables: {
-          id,
-          input: {
-            title: name,
-            content,
-            status,
-            scheduledAt: scheduledAt !== '' ? scheduledAt : undefined,
-          },
-        },
+        variables: { id, input: { title: name, content, status } },
       })
       setMutationError(null)
     } catch (e) {
@@ -78,8 +64,6 @@ export function useAnnouncementDetail(id: string) {
     setContent,
     status,
     setStatus,
-    scheduledAt,
-    setScheduledAt,
     createdAt: '',
     updatedAt: '',
     handleSave,

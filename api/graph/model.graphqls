@@ -105,7 +105,6 @@ type Information {
   title: String!
   content: String!
   status: String!
-  scheduledAt: String
 }
 
 enum RankingConditionKey {

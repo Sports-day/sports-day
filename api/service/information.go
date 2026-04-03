@@ -2,10 +2,7 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"time"
 
-	"sports-day/api"
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
@@ -33,21 +30,11 @@ func (s *Information) Create(ctx context.Context, input *model.CreateInformation
 		status = *input.Status
 	}
 
-	var scheduledAt sql.NullTime
-	if input.ScheduledAt != nil && *input.ScheduledAt != "" {
-		t, err := time.Parse(time.RFC3339, *input.ScheduledAt)
-		if err != nil {
-			return nil, errors.Wrap(err)
-		}
-		scheduledAt = sql.NullTime{Time: t, Valid: true}
-	}
-
 	information := &db_model.Information{
-		ID:          ulid.Make(),
-		Title:       input.Title,
-		Content:     input.Content,
-		Status:      status,
-		ScheduledAt: scheduledAt,
+		ID:      ulid.Make(),
+		Title:   input.Title,
+		Content: input.Content,
+		Status:  status,
 	}
 	information, err := s.informationRepository.Save(ctx, s.db, information)
 	if err != nil {
@@ -82,18 +69,6 @@ func (s *Information) Update(ctx context.Context, input model.UpdateInformationI
 		information.Status = *input.Status
 	}
 
-	if input.ScheduledAt != nil {
-		if *input.ScheduledAt == "" {
-			information.ScheduledAt = sql.NullTime{Valid: false}
-		} else {
-			t, err := time.Parse(time.RFC3339, *input.ScheduledAt)
-			if err != nil {
-				return nil, errors.Wrap(err)
-			}
-			information.ScheduledAt = sql.NullTime{Time: t, Valid: true}
-		}
-	}
-
 	information, err = s.informationRepository.Save(ctx, s.db, information)
 	if err != nil {
 		return nil, errors.ErrSaveInformation
@@ -115,15 +90,4 @@ func (s *Information) GetAll(ctx context.Context) ([]*db_model.Information, erro
 		return nil, errors.Wrap(err)
 	}
 	return informations, nil
-}
-
-func (s *Information) PublishScheduled(ctx context.Context) error {
-	count, err := s.informationRepository.PublishScheduled(ctx, s.db)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	if count > 0 {
-		api.Logger.Info().Int64("count", count).Msg("published scheduled informations")
-	}
-	return nil
 }

@@ -1,12 +1,8 @@
 import { useGetAdminInformationsQuery } from '@/gql/__generated__/graphql'
 import type { Announcement } from '../types'
 
-const VALID_STATUSES = ['published', 'scheduled', 'draft'] as const
-
 function parseStatus(s: string | null | undefined): Announcement['status'] {
-  if (s && (VALID_STATUSES as readonly string[]).includes(s)) {
-    return s as Announcement['status']
-  }
+  if (s === 'published') return 'published'
   return 'draft'
 }
 
@@ -19,7 +15,6 @@ export function useAnnouncements() {
     createdAt: '',
     updatedAt: '',
     status: parseStatus(i.status),
-    scheduledAt: i.scheduledAt ?? undefined,
   }))
   return { data: announcements, loading, error: error ?? null }
 }

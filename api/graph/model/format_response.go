@@ -22,17 +22,11 @@ func FormatGroupResponse(group *db_model.Group) *Group {
 }
 
 func FormatInformationResponse(information *db_model.Information) *Information {
-	var scheduledAt *string
-	if information.ScheduledAt.Valid {
-		s := information.ScheduledAt.Time.Format(time.RFC3339)
-		scheduledAt = &s
-	}
 	return &Information{
-		ID:          information.ID,
-		Title:       information.Title,
-		Content:     information.Content,
-		Status:      information.Status,
-		ScheduledAt: scheduledAt,
+		ID:      information.ID,
+		Title:   information.Title,
+		Content: information.Content,
+		Status:  information.Status,
 	}
 }
 

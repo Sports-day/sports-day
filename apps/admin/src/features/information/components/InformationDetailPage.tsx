@@ -12,7 +12,7 @@ type Props = {
 }
 
 export function InformationDetailPage({ announcementId, onBack }: Props) {
-  const { announcementName, name, setName, content, setContent, status, setStatus, scheduledAt, setScheduledAt, createdAt, updatedAt, handleSave, handleDelete } =
+  const { announcementName, name, setName, content, setContent, status, setStatus, createdAt, updatedAt, handleSave, handleDelete } =
     useAnnouncementDetail(announcementId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -85,7 +85,7 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
             <TextField
               label="ステータス"
               value={status}
-              onChange={(e) => setStatus(e.target.value as 'published' | 'scheduled' | 'draft')}
+              onChange={(e) => setStatus(e.target.value as 'published' | 'draft')}
               fullWidth
               size="small"
               select
@@ -93,21 +93,7 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
             >
               <MenuItem value="draft">下書き</MenuItem>
               <MenuItem value="published">公開中</MenuItem>
-              <MenuItem value="scheduled">公開予約</MenuItem>
             </TextField>
-
-            {status === 'scheduled' && (
-              <TextField
-                label="公開予約日時"
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                sx={CARD_FIELD_SX}
-              />
-            )}
 
             <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
               <Button

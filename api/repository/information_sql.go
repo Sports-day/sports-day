@@ -54,13 +54,3 @@ func (r information) List(ctx context.Context, db *gorm.DB) ([]*db_model.Informa
 	}
 	return informations, nil
 }
-
-func (r information) PublishScheduled(ctx context.Context, db *gorm.DB) (int64, error) {
-	result := db.Model(&db_model.Information{}).
-		Where("status = ? AND scheduled_at <= NOW()", "scheduled").
-		Update("status", "published")
-	if result.Error != nil {
-		return 0, errors.Wrap(result.Error)
-	}
-	return result.RowsAffected, nil
-}

@@ -164,10 +164,6 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
-	// context for background goroutines
-	bgCtx, bgCancel := context.WithCancel(context.Background())
-	defer bgCancel()
-
 	// start server in another goroutine
 	go func() {
 		api.Logger.Info().Msgf("Starting server on http://%s", address)
@@ -177,22 +173,6 @@ func main() {
 				Msg("Failed to start server")
 		}
 		shutdownChan <- struct{}{}
-	}()
-
-	// publish scheduled informations periodically
-	go func() {
-		ticker := time.NewTicker(time.Minute)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				if err := informationService.PublishScheduled(bgCtx); err != nil {
-					api.Logger.Error().Err(err).Msg("failed to publish scheduled informations")
-				}
-			case <-bgCtx.Done():
-				return
-			}
-		}
 	}()
 
 	// wait for signal

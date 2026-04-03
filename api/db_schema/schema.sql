@@ -106,11 +106,10 @@ CREATE TABLE `information` (
   `title` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT 'タイトル',
   `content` varchar(1000) COLLATE utf8mb4_bin NOT NULL COMMENT 'コメント',
   `status` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT 'draft' COMMENT 'ステータス',
-  `scheduled_at` datetime DEFAULT NULL COMMENT '公開予約日時',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  CONSTRAINT `chk_information_status` CHECK ((`status` in (_utf8mb4'draft',_utf8mb4'published',_utf8mb4'scheduled')))
+  CONSTRAINT `chk_information_status` CHECK ((`status` in (_utf8mb4'draft',_utf8mb4'published')))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -574,5 +573,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20260402114245'),
   ('20260403040112'),
   ('20260403042217'),
-  ('20260403050000');
+  ('20260403050000'),
+  ('20260403060000');
 UNLOCK TABLES;

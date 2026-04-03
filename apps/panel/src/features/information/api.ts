@@ -7,7 +7,6 @@ export const GET_INFORMATIONS = gql`
       title
       content
       status
-      scheduledAt
     }
   }
 `;
@@ -19,7 +18,6 @@ export const GET_INFORMATION = gql`
       title
       content
       status
-      scheduledAt
     }
   }
 `;
