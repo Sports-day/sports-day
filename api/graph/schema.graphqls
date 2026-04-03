@@ -485,6 +485,10 @@ type Mutation {
   """
   deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match! @hasPermission(permission: "match:write")
   """
+  審判を作成する
+  """
+  createJudgment(input: CreateJudgmentInput!): Judgment!
+  """
   審判の情報を更新する
   """
   updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment! @hasPermission(permission: "match:write")

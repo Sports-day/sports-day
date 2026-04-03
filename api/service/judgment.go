@@ -32,6 +32,45 @@ func (s *Judgment) Get(ctx context.Context, id string) (*db_model.Judgment, erro
 	return judgment, nil
 }
 
+func (s *Judgment) Create(ctx context.Context, input *model.CreateJudgmentInput) (*db_model.Judgment, error) {
+	judgment := &db_model.Judgment{
+		ID: input.ID,
+	}
+
+	e := input.Entry
+
+	// バリデーション: User, Team, Group のうち1つ以下が指定されているかチェック
+	count := 0
+	if e.Name != nil {
+		count++
+	}
+	if e.UserID != nil {
+		count++
+	}
+	if e.TeamID != nil {
+		count++
+	}
+	if e.GroupID != nil {
+		count++
+	}
+	// 1つ以下の場合のみ処理を続行（0個も許可、2個以上はエラー）
+	if count <= 1 {
+		judgment.Name = pkggorm.ToNullString(e.Name)
+		judgment.UserID = pkggorm.ToNullString(e.UserID)
+		judgment.TeamID = pkggorm.ToNullString(e.TeamID)
+		judgment.GroupID = pkggorm.ToNullString(e.GroupID)
+	} else {
+		// 複数指定されている場合はエラー
+		return nil, errors.ErrJudgmentEntryInvalid
+	}
+
+	judgment, err := s.judgmentRepository.Save(ctx, s.db, judgment)
+	if err != nil {
+		return nil, errors.ErrSaveJudgment
+	}
+	return judgment, nil
+}
+
 func (s *Judgment) Update(ctx context.Context, id string, input model.UpdateJudgmentInput) (*db_model.Judgment, error) {
 	judgment, err := s.judgmentRepository.Get(ctx, s.db, id)
 	if err != nil {
