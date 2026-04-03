@@ -79,6 +79,8 @@ export type CreateImageUploadUrlInput = {
 
 export type CreateInformationInput = {
   content: Scalars['String']['input'];
+  scheduledAt?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
 };
 
@@ -203,6 +205,8 @@ export type Information = {
   __typename?: 'Information';
   content: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  scheduledAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
 
@@ -1085,6 +1089,8 @@ export type UpdateGroupUsersInput = {
 
 export type UpdateInformationInput = {
   content?: InputMaybe<Scalars['String']['input']>;
+  scheduledAt?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1350,21 +1356,21 @@ export type DeleteAdminImageMutation = { __typename?: 'Mutation', deleteImage: {
 export type GetAdminInformationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminInformationsQuery = { __typename?: 'Query', Informations: Array<{ __typename?: 'Information', id: string, title: string, content: string }> };
+export type GetAdminInformationsQuery = { __typename?: 'Query', Informations: Array<{ __typename?: 'Information', id: string, title: string, content: string, status: string }> };
 
 export type GetAdminInformationQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminInformationQuery = { __typename?: 'Query', Information: { __typename?: 'Information', id: string, title: string, content: string } };
+export type GetAdminInformationQuery = { __typename?: 'Query', Information: { __typename?: 'Information', id: string, title: string, content: string, status: string } };
 
 export type CreateAdminInformationMutationVariables = Exact<{
   input: CreateInformationInput;
 }>;
 
 
-export type CreateAdminInformationMutation = { __typename?: 'Mutation', createInformation: { __typename?: 'Information', id: string, title: string, content: string } };
+export type CreateAdminInformationMutation = { __typename?: 'Mutation', createInformation: { __typename?: 'Information', id: string, title: string, content: string, status: string } };
 
 export type UpdateAdminInformationMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1372,7 +1378,7 @@ export type UpdateAdminInformationMutationVariables = Exact<{
 }>;
 
 
-export type UpdateAdminInformationMutation = { __typename?: 'Mutation', updateInformation: { __typename?: 'Information', id: string, title: string, content: string } };
+export type UpdateAdminInformationMutation = { __typename?: 'Mutation', updateInformation: { __typename?: 'Information', id: string, title: string, content: string, status: string } };
 
 export type DeleteAdminInformationMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -2589,6 +2595,7 @@ export const GetAdminInformationsDocument = gql`
     id
     title
     content
+    status
   }
 }
     `;
@@ -2630,6 +2637,7 @@ export const GetAdminInformationDocument = gql`
     id
     title
     content
+    status
   }
 }
     `;
@@ -2672,6 +2680,7 @@ export const CreateAdminInformationDocument = gql`
     id
     title
     content
+    status
   }
 }
     `;
@@ -2707,6 +2716,7 @@ export const UpdateAdminInformationDocument = gql`
     id
     title
     content
+    status
   }
 }
     `;

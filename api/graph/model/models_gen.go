@@ -37,8 +37,9 @@ type CreateImageUploadURLInput struct {
 }
 
 type CreateInformationInput struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Title   string  `json:"title"`
+	Content string  `json:"content"`
+	Status  *string `json:"status,omitempty"`
 }
 
 type CreateJudgmentInput struct {
@@ -151,6 +152,7 @@ type Information struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+	Status  string `json:"status"`
 }
 
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
@@ -252,6 +254,7 @@ type UpdateGroupUsersInput struct {
 type UpdateInformationInput struct {
 	Title   *string `json:"title,omitempty"`
 	Content *string `json:"content,omitempty"`
+	Status  *string `json:"status,omitempty"`
 }
 
 type UpdateJudgmentInput struct {

@@ -22,7 +22,7 @@ type Props = {
 }
 
 export function InformationCreatePage({ onBack }: Props) {
-  const { name, setName, content, setContent, status, setStatus, scheduledAt, setScheduledAt, handleCreate } = useInformationCreate(onBack)
+  const { name, setName, content, setContent, status, setStatus, handleCreate } = useInformationCreate(onBack)
   const [submitted, setSubmitted] = useState(false)
 
   const onCreate = () => {
@@ -54,27 +54,13 @@ export function InformationCreatePage({ onBack }: Props) {
           size="small"
           label="ステータス"
           value={status}
-          onChange={(e) => setStatus(e.target.value as 'published' | 'scheduled' | 'draft')}
+          onChange={(e) => setStatus(e.target.value as 'published' | 'draft')}
           select
           sx={INPUT_SX}
         >
           <MenuItem value="draft">下書き</MenuItem>
           <MenuItem value="published">公開中</MenuItem>
-          <MenuItem value="scheduled">公開予約</MenuItem>
         </TextField>
-
-        {status === 'scheduled' && (
-          <TextField
-            fullWidth
-            size="small"
-            label="公開予約日時"
-            type="datetime-local"
-            value={scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={INPUT_SX}
-          />
-        )}
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button

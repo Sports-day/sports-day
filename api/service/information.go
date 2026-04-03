@@ -25,10 +25,16 @@ func NewInformation(db *gorm.DB, informationRepository repository.Information) I
 }
 
 func (s *Information) Create(ctx context.Context, input *model.CreateInformationInput) (*db_model.Information, error) {
+	status := "draft"
+	if input.Status != nil && *input.Status != "" {
+		status = *input.Status
+	}
+
 	information := &db_model.Information{
 		ID:      ulid.Make(),
 		Title:   input.Title,
 		Content: input.Content,
+		Status:  status,
 	}
 	information, err := s.informationRepository.Save(ctx, s.db, information)
 	if err != nil {
@@ -57,6 +63,10 @@ func (s *Information) Update(ctx context.Context, input model.UpdateInformationI
 
 	if input.Content != nil {
 		information.Content = *input.Content
+	}
+
+	if input.Status != nil && *input.Status != "" {
+		information.Status = *input.Status
 	}
 
 	information, err = s.informationRepository.Save(ctx, s.db, information)

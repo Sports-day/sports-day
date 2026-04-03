@@ -7,21 +7,27 @@ import {
 } from '@/gql/__generated__/graphql'
 import type { Announcement } from '../types'
 
+function parseStatus(s: string | null | undefined): Announcement['status'] {
+  if (s === 'published') return 'published'
+  return 'draft'
+}
+
 export function useAnnouncementDetail(id: string) {
   const { data, loading, error } = useGetAdminInformationQuery({ variables: { id } })
   const item = data?.Information
 
   const [name, setName] = useState('')
   const [content, setContent] = useState('')
-  const [status, setStatus] = useState<Announcement['status']>('draft') // 【未確定】GQL に status はない
-  const [scheduledAt, setScheduledAt] = useState('') // 【未確定】GQL に scheduledAt はない
+  const [status, setStatus] = useState<Announcement['status']>('draft')
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   useEffect(() => {
     if (item) {
       setName(item.title)
       setContent(item.content)
+      setStatus(parseStatus(item.status))
     }
-  }, [item?.title, item?.content])
+  }, [item?.title, item?.content, item?.status])
 
   const [updateInformation] = useUpdateAdminInformationMutation({
     refetchQueries: [{ query: GetAdminInformationsDocument }],
@@ -31,11 +37,23 @@ export function useAnnouncementDetail(id: string) {
   })
 
   const handleSave = async () => {
-    await updateInformation({ variables: { id, input: { title: name, content } } })
+    try {
+      await updateInformation({
+        variables: { id, input: { title: name, content, status } },
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   const handleDelete = async () => {
-    await deleteInformation({ variables: { id } })
+    try {
+      await deleteInformation({ variables: { id } })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   return {
@@ -46,13 +64,11 @@ export function useAnnouncementDetail(id: string) {
     setContent,
     status,
     setStatus,
-    scheduledAt,
-    setScheduledAt,
-    createdAt: '', // 【未確定】GQL に createdAt はない
-    updatedAt: '', // 【未確定】GQL に updatedAt はない
+    createdAt: '',
+    updatedAt: '',
     handleSave,
     handleDelete,
     loading,
-    error: error ?? null,
+    error: error ?? mutationError,
   }
 }
