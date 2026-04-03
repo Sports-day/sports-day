@@ -7,10 +7,10 @@ export function useAnnouncements() {
     id: i.id,
     name: i.title,
     content: i.content,
-    createdAt: '', // 【未確定】GraphQL Information に createdAt はない
-    updatedAt: '', // 【未確定】GraphQL Information に updatedAt はない
-    status: 'published' as Announcement['status'], // 【未確定】GraphQL Information に status はない
-    scheduledAt: undefined,
+    createdAt: '',
+    updatedAt: '',
+    status: (i.status as Announcement['status']) ?? 'draft',
+    scheduledAt: i.scheduledAt ?? undefined,
   }))
   return { data: announcements, loading, error: error ?? null }
 }

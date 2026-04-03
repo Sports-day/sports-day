@@ -6,6 +6,8 @@ export const GET_ADMIN_INFORMATIONS = gql`
       id
       title
       content
+      status
+      scheduledAt
     }
   }
 `
@@ -16,6 +18,8 @@ export const GET_ADMIN_INFORMATION = gql`
       id
       title
       content
+      status
+      scheduledAt
     }
   }
 `
@@ -26,6 +30,8 @@ export const CREATE_ADMIN_INFORMATION = gql`
       id
       title
       content
+      status
+      scheduledAt
     }
   }
 `
@@ -36,6 +42,8 @@ export const UPDATE_ADMIN_INFORMATION = gql`
       id
       title
       content
+      status
+      scheduledAt
     }
   }
 `

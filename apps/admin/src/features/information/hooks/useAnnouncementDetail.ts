@@ -13,15 +13,17 @@ export function useAnnouncementDetail(id: string) {
 
   const [name, setName] = useState('')
   const [content, setContent] = useState('')
-  const [status, setStatus] = useState<Announcement['status']>('draft') // 【未確定】GQL に status はない
-  const [scheduledAt, setScheduledAt] = useState('') // 【未確定】GQL に scheduledAt はない
+  const [status, setStatus] = useState<Announcement['status']>('draft')
+  const [scheduledAt, setScheduledAt] = useState('')
 
   useEffect(() => {
     if (item) {
       setName(item.title)
       setContent(item.content)
+      setStatus((item.status as Announcement['status']) ?? 'draft')
+      setScheduledAt(item.scheduledAt ?? '')
     }
-  }, [item?.title, item?.content])
+  }, [item?.title, item?.content, item?.status, item?.scheduledAt])
 
   const [updateInformation] = useUpdateAdminInformationMutation({
     refetchQueries: [{ query: GetAdminInformationsDocument }],
@@ -31,7 +33,17 @@ export function useAnnouncementDetail(id: string) {
   })
 
   const handleSave = async () => {
-    await updateInformation({ variables: { id, input: { title: name, content } } })
+    await updateInformation({
+      variables: {
+        id,
+        input: {
+          title: name,
+          content,
+          status,
+          scheduledAt: scheduledAt !== '' ? scheduledAt : undefined,
+        },
+      },
+    })
   }
 
   const handleDelete = async () => {
@@ -48,8 +60,8 @@ export function useAnnouncementDetail(id: string) {
     setStatus,
     scheduledAt,
     setScheduledAt,
-    createdAt: '', // 【未確定】GQL に createdAt はない
-    updatedAt: '', // 【未確定】GQL に updatedAt はない
+    createdAt: '',
+    updatedAt: '',
     handleSave,
     handleDelete,
     loading,
