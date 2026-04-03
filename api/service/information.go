@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"sports-day/api"
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
@@ -114,4 +115,15 @@ func (s *Information) GetAll(ctx context.Context) ([]*db_model.Information, erro
 		return nil, errors.Wrap(err)
 	}
 	return informations, nil
+}
+
+func (s *Information) PublishScheduled(ctx context.Context) error {
+	count, err := s.informationRepository.PublishScheduled(ctx, s.db)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	if count > 0 {
+		api.Logger.Info().Int64("count", count).Msg("published scheduled informations")
+	}
+	return nil
 }

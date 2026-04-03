@@ -13,4 +13,5 @@ type Information interface {
 	Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Information, error)
 	Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Information, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Information, error)
+	PublishScheduled(ctx context.Context, db *gorm.DB) (int64, error)
 }
