@@ -6,6 +6,7 @@ export function useInformationCreate(onSave: () => void) {
   const [content, setContent] = useState('')
   const [status, setStatus] = useState<'published' | 'scheduled' | 'draft'>('draft')
   const [scheduledAt, setScheduledAt] = useState('')
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [createInformation] = useCreateAdminInformationMutation({
     refetchQueries: [{ query: GetAdminInformationsDocument }],
@@ -13,18 +14,23 @@ export function useInformationCreate(onSave: () => void) {
 
   const handleCreate = async () => {
     if (!name.trim()) return
-    await createInformation({
-      variables: {
-        input: {
-          title: name,
-          content,
-          status,
-          scheduledAt: scheduledAt !== '' ? scheduledAt : undefined,
+    try {
+      await createInformation({
+        variables: {
+          input: {
+            title: name,
+            content,
+            status,
+            scheduledAt: scheduledAt !== '' ? scheduledAt : undefined,
+          },
         },
-      },
-    })
-    onSave()
+      })
+      setMutationError(null)
+      onSave()
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  return { name, setName, content, setContent, status, setStatus, scheduledAt, setScheduledAt, handleCreate }
+  return { name, setName, content, setContent, status, setStatus, scheduledAt, setScheduledAt, handleCreate, error: mutationError }
 }

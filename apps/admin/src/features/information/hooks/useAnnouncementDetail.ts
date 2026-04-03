@@ -7,6 +7,15 @@ import {
 } from '@/gql/__generated__/graphql'
 import type { Announcement } from '../types'
 
+const VALID_STATUSES = ['published', 'scheduled', 'draft'] as const
+
+function parseStatus(s: string | null | undefined): Announcement['status'] {
+  if (s && (VALID_STATUSES as readonly string[]).includes(s)) {
+    return s as Announcement['status']
+  }
+  return 'draft'
+}
+
 export function useAnnouncementDetail(id: string) {
   const { data, loading, error } = useGetAdminInformationQuery({ variables: { id } })
   const item = data?.Information
@@ -15,12 +24,13 @@ export function useAnnouncementDetail(id: string) {
   const [content, setContent] = useState('')
   const [status, setStatus] = useState<Announcement['status']>('draft')
   const [scheduledAt, setScheduledAt] = useState('')
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   useEffect(() => {
     if (item) {
       setName(item.title)
       setContent(item.content)
-      setStatus((item.status as Announcement['status']) ?? 'draft')
+      setStatus(parseStatus(item.status))
       setScheduledAt(item.scheduledAt ?? '')
     }
   }, [item?.title, item?.content, item?.status, item?.scheduledAt])
@@ -33,21 +43,31 @@ export function useAnnouncementDetail(id: string) {
   })
 
   const handleSave = async () => {
-    await updateInformation({
-      variables: {
-        id,
-        input: {
-          title: name,
-          content,
-          status,
-          scheduledAt: scheduledAt !== '' ? scheduledAt : undefined,
+    try {
+      await updateInformation({
+        variables: {
+          id,
+          input: {
+            title: name,
+            content,
+            status,
+            scheduledAt: scheduledAt !== '' ? scheduledAt : undefined,
+          },
         },
-      },
-    })
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   const handleDelete = async () => {
-    await deleteInformation({ variables: { id } })
+    try {
+      await deleteInformation({ variables: { id } })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   return {
@@ -65,6 +85,6 @@ export function useAnnouncementDetail(id: string) {
     handleSave,
     handleDelete,
     loading,
-    error: error ?? null,
+    error: error ?? mutationError,
   }
 }

@@ -109,7 +109,8 @@ CREATE TABLE `information` (
   `scheduled_at` datetime DEFAULT NULL COMMENT '公開予約日時',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  CONSTRAINT `chk_information_status` CHECK ((`status` in (_utf8mb4'draft',_utf8mb4'published',_utf8mb4'scheduled')))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -572,5 +573,6 @@ INSERT INTO `schema_migrations` (version) VALUES
   ('20260402100216'),
   ('20260402114245'),
   ('20260403040112'),
-  ('20260403042217');
+  ('20260403042217'),
+  ('20260403050000');
 UNLOCK TABLES;

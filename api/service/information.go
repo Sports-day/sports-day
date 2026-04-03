@@ -77,7 +77,7 @@ func (s *Information) Update(ctx context.Context, input model.UpdateInformationI
 		information.Content = *input.Content
 	}
 
-	if input.Status != nil {
+	if input.Status != nil && *input.Status != "" {
 		information.Status = *input.Status
 	}
 
