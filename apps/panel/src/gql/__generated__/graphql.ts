@@ -1192,7 +1192,7 @@ export type GetPanelLeagueStandingsQueryVariables = Exact<{
 }>;
 
 
-export type GetPanelLeagueStandingsQuery = { __typename?: 'Query', leagueStandings: Array<{ __typename?: 'Standing', id: string, rank: number, points: number, win: number, draw: number, lose: number, team: { __typename?: 'Team', id: string } }> };
+export type GetPanelLeagueStandingsQuery = { __typename?: 'Query', leagueStandings: Array<{ __typename?: 'Standing', id: string, rank: number, points: number, win: number, draw: number, lose: number, goalsFor: number, goalsAgainst: number, goalDiff: number, team: { __typename?: 'Team', id: string } }> };
 
 export type GetPanelTournamentRankingQueryVariables = Exact<{
   competitionId: Scalars['ID']['input'];
@@ -1470,6 +1470,9 @@ export const GetPanelLeagueStandingsDocument = gql`
     win
     draw
     lose
+    goalsFor
+    goalsAgainst
+    goalDiff
   }
 }
     `;

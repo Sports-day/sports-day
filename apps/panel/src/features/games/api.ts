@@ -31,6 +31,9 @@ export const GET_PANEL_LEAGUE_STANDINGS = gql`
       win
       draw
       lose
+      goalsFor
+      goalsAgainst
+      goalDiff
     }
   }
 `;
