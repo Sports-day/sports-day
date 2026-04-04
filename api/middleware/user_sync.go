@@ -31,7 +31,7 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 
 			role, err := authService.GetRole(ctx, user.ID)
 			if err != nil {
-				http.Error(w, pkgerrors.ErrUnauthorized.Error(), http.StatusInternalServerError)
+				http.Error(w, pkgerrors.ErrorServerPanic.Error(), http.StatusInternalServerError)
 				return
 			}
 
