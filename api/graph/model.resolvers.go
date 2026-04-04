@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -692,11 +691,6 @@ func (r *userResolver) Role(ctx context.Context, obj *model.User) (model.Role, e
 	}
 }
 
-// Permissions is the resolver for the permissions field.
-func (r *userResolver) Permissions(ctx context.Context, obj *model.User) ([]string, error) {
-	return r.AuthService.PermissionsFor(ctx, obj.ID)
-}
-
 // Groups is the resolver for the groups field.
 func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Group, error) {
 	groupUsers, err := loader.LoadUserGroups(ctx, obj.ID)
@@ -815,3 +809,10 @@ type tournamentResolver struct{ *Resolver }
 type tournamentRankingResolver struct{ *Resolver }
 type tournamentSlotResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.

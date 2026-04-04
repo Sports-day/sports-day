@@ -15,7 +15,6 @@ type User {
   email: String!
   identify: UserIdentify!
   role: Role!
-  permissions: [String!]!
   groups: [Group!]!
   teams: [Team!]!
   judgments: [Judgment!]!

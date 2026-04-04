@@ -8,11 +8,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sports-day/api/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
-
-	"sports-day/api/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -356,15 +355,14 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Email       func(childComplexity int) int
-		Groups      func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Identify    func(childComplexity int) int
-		Judgments   func(childComplexity int) int
-		Name        func(childComplexity int) int
-		Permissions func(childComplexity int) int
-		Role        func(childComplexity int) int
-		Teams       func(childComplexity int) int
+		Email     func(childComplexity int) int
+		Groups    func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Identify  func(childComplexity int) int
+		Judgments func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Role      func(childComplexity int) int
+		Teams     func(childComplexity int) int
 	}
 
 	UserIdentify struct {
@@ -553,7 +551,6 @@ type TournamentSlotResolver interface {
 type UserResolver interface {
 	Identify(ctx context.Context, obj *model.User) (*model.UserIdentify, error)
 	Role(ctx context.Context, obj *model.User) (model.Role, error)
-	Permissions(ctx context.Context, obj *model.User) ([]string, error)
 	Groups(ctx context.Context, obj *model.User) ([]*model.Group, error)
 	Teams(ctx context.Context, obj *model.User) ([]*model.Team, error)
 	Judgments(ctx context.Context, obj *model.User) ([]*model.Judgment, error)
@@ -2516,13 +2513,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Name(childComplexity), true
-
-	case "User.permissions":
-		if e.complexity.User.Permissions == nil {
-			break
-		}
-
-		return e.complexity.User.Permissions(childComplexity), true
 
 	case "User.role":
 		if e.complexity.User.Role == nil {
@@ -5972,8 +5962,6 @@ func (ec *executionContext) fieldContext_Group_users(_ context.Context, field gr
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -6523,8 +6511,6 @@ func (ec *executionContext) fieldContext_Judgment_user(_ context.Context, field 
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -7580,8 +7566,6 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -13686,8 +13670,6 @@ func (ec *executionContext) fieldContext_Mutation_updateUserRole(ctx context.Con
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -14146,8 +14128,6 @@ func (ec *executionContext) fieldContext_Query_users(_ context.Context, field gr
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -14210,8 +14190,6 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -14285,8 +14263,6 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -18098,8 +18074,6 @@ func (ec *executionContext) fieldContext_Team_users(_ context.Context, field gra
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
 				return ec.fieldContext_User_role(ctx, field)
-			case "permissions":
-				return ec.fieldContext_User_permissions(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -19615,50 +19589,6 @@ func (ec *executionContext) fieldContext_User_role(_ context.Context, field grap
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Role does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_permissions(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_permissions(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().Permissions(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_permissions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -27621,42 +27551,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "permissions":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._User_permissions(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "groups":
 			field := field
 
@@ -29552,38 +29446,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
-	var vSlice []any
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalNSubBracketInput2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSubBracketInput(ctx context.Context, v any) (*model.SubBracketInput, error) {
