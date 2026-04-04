@@ -4,13 +4,11 @@
 -- =============================================================================
 
 -- 最初の admin ユーザーを直接 INSERT する。
--- sub の値は Keycloak に登録済みユーザーの JWT sub claim (UUID) に置き換えること。
--- 確認方法: ブラウザでログイン後、ネットワークタブで JWT をデコードして sub claim を取得する。
--- または Keycloak 管理画面 → Users → 対象ユーザー → Attributes で確認する。
-INSERT IGNORE INTO user_roles (sub, role) VALUES
-  ('{REPLACE_WITH_KEYCLOAK_USER_SUB}', 'admin');
+-- user_id の値は users テーブルに登録済みユーザーの ID（ULID）に置き換えること。
+INSERT IGNORE INTO user_roles (user_id, role) VALUES
+  ('{REPLACE_WITH_USER_ID}', 'admin');
 
 -- 複数ユーザーを登録する場合は以下のようにカンマ区切りで追加できる:
--- INSERT IGNORE INTO user_roles (sub, role) VALUES
---   ('{ADMIN_USER_SUB}', 'admin'),
---   ('{ORGANIZER_USER_SUB}', 'organizer');
+-- INSERT IGNORE INTO user_roles (user_id, role) VALUES
+--   ('{ADMIN_USER_ID}', 'admin'),
+--   ('{ORGANIZER_USER_ID}', 'organizer');

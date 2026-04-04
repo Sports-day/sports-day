@@ -4,6 +4,6 @@ package db_model
 
 // UserRole represents a row from 'sportsday.user_roles'.
 type UserRole struct {
-	Sub  string `json:"sub"`  // JWT sub claim（IdP識別子）
-	Role string `json:"role"` // ロール識別子（admin / organizer / participant）
+	UserID string `json:"user_id"` // usersテーブルのID
+	Role   string `json:"role"`    // ロール識別子（admin / organizer / participant）
 }
