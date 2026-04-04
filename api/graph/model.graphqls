@@ -4,12 +4,16 @@ enum Role {
   PARTICIPANT
 }
 
+type UserIdentify {
+  sub: ID!
+  microsoftUserId: String
+}
+
 type User {
   id: ID!
-  sub: ID!
   name: String!
-  displayName: String!
   email: String!
+  identify: UserIdentify!
   role: Role!
   permissions: [String!]!
   groups: [Group!]!

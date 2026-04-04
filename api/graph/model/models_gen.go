@@ -332,6 +332,11 @@ type UpdateTournamentInput struct {
 	DisplayOrder *int32  `json:"displayOrder,omitempty"`
 }
 
+type UserIdentify struct {
+	Sub             string  `json:"sub"`
+	MicrosoftUserID *string `json:"microsoftUserId,omitempty"`
+}
+
 type BracketState string
 
 const (
