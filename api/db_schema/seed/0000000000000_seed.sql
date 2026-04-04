@@ -10,6 +10,7 @@ DELETE FROM team_users;
 DELETE FROM teams;
 DELETE FROM group_users;
 DELETE FROM `groups`;
+DELETE FROM user_roles;
 DELETE FROM users;
 DELETE FROM information;
 DELETE FROM sport_entries;
@@ -71,6 +72,10 @@ VALUES  ('01JS96Z96329JZHCYD45D72SYB', '山田 太郎', 'ta_yamada@dev.sports-da
         ('01JS96Z9643QY5BATRYY2C02DQ', '宮崎 千咲', 'ch_miyazaki@dev.sports-day.net'),
         ('01JS96Z964KX2GGT92CSMVEJ5X', '大野 陸', 'ri_ono@dev.sports-day.net'),
         ('01JS96Z964EZHVVXQJ0T0ETKAW', '西田 優奈', 'yu_nishida@dev.sports-day.net');
+
+INSERT INTO user_roles (user_id, role) VALUES
+  ('01JS96Z96329JZHCYD45D72SYB', 'admin'),
+  ('01JS96Z963CB5NVZ4151VFBFMT', 'organizer');
 
 INSERT INTO `groups` (id, name)
 VALUES  ('01JS96Z963AJMYFVQC6MNFE6EB', 'サムライスピリッツ'),
