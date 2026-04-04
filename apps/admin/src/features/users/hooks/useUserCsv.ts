@@ -18,6 +18,7 @@ export type UserCsvRow = {
 export function useUserCsv() {
   const [csvText, setCsvText] = useState('')
   const [rows, setRows] = useState<UserCsvRow[]>([])
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const { data: usersData } = useGetAdminUsersQuery()
   const [createUser] = useCreateAdminUserMutation()
@@ -50,21 +51,26 @@ export function useUserCsv() {
 
   const handleCreate = async () => {
     const registrable = rows.filter((r) => r.status === '登録可能')
-    for (const r of registrable) {
-      await createUser({
-        variables: {
-          input: {
-            name: r.userName,
-            email: r.email,
-            gender: r.gender,
+    try {
+      for (const r of registrable) {
+        await createUser({
+          variables: {
+            input: {
+              name: r.userName,
+              email: r.email,
+              gender: r.gender,
+            },
           },
-        },
-        refetchQueries: ['GetAdminUsers'],
-      }).catch(() => {})
+          refetchQueries: ['GetAdminUsers'],
+        })
+      }
+      setMutationError(null)
+      setCsvText('')
+      setRows([])
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
     }
-    setCsvText('')
-    setRows([])
   }
 
-  return { csvText, handleCsvChange, rows, handleCreate }
+  return { csvText, handleCsvChange, rows, handleCreate, error: mutationError }
 }

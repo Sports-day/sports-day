@@ -25,6 +25,7 @@ const INITIAL_FORM: CreateForm = {
 
 export function useLeagueCreate(competitionId: string, type: 'league' | 'tournament', onSave: () => void) {
   const [form, setForm] = useState<CreateForm>(INITIAL_FORM)
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [createLeague] = useCreateAdminLeagueMutation()
   const [createTournament] = useCreateAdminTournamentMutation()
@@ -36,29 +37,35 @@ export function useLeagueCreate(competitionId: string, type: 'league' | 'tournam
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name.trim()) return
 
-    if (type === 'tournament') {
-      createTournament({
-        variables: {
-          input: {
-            name: form.name,
-            competitionId,
-            bracketType: BracketType.Main,
+    try {
+      if (type === 'tournament') {
+        await createTournament({
+          variables: {
+            input: {
+              name: form.name,
+              competitionId,
+              bracketType: BracketType.Main,
+            },
           },
-        },
-        refetchQueries: ['GetAdminTournaments'],
-      }).then(() => onSave()).catch(() => {})
-    } else {
-      createLeague({
-        variables: {
-          input: { name: form.name },
-        },
-        refetchQueries: ['GetAdminLeagues'],
-      }).then(() => onSave()).catch(() => {})
+          refetchQueries: ['GetAdminTournaments'],
+        })
+      } else {
+        await createLeague({
+          variables: {
+            input: { name: form.name },
+          },
+          refetchQueries: ['GetAdminLeagues'],
+        })
+      }
+      setMutationError(null)
+      onSave()
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
     }
   }
 
-  return { form, handleChange, handleSubmit }
+  return { form, handleChange, handleSubmit, error: mutationError }
 }

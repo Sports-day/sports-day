@@ -39,6 +39,8 @@ export function useTeamDetail(teamId: string) {
     gender: u.gender ?? '',
   }))
 
+  const [mutationError, setMutationError] = useState<Error | null>(null)
+
   const [updateTeam] = useUpdateAdminTeamMutation()
   const [deleteTeam] = useDeleteAdminTeamMutation()
   const [updateTeamUsers] = useUpdateAdminTeamUsersMutation()
@@ -48,44 +50,64 @@ export function useTeamDetail(teamId: string) {
   const handleOpenDeleteDialog = () => setDeleteDialogOpen(true)
   const handleCloseDeleteDialog = () => setDeleteDialogOpen(false)
 
-  const handleAddMembers = (selectedIds: string[]) => {
-    updateTeamUsers({
-      variables: {
-        id: teamId,
-        input: { addUserIds: selectedIds },
-      },
-      refetchQueries: ['GetAdminTeam'],
-    }).catch(() => {})
+  const handleAddMembers = async (selectedIds: string[]) => {
+    try {
+      await updateTeamUsers({
+        variables: {
+          id: teamId,
+          input: { addUserIds: selectedIds },
+        },
+        refetchQueries: ['GetAdminTeam'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
     setDialogOpen(false)
   }
 
-  const handleDeleteMember = (_index: number) => {
+  const handleDeleteMember = async (_index: number) => {
     const userId = team?.users[_index]?.id
     if (!userId) return
-    updateTeamUsers({
-      variables: {
-        id: teamId,
-        input: { removeUserIds: [userId] },
-      },
-      refetchQueries: ['GetAdminTeam'],
-    }).catch(() => {})
+    try {
+      await updateTeamUsers({
+        variables: {
+          id: teamId,
+          input: { removeUserIds: [userId] },
+        },
+        refetchQueries: ['GetAdminTeam'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  const handleSave = () => {
-    updateTeam({
-      variables: {
-        id: teamId,
-        input: { name, groupId },
-      },
-      refetchQueries: ['GetAdminTeams', 'GetAdminTeam'],
-    }).catch(() => {})
+  const handleSave = async () => {
+    try {
+      await updateTeam({
+        variables: {
+          id: teamId,
+          input: { name, groupId },
+        },
+        refetchQueries: ['GetAdminTeams', 'GetAdminTeam'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  const handleDeleteTeam = () => {
-    deleteTeam({
-      variables: { id: teamId },
-      refetchQueries: ['GetAdminTeams'],
-    }).catch(() => {})
+  const handleDeleteTeam = async () => {
+    try {
+      await deleteTeam({
+        variables: { id: teamId },
+        refetchQueries: ['GetAdminTeams'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   // 追加可能なユーザー（現チームメンバー以外）
@@ -120,5 +142,6 @@ export function useTeamDetail(teamId: string) {
     selectableUsers,
     loading,
     error: error ?? null,
+    mutationError,
   }
 }

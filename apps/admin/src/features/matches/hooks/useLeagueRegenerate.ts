@@ -5,6 +5,7 @@ export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState('')
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [generateRoundRobin] = useGenerateAdminRoundRobinMutation()
 
@@ -19,19 +20,25 @@ export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
   const openConfirm = () => setIsConfirmOpen(true)
   const closeConfirm = () => setIsConfirmOpen(false)
 
-  const confirmSave = () => {
-    generateRoundRobin({
-      variables: {
-        id: leagueId,
-        input: {
-          startTime: new Date().toISOString(),
-          matchDuration: 15,
-          breakDuration: 5,
-          locationId: selectedLocation || undefined,
+  const confirmSave = async () => {
+    try {
+      await generateRoundRobin({
+        variables: {
+          id: leagueId,
+          input: {
+            startTime: new Date().toISOString(),
+            matchDuration: 15,
+            breakDuration: 5,
+            locationId: selectedLocation || undefined,
+          },
         },
-      },
-      refetchQueries: ['GetAdminMatches'],
-    }).then(() => closeOverlay()).catch(() => {})
+        refetchQueries: ['GetAdminMatches'],
+      })
+      setMutationError(null)
+      closeOverlay()
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   return {
@@ -44,5 +51,6 @@ export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
     openConfirm,
     closeConfirm,
     confirmSave,
+    error: mutationError,
   }
 }

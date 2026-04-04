@@ -7,6 +7,7 @@ export function useTournamentMatchEdit() {
   const [score1, setScore1] = useState('0')
   const [score2, setScore2] = useState('0')
   const [status, setStatus] = useState<MockTMatch['status']>('STANDBY')
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [updateMatchResult] = useUpdateAdminMatchResultMutation()
 
@@ -19,7 +20,7 @@ export function useTournamentMatchEdit() {
 
   const closeMatch = () => setSelectedMatch(null)
 
-  const saveMatch = () => {
+  const saveMatch = async () => {
     if (!selectedMatch) return
 
     const s1 = score1 === '' ? 0 : Number(score1)
@@ -37,21 +38,27 @@ export function useTournamentMatchEdit() {
           : (selectedMatch.slot2.teamId ?? null)
         : null
 
-    updateMatchResult({
-      variables: {
-        id: selectedMatch.id,
-        input: {
-          status: gqlStatus,
-          winnerTeamId,
-          results: [
-            ...(selectedMatch.slot1.teamId ? [{ teamId: selectedMatch.slot1.teamId, score: s1 }] : []),
-            ...(selectedMatch.slot2.teamId ? [{ teamId: selectedMatch.slot2.teamId, score: s2 }] : []),
-          ],
+    try {
+      await updateMatchResult({
+        variables: {
+          id: selectedMatch.id,
+          input: {
+            status: gqlStatus,
+            winnerTeamId,
+            results: [
+              ...(selectedMatch.slot1.teamId ? [{ teamId: selectedMatch.slot1.teamId, score: s1 }] : []),
+              ...(selectedMatch.slot2.teamId ? [{ teamId: selectedMatch.slot2.teamId, score: s2 }] : []),
+            ],
+          },
         },
-      },
-      refetchQueries: ['GetAdminTournament'],
-    }).then(() => closeMatch()).catch(() => {})
+        refetchQueries: ['GetAdminTournament'],
+      })
+      setMutationError(null)
+      closeMatch()
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  return { selectedMatch, score1, score2, status, setScore1, setScore2, setStatus, openMatch, closeMatch, saveMatch }
+  return { selectedMatch, score1, score2, status, setScore1, setScore2, setStatus, openMatch, closeMatch, saveMatch, error: mutationError }
 }

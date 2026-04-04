@@ -79,6 +79,8 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   // GQL PromotionRule.id を rank でひけるようにする
   const [ruleIdByRank, setRuleIdByRank] = useState<Record<number, string>>({})
 
+  const [mutationError, setMutationError] = useState<Error | null>(null)
+
   const [updateLeagueRule] = useUpdateAdminLeagueRuleMutation()
   const [createPromotionRule] = useCreateAdminPromotionRuleMutation({
     refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
@@ -125,12 +127,17 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     setForm(prev => ({ ...prev, [field]: e.target.value }))
   }
 
-  const handleScoringChange = (resultJudgments: string[]) => {
+  const handleScoringChange = async (resultJudgments: string[]) => {
     setForm(prev => ({ ...prev, resultJudgments }))
     // 【未確定】 UpdateLeagueRuleInput は win/draw/lose ポイントのみ対応
-    updateLeagueRule({
-      variables: { id: leagueId, input: {} },
-    }).catch(() => {})
+    try {
+      await updateLeagueRule({
+        variables: { id: leagueId, input: {} },
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   const handleDeleteEntry = (id: number) => {
@@ -159,19 +166,24 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   const handleProgressionRuleChange = async (rank: number, targetId: string) => {
     // 既存ルールがあれば削除してから再作成
     const existingId = ruleIdByRank[rank]
-    if (existingId) {
-      await deletePromotionRule({ variables: { id: existingId } }).catch(() => {})
-    }
-    if (targetId) {
-      await createPromotionRule({
-        variables: {
-          input: {
-            sourceCompetitionId: competitionId,
-            targetCompetitionId: targetId,
-            rankSpec: String(rank),
+    try {
+      if (existingId) {
+        await deletePromotionRule({ variables: { id: existingId } })
+      }
+      if (targetId) {
+        await createPromotionRule({
+          variables: {
+            input: {
+              sourceCompetitionId: competitionId,
+              targetCompetitionId: targetId,
+              rankSpec: String(rank),
+            },
           },
-        },
-      }).catch(() => {})
+        })
+      }
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
     }
     // ローカル state も即時更新
     setProgressionRules(prev => {
@@ -209,5 +221,6 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     handleProgressionRuleChange,
     loading,
     error: error ?? null,
+    mutationError,
   }
 }

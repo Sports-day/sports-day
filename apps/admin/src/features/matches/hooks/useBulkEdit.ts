@@ -19,6 +19,7 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
   const [filterLocation, setFilterLocation] = useState('')
   const [csvData, setCsvDataRaw] = useState('')
   const [parsedRows, setParsedRows] = useState<BulkEditRow[]>([])
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const { data: matchesData } = useGetAdminMatchesQuery()
   const [updateMatchResult] = useUpdateAdminMatchResultMutation()
@@ -63,19 +64,24 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
 
   const execute = async () => {
     const compMatches = (matchesData?.matches ?? []).filter(m => m.competition.id === competitionId)
-    for (const row of parsedRows) {
-      const match = compMatches.find(m => m.id === row.matchId)
-      const results = match?.entries.map((e, i) => ({
-        teamId: e.team?.id ?? '',
-        score: i === 0 ? row.scoreA : row.scoreB,
-      })).filter(r => r.teamId) ?? []
-      await updateMatchResult({
-        variables: {
-          id: row.matchId,
-          input: { status: MatchStatus.Finished, results },
-        },
-        refetchQueries: ['GetAdminMatches'],
-      }).catch(() => {})
+    try {
+      for (const row of parsedRows) {
+        const match = compMatches.find(m => m.id === row.matchId)
+        const results = match?.entries.map((e, i) => ({
+          teamId: e.team?.id ?? '',
+          score: i === 0 ? row.scoreA : row.scoreB,
+        })).filter(r => r.teamId) ?? []
+        await updateMatchResult({
+          variables: {
+            id: row.matchId,
+            input: { status: MatchStatus.Finished, results },
+          },
+          refetchQueries: ['GetAdminMatches'],
+        })
+      }
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
     }
     void filterLocation
     close()
@@ -93,5 +99,6 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
     open,
     close,
     execute,
+    error: mutationError,
   }
 }

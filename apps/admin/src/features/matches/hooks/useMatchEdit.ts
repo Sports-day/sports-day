@@ -18,6 +18,7 @@ export function useMatchEdit() {
   const [scoreB, setScoreB] = useState<string>('0')
   const [winner, setWinner] = useState<WinnerType>(null)
   const [matchStatus, setMatchStatus] = useState<MatchStatusType>('standby')
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [updateMatchResult] = useUpdateAdminMatchResultMutation()
 
@@ -39,7 +40,7 @@ export function useMatchEdit() {
     setMatchStatus('standby')
   }
 
-  const saveMatch = () => {
+  const saveMatch = async () => {
     if (!selectedMatch) return
 
     const parsedA = Number(scoreA)
@@ -53,20 +54,26 @@ export function useMatchEdit() {
       winner === 'teamB' ? selectedMatch.teamBId :
       null
 
-    updateMatchResult({
-      variables: {
-        id: selectedMatch.id,
-        input: {
-          status: matchStatus ? STATUS_MAP[matchStatus] : undefined,
-          winnerTeamId,
-          results: [
-            { teamId: selectedMatch.teamAId, score: scoreAVal },
-            { teamId: selectedMatch.teamBId, score: scoreBVal },
-          ],
+    try {
+      await updateMatchResult({
+        variables: {
+          id: selectedMatch.id,
+          input: {
+            status: matchStatus ? STATUS_MAP[matchStatus] : undefined,
+            winnerTeamId,
+            results: [
+              { teamId: selectedMatch.teamAId, score: scoreAVal },
+              { teamId: selectedMatch.teamBId, score: scoreBVal },
+            ],
+          },
         },
-      },
-      refetchQueries: ['GetAdminMatches'],
-    }).then(() => closeMatch()).catch(() => {})
+        refetchQueries: ['GetAdminMatches'],
+      })
+      setMutationError(null)
+      closeMatch()
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   return {
@@ -83,5 +90,6 @@ export function useMatchEdit() {
     closeMatch,
     resetMatch,
     saveMatch,
+    error: mutationError,
   }
 }

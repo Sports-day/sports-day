@@ -317,6 +317,7 @@ const PLACEMENT_MAP: Record<TournamentCreateForm['placementMethod'], PlacementMe
 
 export function useTournamentCreate(competitionId: string, onSave: () => void) {
   const [form, setForm] = useState<TournamentCreateForm>(INITIAL_FORM)
+  const [mutationError, setMutationError] = useState<Error | null>(null)
   const [createTournament] = useCreateAdminTournamentMutation()
 
   const handleChange =
@@ -326,22 +327,28 @@ export function useTournamentCreate(competitionId: string, onSave: () => void) {
       setForm((prev) => ({ ...prev, [field]: value }))
     }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name.trim()) return
     if (form.teamCount < 2) return
 
-    createTournament({
-      variables: {
-        input: {
-          name: form.name,
-          competitionId,
-          bracketType: BracketType.Main,
-          placementMethod: PLACEMENT_MAP[form.placementMethod],
+    try {
+      await createTournament({
+        variables: {
+          input: {
+            name: form.name,
+            competitionId,
+            bracketType: BracketType.Main,
+            placementMethod: PLACEMENT_MAP[form.placementMethod],
+          },
         },
-      },
-      refetchQueries: ['GetAdminTournaments'],
-    }).then(() => onSave()).catch(() => {})
+        refetchQueries: ['GetAdminTournaments'],
+      })
+      setMutationError(null)
+      onSave()
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  return { form, handleChange, handleSubmit }
+  return { form, handleChange, handleSubmit, error: mutationError }
 }
