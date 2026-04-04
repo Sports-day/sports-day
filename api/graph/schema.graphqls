@@ -590,5 +590,5 @@ type Mutation {
   """
   ユーザーのロールを更新する（user:manage パーミッションが必要）
   """
-  updateUserRole(sub: ID!, role: Role!): User! @hasPermission(permission: "user:manage")
+  updateUserRole(userId: ID!, role: Role!): User! @hasPermission(permission: "user:manage")
 }
