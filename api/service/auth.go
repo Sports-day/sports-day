@@ -183,15 +183,6 @@ func (s *AuthService) updateRole(ctx context.Context, userID string, role string
 	return nil
 }
 
-// PermissionsFor ロールに対応するパーミッション一覧を返す。
-func (s *AuthService) PermissionsFor(ctx context.Context, userID string) ([]string, error) {
-	role, err := s.GetRole(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	return s.authorizer.PermissionsFor(role), nil
-}
-
 // EnsureDefaultRole ロールが未割当の場合に participant をデフォルト付与する。
 func (s *AuthService) EnsureDefaultRole(ctx context.Context, userID string) error {
 	_, err := s.userRepo.GetRoleByUserID(ctx, s.db, userID)

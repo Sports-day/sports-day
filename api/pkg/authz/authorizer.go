@@ -4,8 +4,6 @@ package authz
 type Authorizer interface {
 	// HasPermission は指定ロールが指定パーミッションを持つかを返す。
 	HasPermission(role string, permission string) bool
-	// PermissionsFor は指定ロールが持つパーミッション一覧を返す。
-	PermissionsFor(role string) []string
 }
 
 // 定義済みロール
@@ -97,18 +95,3 @@ func (a *StaticAuthorizer) HasPermission(role string, permission string) bool {
 	return rolePerms[permission]
 }
 
-// PermissionsFor は指定ロールが持つパーミッション一覧を返す。
-// 未知のロールの場合は空スライスを返す。
-func (a *StaticAuthorizer) PermissionsFor(role string) []string {
-	rolePerms, ok := a.permissions[role]
-	if !ok {
-		return []string{}
-	}
-	result := make([]string, 0, len(rolePerms))
-	for perm, allowed := range rolePerms {
-		if allowed {
-			result = append(result, perm)
-		}
-	}
-	return result
-}
