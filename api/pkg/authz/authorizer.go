@@ -17,7 +17,7 @@ const (
 
 // 定義済みパーミッション
 const (
-	PermTournamentWrite  = "tournament:write"
+	PermCompetitionWrite = "competition:write"
 	PermTeamWrite        = "team:write"
 	PermMatchWrite       = "match:write"
 	PermUserWrite        = "user:write"
@@ -42,7 +42,7 @@ func NewStaticAuthorizer() *StaticAuthorizer {
 	return &StaticAuthorizer{
 		permissions: map[string]map[string]bool{
 			RoleAdmin: {
-				PermTournamentWrite:  true,
+				PermCompetitionWrite: true,
 				PermTeamWrite:        true,
 				PermMatchWrite:       true,
 				PermUserWrite:        true,
@@ -56,7 +56,7 @@ func NewStaticAuthorizer() *StaticAuthorizer {
 				PermImageWrite:       true,
 			},
 			RoleOrganizer: {
-				PermTournamentWrite:  true,
+				PermCompetitionWrite: true,
 				PermTeamWrite:        true,
 				PermMatchWrite:       true,
 				PermUserWrite:        true,
@@ -70,7 +70,7 @@ func NewStaticAuthorizer() *StaticAuthorizer {
 				PermImageWrite:       true,
 			},
 			RoleParticipant: {
-				PermTournamentWrite:  false,
+				PermCompetitionWrite: false,
 				PermTeamWrite:        false,
 				PermMatchWrite:       false,
 				PermUserWrite:        false,

@@ -9583,7 +9583,7 @@ func (ec *executionContext) _Mutation_createCompetition(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Competition
 				return zeroVal, err
@@ -9683,7 +9683,7 @@ func (ec *executionContext) _Mutation_updateCompetition(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Competition
 				return zeroVal, err
@@ -9783,7 +9783,7 @@ func (ec *executionContext) _Mutation_deleteCompetition(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Competition
 				return zeroVal, err
@@ -9883,7 +9883,7 @@ func (ec *executionContext) _Mutation_addCompetitionEntries(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Competition
 				return zeroVal, err
@@ -9983,7 +9983,7 @@ func (ec *executionContext) _Mutation_deleteCompetitionEntries(ctx context.Conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Competition
 				return zeroVal, err
@@ -10777,7 +10777,7 @@ func (ec *executionContext) _Mutation_createLeague(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.League
 				return zeroVal, err
@@ -10867,7 +10867,7 @@ func (ec *executionContext) _Mutation_updateLeagueRule(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.League
 				return zeroVal, err
@@ -10957,7 +10957,7 @@ func (ec *executionContext) _Mutation_deleteLeague(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.League
 				return zeroVal, err
@@ -11047,7 +11047,7 @@ func (ec *executionContext) _Mutation_generateRoundRobin(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal []*model.Match
 				return zeroVal, err
@@ -11245,7 +11245,7 @@ func (ec *executionContext) _Mutation_setTiebreakPriorities(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal []*model.TiebreakPriority
 				return zeroVal, err
@@ -11333,7 +11333,7 @@ func (ec *executionContext) _Mutation_createPromotionRule(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.PromotionRule
 				return zeroVal, err
@@ -11427,7 +11427,7 @@ func (ec *executionContext) _Mutation_updatePromotionRule(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.PromotionRule
 				return zeroVal, err
@@ -11521,7 +11521,7 @@ func (ec *executionContext) _Mutation_deletePromotionRule(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.PromotionRule
 				return zeroVal, err
@@ -11615,7 +11615,7 @@ func (ec *executionContext) _Mutation_generateBracket(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal []*model.Tournament
 				return zeroVal, err
@@ -11719,7 +11719,7 @@ func (ec *executionContext) _Mutation_createTournament(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Tournament
 				return zeroVal, err
@@ -11823,7 +11823,7 @@ func (ec *executionContext) _Mutation_updateTournament(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Tournament
 				return zeroVal, err
@@ -11927,7 +11927,7 @@ func (ec *executionContext) _Mutation_deleteTournament(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Tournament
 				return zeroVal, err
@@ -12031,7 +12031,7 @@ func (ec *executionContext) _Mutation_createTournamentMatch(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Match
 				return zeroVal, err
@@ -12131,7 +12131,7 @@ func (ec *executionContext) _Mutation_deleteTournamentMatch(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Match
 				return zeroVal, err
@@ -12231,7 +12231,7 @@ func (ec *executionContext) _Mutation_updateSlotConnection(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.TournamentSlot
 				return zeroVal, err
@@ -12327,7 +12327,7 @@ func (ec *executionContext) _Mutation_updateSeedNumbers(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal []*model.TournamentSlot
 				return zeroVal, err
@@ -12423,7 +12423,7 @@ func (ec *executionContext) _Mutation_resetTournamentBrackets(ctx context.Contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.Competition
 				return zeroVal, err
@@ -12523,7 +12523,7 @@ func (ec *executionContext) _Mutation_assignSeedTeam(ctx context.Context, field 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			permission, err := ec.unmarshalNString2string(ctx, "tournament:write")
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
 			if err != nil {
 				var zeroVal *model.TournamentSlot
 				return zeroVal, err

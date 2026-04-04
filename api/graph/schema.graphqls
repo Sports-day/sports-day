@@ -425,29 +425,29 @@ type Mutation {
   """
   大会を作成する
   """
-  createCompetition(input: CreateCompetitionInput!): Competition! @hasPermission(permission: "tournament:write")
+  createCompetition(input: CreateCompetitionInput!): Competition! @hasPermission(permission: "competition:write")
   """
   大会の情報を更新する
   """
-  updateCompetition(id: ID!, input: UpdateCompetitionInput!): Competition! @hasPermission(permission: "tournament:write")
+  updateCompetition(id: ID!, input: UpdateCompetitionInput!): Competition! @hasPermission(permission: "competition:write")
   """
   大会を削除する
   """
-  deleteCompetition(id: ID!): Competition! @hasPermission(permission: "tournament:write")
+  deleteCompetition(id: ID!): Competition! @hasPermission(permission: "competition:write")
   """
   大会にチームエントリーを追加する
   """
   addCompetitionEntries(
     id: ID!
     input: UpdateCompetitionEntriesInput!
-  ): Competition! @hasPermission(permission: "tournament:write")
+  ): Competition! @hasPermission(permission: "competition:write")
   """
   大会からチームエントリーを削除する
   """
   deleteCompetitionEntries(
     id: ID!
     input: UpdateCompetitionEntriesInput!
-  ): Competition! @hasPermission(permission: "tournament:write")
+  ): Competition! @hasPermission(permission: "competition:write")
   """
   試合を作成する
   """
@@ -479,19 +479,19 @@ type Mutation {
   """
   リーグを追加する
   """
-  createLeague(input: CreateLeagueInput!): League! @hasPermission(permission: "tournament:write")
+  createLeague(input: CreateLeagueInput!): League! @hasPermission(permission: "competition:write")
   """
   リーグのルールを更新する
   """
-  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League! @hasPermission(permission: "tournament:write")
+  updateLeagueRule(id: ID!, input: UpdateLeagueRuleInput!): League! @hasPermission(permission: "competition:write")
   """
   リーグを削除する
   """
-  deleteLeague(id: ID!): League! @hasPermission(permission: "tournament:write")
+  deleteLeague(id: ID!): League! @hasPermission(permission: "competition:write")
   """
   リーグの総当たり戦を自動生成する
   """
-  generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]! @hasPermission(permission: "tournament:write")
+  generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]! @hasPermission(permission: "competition:write")
   """
   スポーツのランキングルールを設定する（全削除→再挿入）
   """
@@ -499,59 +499,59 @@ type Mutation {
   """
   リーグのタイブレーク優先度を設定する
   """
-  setTiebreakPriorities(leagueId: ID!, priorities: [TiebreakPriorityInput!]!): [TiebreakPriority!]! @hasPermission(permission: "tournament:write")
+  setTiebreakPriorities(leagueId: ID!, priorities: [TiebreakPriorityInput!]!): [TiebreakPriority!]! @hasPermission(permission: "competition:write")
   """
   進出ルールを作成する
   """
-  createPromotionRule(input: CreatePromotionRuleInput!): PromotionRule! @hasPermission(permission: "tournament:write")
+  createPromotionRule(input: CreatePromotionRuleInput!): PromotionRule! @hasPermission(permission: "competition:write")
   """
   進出ルールを更新する
   """
-  updatePromotionRule(id: ID!, input: UpdatePromotionRuleInput!): PromotionRule! @hasPermission(permission: "tournament:write")
+  updatePromotionRule(id: ID!, input: UpdatePromotionRuleInput!): PromotionRule! @hasPermission(permission: "competition:write")
   """
   進出ルールを削除する
   """
-  deletePromotionRule(id: ID!): PromotionRule! @hasPermission(permission: "tournament:write")
+  deletePromotionRule(id: ID!): PromotionRule! @hasPermission(permission: "competition:write")
   """
   ブラケット自動生成（MAIN + オプショナルSUB）
   """
-  generateBracket(input: GenerateBracketInput!): [Tournament!]! @hasPermission(permission: "tournament:write")
+  generateBracket(input: GenerateBracketInput!): [Tournament!]! @hasPermission(permission: "competition:write")
   """
   SUBブラケット手動追加
   """
-  createTournament(input: CreateTournamentInput!): Tournament! @hasPermission(permission: "tournament:write")
+  createTournament(input: CreateTournamentInput!): Tournament! @hasPermission(permission: "competition:write")
   """
   トーナメント（ブラケット）を更新する
   """
-  updateTournament(id: ID!, input: UpdateTournamentInput!): Tournament! @hasPermission(permission: "tournament:write")
+  updateTournament(id: ID!, input: UpdateTournamentInput!): Tournament! @hasPermission(permission: "competition:write")
   """
   ブラケット削除（SUBのみ。MAIN削除不可）
   """
-  deleteTournament(id: ID!): Tournament! @hasPermission(permission: "tournament:write")
+  deleteTournament(id: ID!): Tournament! @hasPermission(permission: "competition:write")
   """
   ブラケット内試合追加
   """
-  createTournamentMatch(input: CreateTournamentMatchInput!): Match! @hasPermission(permission: "tournament:write")
+  createTournamentMatch(input: CreateTournamentMatchInput!): Match! @hasPermission(permission: "competition:write")
   """
   ブラケット内試合削除
   """
-  deleteTournamentMatch(matchId: ID!): Match! @hasPermission(permission: "tournament:write")
+  deleteTournamentMatch(matchId: ID!): Match! @hasPermission(permission: "competition:write")
   """
   スロット接続変更
   """
-  updateSlotConnection(input: UpdateSlotConnectionInput!): TournamentSlot! @hasPermission(permission: "tournament:write")
+  updateSlotConnection(input: UpdateSlotConnectionInput!): TournamentSlot! @hasPermission(permission: "competition:write")
   """
   seed_number 振り直し
   """
-  updateSeedNumbers(tournamentId: ID!, seeds: [SeedNumberInput!]!): [TournamentSlot!]! @hasPermission(permission: "tournament:write")
+  updateSeedNumbers(tournamentId: ID!, seeds: [SeedNumberInput!]!): [TournamentSlot!]! @hasPermission(permission: "competition:write")
   """
   トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持）
   """
-  resetTournamentBrackets(competitionId: ID!): Competition! @hasPermission(permission: "tournament:write")
+  resetTournamentBrackets(competitionId: ID!): Competition! @hasPermission(permission: "competition:write")
   """
   SEEDスロットへのチーム手動配置（teamId=null でクリア）
   """
-  assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot! @hasPermission(permission: "tournament:write")
+  assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot! @hasPermission(permission: "competition:write")
   createRule(input: CreateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   updateRule(id: ID!, input: UpdateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   deleteRule(id: ID!): Rule! @hasPermission(permission: "rule:write")
