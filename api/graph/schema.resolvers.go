@@ -6,10 +6,9 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
-	pkgauth "sports-day/api/pkg/auth"
-	"sports-day/api/pkg/errors"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -684,58 +683,22 @@ func (r *mutationResolver) DeleteSportEntry(ctx context.Context, id string) (*mo
 
 // UpdateUserRole is the resolver for the updateUserRole field.
 // @hasPermission(permission: "user:manage") ディレクティブで保護済み。
-func (r *mutationResolver) UpdateUserRole(ctx context.Context, sub string, role model.Role) (*model.User, error) {
-	claims, ok := pkgauth.GetClaims(ctx)
-	if !ok {
-		return nil, errors.ErrUnauthorized
-	}
-
-	// バリデーション 1: 自己降格防止
-	if claims.Sub == sub {
-		return nil, errors.NewError("SELF_ROLE_CHANGE", "自分自身のロールは変更できません")
-	}
-
-	// バリデーション 2: 最後の admin 保護
-	currentRecord, err := r.UserRoleRepo.GetBySub(ctx, r.DB, sub)
-	if err != nil && !errors.Is(err, errors.ErrUserNotFound) {
+func (r *mutationResolver) UpdateUserRole(ctx context.Context, userID string, role model.Role) (*model.User, error) {
+	caller, err := r.AuthService.GetCurrentUser(ctx)
+	if err != nil {
 		return nil, err
 	}
 
-	if currentRecord != nil && currentRecord.Role == "admin" && role != model.RoleAdmin {
-		count, err := r.UserRoleRepo.CountAdmins(ctx, r.DB)
-		if err != nil {
-			return nil, err
-		}
-		if count <= 1 {
-			return nil, errors.NewError("LAST_ADMIN_PROTECTED", "最低1人のadminが必要です")
-		}
-	}
-
-	// ロール更新
-	roleStr := roleToString(role)
-	if _, err := r.UserRoleRepo.Upsert(ctx, r.DB, &db_model.UserRole{
-		Sub:  sub,
-		Role: roleStr,
-	}); err != nil {
+	if err := r.AuthService.ChangeUserRole(ctx, caller.ID, userID, roleToString(role)); err != nil {
 		return nil, err
 	}
-
-	// キャッシュ無効化
-	r.RoleCache.Delete(sub)
 
 	// 更新後のユーザー情報を返す
-	idpRecord, err := r.UserRepo.FindUserIdpBySub(ctx, r.DB, sub)
+	user, err := r.UserService.Get(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	user, err := r.UserService.Get(ctx, idpRecord.UserID)
-	if err != nil {
-		return nil, err
-	}
-	res := model.FormatUserResponse(user)
-	res.Sub = sub
-	res.DisplayName = res.Name
-	return res, nil
+	return model.FormatUserResponse(user), nil
 }
 
 // Users is the resolver for the users field.
@@ -745,28 +708,9 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 		return nil, err
 	}
 
-	// user_id → sub を一括取得してフィールドリゾルバーでのロール解決に使う（N+1防止）
-	userIDs := make([]string, len(users))
-	for i, u := range users {
-		userIDs[i] = u.ID
-	}
-	idpRecords, err := r.UserRepo.BatchFindUserIdpByUserIDs(ctx, r.DB, userIDs)
-	if err != nil {
-		return nil, err
-	}
-	subByUserID := make(map[string]string, len(idpRecords))
-	for _, rec := range idpRecords {
-		if rec.Sub.Valid {
-			subByUserID[rec.UserID] = rec.Sub.String
-		}
-	}
-
 	res := make([]*model.User, 0, len(users))
 	for _, user := range users {
-		u := model.FormatUserResponse(user)
-		u.Sub = subByUserID[user.ID]
-		u.DisplayName = u.Name
-		res = append(res, u)
+		res = append(res, model.FormatUserResponse(user))
 	}
 	return res, nil
 }
@@ -787,31 +731,12 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 		return nil, err
 	}
 
-	claims, ok := pkgauth.GetClaims(ctx)
-	if !ok {
-		return nil, errors.ErrUnauthorized
-	}
-
-	res := model.FormatUserResponse(user)
-	res.Sub = claims.Sub
-	res.DisplayName = res.Name
-
 	// ロールが未割当の場合は participant をデフォルト付与
-	_, err = r.UserRoleRepo.GetBySub(ctx, r.DB, claims.Sub)
-	if err != nil {
-		if errors.Is(err, errors.ErrUserNotFound) {
-			if _, upsertErr := r.UserRoleRepo.Upsert(ctx, r.DB, &db_model.UserRole{
-				Sub:  claims.Sub,
-				Role: "participant",
-			}); upsertErr != nil {
-				return nil, upsertErr
-			}
-		} else {
-			return nil, err
-		}
+	if err := r.AuthService.EnsureDefaultRole(ctx, user.ID); err != nil {
+		return nil, err
 	}
 
-	return res, nil
+	return model.FormatUserResponse(user), nil
 }
 
 // Groups is the resolver for the groups field.
@@ -1063,7 +988,7 @@ func (r *queryResolver) Leagues(ctx context.Context) ([]*model.League, error) {
 	for _, league := range leagues {
 		comp, ok := compMap[league.ID]
 		if !ok {
-			return nil, errors.ErrCompetitionNotFound
+			continue
 		}
 		res = append(res, model.FormatLeagueResponse(league, comp))
 	}

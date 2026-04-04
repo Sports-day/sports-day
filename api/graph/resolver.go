@@ -3,12 +3,8 @@ package graph
 import (
 	"context"
 
-	"gorm.io/gorm"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
-	"sports-day/api/pkg/authz"
-	"sports-day/api/repository"
 	"sports-day/api/service"
 )
 
@@ -32,13 +28,6 @@ type Resolver struct {
 	TournamentService  service.Tournament
 	RuleService        service.Rule
 	ImageService       service.Image
-
-	// 認可関連
-	UserRoleRepo repository.UserRole
-	UserRepo     repository.User
-	RoleCache    *authz.RoleCache
-	Authorizer   authz.Authorizer
-	DB           *gorm.DB
 }
 
 // computeBracketStateForTournament は Tournament に BracketState を付与してレスポンスを生成する。
@@ -80,11 +69,6 @@ func NewResolver(
 	tournamentService service.Tournament,
 	ruleService service.Rule,
 	imageService service.Image,
-	userRoleRepo repository.UserRole,
-	userRepo repository.User,
-	roleCache *authz.RoleCache,
-	authorizer authz.Authorizer,
-	db *gorm.DB,
 ) *Resolver {
 	return &Resolver{
 		UserService:        userService,
@@ -102,10 +86,5 @@ func NewResolver(
 		TournamentService:  tournamentService,
 		RuleService:        ruleService,
 		ImageService:       imageService,
-		UserRoleRepo:       userRoleRepo,
-		UserRepo:           userRepo,
-		RoleCache:          roleCache,
-		Authorizer:         authorizer,
-		DB:                 db,
 	}
 }
