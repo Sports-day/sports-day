@@ -8,11 +8,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sports-day/api/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
-
-	"sports-day/api/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -62,6 +61,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	HasPermission func(ctx context.Context, obj any, next graphql.Resolver, permission string) (res any, err error)
 }
 
 type ComplexityRoot struct {
@@ -203,6 +203,7 @@ type ComplexityRoot struct {
 		UpdateTeam               func(childComplexity int, id string, input model.UpdateTeamInput) int
 		UpdateTeamUsers          func(childComplexity int, id string, input model.UpdateTeamUsersInput) int
 		UpdateTournament         func(childComplexity int, id string, input model.UpdateTournamentInput) int
+		UpdateUserRole           func(childComplexity int, userID string, role model.Role) int
 	}
 
 	PromotionRule struct {
@@ -357,9 +358,16 @@ type ComplexityRoot struct {
 		Email     func(childComplexity int) int
 		Groups    func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Identify  func(childComplexity int) int
 		Judgments func(childComplexity int) int
 		Name      func(childComplexity int) int
+		Role      func(childComplexity int) int
 		Teams     func(childComplexity int) int
+	}
+
+	UserIdentify struct {
+		MicrosoftUserID func(childComplexity int) int
+		Sub             func(childComplexity int) int
 	}
 }
 
@@ -458,6 +466,7 @@ type MutationResolver interface {
 	AddSportEntries(ctx context.Context, id string, input model.AddSportEntriesInput) (*model.SportScene, error)
 	DeleteSportEntries(ctx context.Context, id string, input model.DeleteSportEntriesInput) (*model.SportScene, error)
 	DeleteSportEntry(ctx context.Context, id string) (*model.SportEntry, error)
+	UpdateUserRole(ctx context.Context, userID string, role model.Role) (*model.User, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -540,6 +549,8 @@ type TournamentSlotResolver interface {
 	SourceMatch(ctx context.Context, obj *model.TournamentSlot) (*model.Match, error)
 }
 type UserResolver interface {
+	Identify(ctx context.Context, obj *model.User) (*model.UserIdentify, error)
+	Role(ctx context.Context, obj *model.User) (model.Role, error)
 	Groups(ctx context.Context, obj *model.User) ([]*model.Group, error)
 	Teams(ctx context.Context, obj *model.User) ([]*model.Team, error)
 	Judgments(ctx context.Context, obj *model.User) ([]*model.Judgment, error)
@@ -1633,6 +1644,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateTournament(childComplexity, args["id"].(string), args["input"].(model.UpdateTournamentInput)), true
 
+	case "Mutation.updateUserRole":
+		if e.complexity.Mutation.UpdateUserRole == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserRole(childComplexity, args["userId"].(string), args["role"].(model.Role)), true
+
 	case "PromotionRule.id":
 		if e.complexity.PromotionRule.ID == nil {
 			break
@@ -2470,6 +2493,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
+	case "User.identify":
+		if e.complexity.User.Identify == nil {
+			break
+		}
+
+		return e.complexity.User.Identify(childComplexity), true
+
 	case "User.judgments":
 		if e.complexity.User.Judgments == nil {
 			break
@@ -2484,12 +2514,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Name(childComplexity), true
 
+	case "User.role":
+		if e.complexity.User.Role == nil {
+			break
+		}
+
+		return e.complexity.User.Role(childComplexity), true
+
 	case "User.teams":
 		if e.complexity.User.Teams == nil {
 			break
 		}
 
 		return e.complexity.User.Teams(childComplexity), true
+
+	case "UserIdentify.microsoftUserId":
+		if e.complexity.UserIdentify.MicrosoftUserID == nil {
+			break
+		}
+
+		return e.complexity.UserIdentify.MicrosoftUserID(childComplexity), true
+
+	case "UserIdentify.sub":
+		if e.complexity.UserIdentify.Sub == nil {
+			break
+		}
+
+		return e.complexity.UserIdentify.Sub(childComplexity), true
 
 	}
 	return 0, false
@@ -2665,6 +2716,34 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_hasPermission_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.dir_hasPermission_argsPermission(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["permission"] = arg0
+	return args, nil
+}
+func (ec *executionContext) dir_hasPermission_argsPermission(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["permission"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("permission"))
+	if tmp, ok := rawArgs["permission"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
 
 func (ec *executionContext) field_Mutation_addCompetitionEntries_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
@@ -4660,6 +4739,47 @@ func (ec *executionContext) field_Mutation_updateTournament_argsInput(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_updateUserRole_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateUserRole_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg0
+	arg1, err := ec.field_Mutation_updateUserRole_argsRole(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["role"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateUserRole_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserRole_argsRole(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.Role, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
+	if tmp, ok := rawArgs["role"]; ok {
+		return ec.unmarshalNRole2sportsᚑdayᚋapiᚋgraphᚋmodelᚐRole(ctx, tmp)
+	}
+
+	var zeroVal model.Role
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_Information_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5838,6 +5958,10 @@ func (ec *executionContext) fieldContext_Group_users(_ context.Context, field gr
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -6383,6 +6507,10 @@ func (ec *executionContext) fieldContext_Judgment_user(_ context.Context, field 
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -7375,8 +7503,35 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(model.CreateUserInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(model.CreateUserInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "user:write")
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7407,6 +7562,10 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -7444,8 +7603,35 @@ func (ec *executionContext) _Mutation_createGroup(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateGroup(rctx, fc.Args["input"].(model.CreateGroupInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateGroup(rctx, fc.Args["input"].(model.CreateGroupInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "group:write")
+			if err != nil {
+				var zeroVal *model.Group
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Group
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Group); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Group`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7511,8 +7697,35 @@ func (ec *executionContext) _Mutation_deleteGroup(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteGroup(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteGroup(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "group:write")
+			if err != nil {
+				var zeroVal *model.Group
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Group
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Group); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Group`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7578,8 +7791,35 @@ func (ec *executionContext) _Mutation_updateGroup(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateGroup(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateGroupInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateGroup(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateGroupInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "group:write")
+			if err != nil {
+				var zeroVal *model.Group
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Group
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Group); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Group`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7645,8 +7885,35 @@ func (ec *executionContext) _Mutation_addGroupUsers(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddGroupUsers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateGroupUsersInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddGroupUsers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateGroupUsersInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "group:write")
+			if err != nil {
+				var zeroVal *model.Group
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Group
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Group); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Group`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7712,8 +7979,35 @@ func (ec *executionContext) _Mutation_removeGroupUsers(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RemoveGroupUsers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateGroupUsersInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RemoveGroupUsers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateGroupUsersInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "group:write")
+			if err != nil {
+				var zeroVal *model.Group
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Group
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Group); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Group`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7779,8 +8073,35 @@ func (ec *executionContext) _Mutation_createSports(ctx context.Context, field gr
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateSports(rctx, fc.Args["input"].(model.CreateSportsInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateSports(rctx, fc.Args["input"].(model.CreateSportsInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "sport:write")
+			if err != nil {
+				var zeroVal *model.Sport
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Sport
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Sport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Sport`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7850,8 +8171,35 @@ func (ec *executionContext) _Mutation_deleteSports(ctx context.Context, field gr
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSports(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteSports(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "sport:write")
+			if err != nil {
+				var zeroVal *model.Sport
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Sport
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Sport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Sport`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7921,8 +8269,35 @@ func (ec *executionContext) _Mutation_updateSports(ctx context.Context, field gr
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSports(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateSportsInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateSports(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateSportsInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "sport:write")
+			if err != nil {
+				var zeroVal *model.Sport
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Sport
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Sport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Sport`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7992,8 +8367,35 @@ func (ec *executionContext) _Mutation_createTeam(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTeam(rctx, fc.Args["input"].(model.CreateTeamInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateTeam(rctx, fc.Args["input"].(model.CreateTeamInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "team:write")
+			if err != nil {
+				var zeroVal *model.Team
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Team
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Team); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Team`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8065,8 +8467,35 @@ func (ec *executionContext) _Mutation_deleteTeam(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteTeam(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteTeam(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "team:write")
+			if err != nil {
+				var zeroVal *model.Team
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Team
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Team); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Team`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8138,8 +8567,35 @@ func (ec *executionContext) _Mutation_updateTeam(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTeam(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateTeamInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateTeam(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateTeamInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "team:write")
+			if err != nil {
+				var zeroVal *model.Team
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Team
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Team); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Team`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8211,8 +8667,35 @@ func (ec *executionContext) _Mutation_updateTeamUsers(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTeamUsers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateTeamUsersInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateTeamUsers(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateTeamUsersInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "team:write")
+			if err != nil {
+				var zeroVal *model.Team
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Team
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Team); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Team`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8284,8 +8767,35 @@ func (ec *executionContext) _Mutation_createLocation(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateLocation(rctx, fc.Args["input"].(model.CreateLocationInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateLocation(rctx, fc.Args["input"].(model.CreateLocationInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "location:write")
+			if err != nil {
+				var zeroVal *model.Location
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Location
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Location); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Location`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8347,8 +8857,35 @@ func (ec *executionContext) _Mutation_updateLocation(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateLocation(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateLocationInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateLocation(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateLocationInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "location:write")
+			if err != nil {
+				var zeroVal *model.Location
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Location
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Location); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Location`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8410,8 +8947,35 @@ func (ec *executionContext) _Mutation_deleteLocation(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteLocation(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteLocation(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "location:write")
+			if err != nil {
+				var zeroVal *model.Location
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Location
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Location); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Location`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8473,8 +9037,35 @@ func (ec *executionContext) _Mutation_createScene(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateScene(rctx, fc.Args["input"].(model.CreateSceneInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateScene(rctx, fc.Args["input"].(model.CreateSceneInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.Scene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Scene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Scene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Scene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8536,8 +9127,35 @@ func (ec *executionContext) _Mutation_updateScene(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateScene(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateSceneInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateScene(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateSceneInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.Scene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Scene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Scene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Scene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8599,8 +9217,35 @@ func (ec *executionContext) _Mutation_deleteScene(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteScene(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteScene(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.Scene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Scene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Scene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Scene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8662,8 +9307,35 @@ func (ec *executionContext) _Mutation_createInformation(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateInformation(rctx, fc.Args["input"].(model.CreateInformationInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateInformation(rctx, fc.Args["input"].(model.CreateInformationInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "information:write")
+			if err != nil {
+				var zeroVal *model.Information
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Information
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Information); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Information`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8725,8 +9397,35 @@ func (ec *executionContext) _Mutation_deleteInformation(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteInformation(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteInformation(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "information:write")
+			if err != nil {
+				var zeroVal *model.Information
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Information
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Information); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Information`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8788,8 +9487,35 @@ func (ec *executionContext) _Mutation_updateInformation(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateInformation(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateInformationInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateInformation(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateInformationInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "information:write")
+			if err != nil {
+				var zeroVal *model.Information
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Information
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Information); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Information`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8851,8 +9577,35 @@ func (ec *executionContext) _Mutation_createCompetition(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCompetition(rctx, fc.Args["input"].(model.CreateCompetitionInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateCompetition(rctx, fc.Args["input"].(model.CreateCompetitionInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Competition
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Competition
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Competition); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Competition`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8924,8 +9677,35 @@ func (ec *executionContext) _Mutation_updateCompetition(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCompetition(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateCompetitionInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateCompetition(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateCompetitionInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Competition
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Competition
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Competition); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Competition`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8997,8 +9777,35 @@ func (ec *executionContext) _Mutation_deleteCompetition(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteCompetition(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteCompetition(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Competition
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Competition
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Competition); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Competition`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9070,8 +9877,35 @@ func (ec *executionContext) _Mutation_addCompetitionEntries(ctx context.Context,
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddCompetitionEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateCompetitionEntriesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddCompetitionEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateCompetitionEntriesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Competition
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Competition
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Competition); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Competition`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9143,8 +9977,35 @@ func (ec *executionContext) _Mutation_deleteCompetitionEntries(ctx context.Conte
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteCompetitionEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateCompetitionEntriesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteCompetitionEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateCompetitionEntriesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Competition
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Competition
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Competition); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Competition`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9216,8 +10077,35 @@ func (ec *executionContext) _Mutation_createMatch(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateMatch(rctx, fc.Args["input"].(model.CreateMatchInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateMatch(rctx, fc.Args["input"].(model.CreateMatchInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "match:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9289,8 +10177,35 @@ func (ec *executionContext) _Mutation_updateMatchDetail(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateMatchDetail(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchDetailInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateMatchDetail(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchDetailInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "match:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9362,8 +10277,35 @@ func (ec *executionContext) _Mutation_updateMatchResult(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateMatchResult(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchResultInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateMatchResult(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchResultInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "match:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9435,8 +10377,35 @@ func (ec *executionContext) _Mutation_deleteMatch(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteMatch(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteMatch(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "match:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9508,8 +10477,35 @@ func (ec *executionContext) _Mutation_addMatchEntries(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddMatchEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchEntriesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddMatchEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchEntriesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "match:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9581,8 +10577,35 @@ func (ec *executionContext) _Mutation_deleteMatchEntries(ctx context.Context, fi
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteMatchEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchEntriesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteMatchEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMatchEntriesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "match:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9654,8 +10677,35 @@ func (ec *executionContext) _Mutation_updateJudgment(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateJudgment(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateJudgmentInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateJudgment(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateJudgmentInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "match:write")
+			if err != nil {
+				var zeroVal *model.Judgment
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Judgment
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Judgment); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Judgment`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9721,8 +10771,35 @@ func (ec *executionContext) _Mutation_createLeague(ctx context.Context, field gr
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateLeague(rctx, fc.Args["input"].(model.CreateLeagueInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateLeague(rctx, fc.Args["input"].(model.CreateLeagueInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.League
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.League
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.League); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.League`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9784,8 +10861,35 @@ func (ec *executionContext) _Mutation_updateLeagueRule(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateLeagueRule(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateLeagueRuleInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateLeagueRule(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateLeagueRuleInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.League
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.League
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.League); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.League`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9847,8 +10951,35 @@ func (ec *executionContext) _Mutation_deleteLeague(ctx context.Context, field gr
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteLeague(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteLeague(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.League
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.League
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.League); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.League`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9910,8 +11041,35 @@ func (ec *executionContext) _Mutation_generateRoundRobin(ctx context.Context, fi
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().GenerateRoundRobin(rctx, fc.Args["id"].(string), fc.Args["input"].(model.GenerateRoundRobinInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().GenerateRoundRobin(rctx, fc.Args["id"].(string), fc.Args["input"].(model.GenerateRoundRobinInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal []*model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal []*model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9983,8 +11141,35 @@ func (ec *executionContext) _Mutation_setRankingRules(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SetRankingRules(rctx, fc.Args["sportId"].(string), fc.Args["rules"].([]*model.RankingRuleInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SetRankingRules(rctx, fc.Args["sportId"].(string), fc.Args["rules"].([]*model.RankingRuleInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "sport:write")
+			if err != nil {
+				var zeroVal *model.Sport
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Sport
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Sport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Sport`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10054,8 +11239,35 @@ func (ec *executionContext) _Mutation_setTiebreakPriorities(ctx context.Context,
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SetTiebreakPriorities(rctx, fc.Args["leagueId"].(string), fc.Args["priorities"].([]*model.TiebreakPriorityInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SetTiebreakPriorities(rctx, fc.Args["leagueId"].(string), fc.Args["priorities"].([]*model.TiebreakPriorityInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal []*model.TiebreakPriority
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal []*model.TiebreakPriority
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.TiebreakPriority); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*sports-day/api/graph/model.TiebreakPriority`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10115,8 +11327,35 @@ func (ec *executionContext) _Mutation_createPromotionRule(ctx context.Context, f
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreatePromotionRule(rctx, fc.Args["input"].(model.CreatePromotionRuleInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreatePromotionRule(rctx, fc.Args["input"].(model.CreatePromotionRuleInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.PromotionRule
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.PromotionRule
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.PromotionRule); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.PromotionRule`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10182,8 +11421,35 @@ func (ec *executionContext) _Mutation_updatePromotionRule(ctx context.Context, f
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdatePromotionRule(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdatePromotionRuleInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdatePromotionRule(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdatePromotionRuleInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.PromotionRule
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.PromotionRule
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.PromotionRule); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.PromotionRule`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10249,8 +11515,35 @@ func (ec *executionContext) _Mutation_deletePromotionRule(ctx context.Context, f
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeletePromotionRule(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeletePromotionRule(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.PromotionRule
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.PromotionRule
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.PromotionRule); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.PromotionRule`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10316,8 +11609,35 @@ func (ec *executionContext) _Mutation_generateBracket(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().GenerateBracket(rctx, fc.Args["input"].(model.GenerateBracketInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().GenerateBracket(rctx, fc.Args["input"].(model.GenerateBracketInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal []*model.Tournament
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal []*model.Tournament
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Tournament); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*sports-day/api/graph/model.Tournament`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10393,8 +11713,35 @@ func (ec *executionContext) _Mutation_createTournament(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTournament(rctx, fc.Args["input"].(model.CreateTournamentInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateTournament(rctx, fc.Args["input"].(model.CreateTournamentInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Tournament
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Tournament
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Tournament); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Tournament`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10470,8 +11817,35 @@ func (ec *executionContext) _Mutation_updateTournament(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTournament(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateTournamentInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateTournament(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateTournamentInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Tournament
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Tournament
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Tournament); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Tournament`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10547,8 +11921,35 @@ func (ec *executionContext) _Mutation_deleteTournament(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteTournament(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteTournament(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Tournament
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Tournament
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Tournament); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Tournament`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10624,8 +12025,35 @@ func (ec *executionContext) _Mutation_createTournamentMatch(ctx context.Context,
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTournamentMatch(rctx, fc.Args["input"].(model.CreateTournamentMatchInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateTournamentMatch(rctx, fc.Args["input"].(model.CreateTournamentMatchInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10697,8 +12125,35 @@ func (ec *executionContext) _Mutation_deleteTournamentMatch(ctx context.Context,
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteTournamentMatch(rctx, fc.Args["matchId"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteTournamentMatch(rctx, fc.Args["matchId"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Match
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Match
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Match); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Match`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10770,8 +12225,35 @@ func (ec *executionContext) _Mutation_updateSlotConnection(ctx context.Context, 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSlotConnection(rctx, fc.Args["input"].(model.UpdateSlotConnectionInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateSlotConnection(rctx, fc.Args["input"].(model.UpdateSlotConnectionInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.TournamentSlot
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.TournamentSlot
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TournamentSlot); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.TournamentSlot`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10839,8 +12321,35 @@ func (ec *executionContext) _Mutation_updateSeedNumbers(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSeedNumbers(rctx, fc.Args["tournamentId"].(string), fc.Args["seeds"].([]*model.SeedNumberInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateSeedNumbers(rctx, fc.Args["tournamentId"].(string), fc.Args["seeds"].([]*model.SeedNumberInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal []*model.TournamentSlot
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal []*model.TournamentSlot
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.TournamentSlot); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*sports-day/api/graph/model.TournamentSlot`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10908,8 +12417,35 @@ func (ec *executionContext) _Mutation_resetTournamentBrackets(ctx context.Contex
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ResetTournamentBrackets(rctx, fc.Args["competitionId"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ResetTournamentBrackets(rctx, fc.Args["competitionId"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Competition
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Competition
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Competition); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Competition`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10981,8 +12517,35 @@ func (ec *executionContext) _Mutation_assignSeedTeam(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AssignSeedTeam(rctx, fc.Args["input"].(model.AssignSeedTeamInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AssignSeedTeam(rctx, fc.Args["input"].(model.AssignSeedTeamInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.TournamentSlot
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.TournamentSlot
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TournamentSlot); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.TournamentSlot`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11050,8 +12613,35 @@ func (ec *executionContext) _Mutation_createRule(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateRule(rctx, fc.Args["input"].(model.CreateRuleInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateRule(rctx, fc.Args["input"].(model.CreateRuleInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "rule:write")
+			if err != nil {
+				var zeroVal *model.Rule
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Rule
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Rule); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Rule`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11113,8 +12703,35 @@ func (ec *executionContext) _Mutation_updateRule(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateRule(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateRuleInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateRule(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateRuleInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "rule:write")
+			if err != nil {
+				var zeroVal *model.Rule
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Rule
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Rule); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Rule`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11176,8 +12793,35 @@ func (ec *executionContext) _Mutation_deleteRule(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteRule(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteRule(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "rule:write")
+			if err != nil {
+				var zeroVal *model.Rule
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Rule
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Rule); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Rule`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11239,8 +12883,35 @@ func (ec *executionContext) _Mutation_createImageUploadURL(ctx context.Context, 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateImageUploadURL(rctx, fc.Args["input"].(model.CreateImageUploadURLInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateImageUploadURL(rctx, fc.Args["input"].(model.CreateImageUploadURLInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "image:write")
+			if err != nil {
+				var zeroVal *model.ImageUploadURL
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.ImageUploadURL
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ImageUploadURL); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.ImageUploadURL`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11300,8 +12971,35 @@ func (ec *executionContext) _Mutation_deleteImage(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteImage(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteImage(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "image:write")
+			if err != nil {
+				var zeroVal *model.Image
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Image
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Image); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Image`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11363,8 +13061,35 @@ func (ec *executionContext) _Mutation_addSportScenes(ctx context.Context, field 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddSportScenes(rctx, fc.Args["id"].(string), fc.Args["input"].(model.AddSportScenesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddSportScenes(rctx, fc.Args["id"].(string), fc.Args["input"].(model.AddSportScenesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.Scene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Scene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Scene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Scene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11426,8 +13151,35 @@ func (ec *executionContext) _Mutation_deleteSportScenes(ctx context.Context, fie
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSportScenes(rctx, fc.Args["id"].(string), fc.Args["input"].(model.DeleteSportScenesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteSportScenes(rctx, fc.Args["id"].(string), fc.Args["input"].(model.DeleteSportScenesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.Scene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Scene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Scene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Scene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11489,8 +13241,35 @@ func (ec *executionContext) _Mutation_deleteSportScene(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSportScene(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteSportScene(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.SportScene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.SportScene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.SportScene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.SportScene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11554,8 +13333,35 @@ func (ec *executionContext) _Mutation_addSportEntries(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddSportEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.AddSportEntriesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddSportEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.AddSportEntriesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.SportScene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.SportScene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.SportScene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.SportScene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11619,8 +13425,35 @@ func (ec *executionContext) _Mutation_deleteSportEntries(ctx context.Context, fi
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSportEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.DeleteSportEntriesInput))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteSportEntries(rctx, fc.Args["id"].(string), fc.Args["input"].(model.DeleteSportEntriesInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.SportScene
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.SportScene
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.SportScene); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.SportScene`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11684,8 +13517,35 @@ func (ec *executionContext) _Mutation_deleteSportEntry(ctx context.Context, fiel
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSportEntry(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteSportEntry(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "scene:write")
+			if err != nil {
+				var zeroVal *model.SportEntry
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.SportEntry
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.SportEntry); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.SportEntry`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -11728,6 +13588,106 @@ func (ec *executionContext) fieldContext_Mutation_deleteSportEntry(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteSportEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateUserRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateUserRole(rctx, fc.Args["userId"].(string), fc.Args["role"].(model.Role))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "user:manage")
+			if err != nil {
+				var zeroVal *model.User
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.User
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
+			case "groups":
+				return ec.fieldContext_User_groups(ctx, field)
+			case "teams":
+				return ec.fieldContext_User_teams(ctx, field)
+			case "judgments":
+				return ec.fieldContext_User_judgments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12164,6 +14124,10 @@ func (ec *executionContext) fieldContext_Query_users(_ context.Context, field gr
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -12222,6 +14186,10 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -12291,6 +14259,10 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -16098,6 +18070,10 @@ func (ec *executionContext) fieldContext_Team_users(_ context.Context, field gra
 				return ec.fieldContext_User_name(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
 			case "groups":
 				return ec.fieldContext_User_groups(ctx, field)
 			case "teams":
@@ -17524,6 +19500,100 @@ func (ec *executionContext) fieldContext_User_email(_ context.Context, field gra
 	return fc, nil
 }
 
+func (ec *executionContext) _User_identify(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_identify(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Identify(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserIdentify)
+	fc.Result = res
+	return ec.marshalNUserIdentify2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUserIdentify(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_identify(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "sub":
+				return ec.fieldContext_UserIdentify_sub(ctx, field)
+			case "microsoftUserId":
+				return ec.fieldContext_UserIdentify_microsoftUserId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserIdentify", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_role(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_role(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Role(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Role)
+	fc.Result = res
+	return ec.marshalNRole2sportsᚑdayᚋapiᚋgraphᚋmodelᚐRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_role(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Role does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_groups(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_groups(ctx, field)
 	if err != nil {
@@ -17693,6 +19763,91 @@ func (ec *executionContext) fieldContext_User_judgments(_ context.Context, field
 				return ec.fieldContext_Judgment_group(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserIdentify_sub(ctx context.Context, field graphql.CollectedField, obj *model.UserIdentify) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserIdentify_sub(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sub, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserIdentify_sub(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserIdentify",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserIdentify_microsoftUserId(ctx context.Context, field graphql.CollectedField, obj *model.UserIdentify) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserIdentify_microsoftUserId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MicrosoftUserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserIdentify_microsoftUserId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserIdentify",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22977,6 +25132,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updateUserRole":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserRole(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -25317,6 +27479,78 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "identify":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_identify(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "role":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_role(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "groups":
 			field := field
 
@@ -25425,6 +27659,47 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userIdentifyImplementors = []string{"UserIdentify"}
+
+func (ec *executionContext) _UserIdentify(ctx context.Context, sel ast.SelectionSet, obj *model.UserIdentify) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userIdentifyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserIdentify")
+		case "sub":
+			out.Values[i] = ec._UserIdentify_sub(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "microsoftUserId":
+			out.Values[i] = ec._UserIdentify_microsoftUserId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -26729,6 +29004,16 @@ func (ec *executionContext) unmarshalNRankingRuleInput2ᚖsportsᚑdayᚋapiᚋg
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNRole2sportsᚑdayᚋapiᚋgraphᚋmodelᚐRole(ctx context.Context, v any) (model.Role, error) {
+	var res model.Role
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRole2sportsᚑdayᚋapiᚋgraphᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v model.Role) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNRule2sportsᚑdayᚋapiᚋgraphᚋmodelᚐRule(ctx context.Context, sel ast.SelectionSet, v model.Rule) graphql.Marshaler {
 	return ec._Rule(ctx, sel, &v)
 }
@@ -27623,6 +29908,20 @@ func (ec *executionContext) marshalNUser2ᚖsportsᚑdayᚋapiᚋgraphᚋmodel�
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUserIdentify2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUserIdentify(ctx context.Context, sel ast.SelectionSet, v model.UserIdentify) graphql.Marshaler {
+	return ec._UserIdentify(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUserIdentify2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUserIdentify(ctx context.Context, sel ast.SelectionSet, v *model.UserIdentify) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserIdentify(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

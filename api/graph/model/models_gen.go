@@ -332,6 +332,11 @@ type UpdateTournamentInput struct {
 	DisplayOrder *int32  `json:"displayOrder,omitempty"`
 }
 
+type UserIdentify struct {
+	Sub             string  `json:"sub"`
+	MicrosoftUserID *string `json:"microsoftUserId,omitempty"`
+}
+
 type BracketState string
 
 const (
@@ -593,6 +598,49 @@ func (e *RankingConditionKey) UnmarshalGQL(v any) error {
 }
 
 func (e RankingConditionKey) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Role string
+
+const (
+	RoleAdmin       Role = "ADMIN"
+	RoleOrganizer   Role = "ORGANIZER"
+	RoleParticipant Role = "PARTICIPANT"
+)
+
+var AllRole = []Role{
+	RoleAdmin,
+	RoleOrganizer,
+	RoleParticipant,
+}
+
+func (e Role) IsValid() bool {
+	switch e {
+	case RoleAdmin, RoleOrganizer, RoleParticipant:
+		return true
+	}
+	return false
+}
+
+func (e Role) String() string {
+	return string(e)
+}
+
+func (e *Role) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Role(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Role", str)
+	}
+	return nil
+}
+
+func (e Role) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

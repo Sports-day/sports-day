@@ -682,6 +682,26 @@ func (r *mutationResolver) DeleteSportEntry(ctx context.Context, id string) (*mo
 	return model.FormatSportEntryResponse(res), nil
 }
 
+// UpdateUserRole is the resolver for the updateUserRole field.
+// @hasPermission(permission: "user:manage") ディレクティブで保護済み。
+func (r *mutationResolver) UpdateUserRole(ctx context.Context, userID string, role model.Role) (*model.User, error) {
+	caller, err := r.AuthService.GetCurrentUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := r.AuthService.ChangeUserRole(ctx, caller.ID, userID, roleToString(role)); err != nil {
+		return nil, err
+	}
+
+	// 更新後のユーザー情報を返す
+	user, err := r.UserService.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatUserResponse(user), nil
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	users, err := r.UserService.List(ctx)
@@ -711,6 +731,12 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// ロールが未割当の場合は participant をデフォルト付与
+	if err := r.AuthService.EnsureDefaultRole(ctx, user.ID); err != nil {
+		return nil, err
+	}
+
 	return model.FormatUserResponse(user), nil
 }
 

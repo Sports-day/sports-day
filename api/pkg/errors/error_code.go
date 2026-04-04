@@ -20,6 +20,7 @@ var (
 	ErrSportSceneNotFound  = NewError("SPORT_SCENE_NOT_FOUND", "スポーツシーンが見つかりません")
 	ErrSportEntryNotFound  = NewError("SPORT_ENTRY_NOT_FOUND", "スポーツエントリーが見つかりません")
 	ErrRuleNotFound        = NewError("RULE_NOT_FOUND", "ルールが見つかりません")
+	ErrRoleNotFound        = NewError("ROLE_NOT_FOUND", "ロールが見つかりません")
 
 	/*
 		Validation
@@ -96,4 +97,6 @@ var (
 	ErrTokenInvalid       = NewError("TOKEN_INVALID", "認証トークンが無効です")
 	ErrTokenClaimsInvalid = NewError("TOKEN_CLAIMS_INVALID", "認証トークンの情報が不正です")
 	ErrUserSyncFailed     = NewError("USER_SYNC_FAILED", "ユーザー情報の同期に失敗しました")
+	ErrSelfRoleChange     = NewError("SELF_ROLE_CHANGE", "自分自身のロールは変更できません")
+	ErrInsufficientRole   = NewError("INSUFFICIENT_ROLE", "権限が不足しています")
 )

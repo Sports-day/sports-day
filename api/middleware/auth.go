@@ -25,8 +25,6 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 			}
 
 			var claims struct {
-				Email           string `json:"email"`
-				Name            string `json:"name"`
 				Sub             string `json:"sub"`
 				MicrosoftUserID string `json:"oid"`
 			}
@@ -43,8 +41,6 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 
 			ctx := auth.AttachClaims(r.Context(), &auth.Claims{
 				Sub:             claims.Sub,
-				Email:           claims.Email,
-				Name:            claims.Name,
 				MicrosoftUserID: claims.MicrosoftUserID,
 			})
 			next.ServeHTTP(w, r.WithContext(ctx))

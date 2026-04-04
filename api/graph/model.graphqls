@@ -1,7 +1,20 @@
+enum Role {
+  ADMIN
+  ORGANIZER
+  PARTICIPANT
+}
+
+type UserIdentify {
+  sub: ID!
+  microsoftUserId: String
+}
+
 type User {
   id: ID!
   name: String!
   email: String!
+  identify: UserIdentify!
+  role: Role!
   groups: [Group!]!
   teams: [Team!]!
   judgments: [Judgment!]!

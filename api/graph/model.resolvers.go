@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -70,7 +69,7 @@ func (r *competitionResolver) League(ctx context.Context, obj *model.Competition
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 
 	return model.FormatLeagueResponse(leagues[0], competitions[0]), nil
@@ -251,7 +250,7 @@ func (r *matchResolver) WinnerTeam(ctx context.Context, obj *model.Match) (*mode
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -655,6 +654,42 @@ func (r *tournamentSlotResolver) SourceMatch(ctx context.Context, obj *model.Tou
 		return nil, nil
 	}
 	return model.FormatMatchResponse(matches[0]), nil
+}
+
+// Identify is the resolver for the identify field.
+func (r *userResolver) Identify(ctx context.Context, obj *model.User) (*model.UserIdentify, error) {
+	idp, err := loader.LoadUserIdp(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if idp == nil {
+		return &model.UserIdentify{}, nil
+	}
+	var microsoftUserID *string
+	if idp.MicrosoftUserID.Valid {
+		microsoftUserID = &idp.MicrosoftUserID.String
+	}
+	return &model.UserIdentify{
+		Sub:             idp.Sub.String,
+		MicrosoftUserID: microsoftUserID,
+	}, nil
+}
+
+// Role is the resolver for the role field.
+func (r *userResolver) Role(ctx context.Context, obj *model.User) (model.Role, error) {
+	role, err := loader.LoadUserRole(ctx, obj.ID)
+	if err != nil {
+		return model.RoleParticipant, err
+	}
+
+	switch role {
+	case "admin":
+		return model.RoleAdmin, nil
+	case "organizer":
+		return model.RoleOrganizer, nil
+	default:
+		return model.RoleParticipant, nil
+	}
 }
 
 // Groups is the resolver for the groups field.
