@@ -20,8 +20,9 @@ type Env struct {
 		CORSOrigins []string `envconfig:"SERVER_CORS_ORIGINS" default:"*"`
 	}
 	Auth struct {
-		IssuerURL string `envconfig:"AUTH_ISSUER_URL" required:"true"`
-		ClientID  string `envconfig:"AUTH_CLIENT_ID" required:"true"`
+		IssuerURL     string `envconfig:"AUTH_ISSUER_URL" required:"true"`
+		ClientID      string `envconfig:"AUTH_CLIENT_ID" required:"true"`
+		RoleCacheTTL  int    `envconfig:"AUTH_ROLE_CACHE_TTL" default:"60"`
 	}
 	Storage struct {
 		Endpoint      string `envconfig:"STORAGE_ENDPOINT"`

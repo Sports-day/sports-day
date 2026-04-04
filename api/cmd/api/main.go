@@ -103,7 +103,7 @@ func main() {
 
 	// authorization
 	authorizerInstance := authz.NewStaticAuthorizer()
-	roleCache := authz.NewRoleCache()
+	roleCache := authz.NewRoleCache(env.Get().Auth.RoleCacheTTL)
 
 	// service
 	userService := service.NewUser(db, userRepository)

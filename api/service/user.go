@@ -63,6 +63,19 @@ func (s *User) GetUserIdpMapByUserIDs(ctx context.Context, userIDs []string) (ma
 	return idpMap, nil
 }
 
+func (s *User) GetRoleMapByUserIDs(ctx context.Context, userIDs []string) (map[string]string, error) {
+	records, err := s.userRepository.BatchGetRolesByUserIDs(ctx, s.db, userIDs)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	roleMap := make(map[string]string)
+	for _, rec := range records {
+		roleMap[rec.UserID] = rec.Role
+	}
+	return roleMap, nil
+}
+
 func (s *User) GetUsersMapByIDs(ctx context.Context, userIDs []string) (map[string]*db_model.User, error) {
 	users, err := s.userRepository.BatchGet(ctx, s.db, userIDs)
 	if err != nil {

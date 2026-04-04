@@ -97,7 +97,7 @@ func (r user) GetRoleByUserID(ctx context.Context, db *gorm.DB, userID string) (
 	var record db_model.UserRole
 	if err := db.First(&record, "user_id = ?", userID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.ErrUserNotFound
+			return nil, errors.ErrRoleNotFound
 		}
 		return nil, errors.Wrap(err)
 	}

@@ -12,6 +12,7 @@ import (
 type Loaders struct {
 	UserLoader                     *dataloadgen.Loader[string, *db_model.User]
 	UserIdpLoader                  *dataloadgen.Loader[string, *db_model.UsersIdp]
+	UserRoleLoader                 *dataloadgen.Loader[string, string]
 	GroupLoader                    *dataloadgen.Loader[string, *db_model.Group]
 	TeamLoader                     *dataloadgen.Loader[string, *db_model.Team]
 	CompetitionLoader              *dataloadgen.Loader[string, *db_model.Competition]
@@ -54,6 +55,7 @@ func New(userSvc service.User, groupSvc service.Group, teamSvc service.Team, com
 	return &Loaders{
 		UserLoader:                     dataloadgen.NewLoader(newUserLoader(userSvc)),
 		UserIdpLoader:                  dataloadgen.NewLoader(newUserIdpLoader(userSvc)),
+		UserRoleLoader:                 dataloadgen.NewLoader(newUserRoleLoader(userSvc)),
 		GroupLoader:                    dataloadgen.NewLoader(newGroupLoader(groupSvc)),
 		TeamLoader:                     dataloadgen.NewLoader(newTeamLoader(teamSvc)),
 		CompetitionLoader:              dataloadgen.NewLoader(newCompetitionLoader(competitionSvc)),

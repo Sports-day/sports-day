@@ -119,7 +119,7 @@ func (s *AuthService) GetRole(ctx context.Context, userID string) (string, error
 
 	record, err := s.userRepo.GetRoleByUserID(ctx, s.db, userID)
 	if err != nil {
-		if errors.Is(err, errors.ErrUserNotFound) {
+		if errors.Is(err, errors.ErrRoleNotFound) {
 			return "participant", nil
 		}
 		return "", err
@@ -189,7 +189,7 @@ func (s *AuthService) EnsureDefaultRole(ctx context.Context, userID string) erro
 	if err == nil {
 		return nil
 	}
-	if !errors.Is(err, errors.ErrUserNotFound) {
+	if !errors.Is(err, errors.ErrRoleNotFound) {
 		return err
 	}
 	return s.updateRole(ctx, userID, "participant")
