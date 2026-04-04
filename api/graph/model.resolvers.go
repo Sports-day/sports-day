@@ -6,10 +6,10 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
-	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/slices"
 )
 
@@ -69,7 +69,7 @@ func (r *competitionResolver) League(ctx context.Context, obj *model.Competition
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 
 	return model.FormatLeagueResponse(leagues[0], competitions[0]), nil
@@ -235,7 +235,7 @@ func (r *matchResolver) Competition(ctx context.Context, obj *model.Match) (*mod
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -250,7 +250,7 @@ func (r *matchResolver) WinnerTeam(ctx context.Context, obj *model.Match) (*mode
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -432,7 +432,7 @@ func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*mode
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -444,7 +444,7 @@ func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group
 		return nil, err
 	}
 	if len(groups) == 0 || groups[0] == nil {
-		return nil, errors.ErrGroupNotFound
+		return nil, nil
 	}
 	return model.FormatGroupResponse(groups[0]), nil
 }
@@ -578,7 +578,7 @@ func (r *tournamentResolver) Competition(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -612,7 +612,7 @@ func (r *tournamentRankingResolver) Team(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -624,7 +624,7 @@ func (r *tournamentSlotResolver) Tournament(ctx context.Context, obj *model.Tour
 		return nil, err
 	}
 	if len(tournaments) == 0 || tournaments[0] == nil {
-		return nil, errors.ErrTournamentNotFound
+		return nil, nil
 	}
 	return r.computeBracketStateForTournament(ctx, tournaments[0])
 }
@@ -656,24 +656,30 @@ func (r *tournamentSlotResolver) SourceMatch(ctx context.Context, obj *model.Tou
 	return model.FormatMatchResponse(matches[0]), nil
 }
 
+// Identify is the resolver for the identify field.
+func (r *userResolver) Identify(ctx context.Context, obj *model.User) (*model.UserIdentify, error) {
+	idp, err := loader.LoadUserIdp(ctx, obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if idp == nil {
+		return &model.UserIdentify{}, nil
+	}
+	var microsoftUserID *string
+	if idp.MicrosoftUserID.Valid {
+		microsoftUserID = &idp.MicrosoftUserID.String
+	}
+	return &model.UserIdentify{
+		Sub:             idp.Sub.String,
+		MicrosoftUserID: microsoftUserID,
+	}, nil
+}
+
 // Role is the resolver for the role field.
 func (r *userResolver) Role(ctx context.Context, obj *model.User) (model.Role, error) {
-	if obj.Sub == "" {
-		return model.RoleParticipant, nil
-	}
-
-	// キャッシュからロールを取得
-	role, hit := r.RoleCache.Get(obj.Sub)
-	if !hit {
-		record, err := r.UserRoleRepo.GetBySub(ctx, r.DB, obj.Sub)
-		if err != nil {
-			if errors.Is(err, errors.ErrUserNotFound) {
-				return model.RoleParticipant, nil
-			}
-			return model.RoleParticipant, err
-		}
-		role = record.Role
-		r.RoleCache.Set(obj.Sub, role)
+	role, err := r.AuthService.GetRole(ctx, obj.ID)
+	if err != nil {
+		return model.RoleParticipant, err
 	}
 
 	switch role {
@@ -688,24 +694,7 @@ func (r *userResolver) Role(ctx context.Context, obj *model.User) (model.Role, e
 
 // Permissions is the resolver for the permissions field.
 func (r *userResolver) Permissions(ctx context.Context, obj *model.User) ([]string, error) {
-	if obj.Sub == "" {
-		return r.Authorizer.PermissionsFor("participant"), nil
-	}
-
-	role, hit := r.RoleCache.Get(obj.Sub)
-	if !hit {
-		record, err := r.UserRoleRepo.GetBySub(ctx, r.DB, obj.Sub)
-		if err != nil {
-			if errors.Is(err, errors.ErrUserNotFound) {
-				return r.Authorizer.PermissionsFor("participant"), nil
-			}
-			return nil, err
-		}
-		role = record.Role
-		r.RoleCache.Set(obj.Sub, role)
-	}
-
-	return r.Authorizer.PermissionsFor(role), nil
+	return r.AuthService.PermissionsFor(ctx, obj.ID)
 }
 
 // Groups is the resolver for the groups field.
@@ -826,4 +815,3 @@ type tournamentResolver struct{ *Resolver }
 type tournamentRankingResolver struct{ *Resolver }
 type tournamentSlotResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
-

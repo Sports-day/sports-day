@@ -50,6 +50,19 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 	return row, nil
 }
 
+func (s *User) GetUserIdpMapByUserIDs(ctx context.Context, userIDs []string) (map[string]*db_model.UsersIdp, error) {
+	records, err := s.userRepository.BatchFindUserIdpByUserIDs(ctx, s.db, userIDs)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	idpMap := make(map[string]*db_model.UsersIdp)
+	for _, rec := range records {
+		idpMap[rec.UserID] = rec
+	}
+	return idpMap, nil
+}
+
 func (s *User) GetUsersMapByIDs(ctx context.Context, userIDs []string) (map[string]*db_model.User, error) {
 	users, err := s.userRepository.BatchGet(ctx, s.db, userIDs)
 	if err != nil {
