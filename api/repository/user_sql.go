@@ -7,6 +7,7 @@ import (
 	"sports-day/api/pkg/errors"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type user struct{}
@@ -90,4 +91,33 @@ func (r user) SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.Us
 		return nil, errors.Wrap(err)
 	}
 	return userIdp, nil
+}
+
+func (r user) GetRoleByUserID(ctx context.Context, db *gorm.DB, userID string) (*db_model.UserRole, error) {
+	var record db_model.UserRole
+	if err := db.First(&record, "user_id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrUserNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+	return &record, nil
+}
+
+func (r user) BatchGetRolesByUserIDs(ctx context.Context, db *gorm.DB, userIDs []string) ([]*db_model.UserRole, error) {
+	var records []*db_model.UserRole
+	if err := db.Where("user_id IN (?)", userIDs).Find(&records).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return records, nil
+}
+
+func (r user) SaveRole(ctx context.Context, db *gorm.DB, userRole *db_model.UserRole) (*db_model.UserRole, error) {
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"role"}),
+	}).Create(userRole).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return userRole, nil
 }
