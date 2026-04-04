@@ -9,6 +9,7 @@ import (
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	"sports-day/api/pkg/errors"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -988,7 +989,7 @@ func (r *queryResolver) Leagues(ctx context.Context) ([]*model.League, error) {
 	for _, league := range leagues {
 		comp, ok := compMap[league.ID]
 		if !ok {
-			continue
+			return nil, errors.ErrCompetitionNotFound
 		}
 		res = append(res, model.FormatLeagueResponse(league, comp))
 	}

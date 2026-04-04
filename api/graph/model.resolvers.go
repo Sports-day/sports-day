@@ -9,6 +9,7 @@ import (
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
+	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/slices"
 )
 
@@ -234,7 +235,7 @@ func (r *matchResolver) Competition(ctx context.Context, obj *model.Match) (*mod
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, nil
+		return nil, errors.ErrCompetitionNotFound
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -431,7 +432,7 @@ func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*mode
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, nil
+		return nil, errors.ErrTeamNotFound
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -443,7 +444,7 @@ func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group
 		return nil, err
 	}
 	if len(groups) == 0 || groups[0] == nil {
-		return nil, nil
+		return nil, errors.ErrGroupNotFound
 	}
 	return model.FormatGroupResponse(groups[0]), nil
 }
@@ -577,7 +578,7 @@ func (r *tournamentResolver) Competition(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, nil
+		return nil, errors.ErrCompetitionNotFound
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -611,7 +612,7 @@ func (r *tournamentRankingResolver) Team(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, nil
+		return nil, errors.ErrTeamNotFound
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -623,7 +624,7 @@ func (r *tournamentSlotResolver) Tournament(ctx context.Context, obj *model.Tour
 		return nil, err
 	}
 	if len(tournaments) == 0 || tournaments[0] == nil {
-		return nil, nil
+		return nil, errors.ErrTournamentNotFound
 	}
 	return r.computeBracketStateForTournament(ctx, tournaments[0])
 }
