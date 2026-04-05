@@ -1,27 +1,19 @@
 import { Box, Typography, Stack, Button, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
-import { gql, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import PrivacyPolicyDrawer from "@/components/layouts/PrivacyPolicyDrawer";
 import CircularUnderLoad from "@/features/Loading";
-
-const GET_TYPE = gql`
-  query GetType {
-    scenes {
-      id
-    }
-  }
-`;
+import { useGetTypeQuery } from "@/gql/__generated__/graphql";
 
 export default function Home() {
-  const { data, loading, error } = useQuery(GET_TYPE, {
+  const { data, loading, error } = useGetTypeQuery({
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
   });
   const navigate = useNavigate();
   const theme = useTheme();
 
-  const firstSceneId = data?.scenes?.[0]?.id;
+  const firstSceneId = data?.scenes?.filter((s) => !s.isDeleted)?.[0]?.id;
 
   if (loading) {
     return <CircularUnderLoad />;

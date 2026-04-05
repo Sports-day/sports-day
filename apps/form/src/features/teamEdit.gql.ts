@@ -1,5 +1,16 @@
 import { gql } from "@apollo/client";
 
+export const GET_ME = gql`
+  query GetMe {
+    me {
+      id
+      groups {
+        id
+      }
+    }
+  }
+`;
+
 export const GET_USERS = gql`
   query GetUsers {
     users {
@@ -12,6 +23,7 @@ export const GET_USERS = gql`
 export const GET_SPORTSCENE = gql`
   query GetSportscene {
     scenes {
+      isDeleted
       sportScenes {
         id
         sport {
@@ -36,6 +48,7 @@ export const GET_SPORTSCENE = gql`
 export const GET_SPORTSCENE_ENTRIES = gql`
   query GetSportsceneEntries {
     scenes {
+      isDeleted
       sportScenes {
         id
         entries {

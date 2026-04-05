@@ -5,63 +5,28 @@ import Grid from "@mui/material/Grid";
 import ConfirmCard from "@/components/cards/AboutConfirmPage/ConfirmCard";
 import Conflicted from "@/components/cards/AboutConfirmPage/ConflictedCard";
 import NotSelected from "@/components/cards/AboutConfirmPage/NotSelectedCard";
-import { gql, useQuery } from "@apollo/client";
 import CircularUnderLoad from "@/features/Loading";
-
-const GET_ALLTEAMDATA = gql`
-  query GetAllTeamdata {
-    scenes {
-      sportScenes {
-        scene {
-          id
-          name
-        }
-        sport {
-          id
-          name
-        }
-        entries {
-          team {
-            id
-            name
-            users {
-              name
-            }
-          }
-        }
-      }
-    }
-  }
-`;
+import { useGetAllTeamdataQuery } from "@/gql/__generated__/graphql";
 
 export default function ConfirmPage() {
   const theme = useTheme();
-  const { data, loading } = useQuery(GET_ALLTEAMDATA, {
+  const { data, loading } = useGetAllTeamdataQuery({
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
   });
 
-  const allData:
-    | {
-        sceneName: string;
-        sceneId: string;
-        sportName: string;
-        sportId: string;
-        teamName: string[];
-        teamId: string[];
-        memberData: string[][];
-      }[]
-    | undefined = data?.scenes
-    ?.flatMap((s: any) => s.sportScenes)
-    ?.map((d: any) => ({
+  const allData = data?.scenes
+    ?.filter((s) => !s.isDeleted)
+    ?.flatMap((s) => s.sportScenes)
+    ?.map((d) => ({
       sceneName: d.scene?.name,
       sceneId: d.scene?.id,
       sportName: d.sport?.name,
       sportId: d.sport?.id,
-      teamName: d.entries?.map((s: any) => s.team?.name),
-      teamId: d.entries?.map((s: any) => s.team?.id),
-      memberData: d.entries?.map((s: any) =>
-        s.team?.users?.map((u: any) => u.name),
+      teamName: d.entries?.map((s) => s.team?.name),
+      teamId: d.entries?.map((s) => s.team?.id),
+      memberData: d.entries?.map((s) =>
+        s.team?.users?.map((u) => u.name),
       ),
     }));
 

@@ -76,6 +76,7 @@ export type CreateImageUploadUrlInput = {
 
 export type CreateInformationInput = {
   content: Scalars['String']['input'];
+  status?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
 };
 
@@ -148,6 +149,7 @@ export type CreateTournamentMatchInput = {
 
 export type CreateUserInput = {
   email: Scalars['String']['input'];
+  gender?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
 };
 
@@ -200,6 +202,7 @@ export type Information = {
   __typename?: 'Information';
   content: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  status: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
 
@@ -287,6 +290,8 @@ export type Mutation = {
   /** 画像アップロード用のURLを発行する */
   createImageUploadURL: ImageUploadUrl;
   createInformation: Information;
+  /** 審判を作成する */
+  createJudgment: Judgment;
   /** リーグを追加する */
   createLeague: League;
   /** 場所を追加する */
@@ -340,6 +345,7 @@ export type Mutation = {
   deleteTournament: Tournament;
   /** ブラケット内試合削除 */
   deleteTournamentMatch: Match;
+  deleteUser: User;
   /** ブラケット自動生成（MAIN + オプショナルSUB） */
   generateBracket: Array<Tournament>;
   /** リーグの総当たり戦を自動生成する */
@@ -347,6 +353,7 @@ export type Mutation = {
   removeGroupUsers: Group;
   /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
   resetTournamentBrackets: Competition;
+  restoreScene: Scene;
   /** スポーツのランキングルールを設定する（全削除→再挿入） */
   setRankingRules: Sport;
   /** リーグのタイブレーク優先度を設定する */
@@ -380,6 +387,7 @@ export type Mutation = {
   updateTeamUsers: Team;
   /** トーナメント（ブラケット）を更新する */
   updateTournament: Tournament;
+  updateUser: User;
 };
 
 
@@ -435,6 +443,11 @@ export type MutationCreateImageUploadUrlArgs = {
 
 export type MutationCreateInformationArgs = {
   input: CreateInformationInput;
+};
+
+
+export type MutationCreateJudgmentArgs = {
+  input: CreateJudgmentInput;
 };
 
 
@@ -597,6 +610,11 @@ export type MutationDeleteTournamentMatchArgs = {
 };
 
 
+export type MutationDeleteUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationGenerateBracketArgs = {
   input: GenerateBracketInput;
 };
@@ -616,6 +634,11 @@ export type MutationRemoveGroupUsersArgs = {
 
 export type MutationResetTournamentBracketsArgs = {
   competitionId: Scalars['ID']['input'];
+};
+
+
+export type MutationRestoreSceneArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -729,6 +752,12 @@ export type MutationUpdateTeamUsersArgs = {
 export type MutationUpdateTournamentArgs = {
   id: Scalars['ID']['input'];
   input: UpdateTournamentInput;
+};
+
+
+export type MutationUpdateUserArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateUserInput;
 };
 
 export enum PlacementMethod {
@@ -935,6 +964,7 @@ export type Rule = {
 export type Scene = {
   __typename?: 'Scene';
   id: Scalars['ID']['output'];
+  isDeleted: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   sportScenes: Array<SportScene>;
 };
@@ -1078,6 +1108,7 @@ export type UpdateGroupUsersInput = {
 
 export type UpdateInformationInput = {
   content?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1159,9 +1190,16 @@ export type UpdateTournamentInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateUserInput = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
+  gender?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   judgments: Array<Judgment>;
@@ -1169,10 +1207,30 @@ export type User = {
   teams: Array<Team>;
 };
 
+export type GetSceneIdQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetSceneIdQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, isDeleted: boolean }> };
+
+export type GetSceneUsersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetSceneUsersQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, name: string }> } }> }> }> };
+
+export type GetAllUsersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string }> };
+
 export type GetTypeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetTypeQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string }> };
+export type GetTypeQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, isDeleted: boolean }> };
+
+export type GetWeatherQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetWeatherQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, isDeleted: boolean }> };
 
 export type GetSportQueryVariables = Exact<{
   sceneId: Scalars['ID']['input'];
@@ -1197,20 +1255,20 @@ export type SportDataGetQueryVariables = Exact<{
 
 export type SportDataGetQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', name: string }, scene: { __typename?: 'Scene', name: string } };
 
-export type GetSceneIdQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetTeamDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSceneIdQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string }> };
+export type GetTeamDataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', name: string }> } }> }> }> };
 
-export type GetSceneUsersQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetSceneUsersQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, name: string }> } }> }> }> };
-
-export type GetAllUsersQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetSceneSportQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string }> };
+export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', name: string }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
+
+export type GetAllTeamdataQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', name: string }> } }> }> }> };
 
 export type DeleteTeamFromPopupMutationVariables = Exact<{
   deleteTeamId: Scalars['ID']['input'];
@@ -1219,25 +1277,10 @@ export type DeleteTeamFromPopupMutationVariables = Exact<{
 
 export type DeleteTeamFromPopupMutation = { __typename?: 'Mutation', deleteTeam: { __typename?: 'Team', id: string } };
 
-export type GetAllTeamdataQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', name: string }> } }> }> }> };
-
-export type GetSceneSportQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', name: string }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
-
-export type GetTeamDataQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetTeamDataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', name: string }> } }> }> }> };
-
-export type GetWeatherQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetWeatherQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string }> };
+export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, groups: Array<{ __typename?: 'Group', id: string }> } };
 
 export type GetUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1247,12 +1290,12 @@ export type GetUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 
 export type GetSportsceneQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSportsceneQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', sportScenes: Array<{ __typename?: 'SportScene', id: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, users: Array<{ __typename?: 'User', id: string }> } }> }> }> };
+export type GetSportsceneQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, users: Array<{ __typename?: 'User', id: string }> } }> }> }> };
 
 export type GetSportsceneEntriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSportsceneEntriesQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, users: Array<{ __typename?: 'User', id: string }> } }> }> }> };
+export type GetSportsceneEntriesQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, users: Array<{ __typename?: 'User', id: string }> } }> }> }> };
 
 export type GetTeamQueryVariables = Exact<{
   teamId: Scalars['ID']['input'];
@@ -1300,10 +1343,144 @@ export type DeleteTeamMutationVariables = Exact<{
 export type DeleteTeamMutation = { __typename?: 'Mutation', deleteTeam: { __typename?: 'Team', id: string } };
 
 
+export const GetSceneIdDocument = gql`
+    query GetSceneId {
+  scenes {
+    id
+    name
+    isDeleted
+  }
+}
+    `;
+
+/**
+ * __useGetSceneIdQuery__
+ *
+ * To run a query within a React component, call `useGetSceneIdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSceneIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSceneIdQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetSceneIdQuery(baseOptions?: Apollo.QueryHookOptions<GetSceneIdQuery, GetSceneIdQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSceneIdQuery, GetSceneIdQueryVariables>(GetSceneIdDocument, options);
+      }
+export function useGetSceneIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneIdQuery, GetSceneIdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSceneIdQuery, GetSceneIdQueryVariables>(GetSceneIdDocument, options);
+        }
+export function useGetSceneIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSceneIdQuery, GetSceneIdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetSceneIdQuery, GetSceneIdQueryVariables>(GetSceneIdDocument, options);
+        }
+export type GetSceneIdQueryHookResult = ReturnType<typeof useGetSceneIdQuery>;
+export type GetSceneIdLazyQueryHookResult = ReturnType<typeof useGetSceneIdLazyQuery>;
+export type GetSceneIdSuspenseQueryHookResult = ReturnType<typeof useGetSceneIdSuspenseQuery>;
+export type GetSceneIdQueryResult = Apollo.QueryResult<GetSceneIdQuery, GetSceneIdQueryVariables>;
+export const GetSceneUsersDocument = gql`
+    query GetSceneUsers {
+  scenes {
+    isDeleted
+    sportScenes {
+      scene {
+        id
+      }
+      entries {
+        team {
+          users {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSceneUsersQuery__
+ *
+ * To run a query within a React component, call `useGetSceneUsersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSceneUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSceneUsersQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetSceneUsersQuery(baseOptions?: Apollo.QueryHookOptions<GetSceneUsersQuery, GetSceneUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSceneUsersQuery, GetSceneUsersQueryVariables>(GetSceneUsersDocument, options);
+      }
+export function useGetSceneUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneUsersQuery, GetSceneUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSceneUsersQuery, GetSceneUsersQueryVariables>(GetSceneUsersDocument, options);
+        }
+export function useGetSceneUsersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSceneUsersQuery, GetSceneUsersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetSceneUsersQuery, GetSceneUsersQueryVariables>(GetSceneUsersDocument, options);
+        }
+export type GetSceneUsersQueryHookResult = ReturnType<typeof useGetSceneUsersQuery>;
+export type GetSceneUsersLazyQueryHookResult = ReturnType<typeof useGetSceneUsersLazyQuery>;
+export type GetSceneUsersSuspenseQueryHookResult = ReturnType<typeof useGetSceneUsersSuspenseQuery>;
+export type GetSceneUsersQueryResult = Apollo.QueryResult<GetSceneUsersQuery, GetSceneUsersQueryVariables>;
+export const GetAllUsersDocument = gql`
+    query GetAllUsers {
+  users {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetAllUsersQuery__
+ *
+ * To run a query within a React component, call `useGetAllUsersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAllUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAllUsersQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAllUsersQuery(baseOptions?: Apollo.QueryHookOptions<GetAllUsersQuery, GetAllUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAllUsersQuery, GetAllUsersQueryVariables>(GetAllUsersDocument, options);
+      }
+export function useGetAllUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllUsersQuery, GetAllUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAllUsersQuery, GetAllUsersQueryVariables>(GetAllUsersDocument, options);
+        }
+export function useGetAllUsersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllUsersQuery, GetAllUsersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAllUsersQuery, GetAllUsersQueryVariables>(GetAllUsersDocument, options);
+        }
+export type GetAllUsersQueryHookResult = ReturnType<typeof useGetAllUsersQuery>;
+export type GetAllUsersLazyQueryHookResult = ReturnType<typeof useGetAllUsersLazyQuery>;
+export type GetAllUsersSuspenseQueryHookResult = ReturnType<typeof useGetAllUsersSuspenseQuery>;
+export type GetAllUsersQueryResult = Apollo.QueryResult<GetAllUsersQuery, GetAllUsersQueryVariables>;
 export const GetTypeDocument = gql`
     query GetType {
   scenes {
     id
+    isDeleted
   }
 }
     `;
@@ -1339,6 +1516,47 @@ export type GetTypeQueryHookResult = ReturnType<typeof useGetTypeQuery>;
 export type GetTypeLazyQueryHookResult = ReturnType<typeof useGetTypeLazyQuery>;
 export type GetTypeSuspenseQueryHookResult = ReturnType<typeof useGetTypeSuspenseQuery>;
 export type GetTypeQueryResult = Apollo.QueryResult<GetTypeQuery, GetTypeQueryVariables>;
+export const GetWeatherDocument = gql`
+    query GetWeather {
+  scenes {
+    id
+    name
+    isDeleted
+  }
+}
+    `;
+
+/**
+ * __useGetWeatherQuery__
+ *
+ * To run a query within a React component, call `useGetWeatherQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetWeatherQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetWeatherQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetWeatherQuery(baseOptions?: Apollo.QueryHookOptions<GetWeatherQuery, GetWeatherQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetWeatherQuery, GetWeatherQueryVariables>(GetWeatherDocument, options);
+      }
+export function useGetWeatherLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetWeatherQuery, GetWeatherQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetWeatherQuery, GetWeatherQueryVariables>(GetWeatherDocument, options);
+        }
+export function useGetWeatherSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetWeatherQuery, GetWeatherQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetWeatherQuery, GetWeatherQueryVariables>(GetWeatherDocument, options);
+        }
+export type GetWeatherQueryHookResult = ReturnType<typeof useGetWeatherQuery>;
+export type GetWeatherLazyQueryHookResult = ReturnType<typeof useGetWeatherLazyQuery>;
+export type GetWeatherSuspenseQueryHookResult = ReturnType<typeof useGetWeatherSuspenseQuery>;
+export type GetWeatherQueryResult = Apollo.QueryResult<GetWeatherQuery, GetWeatherQueryVariables>;
 export const GetSportDocument = gql`
     query GetSport($sceneId: ID!) {
   scene(id: $sceneId) {
@@ -1473,57 +1691,20 @@ export type SportDataGetQueryHookResult = ReturnType<typeof useSportDataGetQuery
 export type SportDataGetLazyQueryHookResult = ReturnType<typeof useSportDataGetLazyQuery>;
 export type SportDataGetSuspenseQueryHookResult = ReturnType<typeof useSportDataGetSuspenseQuery>;
 export type SportDataGetQueryResult = Apollo.QueryResult<SportDataGetQuery, SportDataGetQueryVariables>;
-export const GetSceneIdDocument = gql`
-    query GetSceneId {
+export const GetTeamDataDocument = gql`
+    query GetTeamData {
   scenes {
-    id
-    name
-  }
-}
-    `;
-
-/**
- * __useGetSceneIdQuery__
- *
- * To run a query within a React component, call `useGetSceneIdQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetSceneIdQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetSceneIdQuery({
- *   variables: {
- *   },
- * });
- */
-export function useGetSceneIdQuery(baseOptions?: Apollo.QueryHookOptions<GetSceneIdQuery, GetSceneIdQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetSceneIdQuery, GetSceneIdQueryVariables>(GetSceneIdDocument, options);
-      }
-export function useGetSceneIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneIdQuery, GetSceneIdQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetSceneIdQuery, GetSceneIdQueryVariables>(GetSceneIdDocument, options);
-        }
-export function useGetSceneIdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSceneIdQuery, GetSceneIdQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetSceneIdQuery, GetSceneIdQueryVariables>(GetSceneIdDocument, options);
-        }
-export type GetSceneIdQueryHookResult = ReturnType<typeof useGetSceneIdQuery>;
-export type GetSceneIdLazyQueryHookResult = ReturnType<typeof useGetSceneIdLazyQuery>;
-export type GetSceneIdSuspenseQueryHookResult = ReturnType<typeof useGetSceneIdSuspenseQuery>;
-export type GetSceneIdQueryResult = Apollo.QueryResult<GetSceneIdQuery, GetSceneIdQueryVariables>;
-export const GetSceneUsersDocument = gql`
-    query GetSceneUsers {
-  scenes {
+    isDeleted
     sportScenes {
+      sport {
+        id
+      }
       scene {
         id
       }
       entries {
         team {
           users {
-            id
             name
           }
         }
@@ -1534,112 +1715,97 @@ export const GetSceneUsersDocument = gql`
     `;
 
 /**
- * __useGetSceneUsersQuery__
+ * __useGetTeamDataQuery__
  *
- * To run a query within a React component, call `useGetSceneUsersQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetSceneUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetTeamDataQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetTeamDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetSceneUsersQuery({
+ * const { data, loading, error } = useGetTeamDataQuery({
  *   variables: {
  *   },
  * });
  */
-export function useGetSceneUsersQuery(baseOptions?: Apollo.QueryHookOptions<GetSceneUsersQuery, GetSceneUsersQueryVariables>) {
+export function useGetTeamDataQuery(baseOptions?: Apollo.QueryHookOptions<GetTeamDataQuery, GetTeamDataQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetSceneUsersQuery, GetSceneUsersQueryVariables>(GetSceneUsersDocument, options);
+        return Apollo.useQuery<GetTeamDataQuery, GetTeamDataQueryVariables>(GetTeamDataDocument, options);
       }
-export function useGetSceneUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneUsersQuery, GetSceneUsersQueryVariables>) {
+export function useGetTeamDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetTeamDataQuery, GetTeamDataQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetSceneUsersQuery, GetSceneUsersQueryVariables>(GetSceneUsersDocument, options);
+          return Apollo.useLazyQuery<GetTeamDataQuery, GetTeamDataQueryVariables>(GetTeamDataDocument, options);
         }
-export function useGetSceneUsersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSceneUsersQuery, GetSceneUsersQueryVariables>) {
+export function useGetTeamDataSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetTeamDataQuery, GetTeamDataQueryVariables>) {
           const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetSceneUsersQuery, GetSceneUsersQueryVariables>(GetSceneUsersDocument, options);
+          return Apollo.useSuspenseQuery<GetTeamDataQuery, GetTeamDataQueryVariables>(GetTeamDataDocument, options);
         }
-export type GetSceneUsersQueryHookResult = ReturnType<typeof useGetSceneUsersQuery>;
-export type GetSceneUsersLazyQueryHookResult = ReturnType<typeof useGetSceneUsersLazyQuery>;
-export type GetSceneUsersSuspenseQueryHookResult = ReturnType<typeof useGetSceneUsersSuspenseQuery>;
-export type GetSceneUsersQueryResult = Apollo.QueryResult<GetSceneUsersQuery, GetSceneUsersQueryVariables>;
-export const GetAllUsersDocument = gql`
-    query GetAllUsers {
-  users {
-    id
-    name
+export type GetTeamDataQueryHookResult = ReturnType<typeof useGetTeamDataQuery>;
+export type GetTeamDataLazyQueryHookResult = ReturnType<typeof useGetTeamDataLazyQuery>;
+export type GetTeamDataSuspenseQueryHookResult = ReturnType<typeof useGetTeamDataSuspenseQuery>;
+export type GetTeamDataQueryResult = Apollo.QueryResult<GetTeamDataQuery, GetTeamDataQueryVariables>;
+export const GetSceneSportDocument = gql`
+    query GetSceneSport {
+  scenes {
+    isDeleted
+    sportScenes {
+      id
+      entries {
+        team {
+          id
+          name
+          users {
+            name
+          }
+        }
+      }
+      sport {
+        id
+      }
+      scene {
+        id
+      }
+    }
   }
 }
     `;
 
 /**
- * __useGetAllUsersQuery__
+ * __useGetSceneSportQuery__
  *
- * To run a query within a React component, call `useGetAllUsersQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetAllUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetSceneSportQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSceneSportQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetAllUsersQuery({
+ * const { data, loading, error } = useGetSceneSportQuery({
  *   variables: {
  *   },
  * });
  */
-export function useGetAllUsersQuery(baseOptions?: Apollo.QueryHookOptions<GetAllUsersQuery, GetAllUsersQueryVariables>) {
+export function useGetSceneSportQuery(baseOptions?: Apollo.QueryHookOptions<GetSceneSportQuery, GetSceneSportQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetAllUsersQuery, GetAllUsersQueryVariables>(GetAllUsersDocument, options);
+        return Apollo.useQuery<GetSceneSportQuery, GetSceneSportQueryVariables>(GetSceneSportDocument, options);
       }
-export function useGetAllUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllUsersQuery, GetAllUsersQueryVariables>) {
+export function useGetSceneSportLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneSportQuery, GetSceneSportQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetAllUsersQuery, GetAllUsersQueryVariables>(GetAllUsersDocument, options);
+          return Apollo.useLazyQuery<GetSceneSportQuery, GetSceneSportQueryVariables>(GetSceneSportDocument, options);
         }
-export function useGetAllUsersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllUsersQuery, GetAllUsersQueryVariables>) {
+export function useGetSceneSportSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSceneSportQuery, GetSceneSportQueryVariables>) {
           const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetAllUsersQuery, GetAllUsersQueryVariables>(GetAllUsersDocument, options);
+          return Apollo.useSuspenseQuery<GetSceneSportQuery, GetSceneSportQueryVariables>(GetSceneSportDocument, options);
         }
-export type GetAllUsersQueryHookResult = ReturnType<typeof useGetAllUsersQuery>;
-export type GetAllUsersLazyQueryHookResult = ReturnType<typeof useGetAllUsersLazyQuery>;
-export type GetAllUsersSuspenseQueryHookResult = ReturnType<typeof useGetAllUsersSuspenseQuery>;
-export type GetAllUsersQueryResult = Apollo.QueryResult<GetAllUsersQuery, GetAllUsersQueryVariables>;
-export const DeleteTeamFromPopupDocument = gql`
-    mutation DeleteTeamFromPopup($deleteTeamId: ID!) {
-  deleteTeam(id: $deleteTeamId) {
-    id
-  }
-}
-    `;
-export type DeleteTeamFromPopupMutationFn = Apollo.MutationFunction<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>;
-
-/**
- * __useDeleteTeamFromPopupMutation__
- *
- * To run a mutation, you first call `useDeleteTeamFromPopupMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useDeleteTeamFromPopupMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [deleteTeamFromPopupMutation, { data, loading, error }] = useDeleteTeamFromPopupMutation({
- *   variables: {
- *      deleteTeamId: // value for 'deleteTeamId'
- *   },
- * });
- */
-export function useDeleteTeamFromPopupMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>(DeleteTeamFromPopupDocument, options);
-      }
-export type DeleteTeamFromPopupMutationHookResult = ReturnType<typeof useDeleteTeamFromPopupMutation>;
-export type DeleteTeamFromPopupMutationResult = Apollo.MutationResult<DeleteTeamFromPopupMutation>;
-export type DeleteTeamFromPopupMutationOptions = Apollo.BaseMutationOptions<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>;
+export type GetSceneSportQueryHookResult = ReturnType<typeof useGetSceneSportQuery>;
+export type GetSceneSportLazyQueryHookResult = ReturnType<typeof useGetSceneSportLazyQuery>;
+export type GetSceneSportSuspenseQueryHookResult = ReturnType<typeof useGetSceneSportSuspenseQuery>;
+export type GetSceneSportQueryResult = Apollo.QueryResult<GetSceneSportQuery, GetSceneSportQueryVariables>;
 export const GetAllTeamdataDocument = gql`
     query GetAllTeamdata {
   scenes {
+    isDeleted
     sportScenes {
       scene {
         id
@@ -1694,155 +1860,81 @@ export type GetAllTeamdataQueryHookResult = ReturnType<typeof useGetAllTeamdataQ
 export type GetAllTeamdataLazyQueryHookResult = ReturnType<typeof useGetAllTeamdataLazyQuery>;
 export type GetAllTeamdataSuspenseQueryHookResult = ReturnType<typeof useGetAllTeamdataSuspenseQuery>;
 export type GetAllTeamdataQueryResult = Apollo.QueryResult<GetAllTeamdataQuery, GetAllTeamdataQueryVariables>;
-export const GetSceneSportDocument = gql`
-    query GetSceneSport {
-  scenes {
-    sportScenes {
-      id
-      entries {
-        team {
-          id
-          name
-          users {
-            name
-          }
-        }
-      }
-      sport {
-        id
-      }
-      scene {
-        id
-      }
-    }
-  }
-}
-    `;
-
-/**
- * __useGetSceneSportQuery__
- *
- * To run a query within a React component, call `useGetSceneSportQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetSceneSportQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetSceneSportQuery({
- *   variables: {
- *   },
- * });
- */
-export function useGetSceneSportQuery(baseOptions?: Apollo.QueryHookOptions<GetSceneSportQuery, GetSceneSportQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetSceneSportQuery, GetSceneSportQueryVariables>(GetSceneSportDocument, options);
-      }
-export function useGetSceneSportLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSceneSportQuery, GetSceneSportQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetSceneSportQuery, GetSceneSportQueryVariables>(GetSceneSportDocument, options);
-        }
-export function useGetSceneSportSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSceneSportQuery, GetSceneSportQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetSceneSportQuery, GetSceneSportQueryVariables>(GetSceneSportDocument, options);
-        }
-export type GetSceneSportQueryHookResult = ReturnType<typeof useGetSceneSportQuery>;
-export type GetSceneSportLazyQueryHookResult = ReturnType<typeof useGetSceneSportLazyQuery>;
-export type GetSceneSportSuspenseQueryHookResult = ReturnType<typeof useGetSceneSportSuspenseQuery>;
-export type GetSceneSportQueryResult = Apollo.QueryResult<GetSceneSportQuery, GetSceneSportQueryVariables>;
-export const GetTeamDataDocument = gql`
-    query GetTeamData {
-  scenes {
-    sportScenes {
-      sport {
-        id
-      }
-      scene {
-        id
-      }
-      entries {
-        team {
-          users {
-            name
-          }
-        }
-      }
-    }
-  }
-}
-    `;
-
-/**
- * __useGetTeamDataQuery__
- *
- * To run a query within a React component, call `useGetTeamDataQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetTeamDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetTeamDataQuery({
- *   variables: {
- *   },
- * });
- */
-export function useGetTeamDataQuery(baseOptions?: Apollo.QueryHookOptions<GetTeamDataQuery, GetTeamDataQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetTeamDataQuery, GetTeamDataQueryVariables>(GetTeamDataDocument, options);
-      }
-export function useGetTeamDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetTeamDataQuery, GetTeamDataQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetTeamDataQuery, GetTeamDataQueryVariables>(GetTeamDataDocument, options);
-        }
-export function useGetTeamDataSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetTeamDataQuery, GetTeamDataQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetTeamDataQuery, GetTeamDataQueryVariables>(GetTeamDataDocument, options);
-        }
-export type GetTeamDataQueryHookResult = ReturnType<typeof useGetTeamDataQuery>;
-export type GetTeamDataLazyQueryHookResult = ReturnType<typeof useGetTeamDataLazyQuery>;
-export type GetTeamDataSuspenseQueryHookResult = ReturnType<typeof useGetTeamDataSuspenseQuery>;
-export type GetTeamDataQueryResult = Apollo.QueryResult<GetTeamDataQuery, GetTeamDataQueryVariables>;
-export const GetWeatherDocument = gql`
-    query GetWeather {
-  scenes {
+export const DeleteTeamFromPopupDocument = gql`
+    mutation DeleteTeamFromPopup($deleteTeamId: ID!) {
+  deleteTeam(id: $deleteTeamId) {
     id
-    name
+  }
+}
+    `;
+export type DeleteTeamFromPopupMutationFn = Apollo.MutationFunction<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>;
+
+/**
+ * __useDeleteTeamFromPopupMutation__
+ *
+ * To run a mutation, you first call `useDeleteTeamFromPopupMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteTeamFromPopupMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteTeamFromPopupMutation, { data, loading, error }] = useDeleteTeamFromPopupMutation({
+ *   variables: {
+ *      deleteTeamId: // value for 'deleteTeamId'
+ *   },
+ * });
+ */
+export function useDeleteTeamFromPopupMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>(DeleteTeamFromPopupDocument, options);
+      }
+export type DeleteTeamFromPopupMutationHookResult = ReturnType<typeof useDeleteTeamFromPopupMutation>;
+export type DeleteTeamFromPopupMutationResult = Apollo.MutationResult<DeleteTeamFromPopupMutation>;
+export type DeleteTeamFromPopupMutationOptions = Apollo.BaseMutationOptions<DeleteTeamFromPopupMutation, DeleteTeamFromPopupMutationVariables>;
+export const GetMeDocument = gql`
+    query GetMe {
+  me {
+    id
+    groups {
+      id
+    }
   }
 }
     `;
 
 /**
- * __useGetWeatherQuery__
+ * __useGetMeQuery__
  *
- * To run a query within a React component, call `useGetWeatherQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetWeatherQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetMeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMeQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetWeatherQuery({
+ * const { data, loading, error } = useGetMeQuery({
  *   variables: {
  *   },
  * });
  */
-export function useGetWeatherQuery(baseOptions?: Apollo.QueryHookOptions<GetWeatherQuery, GetWeatherQueryVariables>) {
+export function useGetMeQuery(baseOptions?: Apollo.QueryHookOptions<GetMeQuery, GetMeQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetWeatherQuery, GetWeatherQueryVariables>(GetWeatherDocument, options);
+        return Apollo.useQuery<GetMeQuery, GetMeQueryVariables>(GetMeDocument, options);
       }
-export function useGetWeatherLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetWeatherQuery, GetWeatherQueryVariables>) {
+export function useGetMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetMeQuery, GetMeQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetWeatherQuery, GetWeatherQueryVariables>(GetWeatherDocument, options);
+          return Apollo.useLazyQuery<GetMeQuery, GetMeQueryVariables>(GetMeDocument, options);
         }
-export function useGetWeatherSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetWeatherQuery, GetWeatherQueryVariables>) {
+export function useGetMeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetMeQuery, GetMeQueryVariables>) {
           const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetWeatherQuery, GetWeatherQueryVariables>(GetWeatherDocument, options);
+          return Apollo.useSuspenseQuery<GetMeQuery, GetMeQueryVariables>(GetMeDocument, options);
         }
-export type GetWeatherQueryHookResult = ReturnType<typeof useGetWeatherQuery>;
-export type GetWeatherLazyQueryHookResult = ReturnType<typeof useGetWeatherLazyQuery>;
-export type GetWeatherSuspenseQueryHookResult = ReturnType<typeof useGetWeatherSuspenseQuery>;
-export type GetWeatherQueryResult = Apollo.QueryResult<GetWeatherQuery, GetWeatherQueryVariables>;
+export type GetMeQueryHookResult = ReturnType<typeof useGetMeQuery>;
+export type GetMeLazyQueryHookResult = ReturnType<typeof useGetMeLazyQuery>;
+export type GetMeSuspenseQueryHookResult = ReturnType<typeof useGetMeSuspenseQuery>;
+export type GetMeQueryResult = Apollo.QueryResult<GetMeQuery, GetMeQueryVariables>;
 export const GetUsersDocument = gql`
     query GetUsers {
   users {
@@ -1886,6 +1978,7 @@ export type GetUsersQueryResult = Apollo.QueryResult<GetUsersQuery, GetUsersQuer
 export const GetSportsceneDocument = gql`
     query GetSportscene {
   scenes {
+    isDeleted
     sportScenes {
       id
       sport {
@@ -1941,6 +2034,7 @@ export type GetSportsceneQueryResult = Apollo.QueryResult<GetSportsceneQuery, Ge
 export const GetSportsceneEntriesDocument = gql`
     query GetSportsceneEntries {
   scenes {
+    isDeleted
     sportScenes {
       id
       entries {

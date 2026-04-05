@@ -9,10 +9,10 @@ import {
   Typography,
   Slide,
 } from "@mui/material";
-import { gql, useMutation } from "@apollo/client";
 import type { TransitionProps } from "@mui/material/transitions";
 import { forwardRef } from "react";
 import type { ReactElement } from "react";
+import { useDeleteTeamFromPopupMutation } from "@/gql/__generated__/graphql";
 
 export type CheckPopupBaseProps = {
   teamid: string;
@@ -20,14 +20,6 @@ export type CheckPopupBaseProps = {
   setOpen: (open: boolean) => void;
   refetchQueries: string[];
 };
-
-const DELETE_TEAM = gql`
-  mutation DeleteTeamFromPopup($deleteTeamId: ID!) {
-    deleteTeam(id: $deleteTeamId) {
-      id
-    }
-  }
-`;
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -44,7 +36,7 @@ export default function CheckPopupBase({
   setOpen,
   refetchQueries,
 }: CheckPopupBaseProps) {
-  const [deleteTeam] = useMutation(DELETE_TEAM, {
+  const [deleteTeam] = useDeleteTeamFromPopupMutation({
     refetchQueries,
   });
 

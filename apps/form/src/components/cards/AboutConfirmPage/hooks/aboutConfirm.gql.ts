@@ -7,6 +7,7 @@ export const GET_SCENE_ID = gql`
     scenes {
       id
       name
+      isDeleted
     }
   }
 `;
@@ -14,6 +15,7 @@ export const GET_SCENE_ID = gql`
 export const GET_SCENE_USERS = gql`
   query GetSceneUsers {
     scenes {
+      isDeleted
       sportScenes {
         scene {
           id
