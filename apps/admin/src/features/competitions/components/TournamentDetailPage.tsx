@@ -6,10 +6,6 @@ import {
   Card,
   CardContent,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   MenuItem,
   TextField,
@@ -29,7 +25,7 @@ import {
   SAVE_BUTTON_SX,
 } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
-import { TAG_OPTIONS } from '../constants'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useTournamentDetail } from '../hooks/useTournamentDetail'
 import { useTournamentEdit } from '../hooks/useTournamentEdit'
 import { useSeedAssignment } from '@/hooks/useSeedAssignment'
@@ -56,9 +52,9 @@ export function TournamentDetailPage({
   tournamentId,
   tournamentName,
   competitionId: _competitionId,
-  competitionName,
+  competitionName: _competitionName,
   onBackToList,
-  onBackToDetail,
+  onBackToDetail: _onBackToDetail,
   onSaved,
   onDeleted,
 }: Props) {
@@ -66,11 +62,10 @@ export function TournamentDetailPage({
 
   const {
     name,
-    description,
     teamCount,
     placementMethod,
-    tag,
     handleChange,
+    dirty,
     handleSave,
     handleDelete,
   } = useTournamentEdit(tournamentId)
@@ -78,12 +73,10 @@ export function TournamentDetailPage({
   const { seedNumbers, assignments, teams, setAssignment, saveAssignments } = useSeedAssignment(tournamentId)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [dirty, setDirty] = useState(false)
   useUnsavedWarning(dirty)
 
-  const onSave = () => {
-    handleSave()
-    setDirty(false)
+  const onSave = async () => {
+    await handleSave()
     onSaved?.(name.trim())
     showToast('トーナメントを保存しました')
   }
@@ -99,10 +92,7 @@ export function TournamentDetailPage({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
-          競技
-        </ButtonBase>
-        <ButtonBase onClick={onBackToDetail} sx={BREADCRUMB_LINK_SX}>
-          {competitionName}
+          大会
         </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>{data.name}</Typography>
       </Breadcrumbs>
@@ -113,20 +103,11 @@ export function TournamentDetailPage({
           <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             トーナメントを編集
           </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }} onChangeCapture={() => setDirty(true)}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               label="トーナメント名*"
               value={name}
               onChange={handleChange('name')}
-              fullWidth
-              size="small"
-              sx={CARD_FIELD_SX}
-            />
-
-            <TextField
-              label="説明（任意）"
-              value={description}
-              onChange={handleChange('description')}
               fullWidth
               size="small"
               sx={CARD_FIELD_SX}
@@ -160,22 +141,6 @@ export function TournamentDetailPage({
               ))}
             </TextField>
 
-            <TextField
-              select
-              label="タグ"
-              value={tag}
-              onChange={handleChange('tag')}
-              fullWidth
-              size="small"
-              sx={CARD_FIELD_SX}
-            >
-              {TAG_OPTIONS.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </TextField>
-
             <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3 }} />
 
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -192,8 +157,8 @@ export function TournamentDetailPage({
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!name.trim()}
-                sx={{ ...SAVE_BUTTON_SX, '& .MuiButton-startIcon': { color: '#FFFFFF' } }}
+                disabled={!dirty || !name.trim()}
+                sx={SAVE_BUTTON_SX}
               >
                 保存
               </Button>
@@ -260,7 +225,7 @@ export function TournamentDetailPage({
                 variant="contained"
                 startIcon={<CheckIcon />}
                 onClick={() => { saveAssignments(); showToast('シード割り当てを保存しました') }}
-                sx={{ ...SAVE_BUTTON_SX, '& .MuiButton-startIcon': { color: '#FFFFFF' } }}
+                sx={SAVE_BUTTON_SX}
               >
                 割り当てを保存
               </Button>
@@ -269,43 +234,13 @@ export function TournamentDetailPage({
         </Card>
       )}
 
-      <Dialog
+      <ConfirmDialog
         open={deleteDialogOpen}
+        title="トーナメントを削除しますか？"
+        description={`「${tournamentName}」を削除します。この操作は元に戻せません。`}
         onClose={() => setDeleteDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        aria-labelledby="delete-dialog-title"
-        PaperProps={{ sx: { borderRadius: 2, p: 1, backgroundColor: '#EFF0F8' } }}
-      >
-        <DialogTitle id="delete-dialog-title" sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
-          トーナメントを削除しますか？
-        </DialogTitle>
-        <DialogContent sx={{ pb: 1 }}>
-          <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-            「{tournamentName}」を削除します。この操作は元に戻せません。
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2, pb: 2, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            sx={{ fontSize: '13px', color: '#2F3C8C', '&:hover': { backgroundColor: '#E8EAF6' } }}
-          >
-            キャンセル
-          </Button>
-          <Button
-            onClick={onConfirmDelete}
-            variant="outlined"
-            sx={{
-              fontSize: '13px',
-              color: '#D71212',
-              borderColor: '#D71212',
-              '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
-            }}
-          >
-            削除
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={onConfirmDelete}
+      />
     </Box>
   )
 }

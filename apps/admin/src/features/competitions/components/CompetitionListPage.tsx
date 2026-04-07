@@ -6,7 +6,7 @@ import { CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 
 type Props = {
   onNavigateToCreate: () => void
-  onSelectCompetition: (id: string, name: string) => void
+  onSelectCompetition: (id: string, name: string, type: string) => void
 }
 
 export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }: Props) {
@@ -18,14 +18,14 @@ export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }:
   return (
     <Box>
       <Typography sx={{ fontSize: '22px', fontWeight: 700, color: '#2F3C8C', mb: 2 }}>
-        競技
+        大会
       </Typography>
 
       <Card sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
             <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
-              競技一覧
+              すべての大会
             </Typography>
             <Button
               variant="contained"
@@ -34,7 +34,7 @@ export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }:
               onClick={onNavigateToCreate}
               sx={{ ...ACTION_BUTTON_SX }}
             >
-              競技を新規作成
+              大会を新規作成
             </Button>
           </Box>
 
@@ -48,7 +48,7 @@ export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }:
                 <CompetitionCard
                   key={competition.id}
                   competition={competition}
-                  onSelect={() => onSelectCompetition(competition.id, competition.name)}
+                  onSelect={() => onSelectCompetition(competition.id, competition.name, competition.type)}
                 />
               ))}
             </Box>

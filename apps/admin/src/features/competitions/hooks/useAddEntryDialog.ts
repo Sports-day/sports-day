@@ -15,8 +15,8 @@ export function useAddEntryDialog(allIds: string[], onAdd: (selectedIds: string[
     setSelected(allSelected ? [] : [...allIds])
   }
 
-  const handleAdd = (onClose: () => void) => {
-    onAdd(selected)
+  const handleAdd = async (onClose: () => void) => {
+    await onAdd(selected)
     setSelected([])
     onClose()
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   useGetAdminTournamentQuery,
   useUpdateAdminTournamentMutation,
@@ -16,15 +16,18 @@ export function useTournamentEdit(tournamentId: string) {
   const tournament = data?.tournament
 
   const [name, setName] = useState(tournament?.name ?? '')
-  const [description, setDescription] = useState('')
   const [teamCount, setTeamCount] = useState(tournament?.slots.length ?? 4)
   const [placementMethod, setPlacementMethod] = useState<PlacementMethod>(
     (tournament?.placementMethod ?? 'SEED_OPTIMIZED') as PlacementMethod
   )
-  const [tag, setTag] = useState('')
+
+  const initialName = useRef('')
 
   useEffect(() => {
-    if (tournament?.name !== undefined) setName(tournament.name)
+    if (tournament?.name !== undefined) {
+      setName(tournament.name)
+      initialName.current = tournament.name
+    }
   }, [tournament?.name])
 
   useEffect(() => {
@@ -37,6 +40,8 @@ export function useTournamentEdit(tournamentId: string) {
     }
   }, [tournament?.placementMethod])
 
+  const dirty = name !== initialName.current
+
   const [updateTournament] = useUpdateAdminTournamentMutation()
   const [deleteTournament] = useDeleteAdminTournamentMutation({
     refetchQueries: tournament?.competition?.id
@@ -45,11 +50,9 @@ export function useTournamentEdit(tournamentId: string) {
   })
 
   const handleChange =
-    (field: 'name' | 'description' | 'tag' | 'teamCount' | 'placementMethod') =>
+    (field: 'name' | 'teamCount' | 'placementMethod') =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (field === 'name') setName(e.target.value)
-      else if (field === 'description') setDescription(e.target.value)
-      else if (field === 'tag') setTag(e.target.value)
       else if (field === 'teamCount') setTeamCount(Number(e.target.value))
       else if (field === 'placementMethod') setPlacementMethod(e.target.value as PlacementMethod)
     }
@@ -66,10 +69,9 @@ export function useTournamentEdit(tournamentId: string) {
 
   return {
     name,
-    description,
+    dirty,
     teamCount,
     placementMethod,
-    tag,
     handleChange,
     handleSave,
     handleDelete,

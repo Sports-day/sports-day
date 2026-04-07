@@ -6,6 +6,7 @@ export const GET_ADMIN_COMPETITIONS = gql`
       id
       name
       type
+      sport { id name }
       scene { id name }
     }
   }
@@ -17,6 +18,7 @@ export const GET_ADMIN_COMPETITION = gql`
       id
       name
       type
+      sport { id name }
       scene { id name }
       teams { id name group { id name } }
       league { id name }
@@ -39,6 +41,9 @@ export const GET_ADMIN_LEAGUE = gql`
     league(id: $id) {
       id
       name
+      winPt
+      drawPt
+      losePt
       teams { id name group { id name } }
     }
   }
@@ -152,11 +157,15 @@ export const DELETE_ADMIN_PROMOTION_RULE = gql`
   }
 `
 
-export const GET_ADMIN_SCENES = gql`
-  query GetAdminScenes {
-    scenes {
+export const GET_ADMIN_SPORTS_WITH_SCENES = gql`
+  query GetAdminSportsWithScenes {
+    sports {
       id
       name
+      scene {
+        id
+        scene { id name }
+      }
     }
   }
 `
