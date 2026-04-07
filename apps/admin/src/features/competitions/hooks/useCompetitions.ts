@@ -6,9 +6,8 @@ export function useCompetitions() {
   const competitions: Competition[] = (data?.competitions ?? []).map(c => ({
     id: c.id,
     name: c.name,
-    description: '',
-    icon: c.type.toLowerCase(),
-    tag: c.scene.name,
+    type: c.type,
+    sceneName: c.scene.name,
   }))
   return { data: competitions, loading, error: error ?? null }
 }

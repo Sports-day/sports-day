@@ -1,7 +1,7 @@
 import { Box, Chip, LinearProgress, Typography } from '@mui/material'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import AccountTreeIcon from '@mui/icons-material/AccountTree'
-import type { MockBracket, MockTMatch, MockTSlot } from '../types'
+import type { BracketView, TournamentMatchView, TournamentSlotView } from '../types'
 
 // ─── Layout constants ────────────────────────────────────
 const MATCH_W = 224
@@ -85,13 +85,13 @@ function normalizePositions(
 }
 
 function computeLayout(
-  matches: MockTMatch[],
-  bracketType: MockBracket['bracketType'],
+  matches: TournamentMatchView[],
+  bracketType: BracketView['bracketType'],
 ): { matchCenterY: Map<string, number>; totalHeight: number } {
   if (matches.length === 0) return { matchCenterY: new Map(), totalHeight: SLOT_H }
 
   const maxRound = Math.max(...matches.map((m) => m.round))
-  const rounds: MockTMatch[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
+  const rounds: TournamentMatchView[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
     matches.filter((m) => m.round === r),
   )
 
@@ -121,7 +121,7 @@ function computeLayout(
       const matchCenterY = new Map<string, number>()
       for (let r = 0; r <= maxRound; r++) {
         for (const m of rounds[r]) {
-          const y = (slot: MockTSlot): number => {
+          const y = (slot: TournamentSlotView): number => {
             if (slot.sourceType === 'SEED' && slot.seedNumber != null) return seedCenterY(slot.seedNumber)
             if (slot.sourceMatchId) return matchCenterY.get(slot.sourceMatchId) ?? 0
             return 0
@@ -180,7 +180,7 @@ function computeLayout(
 
 // ─── Helpers ────────────────────────────────────────────
 
-function getSlotLabel(slot: MockTSlot): string {
+function getSlotLabel(slot: TournamentSlotView): string {
   if (slot.teamName) return slot.teamName
   if (slot.sourceType === 'SEED' && slot.seedNumber != null) return `Seed ${slot.seedNumber}`
   if (slot.sourceType === 'MATCH_WINNER') return '勝者待ち'
@@ -188,7 +188,7 @@ function getSlotLabel(slot: MockTSlot): string {
   return '未定'
 }
 
-function isEmptySeed(slot: MockTSlot): boolean {
+function isEmptySeed(slot: TournamentSlotView): boolean {
   return slot.sourceType === 'SEED' && !slot.teamName
 }
 
@@ -200,7 +200,7 @@ function getRoundLabel(round: number, maxRound: number, matchCountInRound: numbe
   return `${fromFinal + 1}回戦`
 }
 
-function getProgress(matches: MockTMatch[]): { finished: number; total: number } {
+function getProgress(matches: TournamentMatchView[]): { finished: number; total: number } {
   return {
     total: matches.length,
     finished: matches.filter((m) => m.status === 'FINISHED').length,
@@ -209,7 +209,7 @@ function getProgress(matches: MockTMatch[]): { finished: number; total: number }
 
 // ─── StatusBadge ─────────────────────────────────────────
 
-function StatusBadge({ status }: { status: MockTMatch['status'] }) {
+function StatusBadge({ status }: { status: TournamentMatchView['status'] }) {
   if (status === 'FINISHED')
     return <Chip label="終了" size="small" sx={{ bgcolor: '#E8F5E9', color: '#2E7D32', fontSize: '10px', height: 18, fontWeight: 600 }} />
   if (status === 'ONGOING')
@@ -255,7 +255,7 @@ function TeamRow({ label, score, isWinner, isBottom, empty }: {
 
 // ─── MatchCard ───────────────────────────────────────────
 
-function MatchCard({ match, onClick }: { match: MockTMatch; onClick?: (match: MockTMatch) => void }) {
+function MatchCard({ match, onClick }: { match: TournamentMatchView; onClick?: (match: TournamentMatchView) => void }) {
   const { slot1, slot2, score1, score2, winnerTeamId, status } = match
   const win1 = !!(winnerTeamId && winnerTeamId === slot1.teamId)
   const win2 = !!(winnerTeamId && winnerTeamId === slot2.teamId)
@@ -289,7 +289,7 @@ function MatchCard({ match, onClick }: { match: MockTMatch; onClick?: (match: Mo
 
 // ─── Bracket status ──────────────────────────────────────
 
-function getBracketStatus(bracket: MockBracket): { label: string; color: string; bg: string } {
+function getBracketStatus(bracket: BracketView): { label: string; color: string; bg: string } {
   const { matches } = bracket
   if (matches.length === 0) return { label: '構築中', color: '#9E9E9E', bg: '#F5F5F5' }
   if (matches.every((m) => m.status === 'FINISHED')) return { label: '完了', color: '#2E7D32', bg: '#E8F5E9' }
@@ -307,14 +307,14 @@ function getBracketStatus(bracket: MockBracket): { label: string; color: string;
 // ─── BracketTree (horizontal layout) ─────────────────────
 
 function BracketTree({ matches, bracketType, onMatchClick }: {
-  matches: MockTMatch[]
-  bracketType: MockBracket['bracketType']
-  onMatchClick?: (match: MockTMatch) => void
+  matches: TournamentMatchView[]
+  bracketType: BracketView['bracketType']
+  onMatchClick?: (match: TournamentMatchView) => void
 }) {
   if (matches.length === 0) return null
 
   const maxRound = Math.max(...matches.map((m) => m.round))
-  const rounds: MockTMatch[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
+  const rounds: TournamentMatchView[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
     matches.filter((m) => m.round === r),
   )
 
@@ -421,8 +421,8 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
 // ─── Public component ────────────────────────────────────
 
 type Props = {
-  bracket: MockBracket
-  onMatchClick?: (match: MockTMatch) => void
+  bracket: BracketView
+  onMatchClick?: (match: TournamentMatchView) => void
 }
 
 export function TournamentBracketView({ bracket, onMatchClick }: Props) {

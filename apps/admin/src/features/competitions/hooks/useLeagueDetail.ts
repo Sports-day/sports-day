@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 import {
   useGetAdminLeagueQuery,
-  useGetAdminTeamsQuery,
   useGetAdminCompetitionsQuery,
+  useGetAdminCompetitionQuery,
   useGetAdminPromotionRulesQuery,
   useUpdateAdminLeagueRuleMutation,
   useCreateAdminPromotionRuleMutation,
   useDeleteAdminPromotionRuleMutation,
+  useAddAdminCompetitionEntriesMutation,
+  useDeleteAdminCompetitionEntriesMutation,
   GetAdminPromotionRulesDocument,
+  GetAdminCompetitionDocument,
   CompetitionType,
 } from '@/gql/__generated__/graphql'
 
@@ -25,7 +28,7 @@ type LeagueEntry = {
   id: number
   teamName: string
   teamClass: string
-  teamId?: string
+  teamId: string
 }
 
 export type ProgressionRule = {
@@ -44,7 +47,11 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     variables: { id: leagueId },
     skip: !leagueId,
   })
-  const { data: teamsData } = useGetAdminTeamsQuery()
+  const { data: compData } = useGetAdminCompetitionQuery({
+    variables: { id: competitionId },
+    skip: !competitionId,
+  })
+  // チーム一覧は AddEntryDialog が自前で取得する
   const { data: competitionsData } = useGetAdminCompetitionsQuery()
   const { data: promotionRulesData } = useGetAdminPromotionRulesQuery({
     variables: { sourceCompetitionId: competitionId },
@@ -52,9 +59,10 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   })
 
   const league = leagueData?.league
+  const competitionTeams = compData?.competition?.teams ?? []
 
   const [form, setForm] = useState<LeagueForm>({
-    name: league?.name ?? leagueName,
+    name: leagueName,
     description: '',
     weight: '0',
     matchFormat: 'sunny',
@@ -62,21 +70,18 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     tag: '',
   })
 
-  // GraphQL のリーグチームをエントリーとして使用
-  const [entries, setEntries] = useState<LeagueEntry[]>(
-    (league?.teams ?? []).map((t, i) => ({
-      id: i + 1,
-      teamName: t.name,
-      teamClass: t.group.name,
-      teamId: t.id,
-    }))
-  )
+  // GraphQL の competition.teams をエントリーとして使用
+  const entries: LeagueEntry[] = competitionTeams.map((t, i) => ({
+    id: i + 1,
+    teamName: t.name,
+    teamClass: t.group.name,
+    teamId: t.id,
+  }))
 
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [progressionEnabled, setProgressionEnabled] = useState(false)
   const [progressionMaxRank, setProgressionMaxRank] = useState(3)
   const [progressionRules, setProgressionRules] = useState<ProgressionRule[]>([])
-  // GQL PromotionRule.id を rank でひけるようにする
   const [ruleIdByRank, setRuleIdByRank] = useState<Record<number, string>>({})
 
   const [mutationError, setMutationError] = useState<Error | null>(null)
@@ -88,6 +93,12 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   const [deletePromotionRule] = useDeleteAdminPromotionRuleMutation({
     refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
   })
+  const [addCompetitionEntries] = useAddAdminCompetitionEntriesMutation({
+    refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+  })
+  const [deleteCompetitionEntries] = useDeleteAdminCompetitionEntriesMutation({
+    refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+  })
 
   // GQL データで初期化
   useEffect(() => {
@@ -95,17 +106,6 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       setForm(prev => ({ ...prev, name: league.name }))
     }
   }, [league?.name])
-
-  useEffect(() => {
-    if (league?.teams !== undefined) {
-      setEntries(league.teams.map((t, i) => ({
-        id: i + 1,
-        teamName: t.name,
-        teamClass: t.group.name,
-        teamId: t.id,
-      })))
-    }
-  }, [league?.teams])
 
   useEffect(() => {
     if (promotionRulesData?.promotionRules) {
@@ -127,12 +127,14 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     setForm(prev => ({ ...prev, [field]: e.target.value }))
   }
 
-  const handleScoringChange = async (resultJudgments: string[]) => {
+  const handleScoringChange = (resultJudgments: string[]) => {
     setForm(prev => ({ ...prev, resultJudgments }))
-    // 【未確定】 UpdateLeagueRuleInput は win/draw/lose ポイントのみ対応
+  }
+
+  const handleUpdateLeagueRule = async (winPt: number, drawPt: number, losePt: number) => {
     try {
       await updateLeagueRule({
-        variables: { id: leagueId, input: {} },
+        variables: { id: leagueId, input: { winPt, drawPt, losePt } },
       })
       setMutationError(null)
     } catch (e) {
@@ -140,31 +142,42 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     }
   }
 
-  const handleDeleteEntry = (id: number) => {
-    setEntries(prev => prev.filter(e => e.id !== id))
+  const handleDeleteEntry = async (id: number) => {
+    const entry = entries.find(e => e.id === id)
+    if (!entry?.teamId) return
+    try {
+      await deleteCompetitionEntries({
+        variables: {
+          id: competitionId,
+          input: { teamIds: [entry.teamId] },
+        },
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   const handleOpenAddDialog = () => setAddDialogOpen(true)
   const handleCloseAddDialog = () => setAddDialogOpen(false)
 
-  const handleAddEntries = (selectedIds: string[]) => {
-    const allTeams = teamsData?.teams ?? []
-    const newEntries = selectedIds.flatMap((id, i) => {
-      const team = allTeams.find(t => t.id === id)
-      if (!team) return []
-      return [{
-        id: entries.length + i + 1,
-        teamName: team.name,
-        teamClass: team.group.name,
-        teamId: id,
-      }]
-    })
-    setEntries(prev => [...prev, ...newEntries])
+  const handleAddEntries = async (selectedIds: string[]) => {
+    if (selectedIds.length === 0) return
+    try {
+      await addCompetitionEntries({
+        variables: {
+          id: competitionId,
+          input: { teamIds: selectedIds },
+        },
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
     setAddDialogOpen(false)
   }
 
   const handleProgressionRuleChange = async (rank: number, targetId: string) => {
-    // 既存ルールがあれば削除してから再作成
     const existingId = ruleIdByRank[rank]
     try {
       if (existingId) {
@@ -185,7 +198,6 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
     }
-    // ローカル state も即時更新
     setProgressionRules(prev => {
       const existing = prev.find(r => r.rank === rank)
       if (existing) return prev.map(r => r.rank === rank ? { ...r, targetId } : r)
@@ -212,6 +224,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     availableProgressionTargets,
     handleChange,
     handleScoringChange,
+    handleUpdateLeagueRule,
     handleDeleteEntry,
     handleOpenAddDialog,
     handleCloseAddDialog,

@@ -1,14 +1,13 @@
 export type Competition = {
   id: string
   name: string
-  description: string
-  icon: string
-  tag: string
+  type: string
+  sceneName: string
 }
 
-// ─── Tournament bracket types (GraphQL 未実装 【未確定】) ───
+// ─── Tournament bracket types ───
 
-export type MockTSlot = {
+export type TournamentSlotView = {
   sourceType: 'SEED' | 'MATCH_WINNER' | 'MATCH_LOSER'
   sourceMatchId?: string
   seedNumber?: number
@@ -16,32 +15,32 @@ export type MockTSlot = {
   teamName?: string | null
 }
 
-export type MockTMatch = {
+export type TournamentMatchView = {
   id: string
   label?: string
   round: number
-  slot1: MockTSlot
-  slot2: MockTSlot
+  slot1: TournamentSlotView
+  slot2: TournamentSlotView
   score1?: number | null
   score2?: number | null
   winnerTeamId?: string | null
   status: 'STANDBY' | 'ONGOING' | 'FINISHED'
 }
 
-export type MockBracket = {
+export type BracketView = {
   id: string
   name: string
   bracketType: 'MAIN' | 'SUB'
   displayOrder: number
-  matches: MockTMatch[]
+  matches: TournamentMatchView[]
 }
 
-export type MockTournamentDetailData = {
+export type TournamentDetailView = {
   id: string
   name: string
   description: string
   teamCount: number
   placementMethod: 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
   tag: string
-  brackets: MockBracket[]
+  brackets: BracketView[]
 }

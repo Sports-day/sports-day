@@ -1,14 +1,14 @@
 import { useGetAdminTournamentQuery } from '@/gql/__generated__/graphql'
-import type { MockBracket, MockTMatch, MockTSlot, MockTournamentDetailData } from '../types'
+import type { BracketView, TournamentMatchView, TournamentSlotView, TournamentDetailView } from '../types'
 
 /**
- * GQL TournamentSlot + Match → MockBracket へのマッピング
+ * GQL TournamentSlot + Match → BracketView へのマッピング
  *
  * 各 Match は 2つの MatchEntry を持ち、各 TournamentSlot は matchEntry で
  * どの MatchEntry に対応するかを示す。
  * round は SEED スロット → 0、MATCH_WINNER/LOSER → sourceMatch.round + 1 で計算する。
  */
-function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTournamentQuery>['data']>['tournament']): MockBracket {
+function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTournamentQuery>['data']>['tournament']): BracketView {
   if (!tournament) {
     return { id: '', name: '', bracketType: 'MAIN', displayOrder: 0, matches: [] }
   }
@@ -57,10 +57,10 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
   const toMockSlot = (
     slot: typeof slots[number] | undefined,
     entry: typeof matches[number]['entries'][number] | undefined,
-  ): MockTSlot => {
+  ): TournamentSlotView => {
     if (!slot) return { sourceType: 'SEED' }
     return {
-      sourceType: slot.sourceType as MockTSlot['sourceType'],
+      sourceType: slot.sourceType as TournamentSlotView['sourceType'],
       seedNumber: slot.seedNumber ?? undefined,
       sourceMatchId: slot.sourceMatch?.id,
       teamId: entry?.team?.id ?? null,
@@ -68,13 +68,13 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
     }
   }
 
-  const toStatus = (s: string): MockTMatch['status'] => {
+  const toStatus = (s: string): TournamentMatchView['status'] => {
     if (s === 'ONGOING') return 'ONGOING'
     if (s === 'FINISHED') return 'FINISHED'
     return 'STANDBY'
   }
 
-  const mockMatches: MockTMatch[] = matches.map((match) => {
+  const mockMatches: TournamentMatchView[] = matches.map((match) => {
     const entry0 = match.entries[0]
     const entry1 = match.entries[1]
     const slot0 = entry0 ? entryToSlot.get(entry0.id) : undefined
@@ -94,13 +94,13 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
   return {
     id: tournament.id,
     name: tournament.name,
-    bracketType: tournament.bracketType as MockBracket['bracketType'],
+    bracketType: tournament.bracketType as BracketView['bracketType'],
     displayOrder: tournament.displayOrder ?? 0,
     matches: mockMatches,
   }
 }
 
-export function useTournamentDetail(tournamentId: string, tournamentName: string): MockTournamentDetailData {
+export function useTournamentDetail(tournamentId: string, tournamentName: string): TournamentDetailView {
   const { data } = useGetAdminTournamentQuery({
     variables: { id: tournamentId },
     skip: !tournamentId,
@@ -126,7 +126,7 @@ export function useTournamentDetail(tournamentId: string, tournamentName: string
     name: t.name,
     description: '',
     teamCount: t.slots.length,
-    placementMethod: (t.placementMethod ?? 'SEED_OPTIMIZED') as MockTournamentDetailData['placementMethod'],
+    placementMethod: (t.placementMethod ?? 'SEED_OPTIMIZED') as TournamentDetailView['placementMethod'],
     tag: '',
     brackets: [bracket],
   }

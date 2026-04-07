@@ -57,6 +57,7 @@ export const GET_ADMIN_LEAGUE_STANDINGS = gql`
       goalsFor
       goalsAgainst
       goalDiff
+      matchesPlayed
     }
   }
 `
@@ -247,6 +248,63 @@ export const UPDATE_SEED_NUMBERS = gql`
     updateSeedNumbers(tournamentId: $tournamentId, seeds: $seeds) {
       id
       seedNumber
+    }
+  }
+`
+
+export const ADD_ADMIN_COMPETITION_ENTRIES = gql`
+  mutation AddAdminCompetitionEntries($id: ID!, $input: UpdateCompetitionEntriesInput!) {
+    addCompetitionEntries(id: $id, input: $input) {
+      id
+      teams { id name group { id name } }
+    }
+  }
+`
+
+export const DELETE_ADMIN_COMPETITION_ENTRIES = gql`
+  mutation DeleteAdminCompetitionEntries($id: ID!, $input: UpdateCompetitionEntriesInput!) {
+    deleteCompetitionEntries(id: $id, input: $input) {
+      id
+      teams { id name group { id name } }
+    }
+  }
+`
+
+export const UPDATE_ADMIN_PROMOTION_RULE = gql`
+  mutation UpdateAdminPromotionRule($id: ID!, $input: UpdatePromotionRuleInput!) {
+    updatePromotionRule(id: $id, input: $input) {
+      id
+      rankSpec
+      slot
+    }
+  }
+`
+
+export const GENERATE_ADMIN_BRACKET = gql`
+  mutation GenerateAdminBracket($input: GenerateBracketInput!) {
+    generateBracket(input: $input) {
+      id
+      name
+      bracketType
+      state
+    }
+  }
+`
+
+export const RESET_ADMIN_TOURNAMENT_BRACKETS = gql`
+  mutation ResetAdminTournamentBrackets($competitionId: ID!) {
+    resetTournamentBrackets(competitionId: $competitionId) {
+      id
+    }
+  }
+`
+
+export const GET_ADMIN_TOURNAMENT_RANKING = gql`
+  query GetAdminTournamentRanking($competitionId: ID!) {
+    tournamentRanking(competitionId: $competitionId) {
+      rank
+      team { id name }
+      isTied
     }
   }
 `

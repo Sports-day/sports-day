@@ -24,6 +24,7 @@ export function useCompetitionCreate(onSuccess: (name: string) => void) {
     sceneId: '',
     competitionType: CompetitionType.League,
   })
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [createCompetition] = useCreateAdminCompetitionMutation()
   const { data: scenesData } = useGetAdminScenesQuery()
@@ -33,23 +34,25 @@ export function useCompetitionCreate(onSuccess: (name: string) => void) {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name.trim()) return
-    createCompetition({
-      variables: {
-        input: {
-          name: form.name,
-          type: form.competitionType,
-          sceneId: form.sceneId,
+    try {
+      await createCompetition({
+        variables: {
+          input: {
+            name: form.name,
+            type: form.competitionType,
+            sceneId: form.sceneId,
+          },
         },
-      },
-      refetchQueries: ['GetAdminCompetitions'],
-    }).then(() => {
+        refetchQueries: ['GetAdminCompetitions'],
+      })
+      setMutationError(null)
       onSuccess(form.name)
-    }).catch(() => {
-      // エラーハンドリングは後続タスクで対応
-    })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  return { form, handleChange, handleSubmit, scenes, sceneId: form.sceneId, setSceneId: (id: string) => setForm(prev => ({ ...prev, sceneId: id })) }
+  return { form, handleChange, handleSubmit, scenes, sceneId: form.sceneId, setSceneId: (id: string) => setForm(prev => ({ ...prev, sceneId: id })), error: mutationError }
 }

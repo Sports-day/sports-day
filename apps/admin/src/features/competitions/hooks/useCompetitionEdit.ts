@@ -1,31 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 import {
   useGetAdminCompetitionQuery,
+  useGetAdminTournamentsQuery,
   useUpdateAdminCompetitionMutation,
   useDeleteAdminCompetitionMutation,
 } from '@/gql/__generated__/graphql'
 
 type EditForm = {
   name: string
-  description: string
-  icon: string
-  tag: string
 }
 
 export function useCompetitionEdit(competitionId: string) {
-  const { data } = useGetAdminCompetitionQuery({
+  const { data, loading, error } = useGetAdminCompetitionQuery({
     variables: { id: competitionId },
+    skip: !competitionId,
+  })
+  const { data: tournamentsData } = useGetAdminTournamentsQuery({
+    variables: { competitionId },
     skip: !competitionId,
   })
   const competition = data?.competition
 
-  const [form, setForm] = useState<EditForm>({
-    name: competition?.name ?? '',
-    description: '',
-    icon: competition?.type.toLowerCase() ?? '',
-    tag: competition?.scene.name ?? '',
-  })
+  const [form, setForm] = useState<EditForm>({ name: '' })
+  const [mutationError, setMutationError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    if (competition) {
+      setForm({ name: competition.name })
+    }
+  }, [competition])
 
   const [updateCompetition] = useUpdateAdminCompetitionMutation()
   const [deleteCompetition] = useDeleteAdminCompetitionMutation()
@@ -34,27 +38,49 @@ export function useCompetitionEdit(competitionId: string) {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) return
-    updateCompetition({
-      variables: {
-        id: competitionId,
-        input: { name: form.name.trim() },
-      },
-      refetchQueries: ['GetAdminCompetitions', 'GetAdminCompetition'],
-    }).catch(() => {
-      // エラーハンドリングは後続タスクで対応
-    })
+    try {
+      await updateCompetition({
+        variables: {
+          id: competitionId,
+          input: { name: form.name.trim() },
+        },
+        refetchQueries: ['GetAdminCompetitions', 'GetAdminCompetition'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  const handleDelete = () => {
-    deleteCompetition({
-      variables: { id: competitionId },
-      refetchQueries: ['GetAdminCompetitions'],
-    }).catch(() => {
-      // エラーハンドリングは後続タスクで対応
-    })
+  const handleDelete = async () => {
+    try {
+      await deleteCompetition({
+        variables: { id: competitionId },
+        refetchQueries: ['GetAdminCompetitions'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
-  return { form, handleChange, handleSave, handleDelete }
+  const leagues = competition?.league ? [competition.league] : []
+  const tournaments = tournamentsData?.tournaments ?? []
+  const competitionType = competition?.type ?? null
+  const sceneName = competition?.scene?.name ?? ''
+
+  return {
+    form,
+    handleChange,
+    handleSave,
+    handleDelete,
+    leagues,
+    tournaments,
+    competitionType,
+    sceneName,
+    loading,
+    error: error ?? mutationError,
+  }
 }

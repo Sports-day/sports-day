@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  MenuItem,
   TextField,
   Typography,
 } from '@mui/material'
@@ -29,9 +28,7 @@ import {
   SAVE_BUTTON_SX,
 } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
-import { ICON_OPTIONS, TAG_OPTIONS } from '../constants'
 import { useCompetitionEdit } from '../hooks/useCompetitionEdit'
-import { useGetAdminCompetitionQuery, useGetAdminTournamentsQuery } from '@/gql/__generated__/graphql'
 
 const ENTRY_BUTTON_SX = {
   backgroundColor: '#EFF0F8',
@@ -70,18 +67,7 @@ export function CompetitionDetailPage({
   onSaved,
   onDeleted,
 }: Props) {
-  const { data: compData } = useGetAdminCompetitionQuery({
-    variables: { id: competitionId },
-    skip: !competitionId,
-  })
-  const { data: tournamentsData } = useGetAdminTournamentsQuery({
-    variables: { competitionId },
-    skip: !competitionId,
-  })
-  // codegen 実行後に competition.league の型が解決される
-  const leagues = compData?.competition?.league ? [compData.competition.league] : []
-  const tournaments = tournamentsData?.tournaments ?? []
-  const { form, handleChange, handleSave, handleDelete } = useCompetitionEdit(competitionId)
+  const { form, handleChange, handleSave, handleDelete, leagues, tournaments } = useCompetitionEdit(competitionId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [dirty, setDirty] = useState(false)
   useUnsavedWarning(dirty)
@@ -127,45 +113,6 @@ export function CompetitionDetailPage({
                 size="small"
                 sx={CARD_FIELD_SX}
               />
-              <TextField
-                label="競技の説明"
-                value={form.description}
-                onChange={handleChange('description')}
-                fullWidth
-                size="small"
-                sx={CARD_FIELD_SX}
-              />
-              <TextField
-                select
-                label="アイコン"
-                value={form.icon}
-                onChange={handleChange('icon')}
-                fullWidth
-                size="small"
-                sx={CARD_FIELD_SX}
-              >
-                {ICON_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                label="タグ"
-                value={form.tag}
-                onChange={handleChange('tag')}
-                fullWidth
-                size="small"
-                sx={CARD_FIELD_SX}
-              >
-                {TAG_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-
               <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3 }} />
 
               <Box sx={{ display: 'flex', gap: 2 }}>
