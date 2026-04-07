@@ -6,8 +6,7 @@ export function useTeams() {
   const teams: Team[] = (data?.teams ?? []).map(t => ({
     id: t.id,
     name: t.name,
-    class: t.group.name,
-    tags: [],
+    groupName: t.group.name,
   }))
   return { data: teams, loading, error: error ?? null }
 }

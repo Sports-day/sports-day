@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   useGetAdminTeamQuery,
-  useGetAdminAllUsersForTeamsQuery,
+  useGetAdminUsersQuery,
   useUpdateAdminTeamMutation,
   useDeleteAdminTeamMutation,
   useUpdateAdminTeamUsersMutation,
@@ -14,7 +14,7 @@ export function useTeamDetail(teamId: string) {
     variables: { id: teamId },
     skip: !teamId,
   })
-  const { data: usersData } = useGetAdminAllUsersForTeamsQuery()
+  const { data: usersData } = useGetAdminUsersQuery()
   const { data: groupsData } = useGetAdminGroupsQuery()
 
   const team = data?.team
@@ -32,9 +32,8 @@ export function useTeamDetail(teamId: string) {
 
   const groups = groupsData?.groups ?? []
 
-  // チームメンバーは GraphQL User として管理
   const members: TeamMember[] = (team?.users ?? []).map(u => ({
-    studentId: u.id,
+    id: u.id,
     name: u.name,
     gender: u.gender ?? '',
   }))
@@ -118,7 +117,6 @@ export function useTeamDetail(teamId: string) {
       id: u.id,
       userName: u.name,
       gender: u.gender ?? '',
-      studentId: u.id,
     }))
 
   return {

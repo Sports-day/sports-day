@@ -149,8 +149,8 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
           </TableHead>
           <TableBody>
             {members.map((member, i) => (
-              <TableRow key={member.studentId}>
-                <TableCell sx={CARD_TABLE_CELL_SX}>{member.studentId}</TableCell>
+              <TableRow key={member.id}>
+                <TableCell sx={CARD_TABLE_CELL_SX}>{member.id}</TableCell>
                 <TableCell sx={CARD_TABLE_CELL_SX}>{member.name}</TableCell>
                 <TableCell sx={CARD_TABLE_CELL_SX}>{member.gender}</TableCell>
                 <TableCell sx={CARD_TABLE_CELL_SX}>

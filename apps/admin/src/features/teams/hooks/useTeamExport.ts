@@ -6,7 +6,7 @@ export function useTeamExport() {
   const { data } = useGetAdminTeamsQuery()
   const teams = data?.teams ?? []
 
-  // 【未確定】 GraphQL Team に tags フィールドなし。group.name でフィルタリング
+  // group.name でフィルタリング
   const allTags = Array.from(new Set(teams.map(t => t.group.name))).filter(Boolean)
 
   const handleExport = () => {

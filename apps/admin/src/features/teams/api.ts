@@ -17,7 +17,7 @@ export const GET_ADMIN_TEAM = gql`
       id
       name
       group { id name }
-      users { id name email }
+      users { id name email gender }
     }
   }
 `
@@ -55,18 +55,6 @@ export const UPDATE_ADMIN_TEAM_USERS = gql`
     updateTeamUsers(id: $id, input: $input) {
       id
       users { id name email }
-    }
-  }
-`
-
-export const GET_ADMIN_ALL_USERS_FOR_TEAMS = gql`
-  query GetAdminAllUsersForTeams {
-    users {
-      id
-      name
-      email
-      gender
-      groups { id name }
     }
   }
 `

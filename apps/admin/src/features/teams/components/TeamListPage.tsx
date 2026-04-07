@@ -87,8 +87,8 @@ export function TeamListPage({ onExport, onBulkRename, onTeamClick }: Props) {
                   >
                     <TableCell sx={LIST_TABLE_CELL_SX}>{team.id}</TableCell>
                     <TableCell sx={LIST_TABLE_CELL_SX}>{team.name}</TableCell>
-                    <TableCell sx={LIST_TABLE_CELL_SX}>{team.class}</TableCell>
-                    <TableCell sx={LIST_TABLE_CELL_SX}>{team.tags.join(', ')}</TableCell>
+                    <TableCell sx={LIST_TABLE_CELL_SX}>{team.groupName}</TableCell>
+                    <TableCell sx={LIST_TABLE_CELL_SX}></TableCell>
                   </TableRow>
                 ))
               )}

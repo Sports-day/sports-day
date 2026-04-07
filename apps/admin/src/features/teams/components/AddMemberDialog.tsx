@@ -28,7 +28,7 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
     id: u.id,
     userName: u.name,
     gender: u.gender ?? '',
-    studentId: u.email,
+    email: u.email,
   }))
 
   const toggle = (id: string) => {
@@ -71,7 +71,7 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
               <TableCell sx={LIST_TABLE_HEAD_SX}>ID</TableCell>
               <TableCell sx={LIST_TABLE_HEAD_SX}>ユーザー名</TableCell>
               <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
-              <TableCell sx={LIST_TABLE_HEAD_SX}>学籍番号</TableCell>
+              <TableCell sx={LIST_TABLE_HEAD_SX}>メール</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -92,7 +92,7 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.id}</TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.userName}</TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.gender}</TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.studentId}</TableCell>
+                <TableCell sx={LIST_TABLE_CELL_SX}>{user.email}</TableCell>
               </TableRow>
             ))}
           </TableBody>
