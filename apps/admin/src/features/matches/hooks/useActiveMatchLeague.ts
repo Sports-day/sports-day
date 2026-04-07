@@ -148,5 +148,17 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
 
   const allFinished = activeMatches.length > 0 && activeMatches.every(m => m.status === 'finished')
 
-  return { league, grid, allFinished, statsMap, rankLabels, loading, error: error ?? null }
+  // 同順位チームのグループを検出
+  const rankGroups = new Map<number, { id: string; name: string }[]>()
+  for (const standing of standings) {
+    const rank = standing.rank
+    if (!rankGroups.has(rank)) rankGroups.set(rank, [])
+    rankGroups.get(rank)!.push({ id: standing.team.id, name: standing.team.name ?? '' })
+  }
+  const tiedGroups = Array.from(rankGroups.entries())
+    .filter(([, teams]) => teams.length > 1)
+    .map(([rank, teams]) => ({ rank, teams }))
+    .sort((a, b) => a.rank - b.rank)
+
+  return { league, grid, allFinished, statsMap, rankLabels, tiedGroups, loading, error: error ?? null }
 }

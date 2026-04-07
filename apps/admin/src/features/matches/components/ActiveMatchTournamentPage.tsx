@@ -16,11 +16,11 @@ type Props = {
 }
 
 export function ActiveMatchTournamentPage({
-  competitionName,
+  competitionName: _competitionName,
   tournamentId,
   tournamentName,
   onBackToList,
-  onBackToCompetition,
+  onBackToCompetition: _onBackToCompetition,
 }: Props) {
   const data = useTournamentDetail(tournamentId, tournamentName)
   const sortedBrackets = [...data.brackets].sort((a, b) => a.displayOrder - b.displayOrder)
@@ -33,9 +33,6 @@ export function ActiveMatchTournamentPage({
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
-        </ButtonBase>
-        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
-          {competitionName}
         </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>{tournamentName}</Typography>
       </Breadcrumbs>

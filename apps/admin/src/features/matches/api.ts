@@ -152,3 +152,12 @@ export const UPDATE_ADMIN_SLOT_CONNECTION = gql`
     }
   }
 `
+
+export const SET_ADMIN_TIEBREAK_PRIORITIES = gql`
+  mutation SetAdminTiebreakPriorities($leagueId: ID!, $priorities: [TiebreakPriorityInput!]!) {
+    setTiebreakPriorities(leagueId: $leagueId, priorities: $priorities) {
+      team { id name }
+      priority
+    }
+  }
+`

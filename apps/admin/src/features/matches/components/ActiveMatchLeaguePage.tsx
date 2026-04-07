@@ -25,6 +25,7 @@ import { MatchEditPage } from './MatchEditPage'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
 import { useExecuteProgression } from '../hooks/useExecuteProgression'
+import { TiebreakCard } from './TiebreakCard'
 
 // ─── 定数 ────────────────────────────────────────────────
 const CELL_BORDER = '1px solid #5B6DC6'
@@ -70,7 +71,7 @@ export function ActiveMatchLeaguePage({
   onBackToList,
   onBackToCompetition,
 }: Props) {
-  const { league, grid, allFinished, statsMap, rankLabels } = useActiveMatchLeague(competitionId, leagueId)
+  const { league, grid, allFinished, statsMap, rankLabels, tiedGroups } = useActiveMatchLeague(competitionId, leagueId)
   const regen = useLeagueRegenerate(competitionId, leagueId)
   const bulkEdit = useBulkEdit(competitionId, leagueId)
   const matchEdit = useMatchEdit()
@@ -80,11 +81,10 @@ export function ActiveMatchLeaguePage({
       <Box>
         <Breadcrumbs separator="/" sx={{ mb: 2 }}>
           <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>試合</ButtonBase>
-          <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>{competitionName}</ButtonBase>
           <Typography sx={BREADCRUMB_CURRENT_SX}>{leagueName}</Typography>
         </Breadcrumbs>
         <Typography sx={{ fontSize: '13px', color: '#2F3C8C', opacity: 0.6, mt: 2 }}>
-          試合データがまだありません。競技設定からリーグの試合を登録してください。
+          試合データがまだありません。大会設定からリーグの試合を登録してください。
         </Typography>
       </Box>
     )
@@ -174,13 +174,15 @@ export function ActiveMatchLeaguePage({
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
         </ButtonBase>
-        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
-          {competitionName}
-        </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
           {leagueName}
         </Typography>
       </Breadcrumbs>
+
+      {/* ─── タイブレークカード（全試合終了 & 同順位あり） ─── */}
+      {allFinished && tiedGroups.length > 0 && (
+        <TiebreakCard leagueId={leagueId} tiedGroups={tiedGroups} />
+      )}
 
       {/* ─── リーグ表カード ─── */}
       <Card sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
@@ -243,7 +245,7 @@ export function ActiveMatchLeaguePage({
               </TableHead>
               <TableBody>
                 {league.teams.map((team, rowIdx) => {
-                  const stats = statsMap.get(team.id)!
+                  const stats = statsMap.get(team.id) ?? { points: 0, goalsFor: 0, goalsAgainst: 0, matchesPlayed: 0, winRate: 0, totalGoalRate: 0 }
                   const rankLbl = rankLabels.get(team.id) ?? ''
                   return (
                     <TableRow key={team.id}>
