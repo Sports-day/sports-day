@@ -6,6 +6,7 @@ import { TopHeader, TOP_HEADER_HEIGHT_XS, TOP_HEADER_HEIGHT_MD } from "@/compone
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { GlobalToast } from "@/components/ui/GlobalToast";
 import { registerNavigate } from "@/hooks/useAppNavigation";
+import { ResetToListContext } from "@/hooks/useResetToList";
 import { useAuth } from "@/hooks/useAuth";
 import { userManager } from "@/lib/userManager";
 
@@ -13,10 +14,10 @@ const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/PrivacyPolicyPage"));
 const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage"));
 const CompetitionsPage = lazy(() => import("@/pages/CompetitionsPage"));
+const SportsPage = lazy(() => import("@/pages/SportsPage"));
 const TeamsPage = lazy(() => import("@/pages/TeamsPage"));
 const UsersPage = lazy(() => import("@/pages/UsersPage"));
 const LocationsPage = lazy(() => import("@/pages/LocationsPage"));
-const PermissionsPage = lazy(() => import("@/pages/PermissionsPage"));
 const TagsPage = lazy(() => import("@/pages/TagsPage"));
 const ImagesPage = lazy(() => import("@/pages/ImagesPage"));
 const ActiveMatchesPage = lazy(() => import("@/pages/ActiveMatchesPage"));
@@ -43,6 +44,7 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
   const location = useLocation()
   const { loggedIn, loading } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
 
   useEffect(() => {
     registerNavigate((page: string) => navigate(keyToPath(page)))
@@ -56,6 +58,14 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
   }
 
   const selected = pathToKey(location.pathname)
+
+  const handleSidebarSelect = (key: string) => {
+    if (key === selected) {
+      setResetKey((k) => k + 1)
+    } else {
+      navigate(keyToPath(key))
+    }
+  }
 
   const handleLogout = () => {
     userManager.signoutRedirect().catch(() => {
@@ -75,7 +85,7 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
       <TopHeader onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
       <Sidebar
         selected={selected}
-        onSelect={(key) => navigate(keyToPath(key))}
+        onSelect={handleSidebarSelect}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
         onLogout={handleLogout}
@@ -95,18 +105,20 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
       >
         <ErrorBoundary>
           <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/competitions" element={<CompetitionsPage />} />
-              <Route path="/teams" element={<TeamsPage />} />
-              <Route path="/users" element={<UsersPage />} />
-              <Route path="/locations" element={<LocationsPage />} />
-              <Route path="/permissions" element={<PermissionsPage />} />
-              <Route path="/tags" element={<TagsPage />} />
-              <Route path="/images" element={<ImagesPage />} />
-              <Route path="/active-matches" element={<ActiveMatchesPage />} />
-              <Route path="/information" element={<InformationPage />} />
-              <Route path="*" element={<Navigate to="/competitions" replace />} />
-            </Routes>
+            <ResetToListContext.Provider value={resetKey}>
+              <Routes>
+                <Route path="/competitions" element={<CompetitionsPage />} />
+                <Route path="/sports" element={<SportsPage />} />
+                <Route path="/teams" element={<TeamsPage />} />
+                <Route path="/users" element={<UsersPage />} />
+                <Route path="/locations" element={<LocationsPage />} />
+                <Route path="/tags" element={<TagsPage />} />
+                <Route path="/images" element={<ImagesPage />} />
+                <Route path="/active-matches" element={<ActiveMatchesPage />} />
+                <Route path="/information" element={<InformationPage />} />
+                <Route path="*" element={<Navigate to="/competitions" replace />} />
+              </Routes>
+            </ResetToListContext.Provider>
           </Suspense>
         </ErrorBoundary>
       </Box>
@@ -147,7 +159,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginRoute onPrivacy={() => setShowPrivacy(true)} />} />
         <Route
-          path="/callback"
+          path="/api/auth/callback"
           element={
             <Suspense fallback={<PageFallback />}>
               <AuthCallbackPage />

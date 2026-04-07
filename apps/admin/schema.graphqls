@@ -1,8 +1,15 @@
+enum Role {
+  ADMIN
+  ORGANIZER
+  PARTICIPANT
+}
+
 type User {
   id: ID!
   name: String!
   email: String!
   gender: String
+  role: Role!
   groups: [Group!]!
   teams: [Team!]!
   judgments: [Judgment!]!
@@ -36,6 +43,7 @@ type Competition {
   id: ID!
   name: String!
   type: CompetitionType!
+  sport: Sport!
   scene: Scene!
   teams: [Team!]!
   matches: [Match!]!
@@ -98,6 +106,9 @@ type Standing {
 type League {
   id: ID!
   name: String!
+  winPt: Int!
+  drawPt: Int!
+  losePt: Int!
   teams: [Team!]!
 }
 
@@ -106,7 +117,6 @@ type Information {
   title: String!
   content: String!
   status: String!
-  scheduledAt: String
 }
 
 enum RankingConditionKey {
@@ -264,14 +274,12 @@ input CreateInformationInput {
   title: String!
   content: String!
   status: String
-  scheduledAt: String
 }
 
 input UpdateInformationInput {
   title: String
   content: String
   status: String
-  scheduledAt: String
 }
 
 input CreateSceneInput {
@@ -319,11 +327,13 @@ input CreateCompetitionInput {
   name: String!
   type: CompetitionType!
   sceneId: ID!
+  sportId: ID!
 }
 
 input UpdateCompetitionInput {
   name: String
-  imageId: ID
+  sceneId: ID
+  sportId: ID
 }
 
 input UpdateCompetitionEntriesInput {
@@ -386,6 +396,8 @@ input UpdateJudgmentInput {
 
 input CreateLeagueInput {
   name: String!
+  sceneId: ID!
+  sportId: ID!
   defaultLocationId: ID
 }
 
@@ -813,6 +825,10 @@ type Mutation {
   画像を削除する（S3ファイルとDBレコードを両方削除）
   """
   deleteImage(id: ID!): Image!
+  """
+  ユ���ザーのロールを変更す��
+  """
+  updateUserRole(userId: ID!, role: Role!): User!
   """
   シーンにスポーツを一括追加する
   """

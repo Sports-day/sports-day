@@ -42,6 +42,7 @@ const theme = createTheme({
           backgroundColor: '#EFF0F8',
           borderColor: '#7F8CD6',
           color: '#2F3C8C',
+          boxShadow: 'none',
         },
         contained: {
           backgroundColor: '#5F6DC2',
@@ -67,6 +68,11 @@ const theme = createTheme({
           borderRadius: 10,
           padding: 8,
         },
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        slotProps: { inputLabel: { shrink: true } },
       },
     },
     MuiDrawer: {

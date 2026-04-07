@@ -18,10 +18,11 @@
     "@mui/material": "^7.3.9",
     "@types/papaparse": "^5.5.2",
     "graphql": "^16.11.0",
+    "oidc-client-ts": "^3.5.0",
     "papaparse": "^5.5.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "oidc-client-ts": "^3.5.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "7.9.6"
   },
   "devDependencies": {

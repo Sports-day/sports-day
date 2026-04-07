@@ -1,11 +1,14 @@
 import { LocationListPage, LocationCreatePage, LocationDetailPage } from '@/features/locations'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useResetToList } from '@/hooks/useResetToList'
 
 type View = 'list' | 'create' | 'detail'
 
 export default function LocationsPage() {
   const [view, setView] = useState<View>('list')
   const [selectedId, setSelectedId] = useState('')
+
+  useResetToList(view === 'list', useCallback(() => setView('list'), []))
 
   if (view === 'create') {
     return (

@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { TeamListPage, TeamExportPage, TeamBulkRenamePage, TeamDetailPage } from '@/features/teams'
+import { useResetToList } from '@/hooks/useResetToList'
 
 type View = 'list' | 'export' | 'bulkRename' | 'detail'
 
 export default function TeamsPage() {
   const [view, setView] = useState<View>('list')
   const [selectedTeamId, setSelectedTeamId] = useState<string>('')
+
+  useResetToList(view === 'list', useCallback(() => setView('list'), []))
 
   if (view === 'export') {
     return <TeamExportPage onBack={() => setView('list')} />
