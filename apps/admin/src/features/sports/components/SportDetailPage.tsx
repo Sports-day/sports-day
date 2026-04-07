@@ -1,0 +1,250 @@
+import { useState } from 'react'
+import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
+import {
+  Box,
+  Breadcrumbs,
+  Button,
+  ButtonBase,
+  Card,
+  CardContent,
+  TextField,
+  Typography,
+} from '@mui/material'
+import DeleteIcon from '@mui/icons-material/Delete'
+import CheckIcon from '@mui/icons-material/Check'
+import ImageIcon from '@mui/icons-material/Image'
+import CloseIcon from '@mui/icons-material/Close'
+import { useSportDetail } from '../hooks/useSportDetail'
+import { ImageSelectDialog } from './ImageSelectDialog'
+import { SportRulesSection } from './SportRulesSection'
+import { SceneSelect } from '@/components/ui/SceneSelect'
+import { ScoringDnDList } from '@/features/competitions/components/ScoringDnDList'
+import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, CARD_FIELD_SX } from '@/styles/commonSx'
+import { showToast } from '@/lib/toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+
+type Props = {
+  sportId: string
+  onBack: () => void
+  onDelete: () => void
+}
+
+export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
+  const {
+    sport,
+    name,
+    setName,
+    weight,
+    setWeight,
+    imageId,
+    setImageId,
+    images,
+    usedImageIds,
+    rankingKeys,
+    setRankingKeys,
+    rankingConditionOptions,
+    sceneIds,
+    setSceneIds,
+    allScenes,
+    dirty,
+    handleSave,
+    handleDelete,
+  } = useSportDetail(sportId, onDelete)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [imageDialogOpen, setImageDialogOpen] = useState(false)
+  useUnsavedWarning(dirty)
+
+  if (!sport) {
+    return (
+      <Box>
+        <Typography sx={{ color: '#2F3C8C', mt: 2 }}>競技が見つかりません</Typography>
+      </Box>
+    )
+  }
+
+  const handleSaveWithToast = async () => {
+    try {
+      await handleSave()
+      showToast('競技を保存しました')
+    } catch (e) {
+      console.error('保存エラー:', e)
+      showToast('保存に失敗しました')
+    }
+  }
+
+  const onConfirmDelete = () => {
+    setDeleteDialogOpen(false)
+    handleDelete()
+    showToast('競技を削除しました')
+  }
+
+  const dndOptions = rankingConditionOptions.map(o => ({ value: o.value as string, label: o.label }))
+
+  return (
+    <Box>
+      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+        <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
+          競技
+        </ButtonBase>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>
+          {sport.name}
+        </Typography>
+      </Breadcrumbs>
+
+      <Card sx={{ background: CARD_GRADIENT }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
+            競技の編集
+          </Typography>
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 2 }}>
+            {/* 左: 画像選択 */}
+            <Box sx={{ gridRow: '1 / -1' }}>
+              {imageId ? (
+                <Box sx={{ position: 'relative', height: '100%' }}>
+                  <Box
+                    component="img"
+                    src={images.find(i => i.id === imageId)?.url}
+                    onClick={() => setImageDialogOpen(true)}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: 1.5,
+                      border: '2px solid #3949AB',
+                      display: 'block',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <Box
+                    onClick={() => setImageId(null)}
+                    sx={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      backgroundColor: '#5F6DC2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s',
+                      '&:hover': { backgroundColor: '#D71212' },
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 14, color: '#fff' }} />
+                  </Box>
+                </Box>
+              ) : (
+                <Box
+                  onClick={() => setImageDialogOpen(true)}
+                  sx={{
+                    height: '100%',
+                    aspectRatio: '1',
+                    borderRadius: 1.5,
+                    border: '2px dashed #7F8CD6',
+                    backgroundColor: 'rgba(255,255,255,0.4)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 0.5,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    '&:hover': {
+                      borderColor: '#3949AB',
+                      backgroundColor: 'rgba(57, 73, 171, 0.06)',
+                    },
+                  }}
+                >
+                  <ImageIcon sx={{ fontSize: 24, color: '#5B6DC6', opacity: 0.6 }} />
+                  <Typography sx={{ fontSize: '9px', color: '#5B6DC6', opacity: 0.7, fontWeight: 500 }}>
+                    画像を選択
+                  </Typography>
+                </Box>
+              )}
+              <ImageSelectDialog
+                open={imageDialogOpen}
+                onClose={() => setImageDialogOpen(false)}
+                images={images}
+                selectedImageId={imageId}
+                usedImageIds={usedImageIds}
+                onSelect={(id) => setImageId(id)}
+              />
+            </Box>
+
+            {/* 右: 名称・重み・タグ */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="名称*"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                fullWidth
+                size="small"
+                sx={CARD_FIELD_SX}
+              />
+
+              <TextField
+                label="重み"
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(Number(e.target.value))}
+                fullWidth
+                size="small"
+                sx={CARD_FIELD_SX}
+              />
+
+              <SceneSelect multiple value={sceneIds} onChange={setSceneIds} scenes={allScenes} />
+            </Box>
+          </Box>
+
+          <Box>
+            <ScoringDnDList
+              options={dndOptions}
+              selected={rankingKeys as string[]}
+              onChange={(selected) => setRankingKeys(selected as typeof rankingKeys)}
+            />
+          </Box>
+
+          <SportRulesSection
+            sportId={sportId}
+            rule={sport.rules?.[0]?.id ? { id: sport.rules[0].id, rule: sport.rules[0].rule } : null}
+          />
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
+              onClick={() => setDeleteDialogOpen(true)}
+              sx={DELETE_BUTTON_SX}
+            >
+              この競技を削除
+            </Button>
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<CheckIcon />}
+              onClick={handleSaveWithToast}
+              disabled={!dirty || !name.trim()}
+              sx={SAVE_BUTTON_SX}
+            >
+              保存
+            </Button>
+          </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="競技を削除しますか？"
+        description={`「${sport.name}」を削除します。この操作は元に戻せません。`}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={onConfirmDelete}
+      />
+    </Box>
+  )
+}

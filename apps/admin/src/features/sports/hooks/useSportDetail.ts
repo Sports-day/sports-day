@@ -1,0 +1,192 @@
+import { useState, useEffect, useMemo, useRef } from 'react'
+import {
+  useGetAdminSportQuery,
+  useGetAdminSportsQuery,
+  useUpdateAdminSportMutation,
+  useDeleteAdminSportMutation,
+  useSetAdminRankingRulesMutation,
+  useGetAdminScenesForSportsQuery,
+  useAddAdminSportScenesMutation,
+  useDeleteAdminSportSceneMutation,
+  GetAdminSportsDocument,
+  RankingConditionKey,
+} from '@/gql/__generated__/graphql'
+import { useImages } from '@/features/images/hooks/useImages'
+
+const RANKING_CONDITION_OPTIONS: { value: RankingConditionKey; label: string }[] = [
+  { value: RankingConditionKey.WinPoints, label: '勝ち点' },
+  { value: RankingConditionKey.GoalDiff, label: '得失点差' },
+  { value: RankingConditionKey.TotalGoals, label: '総得点' },
+  { value: RankingConditionKey.HeadToHead, label: '直接対決' },
+  { value: RankingConditionKey.AdminDecision, label: '管理者判定' },
+]
+
+type SportSceneEntry = { sportSceneId: string; sceneId: string }
+
+type Snapshot = {
+  name: string
+  weight: number
+  rankingKeys: RankingConditionKey[]
+  imageId: string | null
+  sceneIds: string[]
+  sportScenes: SportSceneEntry[]
+}
+
+const EMPTY: Snapshot = { name: '', weight: 0, rankingKeys: [], imageId: null, sceneIds: [], sportScenes: [] }
+
+export function useSportDetail(sportId: string, onDelete: () => void) {
+  const { data, loading, error, refetch } = useGetAdminSportQuery({ variables: { id: sportId } })
+  const { data: allSportsData } = useGetAdminSportsQuery()
+  const { data: images } = useImages()
+  const sport = data?.sport
+
+  // フォーム状態
+  const [name, setName] = useState('')
+  const [weight, setWeight] = useState(0)
+  const [rankingKeys, setRankingKeys] = useState<RankingConditionKey[]>([])
+  const [imageId, setImageId] = useState<string | null>(null)
+  const [sceneIds, setSceneIds] = useState<string[]>([])
+
+  // 「最後に保存された状態」— dirty検出に使用
+  const [saved, setSaved] = useState<Snapshot>(EMPTY)
+
+  // シーン一覧
+  const { data: scenesData } = useGetAdminScenesForSportsQuery()
+  const allScenes = useMemo(() => (scenesData?.scenes ?? []).filter(s => !s.isDeleted), [scenesData])
+
+  // 初回のみAPIデータでフォームを初期化（保存中のリセットを防ぐ）
+  const initialized = useRef(false)
+  useEffect(() => {
+    if (!sport || initialized.current) return
+    initialized.current = true
+    const sorted = [...(sport.rankingRules ?? [])].sort((a, b) => a.priority - b.priority)
+    const sportScenes: SportSceneEntry[] = (sport.scene ?? []).map(ss => ({
+      sportSceneId: ss.id,
+      sceneId: ss.scene.id,
+    }))
+    const snap: Snapshot = {
+      name: sport.name,
+      weight: sport.weight,
+      rankingKeys: sorted.map(r => r.conditionKey),
+      imageId: sport.image?.id ?? null,
+      sceneIds: sportScenes.map(ss => ss.sceneId),
+      sportScenes,
+    }
+    setName(snap.name)
+    setWeight(snap.weight)
+    setRankingKeys(snap.rankingKeys)
+    setImageId(snap.imageId)
+    setSceneIds(snap.sceneIds)
+    setSaved(snap)
+  }, [sport])
+
+  // dirty = フォーム現在値と最後に保存された値の比較
+  const dirty = name !== saved.name
+    || weight !== saved.weight
+    || imageId !== saved.imageId
+    || JSON.stringify([...sceneIds].sort()) !== JSON.stringify([...saved.sceneIds].sort())
+    || JSON.stringify(rankingKeys) !== JSON.stringify(saved.rankingKeys)
+
+  const usedImageIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const s of allSportsData?.sports ?? []) {
+      if (s.id !== sportId && s.image?.id) {
+        ids.add(s.image.id)
+      }
+    }
+    return ids
+  }, [allSportsData, sportId])
+
+  // ミューテーション
+  const [updateSport] = useUpdateAdminSportMutation()
+  const [deleteSport] = useDeleteAdminSportMutation({
+    refetchQueries: [{ query: GetAdminSportsDocument }],
+  })
+  const [doSetRankingRules] = useSetAdminRankingRulesMutation()
+  const [addSportScenes] = useAddAdminSportScenesMutation()
+  const [deleteSportScene] = useDeleteAdminSportSceneMutation()
+
+  const handleSave = async () => {
+    // クロージャの値をローカル変数に固定
+    const n = name
+    const w = weight
+    const img = imageId
+    const rk = [...rankingKeys]
+    const sIds = [...sceneIds]
+    const prev = { ...saved }
+
+    // 1) 基本フィールド保存
+    await updateSport({
+      variables: { id: sportId, input: { name: n, weight: w, imageId: img } },
+    })
+
+    // 2) 採点方式保存
+    await doSetRankingRules({
+      variables: {
+        sportId,
+        rules: rk.map((key, i) => ({ conditionKey: key, priority: i + 1 })),
+      },
+    })
+
+    // 3) シーン保存（差分のみ）
+    const prevSceneIdSet = new Set(prev.sceneIds)
+    const newSceneIdSet = new Set(sIds)
+
+    // 削除: 以前あったが今はないもの
+    const toDelete = prev.sportScenes.filter(ss => !newSceneIdSet.has(ss.sceneId))
+    for (const ss of toDelete) {
+      await deleteSportScene({ variables: { id: ss.sportSceneId } })
+    }
+
+    // 追加: 今あるが以前なかったもの
+    const toAdd = sIds.filter(id => !prevSceneIdSet.has(id))
+    for (const sceneId of toAdd) {
+      await addSportScenes({ variables: { id: sceneId, input: { sportIds: [sportId] } } })
+    }
+
+    // 4) refetchしてsportSceneを最新化
+    const { data: refreshed } = await refetch()
+    const newSportScenes: SportSceneEntry[] = (refreshed?.sport?.scene ?? []).map(ss => ({
+      sportSceneId: ss.id,
+      sceneId: ss.scene.id,
+    }))
+
+    // 5) savedをフォーム値で更新 → dirty = false
+    setSaved({
+      name: n,
+      weight: w,
+      imageId: img,
+      sceneIds: sIds,
+      rankingKeys: rk,
+      sportScenes: newSportScenes,
+    })
+  }
+
+  const handleDelete = async () => {
+    await deleteSport({ variables: { id: sportId } })
+    onDelete()
+  }
+
+  return {
+    sport,
+    name,
+    setName,
+    weight,
+    setWeight,
+    imageId,
+    setImageId,
+    images,
+    usedImageIds,
+    rankingKeys,
+    setRankingKeys,
+    rankingConditionOptions: RANKING_CONDITION_OPTIONS,
+    sceneIds,
+    setSceneIds,
+    allScenes,
+    dirty,
+    handleSave,
+    handleDelete,
+    loading,
+    error: error ?? null,
+  }
+}
