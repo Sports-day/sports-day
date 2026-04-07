@@ -94,7 +94,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
                             <Box
                               component="img"
                               src={image.url}
-                              alt={image.name}
+                              alt={image.id}
                               sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                             />
@@ -102,7 +102,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
                         </Box>
                       </TableCell>
                       <TableCell sx={CLICKABLE_CELL_SX}>{image.id}</TableCell>
-                      <TableCell sx={CLICKABLE_CELL_SX}>{image.name}</TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX}>{image.status}</TableCell>
                       <TableCell sx={CLICKABLE_CELL_SX}>{image.url}</TableCell>
                     </TableRow>
                   ))

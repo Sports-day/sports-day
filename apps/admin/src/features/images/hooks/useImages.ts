@@ -1,11 +1,12 @@
 import { useGetAdminImagesQuery } from '@/gql/__generated__/graphql'
+import type { Image } from '../types'
 
 export function useImages() {
   const { data, loading, error } = useGetAdminImagesQuery()
-  const images = (data?.images ?? []).map(i => ({
+  const images: Image[] = (data?.images ?? []).map(i => ({
     id: i.id,
-    name: '', // 【未確定】GraphQL Image に name はない
     url: i.url ?? '',
+    status: i.status,
   }))
   return { data: images, loading, error: error ?? null }
 }

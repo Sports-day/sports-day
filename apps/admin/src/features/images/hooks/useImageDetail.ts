@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   useGetAdminImageQuery,
   useDeleteAdminImageMutation,
@@ -9,34 +9,26 @@ export function useImageDetail(imageId: string) {
   const { data, loading, error } = useGetAdminImageQuery({ variables: { id: imageId } })
   const image = data?.image
 
-  const [name, setName] = useState('') // 【未確定】GraphQL Image に name はない
-  const [url, setUrl] = useState('')
-
-  useEffect(() => {
-    if (image?.url !== undefined) setUrl(image.url ?? '')
-  }, [image?.url])
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [deleteImage] = useDeleteAdminImageMutation({
     refetchQueries: [{ query: GetAdminImagesDocument }],
   })
 
-  const handleSave = () => {
-    // 【未確定】GraphQL に updateImage ミューテーションはない
-  }
-
   const handleDelete = async () => {
-    await deleteImage({ variables: { id: imageId } })
+    try {
+      await deleteImage({ variables: { id: imageId } })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+    }
   }
 
   return {
-    name,
-    setName,
-    url,
-    setUrl,
-    handleSave,
+    url: image?.url ?? '',
+    status: image?.status ?? '',
     handleDelete,
-    imageName: '', // 【未確定】GraphQL Image に name はない
     loading,
-    error: error ?? null,
+    error: error ?? mutationError,
   }
 }
