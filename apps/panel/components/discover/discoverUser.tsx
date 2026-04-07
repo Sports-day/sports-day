@@ -9,31 +9,37 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import {HiOutlineExclamationTriangle, HiUser} from "react-icons/hi2";
-import type { User, Competition, Team, Match } from "@/src/gql/__generated__/graphql";
+import type { GetPanelUsersQuery, GetPanelCompetitionsQuery, GetPanelTeamsQuery, GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import {UserMatchList} from "@/components/match/userMatchList";
 import {useFetchSports} from "@/src/features/sports/hook";
-import {useFetchImages} from "@/src/features/images/hook";
 
+type PanelUser = GetPanelUsersQuery["users"][number];
+type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
+type PanelTeam = GetPanelTeamsQuery["teams"][number];
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
 
 export type DiscoverUserProps = {
-    user: User
-    games: Competition[]
-    teams: Team[]
-    matches: Match[]
+    user: PanelUser
+    games: PanelCompetition[]
+    teams: PanelTeam[]
+    matches: PanelMatch[]
 }
 
 export const DiscoverUser = (props: DiscoverUserProps) => {
     const theme = useTheme();
     const [open, toggleDrawer] = React.useState(false);
     // Find the team that the user belongs to
-    const userTeam = props.teams.find(team => team.userIds.includes(props.user.id));
-    const userMatches = props.matches.filter(match => match.leftTeamId === userTeam?.id || match.rightTeamId === userTeam?.id);
-    const userMatchSportIds = userMatches.map(match => match.sportId);
-    const {sports, isFetching: isFetchingSports} = useFetchSports();
-    const userMatchSports = sports.filter(sport => userMatchSportIds.includes(sport.id));
+    const userTeam = props.teams.find(team => team.users.some(u => u.id === props.user.id));
+    const userMatches = props.matches.filter(match => {
+        const teamIds = match.entries.map(e => e.team?.id);
+        return teamIds.includes(userTeam?.id);
+    });
+    const userMatchSceneIds = userMatches.map(match => match.competition.scene.id);
+    const {sports} = useFetchSports();
+    const userMatchSports = sports.filter(sport =>
+        sport.scene?.some(ss => userMatchSceneIds.includes(ss.scene.id))
+    );
     const userMatchSport = userMatchSports[0];
-    const {images, isFetching: isFetchingImages} = useFetchImages();
-    const icon = images.find(image => image.id === userMatchSport?.iconId)
 
     return(
         <>
@@ -63,9 +69,8 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                             width: "1.5em",
                             backgroundColor: theme.palette.text.secondary,
                         }}
-                        src={`${import.meta.env.VITE_API_URL}/images/${props.user?.pictureId}/file`}
                     >
-                        {props.user?.pictureId === null && <HiUser/>}
+                        <HiUser/>
                     </Avatar>
                     <Typography color={theme.palette.text.primary}>
                         {props.user.name}
@@ -119,9 +124,7 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                                 width: "1.5em",
                                                 backgroundColor: theme.palette.text.secondary,
                                             }}
-                                            // src={`${import.meta.env.VITE_API_URL}/images/${props.user?.pictureId}/file`}
                                         >
-                                            {/*{props.user?.pictureId === null && <HiUser/>}*/}
                                             <HiUser/>
                                         </Avatar>
                                         <Typography color={theme.palette.text.primary}>
@@ -140,23 +143,23 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                             height: "2em", width: "2em",
                                             backgroundColor: `${theme.palette.text.secondary}`,
                                         }}
-                                        src={`${import.meta.env.VITE_API_URL}/images/${userMatchSport?.iconId}/file`}
+                                        src={userMatchSport?.image?.url ?? undefined}
                                     >
-                                        {!userMatchSport?.iconId && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
+                                        {!userMatchSport?.image && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                                     </Avatar>
                                     <Stack>
                                         <Typography fontSize={"14px"} sx={{color: theme.palette.text.primary}}>
                                             {props.user.name}の競技
                                         </Typography>
                                         {userMatchSports.map((sport, index) => (
-                                            <Typography fontSize={"14px"} fontWeight={"600"}　key={index}>
+                                            <Typography fontSize={"14px"} fontWeight={"600"} key={index}>
                                                 {sport.name}
                                             </Typography>
                                         ))}
                                     </Stack>
                                 </Stack>
                             </Card>
-                            <UserMatchList userId={props.user?.id}/>
+                            <UserMatchList userId={props.user.id}/>
                         </Stack>
                     </Container>
                 </Box>

@@ -7,9 +7,7 @@ import {
     Typography,
 } from "@mui/material";
 import * as React from "react";
-import {useContext} from "react";
-import {LocationsContext, TeamsContext} from "../../context";
-import type { Match } from "@/src/gql/__generated__/graphql";
+import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import {
     HiClock,
     HiMapPin,
@@ -17,31 +15,29 @@ import {
 import {useTheme} from "@mui/material/styles";
 import {MatchDetail} from "@/components/game/GameList/matchDetail";
 
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
+
 export type ScheduleContentProps = {
-    match: Match;
-    myTeamId: number;
+    match: PanelMatch;
 }
 
 export const ScheduleContent = (props: ScheduleContentProps) => {
     const theme = useTheme();
-    //  context
-    const {data: locations} = useContext(LocationsContext)
-    const {data: teams} = useContext(TeamsContext)
-
     const [open, toggleDrawer] = React.useState(false);
 
+    const leftEntry = props.match.entries[0];
+    const rightEntry = props.match.entries[1];
+    const leftTeamName = leftEntry?.team?.name ?? null;
+    const rightTeamName = rightEntry?.team?.name ?? null;
+
     //  team is null
-    if (!props.match.leftTeamId || !props.match.rightTeamId) return null;
-    //  get left team
-    const leftTeamModel = teams.find(team => team.id === props.match.leftTeamId);
-    // get right team
-    const rightTeamModel = teams.find(team => team.id === props.match.rightTeamId);
-    //  get time and location
-    const formattedTime = new Date(props.match.startAt).toLocaleTimeString("ja-JP", {
+    if (!leftTeamName || !rightTeamName) return null;
+
+    //  time and location from match
+    const formattedTime = new Date(props.match.time).toLocaleTimeString("ja-JP", {
         hour: '2-digit',
         minute: '2-digit'
     });
-    const locationModel = locations.find(location => location.id === props.match.locationId)
 
     return (
         <>
@@ -75,7 +71,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                             alignItems={"center"}
                         >
                             <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                                {rightTeamModel?.name}
+                                {rightTeamName}
                             </Typography>
                             <Box
                                 sx={{
@@ -93,7 +89,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                             </Box>
                         </Stack>
                         <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                            {leftTeamModel?.name}
+                            {leftTeamName}
                         </Typography>
                     </Stack>
 
@@ -127,7 +123,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                                 <HiMapPin color={theme.palette.text.secondary}/>
                             </SvgIcon>
                             <Typography sx={{color: theme.palette.text.primary, fontSize: "14px"}}>
-                                {locationModel?.name}
+                                {props.match.location?.name ?? "未登録"}
                             </Typography>
                         </Stack>
                     </Stack>
@@ -150,4 +146,3 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
         </>
     )
 }
-

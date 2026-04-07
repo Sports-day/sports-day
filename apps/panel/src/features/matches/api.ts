@@ -32,6 +32,7 @@ export const GET_MATCHES = gql`
       judgment {
         team {
           id
+          name
         }
       }
     }

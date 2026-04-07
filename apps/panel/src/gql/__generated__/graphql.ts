@@ -1247,7 +1247,7 @@ export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typena
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', team?: { __typename?: 'Team', id: string } | null } | null }> };
+export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', team?: { __typename?: 'Team', id: string, name: string } | null } | null }> };
 
 export type GetPanelMatchQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1901,6 +1901,7 @@ export const GetPanelMatchesDocument = gql`
     judgment {
       team {
         id
+        name
       }
     }
   }

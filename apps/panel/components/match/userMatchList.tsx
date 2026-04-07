@@ -1,40 +1,39 @@
 import {useContext} from "react";
-import {MatchesContext} from "../context";
+import {MatchesContext, TeamsContext} from "../context";
 import {GamePointBar} from "@/components/game/GameList/GamePointBar";
 import {Stack} from "@mui/material";
-import {useFetchTeams} from "@/src/features/teams/hook";
+import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
+
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
 
 export type UserMatchListProps = {
-    userId: number
+    userId: string
 }
 
 export const UserMatchList = (props: UserMatchListProps) => {
     const { data: matches } = useContext(MatchesContext)
-    const {teams, isFetching: isTeamFetching, refresh: refreshTeam} = useFetchTeams()
-    const userTeam = teams.find(team => team.userIds.includes(props.userId))
-    const filteredMatches = matches.filter(match => match.leftTeamId === userTeam?.id || match.rightTeamId === userTeam?.id || match.judgeTeamId === userTeam?.id)
-    const maxLeftScore = Math.max.apply(Math, filteredMatches.map(match => match.leftScore))
-    const maxRightScore = Math.max.apply(Math, filteredMatches.map(match => match.rightScore))
-    const maxScore = maxLeftScore > maxRightScore ? maxLeftScore : maxRightScore
+    const { data: teams } = useContext(TeamsContext)
+    const userTeam = teams.find(team => team.users.some(u => u.id === props.userId))
+    const filteredMatches = (matches as PanelMatch[]).filter(match => {
+        const teamIds = match.entries.map(e => e.team?.id)
+        const judgeTeamId = match.judgment?.team?.id
+        return teamIds.includes(userTeam?.id) || judgeTeamId === userTeam?.id
+    })
+    const allScores = filteredMatches.flatMap(match => match.entries.map(e => e.score))
+    const maxScore = allScores.length > 0 ? Math.max(...allScores) : 0
     const barOffset = (maxScore == 0) ? 1 : (95 / maxScore)
 
     return (
         <Stack spacing={1}>
             {filteredMatches
-                .sort((a, b) => a.startAt.localeCompare(b.startAt))
+                .sort((a, b) => a.time.localeCompare(b.time))
                 .map((match) => {
                     return (
                         <>
                             <GamePointBar
                                 key={match.id}
-                                leftScore={match.leftScore}
-                                rightScore={match.rightScore}
-                                leftTeamId={match.leftTeamId}
-                                rightTeamId={match.rightTeamId}
-                                umpireTeam={match.judgeTeamId?.toString() ?? ""}
-                                time={match.startAt}
-                                barOffset={barOffset}
                                 match={match}
+                                barOffset={barOffset}
                                 myTeamId={userTeam?.id}
                                 otherUser={true}
                             />

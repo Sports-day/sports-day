@@ -33,6 +33,8 @@ export type TeamSetsInMyClassResponse = {
   isSuccessful: boolean;
   myClass: GqlGroup | undefined; // class = group の同義語
   users: GqlUser[];
+  teams: GqlTeam[];
+  matches: GqlMatch[];
   matchSets: MatchSet[];
 };
 
@@ -119,7 +121,9 @@ export const useFetchTeamSetsInMyClass = () => {
     isFetching,
     isSuccessful: isSuccessfulState,
     myClass: myClassState,
-    users: users,
+    users,
+    teams,
+    matches,
     matchSets: matchSetListState,
   } as TeamSetsInMyClassResponse;
 };

@@ -1,12 +1,13 @@
 import {Avatar, Box, Button, Stack, Typography, useTheme} from "@mui/material";
-import type { Sport } from "@/src/gql/__generated__/graphql";
+import type { GetPanelSportsQuery } from "@/src/gql/__generated__/graphql";
+type PanelSport = GetPanelSportsQuery["sports"][number];
 import { Link } from "react-router-dom";
 import {HiOutlineExclamationTriangle} from "react-icons/hi2";
 import * as React from "react";
 
 
 export type SportsListElementProps = {
-    sport: Sport;
+    sport: PanelSport;
 }
 
 export const SportsListElement = (props: SportsListElementProps) => {
@@ -35,9 +36,9 @@ export const SportsListElement = (props: SportsListElementProps) => {
                         sx={{height: "2em", width: "2em",
                             backgroundColor: theme.palette.text.secondary,
                         }}
-                        src={`${import.meta.env.VITE_API_URL}/images/${props.sport.iconId}/file`}
+                        src={props.sport.image?.url ?? undefined}
                     >
-                        {!props.sport.iconId && <HiOutlineExclamationTriangle fontSize={"20px"}/>}
+                        {!props.sport.image && <HiOutlineExclamationTriangle fontSize={"20px"}/>}
                     </Avatar>
                     <Typography color={theme.palette.text.primary}>
                         {props.sport.name}

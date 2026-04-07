@@ -2,62 +2,66 @@ import { Grid as Grid2 } from "@mui/material";
 import {Card, Stack, SvgIcon, Typography} from "@mui/material";
 import {HiChartBar} from "react-icons/hi2";
 import * as React from "react";
-import {useState} from "react";
-import type { Competition as Game, Team } from "@/src/gql/__generated__/graphql";
+import {useState, useEffect} from "react";
+import type { GetPanelCompetitionsQuery } from "@/src/gql/__generated__/graphql";
+import {
+    CompetitionType,
+    GetPanelLeagueStandingsDocument,
+    type GetPanelLeagueStandingsQuery,
+} from "@/src/gql/__generated__/graphql";
+import { useApolloClient } from "@apollo/client";
+import {useFetchTeams} from "@/src/features/teams/hook";
 
-// 【未確定】REST → GraphQL 移行中
-type LeagueTeamResult = { teamId: string; score: number; rank: number }
-type LeagueResult = { gameId: string; finished: boolean; teams: LeagueTeamResult[]; createdAt: string }
-import {useAsync} from "react-use";
+type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
 
 export type Top3LeagueCardsProps = {
-    games: Game[]
+    games: PanelCompetition[]
 }
 
-type ExtendedLeagueTeamResult = {
-    game: Game,
-    team: Team
-    teamResult: LeagueTeamResult
+type ExtendedStandingResult = {
+    game: PanelCompetition,
+    teamName: string,
+    score: number,
+    rank: number,
 }
 
 export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
-    const [results, setResults] = useState<ExtendedLeagueTeamResult[]>([])
+    const [results, setResults] = useState<ExtendedStandingResult[]>([])
+    const client = useApolloClient();
+    const { teams } = useFetchTeams();
 
-    useAsync(async () => {
-        // 【未確定】leagueStandings GraphQL クエリへの移行は後続タスクで対応
-        const teams: Team[] = await (async () => [])()
+    useEffect(() => {
+        const leagueGames = props.games.filter(g => g.type === CompetitionType.League && g.league?.id);
+        if (leagueGames.length === 0) return;
 
-        const leagueResults: LeagueResult[] = []
-        for (const game of props.games) {
-            const leagueResult: LeagueResult = await (async () => ({teams: [], createdAt: "", finished: false, gameId: game.id}))()
-            leagueResults.push(leagueResult)
-        }
-
-        const extendedLeagueResults: ExtendedLeagueTeamResult[] = []
-        for (const leagueResult of leagueResults) {
-            leagueResult.teams.forEach((value) => {
-                const team = teams.find(v => v.id == value.teamId)
-                const game = props.games.find(v => v.id == leagueResult.gameId)
-
-                if (!team || !game) {
-                    return
-                }
-
-                extendedLeagueResults.push({
-                    game: game,
-                    team: team,
-                    teamResult: value
-                })
+        Promise.all(
+            leagueGames.map(async (game) => {
+                const leagueId = game.league!.id;
+                const { data } = await client.query<GetPanelLeagueStandingsQuery>({
+                    query: GetPanelLeagueStandingsDocument,
+                    variables: { leagueId },
+                });
+                return { game, standings: data?.leagueStandings ?? [] };
             })
-        }
-
-        //  sort
-        extendedLeagueResults.sort((a, b) =>
-            b.teamResult.score - a.teamResult.score
-        )
-
-        setResults(extendedLeagueResults.slice(0, 3))
-    })
+        ).then((allResults) => {
+            const extended: ExtendedStandingResult[] = [];
+            for (const { game, standings } of allResults) {
+                for (const standing of standings) {
+                    const team = teams.find(t => t.id === standing.team.id);
+                    const totalMatches = standing.win + standing.draw + standing.lose;
+                    const winRate = totalMatches > 0 ? standing.points / (totalMatches * 3) : 0;
+                    extended.push({
+                        game,
+                        teamName: team?.name ?? "不明",
+                        score: winRate,
+                        rank: standing.rank,
+                    });
+                }
+            }
+            extended.sort((a, b) => b.score - a.score);
+            setResults(extended.slice(0, 3));
+        });
+    }, [props.games, teams, client]);
 
 
     return (
@@ -100,7 +104,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
 
                         </Stack>
                         <Typography variant="h3" component="div" textAlign="center">
-                            {results[1]?.team.name ?? "なし"}
+                            {results[1]?.teamName ?? "なし"}
                         </Typography>
 
                     </Stack>
@@ -144,7 +148,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
 
                         </Stack>
                         <Typography variant="h3" component="div" textAlign="center">
-                            {results[0]?.team.name ?? "なし"}
+                            {results[0]?.teamName ?? "なし"}
                         </Typography>
 
                     </Stack>
@@ -188,7 +192,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
 
                         </Stack>
                         <Typography variant="h3" component="div" textAlign="center">
-                            {results[2]?.team.name ?? "なし"}
+                            {results[2]?.teamName ?? "なし"}
                         </Typography>
 
                     </Stack>

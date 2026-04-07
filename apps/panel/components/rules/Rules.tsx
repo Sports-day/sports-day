@@ -1,26 +1,43 @@
 import React from 'react';
-import {RuleBeachball} from "./RuleBeachball";
-import {RuleBasketball} from "./RuleBasketball"
-import {RuleDodgeBall} from "@/components/rules/RuleDodgeBall";
-import {RuleSoccer} from "@/components/rules/RuleSoccer";
-import {RuleDodgebee} from "@/components/rules/RuleDodgebee";
-import {RuleBadminton} from "@/components/rules/RuleBadminton";
-import {RuleFutsal} from "@/components/rules/RuleFutsal";
-import {RuleStrackout} from "@/components/rules/RuleStrackout";
-import {RulePetanque} from "@/components/rules/RulePetanque";
+import {Stack, DialogContentText, Typography, useTheme} from "@mui/material";
+import ReactMarkdown from "react-markdown";
 
 export type RuleProps = {
-    ruleId: number;
+    rules: Array<{ id?: string | null; rule: string }>;
 }
 
 export const Rules = (props: RuleProps) => {
-    const {ruleId} = props;
-    if (ruleId === 1){return <RuleBeachball/>}
-    if (ruleId === 2){return <RuleDodgebee/>}
-    if (ruleId === 3){return <RuleBadminton/>}
-    if (ruleId === 4){return <RuleFutsal/>}
-    if (ruleId === 5){return <RuleStrackout/>}
-    if (ruleId === 6){return <RulePetanque/>}
+    const theme = useTheme();
 
-    return(<> </>)
+    if (props.rules.length === 0) {
+        return (
+            <Typography color={theme.palette.text.secondary}>
+                ルールが登録されていません。
+            </Typography>
+        );
+    }
+
+    return (
+        <Stack
+            direction={"column"}
+            justifyContent={"flex-start"}
+            alignItems={"flex-start"}
+            spacing={2}
+            py={2}
+            sx={{width: "100%"}}
+        >
+            {props.rules.map((rule, index) => (
+                <DialogContentText
+                    key={rule.id ?? index}
+                    id="scroll-dialog-description"
+                    tabIndex={-1}
+                    color={theme.palette.text.primary}
+                    lineHeight={"27px"}
+                    sx={{width: "100%"}}
+                >
+                    <ReactMarkdown>{rule.rule}</ReactMarkdown>
+                </DialogContentText>
+            ))}
+        </Stack>
+    );
 }

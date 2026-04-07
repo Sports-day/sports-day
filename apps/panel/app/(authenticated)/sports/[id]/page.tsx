@@ -23,15 +23,17 @@ import {
 } from "react-icons/hi2";
 import * as React from "react";
 import {GameList} from "@/components/game/GameList"
-import {GamesContext, LocationsContext, MatchesContext, TeamsContext} from "@/components/context";
-import {useEffect, useState} from "react";
+import {GamesContext, LocationsContext, MatchesContext, TeamsContext, UsersContext} from "@/components/context";
+import {useMemo, useEffect, useState} from "react";
 import {DialogProps} from '@mui/material/Dialog';
 import {Rules} from "@/components/rules/Rules";
 import {useInterval} from "react-use";
-import {useFetchSport, useFetchSportGames} from "@/src/features/sports/hook";
+import {useFetchSport} from "@/src/features/sports/hook";
+import {useFetchGames} from "@/src/features/games/hook";
 import {useFetchTeams} from "@/src/features/teams/hook";
 import {useFetchLocations} from "@/src/features/locations/hook";
 import {useFetchMatches} from "@/src/features/matches/hook";
+import {useFetchUsers} from "@/src/features/users/hook";
 import {useFetchUserinfo} from "@/src/features/userinfo/hook";
 import CircleContainer from "@/components/layouts/circleContainer";
 import {motion} from "framer-motion";
@@ -41,30 +43,55 @@ const REFRESH_INTERVAL = 1000 * 60 * 5
 
 export default function Page() {
     const { id } = useParams<{ id: string }>()
+    const sportId = id ?? '0'
     const theme = useTheme()
     //  fetch
-    const {sport, isFetching: isSportFetching, refresh: refreshSport} = useFetchSport(+(id ?? '0'))
-    const {games, isFetching: isGameFetching, refresh: refreshGame} = useFetchSportGames(+(id ?? '0'), true)
+    const {sport, isFetching: isSportFetching, refresh: refreshSport} = useFetchSport(sportId)
+    const {games: allGames, isFetching: isGameFetching, refresh: refreshGame} = useFetchGames()
     const {matches, isFetching: isMatchesFetching, refresh: refreshMatches} = useFetchMatches()
     const {teams, isFetching: isTeamFetching, refresh: refreshTeam} = useFetchTeams()
     const {locations, isFetching: isLocationsFetching, refresh: refreshLocations} = useFetchLocations()
+    const {users, isFetching: isUsersFetching, refresh: refreshUsers} = useFetchUsers()
     const {user, isFetching: isUserFetching} = useFetchUserinfo()
-    const myTeams = teams.filter(team => team.userIds.includes(Number(user?.id)))
-    const myGames = games.filter(game => myTeams.some(team => team.enteredGameIds.includes(game.id)))
-    myGames.sort((a, b) => b.weight - a.weight)
+
+    // sport.scene のシーンIDに一致するgamesをフィルタ
+    const games = useMemo(() => {
+        const sceneIds = new Set((sport?.scene ?? []).map(ss => ss.scene.id))
+        return allGames.filter(game => sceneIds.has(game.scene.id))
+    }, [allGames, sport])
+
+    // ユーザーのチームを取得
+    const myTeams = useMemo(() =>
+        teams.filter(team => team.users.some(u => u.id === user?.id)),
+    [teams, user])
+
+    // ユーザーが参加しているゲーム（チームがcompetitionにエントリーされている）
+    const myGames = useMemo(() => {
+        const myTeamIds = new Set(myTeams.map(t => t.id))
+        return games.filter(game =>
+            game.teams.some(t => myTeamIds.has(t.id))
+        )
+    }, [games, myTeams])
+
     const myGame = myGames[0]
-    const myTeam = myTeams.find(team => team.enteredGameIds.includes(myGame?.id))
+    const myTeam = useMemo(() => {
+        if (!myGame) return undefined
+        const gameTeamIds = new Set(myGame.teams.map(t => t.id))
+        return myTeams.find(team => gameTeamIds.has(team.id))
+    }, [myGame, myTeams])
+
     //  state
     const [open, setOpen] = useState(false);
     const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
-    const [focusedGameId, setFocusedGameId] = useState<number | null>(null)
+    const [focusedGameId, setFocusedGameId] = useState<string | null>(null)
 
-    const isFetching = isSportFetching || isGameFetching || isTeamFetching || isLocationsFetching || isMatchesFetching || isUserFetching
+    const isFetching = isSportFetching || isGameFetching || isTeamFetching || isLocationsFetching || isMatchesFetching || isUsersFetching || isUserFetching
     const refresh = () => {
         refreshSport()
         refreshGame()
         refreshTeam()
         refreshLocations()
+        refreshUsers()
         refreshMatches()
     }
 
@@ -151,6 +178,13 @@ export default function Page() {
                                 }
                             }}
                         >
+                            <UsersContext.Provider
+                                value={{
+                                    data: users,
+                                    refresh: () => {
+                                    }
+                                }}
+                            >
                             <Box
                                 component={"main"}
                                 minHeight={"96vh"}
@@ -179,9 +213,9 @@ export default function Page() {
                                             <Avatar
                                                 alt={sport.name}
                                                 sx={{height: "2.5em", width: "2.5em"}}
-                                                src={`${import.meta.env.VITE_API_URL}/images/${sport.iconId}/file`}
+                                                src={sport.image?.url ?? undefined}
                                             >
-                                                {!sport.iconId && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
+                                                {!sport.image && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                                             </Avatar>
                                             <Typography sx={{
                                                 color: theme.palette.text.primary,
@@ -337,7 +371,7 @@ export default function Page() {
                                     <DialogTitle id="scroll-dialog-title" fontSize={"16px"}
                                                  color={theme.palette.text.primary}>{sport.name}のルール</DialogTitle>
                                     <DialogContent dividers={scroll === 'paper'}>
-                                        <Rules ruleId={sport.ruleId}/>
+                                        <Rules rules={sport.rules ?? []}/>
                                     </DialogContent>
                                     <DialogActions sx={{mb:3}}>
                                         <Stack
@@ -371,6 +405,7 @@ export default function Page() {
                                 </Container>
 
                             </Box>
+                            </UsersContext.Provider>
                         </LocationsContext.Provider>
                     </TeamsContext.Provider>
                 </MatchesContext.Provider>

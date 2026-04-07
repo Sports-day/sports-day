@@ -15,23 +15,26 @@ import {HiXMark, HiClock} from "react-icons/hi2";
 import {Fragment} from "react";
 import * as React from "react";
 
-import type { Image, Location, User } from "@/src/gql/__generated__/graphql"
+import type { GetPanelImagesQuery, GetPanelLocationsQuery, GetPanelUsersQuery } from "@/src/gql/__generated__/graphql"
 import {MatchSet} from "@/src/features/unit/discover";
 
+type PanelUser = GetPanelUsersQuery["users"][number];
+type PanelImage = GetPanelImagesQuery["images"][number];
+type PanelLocation = GetPanelLocationsQuery["locations"][number];
 
 export type DiscoverTeamContentProps = {
     matchSet: MatchSet
-    images: Image[]
-    locations: Location[]
-    users: User[]
+    images: PanelImage[]
+    locations: PanelLocation[]
+    users: PanelUser[]
 }
 
 export const DiscoverTeamContent = (props:DiscoverTeamContentProps) => {
     const theme = useTheme();
     const [open, toggleDrawer] = React.useState(false);
-    const image = props.images.find((v) => v.id === props.matchSet.sport.iconId)
-    const location = props.locations.find((v) => v.id === props.matchSet.match.locationId)
-    const formattedTime = new Date(props.matchSet.match.startAt).toLocaleTimeString("ja-JP", {
+    const image = props.images.find((v) => v.id === props.matchSet.sport.image?.id)
+    const location = props.locations.find((v) => v.id === props.matchSet.match.location?.id)
+    const formattedTime = new Date(props.matchSet.match.time).toLocaleTimeString("ja-JP", {
         hour: '2-digit',
         minute: '2-digit'
     });
@@ -70,7 +73,7 @@ export const DiscoverTeamContent = (props:DiscoverTeamContentProps) => {
                                     <Box sx={{pb:"0.3em"}}>
                                         <Avatar
                                             sx={{height: "1em", width: "1em"}}
-                                            src={image?.data}
+                                            src={image?.url ?? undefined}
                                         >
                                         </Avatar>
                                     </Box>
@@ -154,7 +157,7 @@ export const DiscoverTeamContent = (props:DiscoverTeamContentProps) => {
                             pt={2}
                         >
                             {props.users
-                                .filter(user => user.teamIds.includes(props.matchSet.team.id))
+                                .filter(user => user.teams.some(t => t.id === props.matchSet.team.id))
                                 .map(user => {
                                     return (
                                         <Fragment key={user.id}>
@@ -174,4 +177,3 @@ export const DiscoverTeamContent = (props:DiscoverTeamContentProps) => {
         </>
     )
 }
-

@@ -1,40 +1,42 @@
 import {LeagueRankListCard} from "@/components/game/RankList/LeagueRankListCard";
 import {useTheme, Box, Card, Stack, Typography} from "@mui/material";
-import type { Team } from "@/src/gql/__generated__/graphql";
+import type { GetPanelTeamsQuery } from "@/src/gql/__generated__/graphql";
 import * as React from "react";
-import {useState} from "react";
-import {useAsync} from "react-use";
+import {useContext} from "react";
+import {TeamsContext} from "../../context";
+import {
+    useGetPanelLeagueStandingsQuery,
+} from "@/src/gql/__generated__/graphql";
 
-// 【未確定】leagueStandings GraphQL クエリへの移行は後続タスクで対応
-type LeagueTeamResult = { teamId: string; score: number; rank: number }
-type LeagueResult = { gameId: string; finished: boolean; teams: LeagueTeamResult[]; createdAt: string }
+type PanelTeam = GetPanelTeamsQuery["teams"][number];
 
 export type LeagueRankListProps = {
     dashboard?: boolean,
     myTeamRank?: number,
-    myTeam?: Team,
-    gameId?: string,
+    myTeam?: PanelTeam,
+    leagueId?: string,
 }
 
 export const LeagueRankList = (props: LeagueRankListProps) => {
     const theme = useTheme();
 
-    const [teams, setTeams] = useState<Team[]>([]);
-    const [leagueResult, setLeagueResult] = useState<LeagueResult>({teams: [], createdAt: "", finished: false, gameId: ""});
-    useAsync(async () => {
-        if (!props.gameId) {
-            return;
-        }
+    const {data: teams} = useContext(TeamsContext);
 
-        try {
-            // 【未確定】REST → GraphQL 移行中
-            setTeams(await (async () => [] as Team[])())
-            setLeagueResult(await (async () => ({teams: [], createdAt: "", finished: false, gameId: props.gameId ?? ""}))())
-        } catch (e) {
-            setLeagueResult({teams: [], createdAt: "", finished: false, gameId: ""});
-            setTeams([])
-        }
-    })
+    const { data: standingsData } = useGetPanelLeagueStandingsQuery({
+        variables: { leagueId: props.leagueId ?? "" },
+        skip: !props.leagueId,
+    });
+
+    const standings = standingsData?.leagueStandings ?? [];
+
+    // 勝ち点率の計算: points / (試合数 * 3)
+    const computeWinRate = (s: typeof standings[number]) => {
+        const totalMatches = s.win + s.draw + s.lose;
+        if (totalMatches === 0) return 0;
+        return s.points / (totalMatches * 3);
+    };
+
+    const myStanding = standings.find(s => s.team.id === props.myTeam?.id);
 
     return (
         <>
@@ -90,7 +92,7 @@ export const LeagueRankList = (props: LeagueRankListProps) => {
                                         </Typography>
                                     </Box>
                                     <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                                        {leagueResult.teams.find(team => team.teamId === props.myTeam?.id)?.score.toFixed(3) ?? "---.---"}
+                                        {myStanding ? computeWinRate(myStanding).toFixed(3) : "---.---"}
                                     </Typography>
                                 </Stack>
                             </Stack>
@@ -113,15 +115,15 @@ export const LeagueRankList = (props: LeagueRankListProps) => {
                 <Stack sx={{width: "100%"}} direction={"row"} spacing={0.5}>
                     {/*Ranking List*/}
                     {
-                        leagueResult.teams.map((teamResult) => {
-                            const team = teams.find(value => value.id === teamResult.teamId)
+                        standings.map((standing) => {
+                            const team = teams.find(value => value.id === standing.team.id)
                             return (
                                 <LeagueRankListCard
-                                    key={teamResult.teamId}
-                                    rank={teamResult.rank}
+                                    key={standing.team.id}
+                                    rank={standing.rank}
                                     teamName={team?.name ?? "不明"}
-                                    teamId={teamResult.teamId}
-                                    winRate={teamResult.score}
+                                    teamId={standing.team.id}
+                                    winRate={computeWinRate(standing)}
                                 />
                             )
                         })

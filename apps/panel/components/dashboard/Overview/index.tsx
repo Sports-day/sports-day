@@ -13,7 +13,7 @@ import {
     HiChartBar,
     HiOutlineExclamationTriangle, HiUser
 } from "react-icons/hi2";
-import type { Sport, Team, User, Competition } from "@/src/gql/__generated__/graphql";
+import type { GetPanelSportsQuery, GetPanelTeamsQuery, GetPanelUsersQuery, GetPanelCompetitionsQuery } from "@/src/gql/__generated__/graphql";
 import {Fragment, useState} from "react";
 import * as React from "react";
 import { Link } from "react-router-dom";
@@ -21,12 +21,16 @@ import Rank from "./Rank"
 import {useTheme} from "@mui/material/styles";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
 
+type PanelSport = GetPanelSportsQuery["sports"][number];
+type PanelTeam = GetPanelTeamsQuery["teams"][number];
+type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
+type TeamUser = PanelTeam["users"][number];
 
 export type OverviewProps = {
-    mySport: Sport;
-    myGame: Competition;
-    myTeam: Team;
-    myTeamUsers: User[];
+    mySport: PanelSport;
+    myGame: PanelCompetition;
+    myTeam: PanelTeam;
+    myTeamUsers: TeamUser[];
     myTeamRank: number;
 }
 
@@ -75,9 +79,9 @@ export const Overview = (props: OverviewProps) => {
                                     height: "2.5em", width: "2.5em",
                                     backgroundColor: `${theme.palette.text.secondary}`,
                                 }}
-                                src={`${import.meta.env.VITE_API_URL}/images/${props.mySport.iconId}/file`}
+                                src={props.mySport.image?.url ?? undefined}
                             >
-                                {!props.mySport.iconId && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
+                                {!props.mySport.image && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                             </Avatar>
                             <Stack
                                 direction={"column"}
@@ -212,7 +216,6 @@ export const Overview = (props: OverviewProps) => {
                             </Stack>
 
                             {props.myTeamUsers.map(user => {
-                                const image = `${import.meta.env.VITE_API_URL}/images/${user?.pictureId}/file`
                                 return (
                                     <Fragment key={user.id}>
                                         <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>
@@ -225,9 +228,8 @@ export const Overview = (props: OverviewProps) => {
                                                         width: "1.5em",
                                                         backgroundColor: theme.palette.text.secondary,
                                                     }}
-                                                    src={image}
                                                 >
-                                                    {user?.pictureId === null && <HiUser/>}
+                                                    <HiUser/>
                                                 </Avatar>
                                                 <Typography color={theme.palette.text.primary}>
                                                     {user.name}
@@ -291,7 +293,7 @@ export const Overview = (props: OverviewProps) => {
                                     dashboard={true}
                                     myTeamRank={props.myTeamRank}
                                     myTeam={props.myTeam}
-                                    gameId={props.myGame.id}
+                                    leagueId={props.myGame.league?.id}
                                 />
                             </Stack>
 

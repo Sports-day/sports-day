@@ -136,8 +136,6 @@ export default function Page() {
                                                             {mySport && myGame && myTeam &&　
                                                                 <>
                                                                     <Schedule
-                                                                        sportId={mySport.id}
-                                                                        gameId={myGame.id}
                                                                         matches={myTeamMatches}
                                                                         myTeamId={myTeam.id}
                                                                     />
@@ -156,10 +154,7 @@ export default function Page() {
                                                             </Typography>
                                                             {mySport && myGame && myTeam && myJudgeMatches.length > 0 &&
                                                                 <JudgeSchedule
-                                                                    sportId={mySport.id}
-                                                                    gameId={myGame.id}
                                                                     matches={myJudgeMatches}
-                                                                    myTeamId={myTeam.id}
                                                                 />
                                                             }
                                                             {myJudgeMatches.length === 0 &&

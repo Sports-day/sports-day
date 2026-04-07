@@ -55,28 +55,3 @@ export const GET_SPORT = gql`
     }
   }
 `;
-
-export const GET_SPORT_COMPETITIONS = gql`
-  query GetPanelSportCompetitions($id: ID!) {
-    sport(id: $id) {
-      id
-      scene {
-        id
-        scene {
-          id
-          name
-          sportScenes {
-            id
-          }
-        }
-        entries {
-          id
-          team {
-            id
-            name
-          }
-        }
-      }
-    }
-  }
-`;

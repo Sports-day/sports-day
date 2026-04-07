@@ -12,15 +12,12 @@ import {Loading} from "@/components/layouts/loading";
 import {motion} from "framer-motion";
 import {useFetchLocations} from "@/src/features/locations/hook";
 import {useFetchImages} from "@/src/features/images/hook";
+import {useFetchGames} from "@/src/features/games/hook";
 import {DiscoverTeamContent} from "@/components/discover/DiscoverTeamContent";
 import {OtherInfo} from "@/components/dashboard/Overview/OtherInfo";
 import CircleContainer from "@/components/layouts/circleContainer";
-import {useFetchUsers} from "@/src/features/users/hook";
-import {useFetchTeams} from "@/src/features/teams/hook";
-import {useFetchGames} from "@/src/features/games/hook";
-import {useFetchMatches} from "@/src/features/matches/hook";
 import {DiscoverUser} from "@/components/discover/discoverUser";
-import {MatchesContext, TeamsContext} from "@/components/context";
+import {MatchesContext, TeamsContext, UsersContext} from "@/components/context";
 
 export type TabPanelProps = {
     children?: React.ReactNode;
@@ -65,13 +62,12 @@ export default function DiscoverPage() {
     const {
         isFetching,
         isSuccessful,
+        users,
+        teams,
+        matches,
         matchSets
     } = useFetchTeamSetsInMyClass()
-    const {users, isFetching: isFetchingUsers} = useFetchUsers()
-    const {teams, isFetching: isFetchingTeams} = useFetchTeams()
     const {games, isFetching: isFetchingGames} = useFetchGames()
-    const {matches, isFetching: isFetchingMatches} = useFetchMatches()
-
     const {images, isFetching: isFetchingImages} = useFetchImages()
     const {locations, isFetching: isFetchingLocations} = useFetchLocations()
 
@@ -98,7 +94,7 @@ export default function DiscoverPage() {
                     <Loading/>
                 </motion.div>
             )}
-            {!(isFetching || isFetchingLocations || isFetchingImages) && (
+            {!(isFetching || isFetchingGames || isFetchingLocations || isFetchingImages) && (
                 <>
                     <MatchesContext.Provider
                         value={{
@@ -110,6 +106,13 @@ export default function DiscoverPage() {
                         <TeamsContext.Provider
                             value={{
                                 data: teams,
+                                refresh: () => {
+                                }
+                            }}
+                        >
+                        <UsersContext.Provider
+                            value={{
+                                data: users,
                                 refresh: () => {
                                 }
                             }}
@@ -274,6 +277,7 @@ export default function DiscoverPage() {
 
                             </Container>
                         </Box>
+                        </UsersContext.Provider>
                         </TeamsContext.Provider>
                     </MatchesContext.Provider>
                 </>

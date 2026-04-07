@@ -3,14 +3,16 @@ import * as React from "react";
 import {GameListContent} from "./GameListContent";
 import {useEffect} from "react";
 import {motion} from "framer-motion";
-import type { Competition } from "@/src/gql/__generated__/graphql";
+import type { GetPanelCompetitionsQuery } from "@/src/gql/__generated__/graphql";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
 
+type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
+
 export type GameListProps = {
-    games: Competition[]
-    gameId: number | null
-    setGameId: (gameId: number) => void
-    myTeamId?: number
+    games: PanelCompetition[]
+    gameId: string | null
+    setGameId: (gameId: string) => void
+    myTeamId?: string
 }
 
 export type TabPanelProps = {
@@ -54,7 +56,7 @@ export const GameList = (props: GameListProps) => {
     const theme = useTheme();
     const [value, setValue] = React.useState(0);
 
-    const sortedGame = props.games.sort((a, b) => b.weight - a.weight)
+    const sortedGame = [...props.games]
 
     useEffect(() => {
         //  set tab value if game id not undefined
@@ -129,7 +131,7 @@ export const GameList = (props: GameListProps) => {
                                 このリーグ内のランキング
                             </Typography>
                             <LeagueRankList
-                                gameId={game.id}
+                                leagueId={game.league?.id}
                             />
                             <Typography pl={2} pb={1} pt={3}>
                                 このリーグの試合

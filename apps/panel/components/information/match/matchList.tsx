@@ -1,15 +1,17 @@
 import { Grid } from "@mui/material";
-import type { Match } from "@/src/gql/__generated__/graphql";
+import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import MatchCard from "@/components/information/match/matchCard";
 
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
+
 export type MatchListProps = {
-    matches: Match[]
+    matches: PanelMatch[]
 }
 
 export default function MatchList(props: MatchListProps) {
     const components = props.matches
         //  sort by date in ascending order
-        .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+        .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
         .map((match) =>
             <MatchCard
                 match={match}
