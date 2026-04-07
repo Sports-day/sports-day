@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { useUpdateAdminMatchResultMutation, MatchStatus } from '@/gql/__generated__/graphql'
-import type { MockTMatch } from '@/features/competitions/types'
+import type { TournamentMatchView } from '@/features/competitions/types'
 
 export function useTournamentMatchEdit() {
-  const [selectedMatch, setSelectedMatch] = useState<MockTMatch | null>(null)
+  const [selectedMatch, setSelectedMatch] = useState<TournamentMatchView | null>(null)
   const [score1, setScore1] = useState('0')
   const [score2, setScore2] = useState('0')
-  const [status, setStatus] = useState<MockTMatch['status']>('STANDBY')
+  const [status, setStatus] = useState<TournamentMatchView['status']>('STANDBY')
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [updateMatchResult] = useUpdateAdminMatchResultMutation()
 
-  const openMatch = (match: MockTMatch, _tId: string) => {
+  const openMatch = (match: TournamentMatchView, _tId: string) => {
     setSelectedMatch(match)
     setScore1(match.score1 != null ? String(match.score1) : '0')
     setScore2(match.score2 != null ? String(match.score2) : '0')

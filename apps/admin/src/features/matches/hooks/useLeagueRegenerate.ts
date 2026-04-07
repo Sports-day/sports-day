@@ -32,7 +32,7 @@ export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
             locationId: selectedLocation || undefined,
           },
         },
-        refetchQueries: ['GetAdminMatches'],
+        refetchQueries: ['GetAdminCompetitionMatches'],
       })
       setMutationError(null)
       closeOverlay()

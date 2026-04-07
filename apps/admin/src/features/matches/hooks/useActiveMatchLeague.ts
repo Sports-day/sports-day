@@ -1,4 +1,8 @@
-import { useGetAdminLeagueQuery, useGetAdminLeagueStandingsQuery, useGetAdminMatchesQuery } from '@/gql/__generated__/graphql'
+import {
+  useGetAdminLeagueQuery,
+  useGetAdminLeagueStandingsQuery,
+  useGetAdminCompetitionMatchesQuery,
+} from '@/gql/__generated__/graphql'
 import type { ActiveLeague, ActiveMatch, ActiveTeam } from '../types'
 
 export type GridCell =
@@ -43,7 +47,10 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
     variables: { leagueId },
     skip: !leagueId,
   })
-  const { data: matchesData } = useGetAdminMatchesQuery()
+  const { data: compMatchesData } = useGetAdminCompetitionMatchesQuery({
+    variables: { competitionId },
+    skip: !competitionId,
+  })
 
   if (!leagueData?.league) {
     return {
@@ -59,6 +66,7 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
 
   const gqlLeague = leagueData.league
   const standings = standingsData?.leagueStandings ?? []
+  const competitionMatches = compMatchesData?.competition?.matches ?? []
 
   // GraphQL League.teams → ActiveTeam
   const activeTeams: ActiveTeam[] = gqlLeague.teams.map(t => ({
@@ -67,28 +75,26 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
     shortName: t.name,
   }))
 
-  // competition.matches から league 内の試合を取得（competition.id で絞り込み）
-  const activeMatches: ActiveMatch[] = (matchesData?.matches ?? [])
-    .filter(m => m.competition.id === competitionId)
-    .map(m => {
-      const entry0 = m.entries[0]
-      const entry1 = m.entries[1]
-      const winnerTeamId = m.winnerTeam?.id ?? null
-      let winner: ActiveMatch['winner']
-      if (winnerTeamId && entry0?.team?.id === winnerTeamId) winner = 'teamA'
-      else if (winnerTeamId && entry1?.team?.id === winnerTeamId) winner = 'teamB'
-      return {
-        id: m.id,
-        teamAId: entry0?.team?.id ?? '',
-        teamBId: entry1?.team?.id ?? '',
-        scoreA: entry0?.score ?? null,
-        scoreB: entry1?.score ?? null,
-        status: toActiveStatus(m.status),
-        winner,
-        time: m.time,
-        locationId: m.location?.id,
-      }
-    })
+  // competition.matches を ActiveMatch にマッピング
+  const activeMatches: ActiveMatch[] = competitionMatches.map(m => {
+    const entry0 = m.entries[0]
+    const entry1 = m.entries[1]
+    const winnerTeamId = m.winnerTeam?.id ?? null
+    let winner: ActiveMatch['winner']
+    if (winnerTeamId && entry0?.team?.id === winnerTeamId) winner = 'teamA'
+    else if (winnerTeamId && entry1?.team?.id === winnerTeamId) winner = 'teamB'
+    return {
+      id: m.id,
+      teamAId: entry0?.team?.id ?? '',
+      teamBId: entry1?.team?.id ?? '',
+      scoreA: entry0?.score ?? null,
+      scoreB: entry1?.score ?? null,
+      status: toActiveStatus(m.status),
+      winner,
+      time: m.time,
+      locationId: m.location?.id,
+    }
+  })
 
   const league: ActiveLeague = {
     id: gqlLeague.id,
@@ -104,12 +110,12 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
       points: standing.points,
       goalsFor: standing.goalsFor,
       goalsAgainst: standing.goalsAgainst,
-      matchesPlayed: standing.win + standing.draw + standing.lose,
-      winRate: standing.win + standing.draw + standing.lose > 0
-        ? standing.points / ((standing.win + standing.draw + standing.lose) * 3)
+      matchesPlayed: standing.matchesPlayed,
+      winRate: standing.matchesPlayed > 0
+        ? standing.points / (standing.matchesPlayed * 3)
         : 0,
-      totalGoalRate: standing.win + standing.draw + standing.lose > 0
-        ? standing.goalsFor / (standing.win + standing.draw + standing.lose)
+      totalGoalRate: standing.matchesPlayed > 0
+        ? standing.goalsFor / standing.matchesPlayed
         : 0,
     })
   }

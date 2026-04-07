@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
 import {
   useAssignAdminSeedTeamMutation,
+  useUpdateAdminSeedNumbersMutation,
   useGetAdminTournamentQuery,
 } from '@/gql/__generated__/graphql'
-
-// TODO: useUpdateAdminSeedNumbersMutation は seed番号並び替えUI実装時に使用する
 
 export function useSeedAssignment(tournamentId: string) {
   const { data } = useGetAdminTournamentQuery({ variables: { id: tournamentId } })
@@ -65,6 +64,9 @@ export function useSeedAssignment(tournamentId: string) {
   const [assignSeedTeam] = useAssignAdminSeedTeamMutation({
     refetchQueries: ['GetAdminTournament'],
   })
+  const [updateSeedNumbers] = useUpdateAdminSeedNumbersMutation({
+    refetchQueries: ['GetAdminTournament'],
+  })
 
   const setAssignment = (seedNumber: number, teamId: string) => {
     setAssignments((prev) => ({ ...prev, [seedNumber]: teamId }))
@@ -85,7 +87,43 @@ export function useSeedAssignment(tournamentId: string) {
       })
     })
     await Promise.all(promises)
-    // ローカル state をリセット（サーバー値で再構築される）
+    setAssignments({})
+  }
+
+  /**
+   * シード番号の順序を入れ替える
+   * @param reorderedSeeds - 新しい順序の { slotId, seedNumber } 配列
+   */
+  const reorderSeeds = async (reorderedSeeds: { slotId: string; seedNumber: number }[]) => {
+    await updateSeedNumbers({
+      variables: {
+        tournamentId,
+        seeds: reorderedSeeds.map((s) => ({
+          slotId: s.slotId,
+          seedNumber: s.seedNumber,
+        })),
+      },
+    })
+    setAssignments({})
+  }
+
+  /**
+   * 2つのシード番号を交換する
+   */
+  const swapSeeds = async (seedA: number, seedB: number) => {
+    const slotIdA = seedToSlotId[seedA]
+    const slotIdB = seedToSlotId[seedB]
+    if (!slotIdA || !slotIdB) return
+
+    await updateSeedNumbers({
+      variables: {
+        tournamentId,
+        seeds: [
+          { slotId: slotIdA, seedNumber: seedB },
+          { slotId: slotIdB, seedNumber: seedA },
+        ],
+      },
+    })
     setAssignments({})
   }
 
@@ -93,8 +131,12 @@ export function useSeedAssignment(tournamentId: string) {
     seedNumbers,
     assignments: mergedAssignments,
     teams,
+    seedSlots,
+    seedToSlotId,
     version: seedSlots.length,
     setAssignment,
     saveAssignments,
+    reorderSeeds,
+    swapSeeds,
   }
 }

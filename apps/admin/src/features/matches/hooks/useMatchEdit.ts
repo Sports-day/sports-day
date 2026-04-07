@@ -67,7 +67,7 @@ export function useMatchEdit() {
             ],
           },
         },
-        refetchQueries: ['GetAdminMatches'],
+        refetchQueries: ['GetAdminCompetitionMatches'],
       })
       setMutationError(null)
       closeMatch()

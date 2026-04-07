@@ -41,7 +41,7 @@ export function MatchDetailsCard({ match }: Props) {
     open, setOpen,
     locationId, setLocationId,
     locations,
-    startTime, setStartTime,
+    time, setTime,
     handleSave, handleReset,
   } = useMatchDetails(match)
 
@@ -118,8 +118,8 @@ export function MatchDetailsCard({ match }: Props) {
               type="datetime-local"
               size="small"
               fullWidth
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
               sx={{
                 ...DETAIL_FIELD_SX,
                 '& .MuiInputLabel-root': { color: '#2F3C8C', fontSize: '13px' },

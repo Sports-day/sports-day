@@ -21,5 +21,4 @@ export type ActiveMatch = {
   winner?: 'teamA' | 'teamB' | 'draw'
   time?: string
   locationId?: string
-  startTime?: string
 }

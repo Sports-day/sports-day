@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  useGetAdminMatchesQuery,
+  useGetAdminCompetitionMatchesQuery,
   useUpdateAdminMatchResultMutation,
   MatchStatus,
 } from '@/gql/__generated__/graphql'
@@ -21,8 +21,13 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
   const [parsedRows, setParsedRows] = useState<BulkEditRow[]>([])
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
-  const { data: matchesData } = useGetAdminMatchesQuery()
+  const { data: compMatchesData } = useGetAdminCompetitionMatchesQuery({
+    variables: { competitionId },
+    skip: !competitionId,
+  })
   const [updateMatchResult] = useUpdateAdminMatchResultMutation()
+
+  const compMatches = compMatchesData?.competition?.matches ?? []
 
   const open = () => setIsOpen(true)
   const close = () => {
@@ -35,8 +40,6 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
 
   const setCsvData = (value: string) => {
     setCsvDataRaw(value)
-    // competition.matches から matchId → teamName マップを構築
-    const compMatches = (matchesData?.matches ?? []).filter(m => m.competition.id === competitionId)
     const matchTeamMap = new Map(compMatches.map(m => [
       m.id,
       { teamAName: m.entries[0]?.team?.name ?? '', teamBName: m.entries[1]?.team?.name ?? '' },
@@ -45,45 +48,45 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0)
-      .flatMap((line) => {
+      .map((line) => {
         const parts = line.split(',').map((s) => s.trim())
         const matchId = parts[0] ?? ''
         const scoreA = Number(parts[1] ?? 0)
         const scoreB = Number(parts[2] ?? 0)
         const teams = matchTeamMap.get(matchId)
-        return [{
+        return {
           matchId,
           teamAName: teams?.teamAName ?? matchId,
           teamBName: teams?.teamBName ?? matchId,
           scoreA,
           scoreB,
-        }]
+        }
       })
     setParsedRows(rows)
   }
 
   const execute = async () => {
-    const compMatches = (matchesData?.matches ?? []).filter(m => m.competition.id === competitionId)
     try {
       for (const row of parsedRows) {
         const match = compMatches.find(m => m.id === row.matchId)
-        const results = match?.entries.map((e, i) => ({
-          teamId: e.team?.id ?? '',
-          score: i === 0 ? row.scoreA : row.scoreB,
-        })).filter(r => r.teamId) ?? []
+        const results = (match?.entries ?? [])
+          .map((e, i) => ({
+            teamId: e.team?.id ?? '',
+            score: i === 0 ? row.scoreA : row.scoreB,
+          }))
+          .filter(r => r.teamId)
         await updateMatchResult({
           variables: {
             id: row.matchId,
             input: { status: MatchStatus.Finished, results },
           },
-          refetchQueries: ['GetAdminMatches'],
+          refetchQueries: ['GetAdminCompetitionMatches'],
         })
       }
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
     }
-    void filterLocation
     close()
   }
 

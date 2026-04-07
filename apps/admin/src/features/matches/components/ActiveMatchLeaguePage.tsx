@@ -24,7 +24,7 @@ import { ActiveMatchBulkEditPage } from './ActiveMatchBulkEditPage'
 import { MatchEditPage } from './MatchEditPage'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
-import { executeProgression } from '@/lib/autoSync'
+import { useExecuteProgression } from '../hooks/useExecuteProgression'
 
 // ─── 定数 ────────────────────────────────────────────────
 const CELL_BORDER = '1px solid #5B6DC6'
@@ -74,6 +74,7 @@ export function ActiveMatchLeaguePage({
   const regen = useLeagueRegenerate(competitionId, leagueId)
   const bulkEdit = useBulkEdit(competitionId, leagueId)
   const matchEdit = useMatchEdit()
+  const progression = useExecuteProgression()
   if (!league) {
     return (
       <Box>
@@ -193,12 +194,18 @@ export function ActiveMatchLeaguePage({
               試合を再生成
             </Button>
             {allFinished && (
-              <Button variant="text" size="small" sx={SMALL_BTN_SX} onClick={() => {
-                const count = executeProgression(competitionId, leagueId)
-                if (count > 0) showToast(`${count}チームをトーナメントに進出させました`)
-                else showToast('進出ルールが未設定、または対象がありません')
-              }}>
-                進出を実行
+              <Button
+                variant="text"
+                size="small"
+                sx={SMALL_BTN_SX}
+                disabled={progression.loading}
+                onClick={async () => {
+                  const count = await progression.execute(competitionId, leagueId)
+                  if (count > 0) showToast(`${count}チームをトーナメントに進出させました`)
+                  else showToast('進出ルールが未設定、または対象がありません')
+                }}
+              >
+                {progression.loading ? '進出処理中...' : '進出を実行'}
               </Button>
             )}
           </Box>

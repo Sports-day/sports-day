@@ -8,7 +8,7 @@ import {
 export function useMatchDetails(match: ActiveMatch) {
   const [open, setOpen] = useState(false)
   const [locationId, setLocationId] = useState(match.locationId ?? '')
-  const [startTime, setStartTime] = useState(match.startTime ?? new Date().toISOString().slice(0, 16))
+  const [time, setTime] = useState(match.time ?? new Date().toISOString().slice(0, 16))
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [updateMatchDetail] = useUpdateAdminMatchDetailMutation()
@@ -21,11 +21,11 @@ export function useMatchDetails(match: ActiveMatch) {
         variables: {
           id: match.id,
           input: {
-            time: startTime,
+            time,
             locationId,
           },
         },
-        refetchQueries: ['GetAdminMatches'],
+        refetchQueries: ['GetAdminCompetitionMatches'],
       })
       setMutationError(null)
       setOpen(false)
@@ -36,7 +36,7 @@ export function useMatchDetails(match: ActiveMatch) {
 
   const handleReset = () => {
     setLocationId(match.locationId ?? '')
-    setStartTime(match.startTime ?? new Date().toISOString().slice(0, 16))
+    setTime(match.time ?? new Date().toISOString().slice(0, 16))
   }
 
   return {
@@ -45,8 +45,8 @@ export function useMatchDetails(match: ActiveMatch) {
     locationId,
     setLocationId,
     locations,
-    startTime,
-    setStartTime,
+    time,
+    setTime,
     handleSave,
     handleReset,
     error: mutationError,
