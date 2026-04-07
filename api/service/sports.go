@@ -135,10 +135,6 @@ func (s *Sport) GetRankingRules(ctx context.Context, sportID string) ([]*db_mode
 }
 
 func (s *Sport) SetRankingRules(ctx context.Context, sportID string, rules []model.RankingRuleInput) ([]*db_model.RankingRule, error) {
-	if len(rules) == 0 {
-		return nil, errors.ErrRankingRuleInvalid
-	}
-
 	// priority 重複チェック
 	seen := make(map[int32]bool)
 	for _, r := range rules {

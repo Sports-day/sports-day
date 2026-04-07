@@ -21,6 +21,7 @@ type Image struct {
 	db              *gorm.DB
 	imageRepository repository.Image
 	s3              *s3.Client
+	s3Public        *s3.Client
 	bucket          string
 	endpoint        string
 }
@@ -28,7 +29,8 @@ type Image struct {
 func NewImage(
 	db *gorm.DB,
 	imageRepository repository.Image,
-	s3 *s3.Client,
+	s3Client *s3.Client,
+	s3PublicClient *s3.Client,
 	bucket string,
 	endpoint string,
 ) Image {
@@ -36,7 +38,8 @@ func NewImage(
 	return Image{
 		db:              db,
 		imageRepository: imageRepository,
-		s3:              s3,
+		s3:              s3Client,
+		s3Public:        s3PublicClient,
 		bucket:          bucket,
 		endpoint:        endpoint,
 	}
@@ -57,13 +60,16 @@ func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) 
 	}
 
 	if img.URL.Valid {
-		prefix := s.endpoint + "/" + s.bucket + "/"
-		key := strings.TrimPrefix(img.URL.String, prefix)
-		if _, err := s.s3.DeleteObject(ctx, &s3.DeleteObjectInput{
-			Bucket: &s.bucket,
-			Key:    &key,
-		}); err != nil {
-			return nil, errors.Wrap(err)
+		// URLからバケット名以降のパスをオブジェクトキーとして抽出
+		bucketPrefix := "/" + s.bucket + "/"
+		if idx := strings.Index(img.URL.String, bucketPrefix); idx >= 0 {
+			key := img.URL.String[idx+len(bucketPrefix):]
+			if _, err := s.s3.DeleteObject(ctx, &s3.DeleteObjectInput{
+				Bucket: &s.bucket,
+				Key:    &key,
+			}); err != nil {
+				return nil, errors.Wrap(err)
+			}
 		}
 	}
 
@@ -93,7 +99,7 @@ func (s *Image) CreateUploadURL(ctx context.Context, filename string) (*db_model
 		return nil, "", errors.Wrap(err)
 	}
 
-	presigner := s3.NewPresignClient(s.s3)
+	presigner := s3.NewPresignClient(s.s3Public)
 
 	key := fmt.Sprintf("%s/%s", img.ID, filename)
 

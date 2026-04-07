@@ -94,7 +94,7 @@ func (r user) BatchFindUserIdpByUserIDs(ctx context.Context, db *gorm.DB, userID
 }
 
 func (r user) SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.UsersIdp) (*db_model.UsersIdp, error) {
-	if err := db.Save(userIdp).Error; err != nil {
+	if err := db.Where("user_id = ?", userIdp.UserID).Save(userIdp).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return userIdp, nil

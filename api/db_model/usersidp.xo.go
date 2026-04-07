@@ -6,7 +6,7 @@ import (
 	"database/sql"
 )
 
-// UsersIdp represents a row from 'sportsday.users_idp'.
+// UsersIdp represents a row from 'sportsday.users_idps'.
 type UsersIdp struct {
 	UserID          string         `json:"user_id"`           // User ID
 	Provider        string         `json:"provider"`          // プロバイダー名

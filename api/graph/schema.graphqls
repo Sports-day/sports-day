@@ -81,11 +81,13 @@ input CreateCompetitionInput {
   name: String!
   type: CompetitionType!
   sceneId: ID!
+  sportId: ID!
 }
 
 input UpdateCompetitionInput {
   name: String
-  imageId: ID
+  sceneId: ID
+  sportId: ID
 }
 
 input UpdateCompetitionEntriesInput {
@@ -148,6 +150,8 @@ input UpdateJudgmentInput {
 
 input CreateLeagueInput {
   name: String!
+  sceneId: ID!
+  sportId: ID!
   defaultLocationId: ID
 }
 

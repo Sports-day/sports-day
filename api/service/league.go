@@ -50,9 +50,11 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 		competitionID := ulid.Make()
 
 		competition := &db_model.Competition{
-			ID:   competitionID,
-			Name: input.Name,
-			Type: string(model.CompetitionTypeLeague),
+			ID:      competitionID,
+			Name:    input.Name,
+			Type:    string(model.CompetitionTypeLeague),
+			SceneID: input.SceneID,
+			SportID: sql.NullString{Valid: true, String: input.SportID},
 		}
 
 		if _, err := s.competitionRepository.Save(ctx, tx, competition); err != nil {

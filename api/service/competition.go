@@ -19,17 +19,19 @@ type Competition struct {
 	competitionRepository repository.Competition
 	teamRepository        repository.Team
 	leagueRepository      repository.League
+	tournamentRepository  repository.Tournament
 	matchRepository       repository.Match
 	sportsRepository      repository.Sports
 	tournamentService     *Tournament
 }
 
-func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, teamRepository repository.Team, leagueRepository repository.League, matchRepository repository.Match, sportsRepository repository.Sports) Competition {
+func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, teamRepository repository.Team, leagueRepository repository.League, tournamentRepository repository.Tournament, matchRepository repository.Match, sportsRepository repository.Sports) Competition {
 	return Competition{
 		db:                    db,
 		competitionRepository: competitionRepository,
 		teamRepository:        teamRepository,
 		leagueRepository:      leagueRepository,
+		tournamentRepository:  tournamentRepository,
 		matchRepository:       matchRepository,
 		sportsRepository:      sportsRepository,
 	}
@@ -41,18 +43,54 @@ func (s *Competition) SetTournamentService(ts *Tournament) {
 }
 
 func (s *Competition) Create(ctx context.Context, input *model.CreateCompetitionInput) (*db_model.Competition, error) {
-	competition := &db_model.Competition{
-		ID:      ulid.Make(),
-		Name:    input.Name,
-		Type:    input.Type.String(),
-		SceneID: input.SceneID,
-	}
+	var result *db_model.Competition
 
-	competition, err := s.competitionRepository.Save(ctx, s.db, competition)
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		competitionID := ulid.Make()
+		competition := &db_model.Competition{
+			ID:      competitionID,
+			Name:    input.Name,
+			Type:    input.Type.String(),
+			SceneID: input.SceneID,
+			SportID: sql.NullString{Valid: true, String: input.SportID},
+		}
+
+		saved, err := s.competitionRepository.Save(ctx, tx, competition)
+		if err != nil {
+			return errors.ErrSaveCompetition
+		}
+
+		// LEAGUE型の場合はLeagueレコードも自動作成
+		if input.Type == model.CompetitionTypeLeague {
+			league := &db_model.League{
+				ID: competitionID,
+			}
+			if _, err := s.leagueRepository.Save(ctx, tx, league); err != nil {
+				return errors.ErrSaveLeague
+			}
+		}
+
+		// TOURNAMENT型の場合はMAINトーナメントレコードを自動作成
+		if input.Type == model.CompetitionTypeTournament {
+			tournament := &db_model.Tournament{
+				ID:            ulid.Make(),
+				CompetitionID: competitionID,
+				Name:          input.Name,
+				BracketType:   string(model.BracketTypeMain),
+				DisplayOrder:  1,
+			}
+			if _, err := s.tournamentRepository.Save(ctx, tx, tournament); err != nil {
+				return errors.ErrSaveTournament
+			}
+		}
+
+		result = saved
+		return nil
+	})
 	if err != nil {
-		return nil, errors.ErrSaveCompetition
+		return nil, err
 	}
-	return competition, nil
+	return result, nil
 }
 
 func (s *Competition) Get(ctx context.Context, id string) (*db_model.Competition, error) {
@@ -71,6 +109,12 @@ func (s *Competition) Update(ctx context.Context, id string, input model.UpdateC
 
 	if input.Name != nil {
 		competition.Name = *input.Name
+	}
+	if input.SceneID != nil {
+		competition.SceneID = *input.SceneID
+	}
+	if input.SportID != nil {
+		competition.SportID = sql.NullString{Valid: true, String: *input.SportID}
 	}
 
 	competition, err = s.competitionRepository.Save(ctx, s.db, competition)

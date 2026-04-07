@@ -31,7 +31,6 @@ func FormatInformationResponse(information *db_model.Information) *Information {
 		ID:      information.ID,
 		Title:   information.Title,
 		Content: information.Content,
-		Status:  information.Status,
 	}
 }
 
@@ -106,10 +105,15 @@ func FormatLocationResponse(location *db_model.Location) *Location {
 }
 
 func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
+	var sportID string
+	if competition.SportID.Valid {
+		sportID = competition.SportID.String
+	}
 	return &Competition{
 		ID:      competition.ID,
 		Name:    competition.Name,
 		Type:    CompetitionType(competition.Type),
+		SportID: sportID,
 		SceneID: competition.SceneID,
 	}
 }
@@ -169,8 +173,11 @@ func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
 
 func FormatLeagueResponse(league *db_model.League, competition *db_model.Competition) *League {
 	return &League{
-		ID:   league.ID,
-		Name: competition.Name,
+		ID:     league.ID,
+		Name:   competition.Name,
+		WinPt:  int32(league.WinPt),
+		DrawPt: int32(league.DrawPt),
+		LosePt: int32(league.LosePt),
 	}
 }
 

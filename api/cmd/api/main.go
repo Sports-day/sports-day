@@ -101,6 +101,15 @@ func main() {
 		o.UsePathStyle = true
 	})
 
+	publicEndpoint := env.Get().Storage.PublicEndpoint
+	if publicEndpoint == "" {
+		publicEndpoint = env.Get().Storage.Endpoint
+	}
+	s3PublicClient := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(publicEndpoint)
+		o.UsePathStyle = true
+	})
+
 	// authorization
 	authorizerInstance := authz.NewStaticAuthorizer()
 	roleCache := authz.NewRoleCache(env.Get().Auth.RoleCacheTTL)
@@ -112,7 +121,7 @@ func main() {
 	teamService := service.NewTeam(db, teamRepository, userRepository)
 	locationService := service.NewLocation(db, locationRepository)
 	informationService := service.NewInformation(db, informationRepository)
-	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository, matchRepository, sportRepository)
+	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository, tournamentRepository, matchRepository, sportRepository)
 	sceneService := service.NewScene(db, sceneRepository, &competitionService)
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository)
@@ -124,7 +133,7 @@ func main() {
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
-	imageService := service.NewImage(db, imageRepository, s3Client, env.Get().Storage.Bucket, env.Get().Storage.Endpoint)
+	imageService := service.NewImage(db, imageRepository, s3Client, s3PublicClient, env.Get().Storage.Bucket, env.Get().Storage.Endpoint)
 	sportService := service.NewSports(db, sportRepository, &imageService)
 
 	directiveHandler := graph.NewDirective(authorizerInstance)
@@ -153,7 +162,7 @@ func main() {
 		apihandler.HandleUploadWebhook(
 			&imageService,
 			env.Get().Storage.WebhookSecret,
-			env.Get().Storage.Endpoint,
+			publicEndpoint,
 			env.Get().Storage.Bucket,
 		),
 	)

@@ -1,5 +1,4 @@
 -- migrate:up
-DELETE FROM league_standings;
 DELETE FROM leagues;
 DELETE FROM judgments;
 DELETE FROM match_entries;
@@ -29,49 +28,49 @@ VALUES  ('01JS96Z963A6RT2C563DCSSCQN', 'フットサル', 0),
         ('01JS96Z963KZND56RX30AHX6C0', '卓球', 0),
         ('01JS96Z964EZHVVXQJ0T0ETKAW', 'バドミントン', 0);
 
-INSERT INTO users (id, name, email)
-VALUES  ('01JS96Z96329JZHCYD45D72SYB', '山田 太郎', 'ta_yamada@dev.sports-day.net'),
-        ('01JS96Z963CB5NVZ4151VFBFMT', '佐藤 健一', 'ke_sato@dev.sports-day.net'),
-        ('01JS96Z963RP3AJQ9CMBS7QCCF', '鈴木 美咲', 'mi_suzuki@dev.sports-day.net'),
-        ('01JS96Z963KWF07JCA6A8R9RYE', '田中 裕子', 'yu_tanaka@dev.sports-day.net'),
-        ('01JS96Z9632TEN2FVK713YCYWH', '伊藤 翔太', 'sh_ito@dev.sports-day.net'),
-        ('01JS96Z963BHSMBPRKW6CW5GCV', '渡辺 麻衣', 'ma_watanabe@dev.sports-day.net'),
-        ('01JS96Z96394WS2KG3VGPYEFXY', '小林 直人', 'na_kobayashi@dev.sports-day.net'),
-        ('01JS96Z9630PP2C2MSNFBXWWVB', '加藤 結衣', 'yu_kato@dev.sports-day.net'),
-        ('01JS96Z96315KJEHK6QH6E66GA', '吉田 大輔', 'da_yoshida@dev.sports-day.net'),
-        ('01JS96Z963J78P3163YWJ8E2G3', '松本 さくら', 'sa_matsumoto@dev.sports-day.net'),
-        ('01JS96Z963RXHX7ZEQETJF755X', '井上 拓也', 'ta_inoue@dev.sports-day.net'),
-        ('01JS96Z96366ES49EA66C5MNTN', '木村 愛子', 'ai_kimura@dev.sports-day.net'),
-        ('01JS96Z963392V0E1M882PAK59', '林 正樹', 'ma_hayashi@dev.sports-day.net'),
-        ('01JS96Z963WC15Z6EF1Q28TPGN', '斎藤 優花', 'yu_saito@dev.sports-day.net'),
-        ('01JS96Z963FWJNS332FA9PGMKR', '清水 隆司', 'ry_shimizu@dev.sports-day.net'),
-        ('01JS96Z963VA0P0RE84ZDEWX99', '山口 千尋', 'ch_yamaguchi@dev.sports-day.net'),
-        ('01JS96Z96371Z3AD7SPM79VERY', '中村 浩二', 'ko_nakamura@dev.sports-day.net'),
-        ('01JS96Z96327Q7P2EE2QVSWZJ9', '石井 美穂', 'mi_ishii@dev.sports-day.net'),
-        ('01JS96Z963N5K497Z9J641QFGS', '前田 一郎', 'ic_maeda@dev.sports-day.net'),
-        ('01JS96Z963GWSSKP6TH26EGRQF', '高橋 望', 'no_takahashi@dev.sports-day.net'),
-        ('01JS96Z963J7286BRXWECRTWK8', '村上 遥', 'ha_murakami@dev.sports-day.net'),
-        ('01JS96Z963ZSN09NH45YXXTGMM', '近藤 陽太', 'yo_kondo@dev.sports-day.net'),
-        ('01JS96Z963B9SA9JHT9QM09VC8', '遠藤 美咲', 'mi_endo@dev.sports-day.net'),
-        ('01JS96Z963WJJRRE7DVRKQ5XGF', '藤田 健太', 'ke_fujita@dev.sports-day.net'),
-        ('01JS96Z963A6RT2C563DCSSCQN', '野口 真由', 'ma_noguchi@dev.sports-day.net'),
-        ('01JS96Z9630FPVV0HFY7YR1BQ2', '原田 翔太', 'sh_harada@dev.sports-day.net'),
-        ('01JS96Z963WPXJZG9X99N7VP44', '本田 瑞希', 'mi_honda@dev.sports-day.net'),
-        ('01JS96Z963QYQ0APZ6Z3K246HM', '久保田 涼介', 'ry_kubota@dev.sports-day.net'),
-        ('01JS96Z96348RDDS4SRA5Y43JA', '菊地 美優', 'mi_kikuchi@dev.sports-day.net'),
-        ('01JS96Z963KZND56RX30AHX6C0', '岡本 大地', 'da_okamoto@dev.sports-day.net'),
-        ('01JS96Z9636YQTGG91PTKH85HW', '中島 花子', 'ha_nakajima@dev.sports-day.net'),
-        ('01JS96Z9636NBCA1Z8VYDDRK91', '竹内 智也', 'to_takeuchi@dev.sports-day.net'),
-        ('01JS96Z963W85T84GDAXE30JMT', '上田 莉子', 'ri_ueda@dev.sports-day.net'),
-        ('01JS96Z963NRHCWEV6BE3EK435', '福田 悠斗', 'yu_fukuda@dev.sports-day.net'),
-        ('01JS96Z963GJYKEQFT3V78DPSB', '橋本 美緒', 'mi_hashimoto@dev.sports-day.net'),
-        ('01JS96Z963FNKY1812FBFV6BQE', '星野 拓海', 'ta_hoshino@dev.sports-day.net'),
-        ('01JS96Z963GJVJ59GNE06AKZW2', '内田 結菜', 'yu_uchida@dev.sports-day.net'),
-        ('01JS96Z964TC50FZW2MSXZWWXK', '浜田 蓮', 're_hamada@dev.sports-day.net'),
-        ('01JS96Z964P79JWGCNQX95ZBRN', '横山 颯太', 'so_yokoyama@dev.sports-day.net'),
-        ('01JS96Z9643QY5BATRYY2C02DQ', '宮崎 千咲', 'ch_miyazaki@dev.sports-day.net'),
-        ('01JS96Z964KX2GGT92CSMVEJ5X', '大野 陸', 'ri_ono@dev.sports-day.net'),
-        ('01JS96Z964EZHVVXQJ0T0ETKAW', '西田 優奈', 'yu_nishida@dev.sports-day.net');
+INSERT INTO users (id, name, email, gender)
+VALUES  ('01JS96Z96329JZHCYD45D72SYB', '山田 太郎', 'ta_yamada@dev.sports-day.net', '男'),
+        ('01JS96Z963CB5NVZ4151VFBFMT', '佐藤 健一', 'ke_sato@dev.sports-day.net', '男'),
+        ('01JS96Z963RP3AJQ9CMBS7QCCF', '鈴木 美咲', 'mi_suzuki@dev.sports-day.net', '女'),
+        ('01JS96Z963KWF07JCA6A8R9RYE', '田中 裕子', 'yu_tanaka@dev.sports-day.net', '女'),
+        ('01JS96Z9632TEN2FVK713YCYWH', '伊藤 翔太', 'sh_ito@dev.sports-day.net', '男'),
+        ('01JS96Z963BHSMBPRKW6CW5GCV', '渡辺 麻衣', 'ma_watanabe@dev.sports-day.net', '女'),
+        ('01JS96Z96394WS2KG3VGPYEFXY', '小林 直人', 'na_kobayashi@dev.sports-day.net', '男'),
+        ('01JS96Z9630PP2C2MSNFBXWWVB', '加藤 結衣', 'yu_kato@dev.sports-day.net', '女'),
+        ('01JS96Z96315KJEHK6QH6E66GA', '吉田 大輔', 'da_yoshida@dev.sports-day.net', '男'),
+        ('01JS96Z963J78P3163YWJ8E2G3', '松本 さくら', 'sa_matsumoto@dev.sports-day.net', '女'),
+        ('01JS96Z963RXHX7ZEQETJF755X', '井上 拓也', 'ta_inoue@dev.sports-day.net', '男'),
+        ('01JS96Z96366ES49EA66C5MNTN', '木村 愛子', 'ai_kimura@dev.sports-day.net', '女'),
+        ('01JS96Z963392V0E1M882PAK59', '林 正樹', 'ma_hayashi@dev.sports-day.net', '男'),
+        ('01JS96Z963WC15Z6EF1Q28TPGN', '斎藤 優花', 'yu_saito@dev.sports-day.net', '女'),
+        ('01JS96Z963FWJNS332FA9PGMKR', '清水 隆司', 'ry_shimizu@dev.sports-day.net', '男'),
+        ('01JS96Z963VA0P0RE84ZDEWX99', '山口 千尋', 'ch_yamaguchi@dev.sports-day.net', '女'),
+        ('01JS96Z96371Z3AD7SPM79VERY', '中村 浩二', 'ko_nakamura@dev.sports-day.net', '男'),
+        ('01JS96Z96327Q7P2EE2QVSWZJ9', '石井 美穂', 'mi_ishii@dev.sports-day.net', '女'),
+        ('01JS96Z963N5K497Z9J641QFGS', '前田 一郎', 'ic_maeda@dev.sports-day.net', '男'),
+        ('01JS96Z963GWSSKP6TH26EGRQF', '高橋 望', 'no_takahashi@dev.sports-day.net', '女'),
+        ('01JS96Z963J7286BRXWECRTWK8', '村上 遥', 'ha_murakami@dev.sports-day.net', '女'),
+        ('01JS96Z963ZSN09NH45YXXTGMM', '近藤 陽太', 'yo_kondo@dev.sports-day.net', '男'),
+        ('01JS96Z963B9SA9JHT9QM09VC8', '遠藤 美咲', 'mi_endo@dev.sports-day.net', '女'),
+        ('01JS96Z963WJJRRE7DVRKQ5XGF', '藤田 健太', 'ke_fujita@dev.sports-day.net', '男'),
+        ('01JS96Z963A6RT2C563DCSSCQN', '野口 真由', 'ma_noguchi@dev.sports-day.net', '女'),
+        ('01JS96Z9630FPVV0HFY7YR1BQ2', '原田 翔太', 'sh_harada@dev.sports-day.net', '男'),
+        ('01JS96Z963WPXJZG9X99N7VP44', '本田 瑞希', 'mi_honda@dev.sports-day.net', '女'),
+        ('01JS96Z963QYQ0APZ6Z3K246HM', '久保田 涼介', 'ry_kubota@dev.sports-day.net', '男'),
+        ('01JS96Z96348RDDS4SRA5Y43JA', '菊地 美優', 'mi_kikuchi@dev.sports-day.net', '女'),
+        ('01JS96Z963KZND56RX30AHX6C0', '岡本 大地', 'da_okamoto@dev.sports-day.net', '男'),
+        ('01JS96Z9636YQTGG91PTKH85HW', '中島 花子', 'ha_nakajima@dev.sports-day.net', '女'),
+        ('01JS96Z9636NBCA1Z8VYDDRK91', '竹内 智也', 'to_takeuchi@dev.sports-day.net', '男'),
+        ('01JS96Z963W85T84GDAXE30JMT', '上田 莉子', 'ri_ueda@dev.sports-day.net', '女'),
+        ('01JS96Z963NRHCWEV6BE3EK435', '福田 悠斗', 'yu_fukuda@dev.sports-day.net', '男'),
+        ('01JS96Z963GJYKEQFT3V78DPSB', '橋本 美緒', 'mi_hashimoto@dev.sports-day.net', '女'),
+        ('01JS96Z963FNKY1812FBFV6BQE', '星野 拓海', 'ta_hoshino@dev.sports-day.net', '男'),
+        ('01JS96Z963GJVJ59GNE06AKZW2', '内田 結菜', 'yu_uchida@dev.sports-day.net', '女'),
+        ('01JS96Z964TC50FZW2MSXZWWXK', '浜田 蓮', 're_hamada@dev.sports-day.net', '男'),
+        ('01JS96Z964P79JWGCNQX95ZBRN', '横山 颯太', 'so_yokoyama@dev.sports-day.net', '男'),
+        ('01JS96Z9643QY5BATRYY2C02DQ', '宮崎 千咲', 'ch_miyazaki@dev.sports-day.net', '女'),
+        ('01JS96Z964KX2GGT92CSMVEJ5X', '大野 陸', 'ri_ono@dev.sports-day.net', '男'),
+        ('01JS96Z964EZHVVXQJ0T0ETKAW', '西田 優奈', 'yu_nishida@dev.sports-day.net', '女');
 
 INSERT INTO user_roles (user_id, role) VALUES
   ('01JS96Z96329JZHCYD45D72SYB', 'admin'),
@@ -254,13 +253,13 @@ VALUES
   ('01JS96Z963VA0P0RE84ZDEWX99', '01JSB1ZQK0A2X6JQK1Q2X6JQY');
 
 -- 大会データ挿入
-INSERT INTO competitions (id, name, type, scene_id)
+INSERT INTO competitions (id, name, type, scene_id, sport_id)
 VALUES
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', 'サッカーAリーグ', 'LEAGUE', '01JZSY6HF3AYEXVCT4WJ2YBYA7'),
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQB', 'バスケットボールCリーグ', 'LEAGUE', '01JZSY6HF3AYEXVCT4WJ2YBYA7'),
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQC', 'バレーボールAトーナメント', 'TOURNAMENT', '01JZSY6HF3AYEXVCT4WJ2YBYA7'),
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '陸上競技Dリーグ', 'LEAGUE', '01JZSY6HG9KZPFQ6FDCMZ4BBEZ'),
-  ('01JSD1ZQK0A2X6JQK1Q2X6JQE', '水泳Bトーナメント', 'TOURNAMENT', '01JZSY6HG9KZPFQ6FDCMZ4BBEZ');
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQA', 'サッカーAリーグ', 'LEAGUE', '01JZSY6HF3AYEXVCT4WJ2YBYA7', '01JS96Z963A6RT2C563DCSSCQN'),
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQB', 'バスケットボールCリーグ', 'LEAGUE', '01JZSY6HF3AYEXVCT4WJ2YBYA7', '01JS96Z9630FPVV0HFY7YR1BQ2'),
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQC', 'バレーボールAトーナメント', 'TOURNAMENT', '01JZSY6HF3AYEXVCT4WJ2YBYA7', '01JS96Z963QYQ0APZ6Z3K246HM'),
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQD', '陸上競技Dリーグ', 'LEAGUE', '01JZSY6HG9KZPFQ6FDCMZ4BBEZ', '01JS96Z96348RDDS4SRA5Y43JA'),
+  ('01JSD1ZQK0A2X6JQK1Q2X6JQE', '水泳Bトーナメント', 'TOURNAMENT', '01JZSY6HG9KZPFQ6FDCMZ4BBEZ', '01JS96Z963KZND56RX30AHX6C0');
 
 -- 大会エントリー中間テーブル
 INSERT INTO competition_entries (competition_id, team_id)
@@ -407,7 +406,6 @@ VALUES
         ('01K2B2C9Y4S6T7V8W9X0Y1Z2A3', '01K2A1XRY6J8K9W2M4V3N5P7XR', '01JSB1ZQK0A2X6JQK1Q2X6JQT');
 
 -- migrate:down
-DELETE FROM league_standings;
 DELETE FROM leagues;
 DELETE FROM judgments;
 DELETE FROM match_entries;

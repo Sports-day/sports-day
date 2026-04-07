@@ -6,13 +6,26 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
-	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/slices"
 )
+
+// Sport is the resolver for the sport field.
+func (r *competitionResolver) Sport(ctx context.Context, obj *model.Competition) (*model.Sport, error) {
+	if obj.SportID == "" {
+		return nil, nil
+	}
+	sports, err := loader.LoadSports(ctx, []string{obj.SportID})
+	if err != nil {
+		return nil, err
+	}
+	if len(sports) == 0 || sports[0] == nil {
+		return nil, nil
+	}
+	return model.FormatSportResponse(sports[0]), nil
+}
 
 // Scene is the resolver for the scene field.
 func (r *competitionResolver) Scene(ctx context.Context, obj *model.Competition) (*model.Scene, error) {
@@ -236,7 +249,7 @@ func (r *matchResolver) Competition(ctx context.Context, obj *model.Match) (*mod
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -433,7 +446,7 @@ func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*mode
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -445,7 +458,7 @@ func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group
 		return nil, err
 	}
 	if len(groups) == 0 || groups[0] == nil {
-		return nil, errors.ErrGroupNotFound
+		return nil, nil
 	}
 	return model.FormatGroupResponse(groups[0]), nil
 }
@@ -579,7 +592,7 @@ func (r *tournamentResolver) Competition(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -613,7 +626,7 @@ func (r *tournamentRankingResolver) Team(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -625,7 +638,7 @@ func (r *tournamentSlotResolver) Tournament(ctx context.Context, obj *model.Tour
 		return nil, err
 	}
 	if len(tournaments) == 0 || tournaments[0] == nil {
-		return nil, errors.ErrTournamentNotFound
+		return nil, nil
 	}
 	return r.computeBracketStateForTournament(ctx, tournaments[0])
 }

@@ -22,6 +22,7 @@ type Competition struct {
 	ID      string          `json:"id"`
 	Name    string          `json:"name"`
 	Type    CompetitionType `json:"type"`
+	SportID string          `json:"sportId"`
 	SceneID string          `json:"sceneId"`
 }
 
@@ -48,8 +49,11 @@ type Judgment struct {
 }
 
 type League struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	WinPt  int32  `json:"winPt"`
+	DrawPt int32  `json:"drawPt"`
+	LosePt int32  `json:"losePt"`
 }
 
 type Tournament struct {

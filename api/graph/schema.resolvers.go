@@ -6,10 +6,8 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
-	"sports-day/api/pkg/errors"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -1025,7 +1023,7 @@ func (r *queryResolver) Leagues(ctx context.Context) ([]*model.League, error) {
 	for _, league := range leagues {
 		comp, ok := compMap[league.ID]
 		if !ok {
-			return nil, errors.ErrCompetitionNotFound
+			return nil, nil
 		}
 		res = append(res, model.FormatLeagueResponse(league, comp))
 	}

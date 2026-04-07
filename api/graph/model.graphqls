@@ -49,6 +49,7 @@ type Competition {
   id: ID!
   name: String!
   type: CompetitionType!
+  sport: Sport!
   scene: Scene!
   teams: [Team!]!
   matches: [Match!]!
@@ -111,6 +112,9 @@ type Standing {
 type League {
   id: ID!
   name: String!
+  winPt: Int!
+  drawPt: Int!
+  losePt: Int!
   teams: [Team!]!
 }
 

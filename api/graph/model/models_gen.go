@@ -26,6 +26,7 @@ type CreateCompetitionInput struct {
 	Name    string          `json:"name"`
 	Type    CompetitionType `json:"type"`
 	SceneID string          `json:"sceneId"`
+	SportID string          `json:"sportId"`
 }
 
 type CreateGroupInput struct {
@@ -37,8 +38,9 @@ type CreateImageUploadURLInput struct {
 }
 
 type CreateInformationInput struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Title   string  `json:"title"`
+	Content string  `json:"content"`
+	Status  *string `json:"status,omitempty"`
 }
 
 type CreateJudgmentInput struct {
@@ -48,6 +50,8 @@ type CreateJudgmentInput struct {
 
 type CreateLeagueInput struct {
 	Name              string  `json:"name"`
+	SceneID           string  `json:"sceneId"`
+	SportID           string  `json:"sportId"`
 	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
 }
 
@@ -109,8 +113,9 @@ type CreateTournamentMatchInput struct {
 }
 
 type CreateUserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name   string  `json:"name"`
+	Email  string  `json:"email"`
+	Gender *string `json:"gender,omitempty"`
 }
 
 type DeleteSportEntriesInput struct {
@@ -151,6 +156,7 @@ type Information struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+	Status  string `json:"status"`
 }
 
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
@@ -238,7 +244,8 @@ type UpdateCompetitionEntriesInput struct {
 
 type UpdateCompetitionInput struct {
 	Name    *string `json:"name,omitempty"`
-	ImageID *string `json:"imageId,omitempty"`
+	SceneID *string `json:"sceneId,omitempty"`
+	SportID *string `json:"sportId,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -252,6 +259,7 @@ type UpdateGroupUsersInput struct {
 type UpdateInformationInput struct {
 	Title   *string `json:"title,omitempty"`
 	Content *string `json:"content,omitempty"`
+	Status  *string `json:"status,omitempty"`
 }
 
 type UpdateJudgmentInput struct {
@@ -330,6 +338,12 @@ type UpdateTeamUsersInput struct {
 type UpdateTournamentInput struct {
 	Name         *string `json:"name,omitempty"`
 	DisplayOrder *int32  `json:"displayOrder,omitempty"`
+}
+
+type UpdateUserInput struct {
+	Name   *string `json:"name,omitempty"`
+	Email  *string `json:"email,omitempty"`
+	Gender *string `json:"gender,omitempty"`
 }
 
 type UserIdentify struct {
