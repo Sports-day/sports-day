@@ -7,10 +7,9 @@ export function useUsers() {
     id: u.id,
     name: u.name,
     email: u.email,
-    gender: (u.gender ?? '') as '男性' | '女性',
-    class: u.groups[0]?.name ?? '',
-    teams: u.teams.map(t => t.id),
-    role: undefined,
+    gender: u.gender ?? '',
+    groupName: u.groups[0]?.name ?? '',
+    teams: u.teams.map(t => ({ id: t.id, name: t.name })),
   }))
   return { data: users, loading, error: error ?? null }
 }

@@ -71,7 +71,7 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                    {[user.id, user.name, user.email, user.gender, user.class, user.teams.join(', ')].map((val, i) => (
+                    {[user.id, user.name, user.email, user.gender, user.groupName, user.teams.map(t => t.name).join(', ')].map((val, i) => (
                       <TableCell
                         key={i}
                         sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}

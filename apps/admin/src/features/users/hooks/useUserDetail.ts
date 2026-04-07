@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   useGetAdminUserQuery,
   useUpdateAdminUserMutation,
@@ -17,10 +17,17 @@ export function useUserDetail(userId: string) {
   })
   const user = data?.user
 
-  const [gender, setGender] = useState(user?.gender ?? '')
-  const [userClass, setUserClass] = useState(user?.groups[0]?.name ?? '')
+  const [gender, setGender] = useState('')
+  const [userClass, setUserClass] = useState('')
   const [role, setRole] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      setGender(user.gender ?? '')
+      setUserClass(user.groups[0]?.name ?? '')
+    }
+  }, [user])
 
   const [updateUser] = useUpdateAdminUserMutation({
     refetchQueries: [{ query: GetAdminUsersDocument }],
