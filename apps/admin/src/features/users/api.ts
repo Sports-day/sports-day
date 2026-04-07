@@ -7,6 +7,7 @@ export const GET_ADMIN_USERS = gql`
       name
       email
       gender
+      role
       groups { id name }
       teams { id name }
     }
@@ -20,6 +21,7 @@ export const GET_ADMIN_USER = gql`
       name
       email
       gender
+      role
       groups { id name }
       teams { id name }
     }
@@ -52,6 +54,15 @@ export const DELETE_ADMIN_USER = gql`
   mutation DeleteAdminUser($id: ID!) {
     deleteUser(id: $id) {
       id
+    }
+  }
+`
+
+export const UPDATE_ADMIN_USER_ROLE = gql`
+  mutation UpdateAdminUserRole($userId: ID!, $role: Role!) {
+    updateUserRole(userId: $userId, role: $role) {
+      id
+      role
     }
   }
 `

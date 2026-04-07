@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   useGetAdminTeamQuery,
   useGetAdminUsersQuery,
@@ -20,13 +20,19 @@ export function useTeamDetail(teamId: string) {
   const team = data?.team
   const [name, setName] = useState('')
   const [groupId, setGroupId] = useState('')
+  const initialState = useRef({ name: '', groupId: '' })
 
   useEffect(() => {
     if (team) {
-      setName(team.name ?? '')
-      setGroupId(team.group?.id ?? '')
+      const n = team.name ?? ''
+      const g = team.group?.id ?? ''
+      setName(n)
+      setGroupId(g)
+      initialState.current = { name: n, groupId: g }
     }
   }, [team])
+
+  const dirty = name !== initialState.current.name || groupId !== initialState.current.groupId
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
@@ -136,6 +142,7 @@ export function useTeamDetail(teamId: string) {
     deleteDialogOpen,
     handleOpenDeleteDialog,
     handleCloseDeleteDialog,
+    dirty,
     teamName: team?.name ?? '',
     selectableUsers,
     loading,

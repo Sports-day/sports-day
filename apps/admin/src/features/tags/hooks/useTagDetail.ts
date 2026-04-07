@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   useGetAdminSceneForTagQuery,
   useUpdateAdminSceneForTagMutation,
@@ -12,10 +12,16 @@ export function useTagDetail(tagId: string) {
   const scene = data?.scene
 
   const [name, setName] = useState('')
+  const initialName = useRef('')
 
   useEffect(() => {
-    if (scene?.name !== undefined) setName(scene.name)
+    if (scene?.name !== undefined) {
+      setName(scene.name)
+      initialName.current = scene.name
+    }
   }, [scene?.name])
+
+  const dirty = name !== initialName.current
 
   const [updateScene] = useUpdateAdminSceneForTagMutation({
     refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
@@ -42,6 +48,7 @@ export function useTagDetail(tagId: string) {
   return {
     name,
     setName,
+    dirty,
     isDeleted: scene?.isDeleted ?? false,
     handleSave,
     handleDelete,

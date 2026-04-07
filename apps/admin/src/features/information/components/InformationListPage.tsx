@@ -52,17 +52,15 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
             <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 80 }}>ID</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 200 }}>名前</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 400 }}>内容</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>内容</TableCell>
                   <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 120 }}>ステータス</TableCell>
-                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 160 }}>作成日</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {announcements.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
                       データがありません
                     </TableCell>
                   </TableRow>
@@ -74,7 +72,6 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
                       onClick={() => onAnnouncementClick(item.id)}
                       sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
                     >
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{item.id}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.title}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.content}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>
@@ -89,8 +86,6 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
                             height: 22,
                           }}
                         />
-                      </TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>
                       </TableCell>
                     </TableRow>
                   ))

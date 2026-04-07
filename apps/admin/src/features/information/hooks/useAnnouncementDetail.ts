@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   useGetAdminInformationQuery,
   useUpdateAdminInformationMutation,
@@ -20,14 +20,23 @@ export function useAnnouncementDetail(id: string) {
   const [content, setContent] = useState('')
   const [status, setStatus] = useState<Announcement['status']>('draft')
   const [mutationError, setMutationError] = useState<Error | null>(null)
+  const initialState = useRef({ title: '', content: '', status: 'draft' as Announcement['status'] })
 
   useEffect(() => {
     if (item) {
-      setTitle(item.title)
-      setContent(item.content)
-      setStatus(parseStatus(item.status))
+      const t = item.title
+      const c = item.content
+      const s = parseStatus(item.status)
+      setTitle(t)
+      setContent(c)
+      setStatus(s)
+      initialState.current = { title: t, content: c, status: s }
     }
   }, [item?.title, item?.content, item?.status])
+
+  const dirty = title !== initialState.current.title
+    || content !== initialState.current.content
+    || status !== initialState.current.status
 
   const [updateInformation] = useUpdateAdminInformationMutation({
     refetchQueries: [{ query: GetAdminInformationsDocument }],
@@ -64,6 +73,7 @@ export function useAnnouncementDetail(id: string) {
     setContent,
     status,
     setStatus,
+    dirty,
     handleSave,
     handleDelete,
     loading,

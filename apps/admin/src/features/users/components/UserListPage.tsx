@@ -53,7 +53,7 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
           <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={LIST_TABLE_HEAD_SX}>ユーザーID</TableCell>
+                <TableCell sx={LIST_TABLE_HEAD_SX}>学籍番号</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>メール名</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
@@ -69,19 +69,19 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((user) => (
-                  <TableRow key={user.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                    {[user.id, user.name, user.email, user.gender, user.groupName, user.teams.map(t => t.name).join(', ')].map((val, i) => (
-                      <TableCell
-                        key={i}
-                        sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-                        onClick={() => onUserClick(user.id)}
-                      >
-                        {val}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                users.map((user) => {
+                  const cellSx = { ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }
+                  return (
+                    <TableRow key={user.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }} onClick={() => onUserClick(user.id)}>
+                      <TableCell sx={cellSx}>{user.id}</TableCell>
+                      <TableCell sx={cellSx}>{user.name}</TableCell>
+                      <TableCell sx={cellSx}>{user.email}</TableCell>
+                      <TableCell sx={{ ...cellSx, color: user.gender === '女' ? '#D71212' : undefined }}>{user.gender}</TableCell>
+                      <TableCell sx={cellSx}>{user.groupName}</TableCell>
+                      <TableCell sx={cellSx}>{user.teams.map(t => t.name).join(', ')}</TableCell>
+                    </TableRow>
+                  )
+                })
               )}
             </TableBody>
           </Table>

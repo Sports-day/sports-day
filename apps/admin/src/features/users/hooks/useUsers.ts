@@ -8,6 +8,7 @@ export function useUsers() {
     name: u.name,
     email: u.email,
     gender: u.gender ?? '',
+    role: u.role,
     groupName: u.groups[0]?.name ?? '',
     teams: u.teams.map(t => ({ id: t.id, name: t.name })),
   }))

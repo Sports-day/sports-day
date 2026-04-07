@@ -1,35 +1,61 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
+  Role,
   useGetAdminUserQuery,
+  useGetAdminGroupsQuery,
   useUpdateAdminUserMutation,
+  useUpdateAdminUserRoleMutation,
   useDeleteAdminUserMutation,
   GetAdminUsersDocument,
 } from '@/gql/__generated__/graphql'
 
-const GENDER_OPTIONS = ['男性', '女性']
-const CLASS_OPTIONS = ['Class A', 'Class B', 'Class C']
-const ROLE_OPTIONS = ['管理者', '一般', 'ゲスト']
+const GENDER_SCENES = [
+  { id: '男', name: '男' },
+  { id: '女', name: '女' },
+]
+const ROLE_SCENES = [
+  { id: Role.Admin, name: '管理者' },
+  { id: Role.Organizer, name: '運営者' },
+  { id: Role.Participant, name: '参加者' },
+]
 
 export function useUserDetail(userId: string) {
   const { data, loading, error } = useGetAdminUserQuery({
     variables: { id: userId },
     skip: !userId,
   })
+  const { data: groupsData } = useGetAdminGroupsQuery()
   const user = data?.user
 
   const [gender, setGender] = useState('')
-  const [userClass, setUserClass] = useState('')
+  const [groupId, setGroupId] = useState('')
   const [role, setRole] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const initialState = useRef({ gender: '', groupId: '', role: '' })
 
   useEffect(() => {
     if (user) {
-      setGender(user.gender ?? '')
-      setUserClass(user.groups[0]?.name ?? '')
+      const g = user.gender ?? ''
+      const gid = user.groups[0]?.id ?? ''
+      setGender(g)
+      setGroupId(gid)
+      setRole(user.role)
+      initialState.current = { gender: g, groupId: gid, role: user.role }
     }
   }, [user])
 
+  const groups = groupsData?.groups ?? []
+
+  const dirty =
+    gender !== initialState.current.gender ||
+    groupId !== initialState.current.groupId ||
+    role !== initialState.current.role
+
   const [updateUser] = useUpdateAdminUserMutation({
+    refetchQueries: [{ query: GetAdminUsersDocument }],
+  })
+
+  const [updateUserRole] = useUpdateAdminUserRoleMutation({
     refetchQueries: [{ query: GetAdminUsersDocument }],
   })
 
@@ -49,6 +75,11 @@ export function useUserDetail(userId: string) {
         },
       },
     })
+    if (user && role && role !== user.role) {
+      await updateUserRole({
+        variables: { userId, role: role as Role },
+      })
+    }
   }
 
   const handleDeleteUser = async () => {
@@ -61,18 +92,19 @@ export function useUserDetail(userId: string) {
     userName: user?.name ?? '',
     gender,
     setGender,
-    userClass,
-    setUserClass,
+    groupId,
+    setGroupId,
+    groups,
     role,
     setRole,
+    dirty,
     handleSave,
     handleDeleteUser,
     deleteDialogOpen,
     openDeleteDialog: () => setDeleteDialogOpen(true),
     closeDeleteDialog: () => setDeleteDialogOpen(false),
-    genderOptions: GENDER_OPTIONS,
-    classOptions: CLASS_OPTIONS,
-    roleOptions: ROLE_OPTIONS,
+    genderScenes: GENDER_SCENES,
+    roleScenes: ROLE_SCENES,
     loading,
     error: error ?? null,
   }

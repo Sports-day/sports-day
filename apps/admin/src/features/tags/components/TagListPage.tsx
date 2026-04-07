@@ -81,7 +81,6 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
           <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={TABLE_HEAD_SX}>タグID</TableCell>
                 <TableCell sx={TABLE_HEAD_SX}>名前</TableCell>
                 <TableCell sx={TABLE_HEAD_SX}>状態</TableCell>
               </TableRow>
@@ -89,13 +88,12 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
             <TableBody>
               {tags.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                  <TableCell colSpan={2} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
                     データがありません
                   </TableCell>
                 </TableRow>
               ) : tags.map((tag) => (
                 <TableRow key={tag.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                  <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onTagClick(tag.id)}>{tag.id}</TableCell>
                   <TableCell sx={CLICKABLE_CELL_SX} onClick={() => onTagClick(tag.id)}>{tag.name}</TableCell>
                   <TableCell sx={TABLE_CELL_SX}>
                     <Chip

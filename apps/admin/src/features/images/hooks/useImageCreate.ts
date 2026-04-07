@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import { useApolloClient } from '@apollo/client'
 import { useCreateAdminImageUploadUrlMutation, GetAdminImagesDocument } from '@/gql/__generated__/graphql'
 
 export function useImageCreate(onSuccess?: () => void) {
@@ -6,10 +7,21 @@ export function useImageCreate(onSuccess?: () => void) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const client = useApolloClient()
 
-  const [createImageUploadUrl] = useCreateAdminImageUploadUrlMutation({
-    refetchQueries: [{ query: GetAdminImagesDocument }],
-  })
+  const [createImageUploadUrl] = useCreateAdminImageUploadUrlMutation()
+
+  const pollUntilUploaded = useCallback(async (imageId: string) => {
+    for (let i = 0; i < 10; i++) {
+      await new Promise(r => setTimeout(r, 1000))
+      const { data } = await client.query({
+        query: GetAdminImagesDocument,
+        fetchPolicy: 'network-only',
+      })
+      const img = data?.images?.find((img: { id: string }) => img.id === imageId)
+      if (img?.status === 'uploaded') return
+    }
+  }, [client])
 
   const handleFileSelect = (selectedFile: File | null) => {
     setFile(selectedFile)
@@ -27,6 +39,7 @@ export function useImageCreate(onSuccess?: () => void) {
         variables: { input: { filename: file.name } },
       })
       const uploadUrl = data?.createImageUploadURL?.uploadUrl
+      const imageId = data?.createImageUploadURL?.imageId
       if (!uploadUrl) throw new Error('アップロードURLの取得に失敗しました')
 
       // 2. S3にファイルをPUTアップロード
@@ -36,6 +49,9 @@ export function useImageCreate(onSuccess?: () => void) {
         headers: { 'Content-Type': file.type || 'application/octet-stream' },
       })
       if (!response.ok) throw new Error(`アップロードに失敗しました: ${response.status}`)
+
+      // 3. webhookによるステータス更新をポーリングで待つ
+      if (imageId) await pollUntilUploaded(imageId)
 
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''

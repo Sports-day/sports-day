@@ -53,15 +53,13 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
             <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={LIST_TABLE_HEAD_SX}>場所ID</TableCell>
                   <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
-                  <TableCell sx={LIST_TABLE_HEAD_SX}>説明</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {locations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    <TableCell colSpan={1} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
                       データがありません
                     </TableCell>
                   </TableRow>
@@ -73,9 +71,7 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
                       onClick={() => onSelectLocation(location.id)}
                       sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
                     >
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{location.id}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{location.name}</TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}></TableCell>
                     </TableRow>
                   ))
                 )}

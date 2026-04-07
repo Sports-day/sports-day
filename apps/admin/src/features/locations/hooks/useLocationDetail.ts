@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   useGetAdminLocationQuery,
   useUpdateAdminLocationMutation,
@@ -11,10 +11,16 @@ export function useLocationDetail(locationId: string, onSave: () => void, onDele
   const location = data?.location
 
   const [name, setName] = useState('')
+  const initialName = useRef('')
 
   useEffect(() => {
-    if (location?.name !== undefined) setName(location.name)
+    if (location?.name !== undefined) {
+      setName(location.name)
+      initialName.current = location.name
+    }
   }, [location?.name])
+
+  const dirty = name !== initialName.current
 
   const [updateLocation] = useUpdateAdminLocationMutation({
     refetchQueries: [{ query: GetAdminLocationsDocument }],
@@ -33,5 +39,5 @@ export function useLocationDetail(locationId: string, onSave: () => void, onDele
     onDelete()
   }
 
-  return { location, name, setName, handleSave, handleDelete, loading, error: error ?? null }
+  return { location, name, setName, dirty, handleSave, handleDelete, loading, error: error ?? null }
 }

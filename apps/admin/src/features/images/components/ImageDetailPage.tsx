@@ -91,9 +91,9 @@ export function ImageDetailPage({ imageId, onBack }: Props) {
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" onClick={onDelete} sx={DELETE_BUTTON_SX}>
-            この画像を削除
+        <Box sx={{ width: 160 }}>
+          <Button variant="outlined" onClick={onDelete} fullWidth sx={DELETE_BUTTON_SX}>
+            削除
           </Button>
         </Box>
       </Box>
