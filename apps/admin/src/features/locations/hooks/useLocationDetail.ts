@@ -11,7 +11,6 @@ export function useLocationDetail(locationId: string, onSave: () => void, onDele
   const location = data?.location
 
   const [name, setName] = useState('')
-  const [note, setNote] = useState('') // 【未確定】GraphQL Location に description はない
 
   useEffect(() => {
     if (location?.name !== undefined) setName(location.name)
@@ -34,5 +33,5 @@ export function useLocationDetail(locationId: string, onSave: () => void, onDele
     onDelete()
   }
 
-  return { location, name, note, setName, setNote, handleSave, handleDelete, loading, error: error ?? null }
+  return { location, name, setName, handleSave, handleDelete, loading, error: error ?? null }
 }

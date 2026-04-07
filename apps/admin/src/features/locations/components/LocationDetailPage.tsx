@@ -28,7 +28,7 @@ type Props = {
 }
 
 export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Props) {
-  const { location, name, note, setName, setNote, handleSave, handleDelete } = useLocationDetail(locationId, onSave, onDelete)
+  const { location, name, setName, handleSave, handleDelete } = useLocationDetail(locationId, onSave, onDelete)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [dirty, setDirty] = useState(false)
   useUnsavedWarning(dirty)
@@ -75,15 +75,6 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
               label="名称*"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              fullWidth
-              size="small"
-              sx={CARD_FIELD_SX}
-            />
-
-            <TextField
-              label="備考"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
               fullWidth
               size="small"
               sx={CARD_FIELD_SX}

@@ -3,11 +3,10 @@ import { useCreateAdminLocationMutation, GetAdminLocationsDocument } from '@/gql
 
 type LocationCreateForm = {
   name: string
-  note: string
 }
 
 export function useLocationCreate(onSave: () => void) {
-  const [form, setForm] = useState<LocationCreateForm>({ name: '', note: '' })
+  const [form, setForm] = useState<LocationCreateForm>({ name: '' })
   const [createLocation] = useCreateAdminLocationMutation({
     refetchQueries: [{ query: GetAdminLocationsDocument }],
   })
@@ -20,7 +19,6 @@ export function useLocationCreate(onSave: () => void) {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return
-    // note (description) は 【未確定】GraphQL CreateLocationInput に存在しない
     await createLocation({ variables: { input: { name: form.name } } })
     onSave()
   }

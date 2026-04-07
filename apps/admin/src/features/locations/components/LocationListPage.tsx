@@ -75,7 +75,7 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
                     >
                       <TableCell sx={LIST_TABLE_CELL_SX}>{location.id}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{location.name}</TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{location.description}</TableCell>
+                      <TableCell sx={LIST_TABLE_CELL_SX}></TableCell>
                     </TableRow>
                   ))
                 )}

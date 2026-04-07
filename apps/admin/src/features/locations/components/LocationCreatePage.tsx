@@ -49,15 +49,6 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
               sx={CARD_FIELD_CREATE_SX}
             />
 
-            <TextField
-              placeholder="備考*"
-              value={form.note}
-              onChange={handleChange('note')}
-              fullWidth
-              size="small"
-              sx={CARD_FIELD_CREATE_SX}
-            />
-
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 variant="contained"
