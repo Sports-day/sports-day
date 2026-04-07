@@ -75,7 +75,7 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
                       sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
                     >
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.id}</TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{item.name}</TableCell>
+                      <TableCell sx={LIST_TABLE_CELL_SX}>{item.title}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.content}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>
                         <Chip
@@ -91,7 +91,6 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
                         />
                       </TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>
-                        {item.createdAt ? new Date(item.createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
                       </TableCell>
                     </TableRow>
                   ))

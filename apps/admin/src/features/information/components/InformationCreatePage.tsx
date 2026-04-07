@@ -22,12 +22,12 @@ type Props = {
 }
 
 export function InformationCreatePage({ onBack }: Props) {
-  const { name, setName, content, setContent, status, setStatus, handleCreate } = useInformationCreate(onBack)
+  const { title, setTitle, content, setContent, status, setStatus, handleCreate } = useInformationCreate(onBack)
   const [submitted, setSubmitted] = useState(false)
 
   const onCreate = () => {
     setSubmitted(true)
-    if (!name.trim()) return
+    if (!title.trim()) return
     handleCreate()
     showToast('お知らせを作成しました')
   }
@@ -46,7 +46,7 @@ export function InformationCreatePage({ onBack }: Props) {
           お知らせ作成
         </Typography>
 
-        <TextField fullWidth size="small" label="名前*" value={name} onChange={(e) => setName(e.target.value)} error={submitted && !name.trim()} helperText={submitted && !name.trim() ? 'この項目は必須です' : ''} sx={INPUT_SX} />
+        <TextField fullWidth size="small" label="タイトル*" value={title} onChange={(e) => setTitle(e.target.value)} error={submitted && !title.trim()} helperText={submitted && !title.trim() ? 'この項目は必須です' : ''} sx={INPUT_SX} />
         <TextField fullWidth size="small" label="内容*" value={content} onChange={(e) => setContent(e.target.value)} sx={INPUT_SX} />
 
         <TextField
@@ -65,7 +65,7 @@ export function InformationCreatePage({ onBack }: Props) {
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="contained"
-            disabled={!name.trim()}
+            disabled={!title.trim()}
             onClick={onCreate}
             sx={{ ...SAVE_BUTTON_SX, fontSize: '13px' }}
           >

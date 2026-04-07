@@ -16,14 +16,14 @@ export function useAnnouncementDetail(id: string) {
   const { data, loading, error } = useGetAdminInformationQuery({ variables: { id } })
   const item = data?.Information
 
-  const [name, setName] = useState('')
+  const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [status, setStatus] = useState<Announcement['status']>('draft')
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
   useEffect(() => {
     if (item) {
-      setName(item.title)
+      setTitle(item.title)
       setContent(item.content)
       setStatus(parseStatus(item.status))
     }
@@ -39,7 +39,7 @@ export function useAnnouncementDetail(id: string) {
   const handleSave = async () => {
     try {
       await updateInformation({
-        variables: { id, input: { title: name, content, status } },
+        variables: { id, input: { title, content, status } },
       })
       setMutationError(null)
     } catch (e) {
@@ -57,15 +57,13 @@ export function useAnnouncementDetail(id: string) {
   }
 
   return {
-    announcementName: item?.title ?? '',
-    name,
-    setName,
+    announcementTitle: item?.title ?? '',
+    title,
+    setTitle,
     content,
     setContent,
     status,
     setStatus,
-    createdAt: '',
-    updatedAt: '',
     handleSave,
     handleDelete,
     loading,

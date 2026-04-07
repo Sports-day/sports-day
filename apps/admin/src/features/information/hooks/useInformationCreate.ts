@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useCreateAdminInformationMutation, GetAdminInformationsDocument } from '@/gql/__generated__/graphql'
 
 export function useInformationCreate(onSave: () => void) {
-  const [name, setName] = useState('')
+  const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [status, setStatus] = useState<'published' | 'draft'>('draft')
   const [mutationError, setMutationError] = useState<Error | null>(null)
@@ -12,10 +12,10 @@ export function useInformationCreate(onSave: () => void) {
   })
 
   const handleCreate = async () => {
-    if (!name.trim()) return
+    if (!title.trim()) return
     try {
       await createInformation({
-        variables: { input: { title: name, content, status } },
+        variables: { input: { title, content, status } },
       })
       setMutationError(null)
       onSave()
@@ -24,5 +24,5 @@ export function useInformationCreate(onSave: () => void) {
     }
   }
 
-  return { name, setName, content, setContent, status, setStatus, handleCreate, error: mutationError }
+  return { title, setTitle, content, setContent, status, setStatus, handleCreate, error: mutationError }
 }

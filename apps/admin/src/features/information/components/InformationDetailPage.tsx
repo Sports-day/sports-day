@@ -12,7 +12,7 @@ type Props = {
 }
 
 export function InformationDetailPage({ announcementId, onBack }: Props) {
-  const { announcementName, name, setName, content, setContent, status, setStatus, createdAt, updatedAt, handleSave, handleDelete } =
+  const { announcementTitle, title, setTitle, content, setContent, status, setStatus, handleSave, handleDelete } =
     useAnnouncementDetail(announcementId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -38,20 +38,20 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           お知らせ
         </ButtonBase>
-        <Typography sx={BREADCRUMB_CURRENT_SX}>{announcementName}</Typography>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>{announcementTitle}</Typography>
       </Breadcrumbs>
 
       <Card sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
-            {announcementName}を編集
+            {announcementTitle}を編集
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }} onChangeCapture={() => setDirty(true)}>
             <TextField
-              label="名前*"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              label="タイトル*"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               fullWidth
               size="small"
               sx={CARD_FIELD_SX}
@@ -66,21 +66,6 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
               rows={4}
               sx={CARD_FIELD_SX}
             />
-
-            {(createdAt || updatedAt) && (
-              <Box sx={{ display: 'flex', gap: 3, mb: 1 }}>
-                {createdAt && (
-                  <Typography sx={{ fontSize: '13px', color: '#5B6DC6' }}>
-                    作成日: {new Date(createdAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                  </Typography>
-                )}
-                {updatedAt && (
-                  <Typography sx={{ fontSize: '13px', color: '#5B6DC6' }}>
-                    更新日: {new Date(updatedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                  </Typography>
-                )}
-              </Box>
-            )}
 
             <TextField
               label="ステータス"
