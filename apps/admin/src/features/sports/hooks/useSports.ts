@@ -8,6 +8,7 @@ export function useSports() {
     name: s.name,
     weight: s.weight,
     imageUrl: s.image?.url ?? '',
+    sceneNames: (s.scene ?? []).map(sc => sc.scene.name),
   }))
   return { data: sports, loading, error: error ?? null }
 }

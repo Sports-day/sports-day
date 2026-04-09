@@ -26,13 +26,14 @@ type SportSceneEntry = { sportSceneId: string; sceneId: string }
 type Snapshot = {
   name: string
   weight: number
+  experiencedLimit: number | null
   rankingKeys: RankingConditionKey[]
   imageId: string | null
   sceneIds: string[]
   sportScenes: SportSceneEntry[]
 }
 
-const EMPTY: Snapshot = { name: '', weight: 0, rankingKeys: [], imageId: null, sceneIds: [], sportScenes: [] }
+const EMPTY: Snapshot = { name: '', weight: 0, experiencedLimit: null, rankingKeys: [], imageId: null, sceneIds: [], sportScenes: [] }
 
 export function useSportDetail(sportId: string, onDelete: () => void) {
   const { data, loading, error, refetch } = useGetAdminSportQuery({ variables: { id: sportId } })
@@ -43,6 +44,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
   // フォーム状態
   const [name, setName] = useState('')
   const [weight, setWeight] = useState(0)
+  const [experiencedLimit, setExperiencedLimit] = useState<number | null>(null)
   const [rankingKeys, setRankingKeys] = useState<RankingConditionKey[]>([])
   const [imageId, setImageId] = useState<string | null>(null)
   const [sceneIds, setSceneIds] = useState<string[]>([])
@@ -67,6 +69,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
     const snap: Snapshot = {
       name: sport.name,
       weight: sport.weight,
+      experiencedLimit: sport.experiencedLimit ?? null,
       rankingKeys: sorted.map(r => r.conditionKey),
       imageId: sport.image?.id ?? null,
       sceneIds: sportScenes.map(ss => ss.sceneId),
@@ -74,6 +77,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
     }
     setName(snap.name)
     setWeight(snap.weight)
+    setExperiencedLimit(snap.experiencedLimit)
     setRankingKeys(snap.rankingKeys)
     setImageId(snap.imageId)
     setSceneIds(snap.sceneIds)
@@ -83,6 +87,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
   // dirty = フォーム現在値と最後に保存された値の比較
   const dirty = name !== saved.name
     || weight !== saved.weight
+    || experiencedLimit !== saved.experiencedLimit
     || imageId !== saved.imageId
     || JSON.stringify([...sceneIds].sort()) !== JSON.stringify([...saved.sceneIds].sort())
     || JSON.stringify(rankingKeys) !== JSON.stringify(saved.rankingKeys)
@@ -107,9 +112,11 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
   const [deleteSportScene] = useDeleteAdminSportSceneMutation()
 
   const handleSave = async () => {
+    if (!name.trim() || weight < 0 || !Number.isInteger(weight)) return
     // クロージャの値をローカル変数に固定
-    const n = name
+    const n = name.slice(0, 64)
     const w = weight
+    const el = experiencedLimit
     const img = imageId
     const rk = [...rankingKeys]
     const sIds = [...sceneIds]
@@ -117,7 +124,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
 
     // 1) 基本フィールド保存
     await updateSport({
-      variables: { id: sportId, input: { name: n, weight: w, imageId: img } },
+      variables: { id: sportId, input: { name: n, weight: w, experiencedLimit: el, imageId: img } },
     })
 
     // 2) 採点方式保存
@@ -155,6 +162,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
     setSaved({
       name: n,
       weight: w,
+      experiencedLimit: el,
       imageId: img,
       sceneIds: sIds,
       rankingKeys: rk,
@@ -173,6 +181,8 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
     setName,
     weight,
     setWeight,
+    experiencedLimit,
+    setExperiencedLimit,
     imageId,
     setImageId,
     images,

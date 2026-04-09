@@ -20,7 +20,7 @@ import { SportRulesSection } from './SportRulesSection'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import { ScoringDnDList } from '@/features/competitions/components/ScoringDnDList'
 import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, CARD_FIELD_SX } from '@/styles/commonSx'
-import { showToast } from '@/lib/toast'
+import { showToast, showErrorToast } from '@/lib/toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Props = {
@@ -36,6 +36,8 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
     setName,
     weight,
     setWeight,
+    experiencedLimit,
+    setExperiencedLimit,
     imageId,
     setImageId,
     images,
@@ -67,8 +69,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
       await handleSave()
       showToast('競技を保存しました')
     } catch (e) {
-      console.error('保存エラー:', e)
-      showToast('保存に失敗しました')
+      showErrorToast('保存に失敗しました。')
     }
   }
 
@@ -91,7 +92,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
         </Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
@@ -184,7 +185,10 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
                 onChange={(e) => setName(e.target.value)}
                 fullWidth
                 size="small"
+                error={!name.trim() && dirty}
+                helperText={!name.trim() && dirty ? 'この項目は必須です' : name.length >= 60 ? `${name.length}/64文字` : ''}
                 sx={CARD_FIELD_SX}
+                slotProps={{ htmlInput: { maxLength: 64 } }}
               />
 
               <TextField
@@ -194,7 +198,25 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
                 onChange={(e) => setWeight(Number(e.target.value))}
                 fullWidth
                 size="small"
+                error={weight < 0 || !Number.isInteger(weight)}
+                helperText={weight < 0 ? '0以上の値を入力してください' : !Number.isInteger(weight) ? '整数を入力してください' : ''}
                 sx={CARD_FIELD_SX}
+                slotProps={{ htmlInput: { min: 0, step: 1 } }}
+              />
+
+              <TextField
+                label="経験者上限（1チームあたり）"
+                type="number"
+                value={experiencedLimit ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setExperiencedLimit(v === '' ? null : Number(v))
+                }}
+                fullWidth
+                size="small"
+                helperText="未設定の場合は制限なし"
+                sx={CARD_FIELD_SX}
+                slotProps={{ htmlInput: { min: 0, step: 1 } }}
               />
 
               <SceneSelect multiple value={sceneIds} onChange={setSceneIds} scenes={allScenes} />
@@ -228,7 +250,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
               fullWidth
               startIcon={<CheckIcon />}
               onClick={handleSaveWithToast}
-              disabled={!dirty || !name.trim()}
+              disabled={!dirty || !name.trim() || weight < 0 || !Number.isInteger(weight)}
               sx={SAVE_BUTTON_SX}
             >
               保存

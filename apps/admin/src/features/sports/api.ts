@@ -7,6 +7,10 @@ export const GET_ADMIN_SPORTS = gql`
       name
       weight
       image { id url }
+      scene {
+        id
+        scene { id name }
+      }
     }
   }
 `
@@ -17,6 +21,7 @@ export const GET_ADMIN_SPORT = gql`
       id
       name
       weight
+      experiencedLimit
       image { id url }
       rankingRules {
         conditionKey
@@ -46,6 +51,7 @@ export const UPDATE_ADMIN_SPORT = gql`
       id
       name
       weight
+      experiencedLimit
     }
   }
 `

@@ -19,7 +19,7 @@ export function useSportCreate(onSave: () => void) {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return
-    await createSport({ variables: { input: { name: form.name } } })
+    await createSport({ variables: { input: { name: form.name.slice(0, 64) } } })
     onSave()
   }
 

@@ -66,6 +66,8 @@ export function SportRulesSection({ sportId, rule }: Props) {
             maxRows={14}
             fullWidth
             autoFocus
+            helperText={`${editText.length}/10000文字`}
+            slotProps={{ htmlInput: { maxLength: 10000 } }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 fontSize: '13px',

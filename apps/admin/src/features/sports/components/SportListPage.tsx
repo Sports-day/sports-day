@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -9,7 +10,10 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import SportsIcon from '@mui/icons-material/Sports'
 import { useSports } from '../hooks/useSports'
+import { QueryError } from '@/components/ui/QueryError'
 import { CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
+import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
+import { useFilterParams } from '@/hooks/useFilterParams'
 
 type Props = {
   onNavigateToCreate: () => void
@@ -18,9 +22,40 @@ type Props = {
 
 export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
   const { data: sports, loading, error } = useSports()
+  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'scene'])
+  const keyword = fp.keyword
+  const sceneFilter = fp.scene
+
+  const sceneOptions = useMemo(() => {
+    const set = new Set<string>()
+    for (const s of sports) {
+      for (const name of s.sceneNames) set.add(name)
+    }
+    return Array.from(set).sort().map(name => ({ value: name, label: name }))
+  }, [sports])
+
+  const filterDefs: FilterDef[] = useMemo(() => [
+    { key: 'scene', label: 'シーン', options: sceneOptions },
+  ], [sceneOptions])
+
+  const filterValues = useMemo(() => ({ scene: sceneFilter }), [sceneFilter])
+
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    setFilter(key, value)
+  }, [setFilter])
+
+  const filtered = useMemo(() => {
+    let result = sports
+    if (keyword) {
+      const kw = keyword.toLowerCase()
+      result = result.filter(s => s.name.toLowerCase().includes(kw))
+    }
+    if (sceneFilter) result = result.filter(s => s.sceneNames.includes(sceneFilter))
+    return result
+  }, [sports, keyword, sceneFilter])
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
-  if (error) return <Typography sx={{ color: '#D71212', mt: 2 }}>データの取得に失敗しました</Typography>
+  if (error) return <QueryError />
 
   return (
     <Box>
@@ -28,7 +63,20 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
         競技
       </Typography>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Box sx={{ mb: 2 }}>
+        <SearchFilterBar
+          keyword={keyword}
+          onKeywordChange={(v) => setFilter('keyword', v)}
+          placeholder="競技名で検索…"
+          filters={filterDefs}
+          filterValues={filterValues}
+          onFilterChange={handleFilterChange}
+          resultCount={filtered.length}
+          onReset={resetFilters}
+        />
+      </Box>
+
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
             <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
@@ -45,13 +93,13 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
             </Button>
           </Box>
 
-          {sports.length === 0 ? (
+          {filtered.length === 0 ? (
             <Typography sx={{ py: 8, color: '#888', fontSize: '13px', textAlign: 'center' }}>
-              データがありません
+              {keyword || sceneFilter ? '条件に一致する競技がありません' : 'データがありません'}
             </Typography>
           ) : (
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1 }}>
-              {sports.map((sport) => (
+              {filtered.map((sport) => (
                 <Button
                   key={sport.id}
                   variant="text"

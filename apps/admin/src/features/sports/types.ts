@@ -3,4 +3,5 @@ export type Sport = {
   name: string
   weight: number
   imageUrl: string
+  sceneNames: string[]
 }
