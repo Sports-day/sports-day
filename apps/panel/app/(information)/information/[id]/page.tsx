@@ -22,11 +22,10 @@ export default function Page() {
     const {matches, isFetching: isMatchesFetching} = useFetchMatches()
     const {progress, isFetching: isProgressFetching} = useFetchSportProgress(sportId)
 
-    // sport.scene のシーンIDに一致するgamesをフィルタ
+    // sportIdに一致するgamesをフィルタ
     const filteredGames = useMemo(() => {
-        const sceneIds = new Set((sport?.scene ?? []).map(ss => ss.scene.id))
-        return games.filter((game) => sceneIds.has(game.scene.id))
-    }, [games, sport])
+        return games.filter((game) => game.sport?.id === sportId)
+    }, [games, sportId])
 
     const formattedProgress = Math.trunc((progress ?? 0) * 100)
     const chartSeries = [formattedProgress, 100 - formattedProgress]

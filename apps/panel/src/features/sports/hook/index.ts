@@ -31,10 +31,9 @@ export const useFetchSportProgress = (sportId: string | number) => {
   const { sport, isFetching: isSportFetching } = useFetchSport(sportIdStr)
   const { data: matchesData, loading: isMatchesFetching } = useGetPanelMatchesQuery()
 
-  // sport.scene[].scene.id に一致する competition の match を抽出
-  const sceneIds = new Set((sport?.scene ?? []).map(ss => ss.scene.id))
+  // sportId に一致する competition の match を抽出
   const sportMatches = (matchesData?.matches ?? []).filter(m =>
-    sceneIds.has(m.competition.scene.id)
+    m.competition.sport?.id === sportIdStr
   )
 
   const total = sportMatches.length

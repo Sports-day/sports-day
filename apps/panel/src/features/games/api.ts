@@ -7,6 +7,9 @@ export const GET_COMPETITIONS = gql`
       id
       name
       type
+      sport {
+        id
+      }
       scene {
         id
         name

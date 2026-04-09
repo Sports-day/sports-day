@@ -9,9 +9,11 @@ import {
 type GqlCompetition = GetPanelCompetitionsQuery["competitions"][0];
 
 export const useFetchGames = (_filter: boolean = false) => {
-  const { data, loading, refetch } = useGetPanelCompetitionsQuery();
+  const { data, loading, refetch } = useGetPanelCompetitionsQuery({
+    errorPolicy: 'all',
+  });
   return {
-    games: data?.competitions ?? [],
+    games: (data?.competitions ?? []).filter(Boolean),
     isFetching: loading,
     refresh: refetch,
   };

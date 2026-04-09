@@ -54,11 +54,10 @@ export default function Page() {
     const {users, isFetching: isUsersFetching, refresh: refreshUsers} = useFetchUsers()
     const {user, isFetching: isUserFetching} = useFetchUserinfo()
 
-    // sport.scene のシーンIDに一致するgamesをフィルタ
+    // sportIdに一致するgamesをフィルタ
     const games = useMemo(() => {
-        const sceneIds = new Set((sport?.scene ?? []).map(ss => ss.scene.id))
-        return allGames.filter(game => sceneIds.has(game.scene.id))
-    }, [allGames, sport])
+        return allGames.filter(game => game.sport?.id === sportId)
+    }, [allGames, sportId])
 
     // ユーザーのチームを取得
     const myTeams = useMemo(() =>
@@ -288,7 +287,7 @@ export default function Page() {
                                                                     alignItems={"flex-start"}
                                                                 >
                                                                     <Typography fontSize={"14px"}>
-                                                                        あなたのリーグ
+                                                                        参加中
                                                                     </Typography>
                                                                     <Typography>
                                                                         {myGame?.name}

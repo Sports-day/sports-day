@@ -4,9 +4,11 @@ import {
 } from "@/src/gql/__generated__/graphql";
 
 export const useFetchMatches = () => {
-  const { data, loading, refetch } = useGetPanelMatchesQuery();
+  const { data, loading, refetch } = useGetPanelMatchesQuery({
+    errorPolicy: 'all',
+  });
   return {
-    matches: data?.matches ?? [],
+    matches: (data?.matches ?? []).filter(Boolean),
     isFetching: loading,
     refresh: refetch,
   };

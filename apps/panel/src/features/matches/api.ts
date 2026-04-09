@@ -13,6 +13,9 @@ export const GET_MATCHES = gql`
       competition {
         id
         name
+        sport {
+          id
+        }
         scene {
           id
         }

@@ -50,6 +50,7 @@ export type Competition = {
   matches: Array<Match>;
   name: Scalars['String']['output'];
   scene: Scene;
+  sport: Sport;
   teams: Array<Team>;
   tournaments: Array<Tournament>;
   type: CompetitionType;
@@ -63,6 +64,7 @@ export enum CompetitionType {
 export type CreateCompetitionInput = {
   name: Scalars['String']['input'];
   sceneId: Scalars['ID']['input'];
+  sportId: Scalars['ID']['input'];
   type: CompetitionType;
 };
 
@@ -76,6 +78,7 @@ export type CreateImageUploadUrlInput = {
 
 export type CreateInformationInput = {
   content: Scalars['String']['input'];
+  status?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
 };
 
@@ -87,6 +90,8 @@ export type CreateJudgmentInput = {
 export type CreateLeagueInput = {
   defaultLocationId?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
+  sceneId: Scalars['ID']['input'];
+  sportId: Scalars['ID']['input'];
 };
 
 export type CreateLocationInput = {
@@ -148,6 +153,7 @@ export type CreateTournamentMatchInput = {
 
 export type CreateUserInput = {
   email: Scalars['String']['input'];
+  gender?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
 };
 
@@ -172,6 +178,14 @@ export type GenerateRoundRobinInput = {
   locationId?: InputMaybe<Scalars['ID']['input']>;
   matchDuration: Scalars['Int']['input'];
   startTime: Scalars['String']['input'];
+};
+
+/** サブブラケット自動生成 */
+export type GenerateSubBracketInput = {
+  competitionId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  placementMethod?: InputMaybe<PlacementMethod>;
+  teamCount: Scalars['Int']['input'];
 };
 
 export type Group = {
@@ -226,9 +240,12 @@ export type JudgmentEntry = {
 
 export type League = {
   __typename?: 'League';
+  drawPt: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  losePt: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   teams: Array<Team>;
+  winPt: Scalars['Int']['output'];
 };
 
 export type Location = {
@@ -278,6 +295,8 @@ export type Mutation = {
   addMatchEntries: Match;
   /** スポーツシーンにチームエントリーを一括追加する */
   addSportEntries: SportScene;
+  /** スポーツの経験者を追加する */
+  addSportExperiences: Array<SportExperience>;
   /** シーンにスポーツを一括追加する */
   addSportScenes: Scene;
   /** SEEDスロットへのチーム手動配置（teamId=null でクリア） */
@@ -288,6 +307,8 @@ export type Mutation = {
   /** 画像アップロード用のURLを発行する */
   createImageUploadURL: ImageUploadUrl;
   createInformation: Information;
+  /** 審判を作成する */
+  createJudgment: Judgment;
   /** リーグを追加する */
   createLeague: League;
   /** 場所を追加する */
@@ -330,6 +351,8 @@ export type Mutation = {
   deleteSportEntries: SportScene;
   /** スポーツエントリーを削除する */
   deleteSportEntry: SportEntry;
+  /** スポーツの経験者を削除する */
+  deleteSportExperiences: Scalars['Boolean']['output'];
   /** スポーツシーンを削除する */
   deleteSportScene: SportScene;
   /** シーンからスポーツを一括削除する */
@@ -341,13 +364,17 @@ export type Mutation = {
   deleteTournament: Tournament;
   /** ブラケット内試合削除 */
   deleteTournamentMatch: Match;
+  deleteUser: User;
   /** ブラケット自動生成（MAIN + オプショナルSUB） */
   generateBracket: Array<Tournament>;
   /** リーグの総当たり戦を自動生成する */
   generateRoundRobin: Array<Match>;
+  /** サブブラケット自動生成（試合構造含む） */
+  generateSubBracket: Tournament;
   removeGroupUsers: Group;
   /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
   resetTournamentBrackets: Competition;
+  restoreScene: Scene;
   /** スポーツのランキングルールを設定する（全削除→再挿入） */
   setRankingRules: Sport;
   /** リーグのタイブレーク優先度を設定する */
@@ -381,6 +408,9 @@ export type Mutation = {
   updateTeamUsers: Team;
   /** トーナメント（ブラケット）を更新する */
   updateTournament: Tournament;
+  updateUser: User;
+  /** ユーザーのロールを更新する（user:manage パーミッションが必要） */
+  updateUserRole: User;
 };
 
 
@@ -405,6 +435,12 @@ export type MutationAddMatchEntriesArgs = {
 export type MutationAddSportEntriesArgs = {
   id: Scalars['ID']['input'];
   input: AddSportEntriesInput;
+};
+
+
+export type MutationAddSportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -436,6 +472,11 @@ export type MutationCreateImageUploadUrlArgs = {
 
 export type MutationCreateInformationArgs = {
   input: CreateInformationInput;
+};
+
+
+export type MutationCreateJudgmentArgs = {
+  input: CreateJudgmentInput;
 };
 
 
@@ -567,6 +608,12 @@ export type MutationDeleteSportEntryArgs = {
 };
 
 
+export type MutationDeleteSportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationDeleteSportSceneArgs = {
   id: Scalars['ID']['input'];
 };
@@ -598,6 +645,11 @@ export type MutationDeleteTournamentMatchArgs = {
 };
 
 
+export type MutationDeleteUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationGenerateBracketArgs = {
   input: GenerateBracketInput;
 };
@@ -609,6 +661,11 @@ export type MutationGenerateRoundRobinArgs = {
 };
 
 
+export type MutationGenerateSubBracketArgs = {
+  input: GenerateSubBracketInput;
+};
+
+
 export type MutationRemoveGroupUsersArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGroupUsersInput;
@@ -617,6 +674,11 @@ export type MutationRemoveGroupUsersArgs = {
 
 export type MutationResetTournamentBracketsArgs = {
   competitionId: Scalars['ID']['input'];
+};
+
+
+export type MutationRestoreSceneArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -732,6 +794,18 @@ export type MutationUpdateTournamentArgs = {
   input: UpdateTournamentInput;
 };
 
+
+export type MutationUpdateUserArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateUserInput;
+};
+
+
+export type MutationUpdateUserRoleArgs = {
+  role: Role;
+  userId: Scalars['ID']['input'];
+};
+
 export enum PlacementMethod {
   Balanced = 'BALANCED',
   Manual = 'MANUAL',
@@ -759,6 +833,8 @@ export type Query = {
   __typename?: 'Query';
   Information: Information;
   Informations: Array<Information>;
+  /** 全ての経験者データを取得する */
+  allSportExperiences: Array<SportExperience>;
   /** ID指定で大会を取得する */
   competition: Competition;
   /** 大会をまとめて取得する */
@@ -797,6 +873,8 @@ export type Query = {
   scene: Scene;
   scenes: Array<Scene>;
   sport: Sport;
+  /** 指定スポーツの経験者一覧を取得する */
+  sportExperiences: Array<SportExperience>;
   sports: Array<Sport>;
   /** ID指定でチームを取得する */
   team: Team;
@@ -809,6 +887,8 @@ export type Query = {
   /** competition内の全ブラケット取得 */
   tournaments: Array<Tournament>;
   user: User;
+  /** 指定ユーザーの経験者スポーツ一覧を取得する */
+  userSportExperiences: Array<SportExperience>;
   users: Array<User>;
 };
 
@@ -883,6 +963,11 @@ export type QuerySportArgs = {
 };
 
 
+export type QuerySportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+};
+
+
 export type QueryTeamArgs = {
   id: Scalars['ID']['input'];
 };
@@ -907,6 +992,11 @@ export type QueryUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type QueryUserSportExperiencesArgs = {
+  userId: Scalars['ID']['input'];
+};
+
 export enum RankingConditionKey {
   AdminDecision = 'ADMIN_DECISION',
   GoalDiff = 'GOAL_DIFF',
@@ -926,6 +1016,12 @@ export type RankingRuleInput = {
   priority: Scalars['Int']['input'];
 };
 
+export enum Role {
+  Admin = 'ADMIN',
+  Organizer = 'ORGANIZER',
+  Participant = 'PARTICIPANT'
+}
+
 export type Rule = {
   __typename?: 'Rule';
   id?: Maybe<Scalars['ID']['output']>;
@@ -936,6 +1032,7 @@ export type Rule = {
 export type Scene = {
   __typename?: 'Scene';
   id: Scalars['ID']['output'];
+  isDeleted: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   sportScenes: Array<SportScene>;
 };
@@ -961,6 +1058,7 @@ export enum SlotSourceType {
 
 export type Sport = {
   __typename?: 'Sport';
+  experiencedLimit?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   image?: Maybe<Image>;
   name: Scalars['String']['output'];
@@ -975,6 +1073,12 @@ export type SportEntry = {
   id: Scalars['ID']['output'];
   sportScene: SportScene;
   team: Team;
+};
+
+export type SportExperience = {
+  __typename?: 'SportExperience';
+  sportId: Scalars['ID']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 export type SportScene = {
@@ -1065,8 +1169,9 @@ export type UpdateCompetitionEntriesInput = {
 };
 
 export type UpdateCompetitionInput = {
-  imageId?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  sceneId?: InputMaybe<Scalars['ID']['input']>;
+  sportId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type UpdateGroupInput = {
@@ -1079,6 +1184,7 @@ export type UpdateGroupUsersInput = {
 
 export type UpdateInformationInput = {
   content?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1139,6 +1245,7 @@ export type UpdateSlotConnectionInput = {
 };
 
 export type UpdateSportsInput = {
+  experiencedLimit?: InputMaybe<Scalars['Int']['input']>;
   imageId?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   weight?: InputMaybe<Scalars['Int']['input']>;
@@ -1160,14 +1267,29 @@ export type UpdateTournamentInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateUserInput = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
+  gender?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
+  identify: UserIdentify;
   judgments: Array<Judgment>;
   name: Scalars['String']['output'];
+  role: Role;
   teams: Array<Team>;
+};
+
+export type UserIdentify = {
+  __typename?: 'UserIdentify';
+  microsoftUserId?: Maybe<Scalars['String']['output']>;
+  sub: Scalars['ID']['output'];
 };
 
 export type GetPanelGroupsQueryVariables = Exact<{ [key: string]: never; }>;
@@ -1185,7 +1307,7 @@ export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: '
 export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string }>, league?: { __typename?: 'League', id: string } | null }> };
+export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string }>, league?: { __typename?: 'League', id: string } | null }> };
 
 export type GetPanelLeagueStandingsQueryVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1200,13 +1322,6 @@ export type GetPanelTournamentRankingQueryVariables = Exact<{
 
 
 export type GetPanelTournamentRankingQuery = { __typename?: 'Query', tournamentRanking: Array<{ __typename?: 'TournamentRanking', rank: number, isTied: boolean, team: { __typename?: 'Team', id: string } }> };
-
-export type GetPanelCompetitionQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type GetPanelCompetitionQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string, name: string }>, matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }> } };
 
 export type GetPanelImagesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1247,7 +1362,7 @@ export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typena
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', team?: { __typename?: 'Team', id: string, name: string } | null } | null }> };
+export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', team?: { __typename?: 'Team', id: string, name: string } | null } | null }> };
 
 export type GetPanelMatchQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1267,13 +1382,6 @@ export type GetPanelSportQueryVariables = Exact<{
 
 
 export type GetPanelSportQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, name: string, weight: number, rules: Array<{ __typename?: 'Rule', id?: string | null, rule: string }>, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', id: string, team: { __typename?: 'Team', id: string, name: string } }> }> | null } };
-
-export type GetPanelSportCompetitionsQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type GetPanelSportCompetitionsQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string, sportScenes: Array<{ __typename?: 'SportScene', id: string }> }, entries: Array<{ __typename?: 'SportEntry', id: string, team: { __typename?: 'Team', id: string, name: string } }> }> | null } };
 
 export type GetPanelScenesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1413,6 +1521,9 @@ export const GetPanelCompetitionsDocument = gql`
     id
     name
     type
+    sport {
+      id
+    }
     scene {
       id
       name
@@ -1553,73 +1664,6 @@ export type GetPanelTournamentRankingQueryHookResult = ReturnType<typeof useGetP
 export type GetPanelTournamentRankingLazyQueryHookResult = ReturnType<typeof useGetPanelTournamentRankingLazyQuery>;
 export type GetPanelTournamentRankingSuspenseQueryHookResult = ReturnType<typeof useGetPanelTournamentRankingSuspenseQuery>;
 export type GetPanelTournamentRankingQueryResult = Apollo.QueryResult<GetPanelTournamentRankingQuery, GetPanelTournamentRankingQueryVariables>;
-export const GetPanelCompetitionDocument = gql`
-    query GetPanelCompetition($id: ID!) {
-  competition(id: $id) {
-    id
-    name
-    type
-    scene {
-      id
-      name
-    }
-    teams {
-      id
-      name
-    }
-    matches {
-      id
-      time
-      status
-      location {
-        id
-        name
-      }
-      entries {
-        id
-        team {
-          id
-          name
-        }
-        score
-      }
-    }
-  }
-}
-    `;
-
-/**
- * __useGetPanelCompetitionQuery__
- *
- * To run a query within a React component, call `useGetPanelCompetitionQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetPanelCompetitionQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetPanelCompetitionQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useGetPanelCompetitionQuery(baseOptions: Apollo.QueryHookOptions<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables> & ({ variables: GetPanelCompetitionQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>(GetPanelCompetitionDocument, options);
-      }
-export function useGetPanelCompetitionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>(GetPanelCompetitionDocument, options);
-        }
-export function useGetPanelCompetitionSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>(GetPanelCompetitionDocument, options);
-        }
-export type GetPanelCompetitionQueryHookResult = ReturnType<typeof useGetPanelCompetitionQuery>;
-export type GetPanelCompetitionLazyQueryHookResult = ReturnType<typeof useGetPanelCompetitionLazyQuery>;
-export type GetPanelCompetitionSuspenseQueryHookResult = ReturnType<typeof useGetPanelCompetitionSuspenseQuery>;
-export type GetPanelCompetitionQueryResult = Apollo.QueryResult<GetPanelCompetitionQuery, GetPanelCompetitionQueryVariables>;
 export const GetPanelImagesDocument = gql`
     query GetPanelImages {
   images {
@@ -1882,6 +1926,9 @@ export const GetPanelMatchesDocument = gql`
     competition {
       id
       name
+      sport {
+        id
+      }
       scene {
         id
       }
@@ -2135,63 +2182,6 @@ export type GetPanelSportQueryHookResult = ReturnType<typeof useGetPanelSportQue
 export type GetPanelSportLazyQueryHookResult = ReturnType<typeof useGetPanelSportLazyQuery>;
 export type GetPanelSportSuspenseQueryHookResult = ReturnType<typeof useGetPanelSportSuspenseQuery>;
 export type GetPanelSportQueryResult = Apollo.QueryResult<GetPanelSportQuery, GetPanelSportQueryVariables>;
-export const GetPanelSportCompetitionsDocument = gql`
-    query GetPanelSportCompetitions($id: ID!) {
-  sport(id: $id) {
-    id
-    scene {
-      id
-      scene {
-        id
-        name
-        sportScenes {
-          id
-        }
-      }
-      entries {
-        id
-        team {
-          id
-          name
-        }
-      }
-    }
-  }
-}
-    `;
-
-/**
- * __useGetPanelSportCompetitionsQuery__
- *
- * To run a query within a React component, call `useGetPanelSportCompetitionsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetPanelSportCompetitionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetPanelSportCompetitionsQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useGetPanelSportCompetitionsQuery(baseOptions: Apollo.QueryHookOptions<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables> & ({ variables: GetPanelSportCompetitionsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables>(GetPanelSportCompetitionsDocument, options);
-      }
-export function useGetPanelSportCompetitionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables>(GetPanelSportCompetitionsDocument, options);
-        }
-export function useGetPanelSportCompetitionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables>(GetPanelSportCompetitionsDocument, options);
-        }
-export type GetPanelSportCompetitionsQueryHookResult = ReturnType<typeof useGetPanelSportCompetitionsQuery>;
-export type GetPanelSportCompetitionsLazyQueryHookResult = ReturnType<typeof useGetPanelSportCompetitionsLazyQuery>;
-export type GetPanelSportCompetitionsSuspenseQueryHookResult = ReturnType<typeof useGetPanelSportCompetitionsSuspenseQuery>;
-export type GetPanelSportCompetitionsQueryResult = Apollo.QueryResult<GetPanelSportCompetitionsQuery, GetPanelSportCompetitionsQueryVariables>;
 export const GetPanelScenesDocument = gql`
     query GetPanelScenes {
   scenes {
