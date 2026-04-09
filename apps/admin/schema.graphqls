@@ -4,11 +4,17 @@ enum Role {
   PARTICIPANT
 }
 
+type UserIdentify {
+  sub: ID!
+  microsoftUserId: String
+}
+
 type User {
   id: ID!
   name: String!
   email: String!
   gender: String
+  identify: UserIdentify!
   role: Role!
   groups: [Group!]!
   teams: [Team!]!
@@ -141,6 +147,7 @@ type Sport {
   id: ID!
   name: String!
   weight: Int!
+  experiencedLimit: Int
   rankingRules: [RankingRule!]!
   rules: [Rule!]!
   image: Image
@@ -171,6 +178,11 @@ type SportEntry {
   id: ID!
   sportScene: SportScene!
   team: Team!
+}
+
+type SportExperience {
+  userId: ID!
+  sportId: ID!
 }
 
 enum BracketType {
@@ -297,6 +309,7 @@ input UpdateSportsInput {
   name: String
   weight: Int
   imageId: ID
+  experiencedLimit: Int
 }
 
 input CreateTeamInput {
@@ -435,6 +448,16 @@ input RankingRuleInput {
 input TiebreakPriorityInput {
   teamId: ID!
   priority: Int!
+}
+
+"""
+サブブラケット自動生成
+"""
+input GenerateSubBracketInput {
+  competitionId: ID!
+  name: String!
+  teamCount: Int!
+  placementMethod: PlacementMethod
 }
 
 """
@@ -626,6 +649,9 @@ type Query {
   画像一覧を取得する
   """
   images: [Image!]!
+  sportExperiences(sportId: ID!): [SportExperience!]!
+  userSportExperiences(userId: ID!): [SportExperience!]!
+  allSportExperiences: [SportExperience!]!
 }
 
 input CreateImageUploadURLInput {
@@ -779,6 +805,10 @@ type Mutation {
   """
   generateBracket(input: GenerateBracketInput!): [Tournament!]!
   """
+  サブブラケット自動生成（試合構造含む）
+  """
+  generateSubBracket(input: GenerateSubBracketInput!): Tournament!
+  """
   SUBブラケット手動追加
   """
   createTournament(input: CreateTournamentInput!): Tournament!
@@ -829,6 +859,8 @@ type Mutation {
   ユ���ザーのロールを変更す��
   """
   updateUserRole(userId: ID!, role: Role!): User!
+  addSportExperiences(sportId: ID!, userIds: [ID!]!): [SportExperience!]!
+  deleteSportExperiences(sportId: ID!, userIds: [ID!]!): Boolean!
   """
   シーンにスポーツを一括追加する
   """

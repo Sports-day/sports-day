@@ -183,6 +183,14 @@ export type GenerateRoundRobinInput = {
   startTime: Scalars['String']['input'];
 };
 
+/** サブブラケット自動生成 */
+export type GenerateSubBracketInput = {
+  competitionId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  placementMethod?: InputMaybe<PlacementMethod>;
+  teamCount: Scalars['Int']['input'];
+};
+
 export type Group = {
   __typename?: 'Group';
   id: Scalars['ID']['output'];
@@ -291,6 +299,7 @@ export type Mutation = {
   addMatchEntries: Match;
   /** スポーツシーンにチームエントリーを一括追加する */
   addSportEntries: SportScene;
+  addSportExperiences: Array<SportExperience>;
   /** シーンにスポーツを一括追加する */
   addSportScenes: Scene;
   /** SEEDスロットへのチーム手動配置（teamId=null でクリア） */
@@ -343,6 +352,7 @@ export type Mutation = {
   deleteSportEntries: SportScene;
   /** スポーツエントリーを削除する */
   deleteSportEntry: SportEntry;
+  deleteSportExperiences: Scalars['Boolean']['output'];
   /** スポーツシーンを削除する */
   deleteSportScene: SportScene;
   /** シーンからスポーツを一括削除する */
@@ -359,6 +369,8 @@ export type Mutation = {
   generateBracket: Array<Tournament>;
   /** リーグの総当たり戦を自動生成する */
   generateRoundRobin: Array<Match>;
+  /** サブブラケット自動生成（試合構造含む） */
+  generateSubBracket: Tournament;
   removeGroupUsers: Group;
   /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
   resetTournamentBrackets: Competition;
@@ -423,6 +435,12 @@ export type MutationAddMatchEntriesArgs = {
 export type MutationAddSportEntriesArgs = {
   id: Scalars['ID']['input'];
   input: AddSportEntriesInput;
+};
+
+
+export type MutationAddSportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -585,6 +603,12 @@ export type MutationDeleteSportEntryArgs = {
 };
 
 
+export type MutationDeleteSportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationDeleteSportSceneArgs = {
   id: Scalars['ID']['input'];
 };
@@ -629,6 +653,11 @@ export type MutationGenerateBracketArgs = {
 export type MutationGenerateRoundRobinArgs = {
   id: Scalars['ID']['input'];
   input: GenerateRoundRobinInput;
+};
+
+
+export type MutationGenerateSubBracketArgs = {
+  input: GenerateSubBracketInput;
 };
 
 
@@ -800,6 +829,7 @@ export type Query = {
   __typename?: 'Query';
   Information: Information;
   Informations: Array<Information>;
+  allSportExperiences: Array<SportExperience>;
   /** ID指定で大会を取得する */
   competition: Competition;
   /** 大会をまとめて取得する */
@@ -838,6 +868,7 @@ export type Query = {
   scene: Scene;
   scenes: Array<Scene>;
   sport: Sport;
+  sportExperiences: Array<SportExperience>;
   sports: Array<Sport>;
   /** ID指定でチームを取得する */
   team: Team;
@@ -850,6 +881,7 @@ export type Query = {
   /** competition内の全ブラケット取得 */
   tournaments: Array<Tournament>;
   user: User;
+  userSportExperiences: Array<SportExperience>;
   users: Array<User>;
 };
 
@@ -924,6 +956,11 @@ export type QuerySportArgs = {
 };
 
 
+export type QuerySportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+};
+
+
 export type QueryTeamArgs = {
   id: Scalars['ID']['input'];
 };
@@ -946,6 +983,11 @@ export type QueryTournamentsArgs = {
 
 export type QueryUserArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserSportExperiencesArgs = {
+  userId: Scalars['ID']['input'];
 };
 
 export const RankingConditionKey = {
@@ -1012,6 +1054,7 @@ export const SlotSourceType = {
 export type SlotSourceType = typeof SlotSourceType[keyof typeof SlotSourceType];
 export type Sport = {
   __typename?: 'Sport';
+  experiencedLimit?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   image?: Maybe<Image>;
   name: Scalars['String']['output'];
@@ -1026,6 +1069,12 @@ export type SportEntry = {
   id: Scalars['ID']['output'];
   sportScene: SportScene;
   team: Team;
+};
+
+export type SportExperience = {
+  __typename?: 'SportExperience';
+  sportId: Scalars['ID']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 export type SportScene = {
@@ -1192,6 +1241,7 @@ export type UpdateSlotConnectionInput = {
 };
 
 export type UpdateSportsInput = {
+  experiencedLimit?: InputMaybe<Scalars['Int']['input']>;
   imageId?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   weight?: InputMaybe<Scalars['Int']['input']>;
@@ -1225,11 +1275,68 @@ export type User = {
   gender?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
+  identify: UserIdentify;
   judgments: Array<Judgment>;
   name: Scalars['String']['output'];
   role: Role;
   teams: Array<Team>;
 };
+
+export type UserIdentify = {
+  __typename?: 'UserIdentify';
+  microsoftUserId?: Maybe<Scalars['String']['output']>;
+  sub: Scalars['ID']['output'];
+};
+
+export type GetAdminGroupsForClassesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAdminGroupsForClassesQuery = { __typename?: 'Query', groups: Array<{ __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string }> }> };
+
+export type GetAdminGroupForClassQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetAdminGroupForClassQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name: string, email: string, gender?: string | null }> } };
+
+export type CreateAdminGroupForClassMutationVariables = Exact<{
+  input: CreateGroupInput;
+}>;
+
+
+export type CreateAdminGroupForClassMutation = { __typename?: 'Mutation', createGroup: { __typename?: 'Group', id: string, name: string } };
+
+export type UpdateAdminGroupForClassMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateGroupInput;
+}>;
+
+
+export type UpdateAdminGroupForClassMutation = { __typename?: 'Mutation', updateGroup: { __typename?: 'Group', id: string, name: string } };
+
+export type DeleteAdminGroupForClassMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteAdminGroupForClassMutation = { __typename?: 'Mutation', deleteGroup: { __typename?: 'Group', id: string } };
+
+export type AddAdminGroupUsersForClassMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateGroupUsersInput;
+}>;
+
+
+export type AddAdminGroupUsersForClassMutation = { __typename?: 'Mutation', addGroupUsers: { __typename?: 'Group', id: string, users: Array<{ __typename?: 'User', id: string, name: string, email: string, gender?: string | null }> } };
+
+export type RemoveAdminGroupUsersForClassMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateGroupUsersInput;
+}>;
+
+
+export type RemoveAdminGroupUsersForClassMutation = { __typename?: 'Mutation', removeGroupUsers: { __typename?: 'Group', id: string, users: Array<{ __typename?: 'User', id: string, name: string, email: string, gender?: string | null }> } };
 
 export type GetAdminCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1241,7 +1348,7 @@ export type GetAdminCompetitionQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminCompetitionQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string } }>, league?: { __typename?: 'League', id: string, name: string } | null } };
+export type GetAdminCompetitionQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string } }> } };
 
 export type GetAdminLeaguesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1274,7 +1381,7 @@ export type GetAdminTournamentQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminTournamentQuery = { __typename?: 'Query', tournament: { __typename?: 'Tournament', id: string, name: string, bracketType: BracketType, placementMethod?: PlacementMethod | null, displayOrder: number, state: BracketState, progress: number, competition: { __typename?: 'Competition', id: string, name: string }, matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }>, slots: Array<{ __typename?: 'TournamentSlot', id: string, sourceType: SlotSourceType, seedNumber?: number | null, sourceMatch?: { __typename?: 'Match', id: string } | null, matchEntry: { __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null } }> } };
+export type GetAdminTournamentQuery = { __typename?: 'Query', tournament: { __typename?: 'Tournament', id: string, name: string, bracketType: BracketType, placementMethod?: PlacementMethod | null, displayOrder: number, state: BracketState, progress: number, competition: { __typename?: 'Competition', id: string, name: string, teams: Array<{ __typename?: 'Team', id: string, name: string }> }, matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }>, slots: Array<{ __typename?: 'TournamentSlot', id: string, sourceType: SlotSourceType, seedNumber?: number | null, sourceMatch?: { __typename?: 'Match', id: string } | null, matchEntry: { __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null } }> } };
 
 export type UpdateAdminTournamentMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1375,6 +1482,13 @@ export type CreateAdminTournamentMutationVariables = Exact<{
 
 
 export type CreateAdminTournamentMutation = { __typename?: 'Mutation', createTournament: { __typename?: 'Tournament', id: string, name: string, bracketType: BracketType } };
+
+export type GenerateAdminSubBracketMutationVariables = Exact<{
+  input: GenerateSubBracketInput;
+}>;
+
+
+export type GenerateAdminSubBracketMutation = { __typename?: 'Mutation', generateSubBracket: { __typename?: 'Tournament', id: string, name: string, bracketType: BracketType, state: BracketState, progress: number } };
 
 export type AssignAdminSeedTeamMutationVariables = Exact<{
   input: AssignSeedTeamInput;
@@ -1538,7 +1652,7 @@ export type GetAdminLocationsForMatchesQuery = { __typename?: 'Query', locations
 export type GetAdminMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }> };
+export type GetAdminMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, tournaments: Array<{ __typename?: 'Tournament', id: string, name: string, bracketType: BracketType, matches: Array<{ __typename?: 'Match', id: string }> }> }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null } | null }> };
 
 export type GetAdminCompetitionMatchesQueryVariables = Exact<{
   competitionId: Scalars['ID']['input'];
@@ -1552,7 +1666,7 @@ export type GetAdminMatchQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> } };
+export type GetAdminMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, user?: { __typename?: 'User', id: string, name: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } | null } };
 
 export type UpdateAdminMatchResultMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1629,6 +1743,13 @@ export type UpdateAdminSlotConnectionMutationVariables = Exact<{
 
 export type UpdateAdminSlotConnectionMutation = { __typename?: 'Mutation', updateSlotConnection: { __typename?: 'TournamentSlot', id: string, sourceType: SlotSourceType, seedNumber?: number | null, sourceMatch?: { __typename?: 'Match', id: string } | null } };
 
+export type GetAdminCompetitionJudgeOptionsQueryVariables = Exact<{
+  competitionId: Scalars['ID']['input'];
+}>;
+
+
+export type GetAdminCompetitionJudgeOptionsQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name: string }> }> } };
+
 export type SetAdminTiebreakPrioritiesMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
   priorities: Array<TiebreakPriorityInput> | TiebreakPriorityInput;
@@ -1640,14 +1761,14 @@ export type SetAdminTiebreakPrioritiesMutation = { __typename?: 'Mutation', setT
 export type GetAdminSportsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminSportsQuery = { __typename?: 'Query', sports: Array<{ __typename?: 'Sport', id: string, name: string, weight: number, image?: { __typename?: 'Image', id: string, url?: string | null } | null }> };
+export type GetAdminSportsQuery = { __typename?: 'Query', sports: Array<{ __typename?: 'Sport', id: string, name: string, weight: number, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null }> };
 
 export type GetAdminSportQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminSportQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, name: string, weight: number, image?: { __typename?: 'Image', id: string, url?: string | null } | null, rankingRules: Array<{ __typename?: 'RankingRule', conditionKey: RankingConditionKey, priority: number }>, rules: Array<{ __typename?: 'Rule', id?: string | null, rule: string }>, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null } };
+export type GetAdminSportQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, name: string, weight: number, experiencedLimit?: number | null, image?: { __typename?: 'Image', id: string, url?: string | null } | null, rankingRules: Array<{ __typename?: 'RankingRule', conditionKey: RankingConditionKey, priority: number }>, rules: Array<{ __typename?: 'Rule', id?: string | null, rule: string }>, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null } };
 
 export type CreateAdminSportMutationVariables = Exact<{
   input: CreateSportsInput;
@@ -1662,7 +1783,7 @@ export type UpdateAdminSportMutationVariables = Exact<{
 }>;
 
 
-export type UpdateAdminSportMutation = { __typename?: 'Mutation', updateSports: { __typename?: 'Sport', id: string, name: string, weight: number } };
+export type UpdateAdminSportMutation = { __typename?: 'Mutation', updateSports: { __typename?: 'Sport', id: string, name: string, weight: number, experiencedLimit?: number | null } };
 
 export type DeleteAdminSportMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1812,14 +1933,14 @@ export type GetAdminGroupsQuery = { __typename?: 'Query', groups: Array<{ __type
 export type GetAdminUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string, email: string, gender?: string | null, role: Role, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
+export type GetAdminUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string, email: string, gender?: string | null, role: Role, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> }>, sports: Array<{ __typename?: 'Sport', id: string, name: string }>, allSportExperiences: Array<{ __typename?: 'SportExperience', userId: string, sportId: string }> };
 
 export type GetAdminUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name: string, email: string, gender?: string | null, role: Role, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetAdminUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name: string, email: string, gender?: string | null, role: Role, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type CreateAdminUserMutationVariables = Exact<{
   input: CreateUserInput;
@@ -1851,7 +1972,307 @@ export type UpdateAdminUserRoleMutationVariables = Exact<{
 
 export type UpdateAdminUserRoleMutation = { __typename?: 'Mutation', updateUserRole: { __typename?: 'User', id: string, role: Role } };
 
+export type GetAdminUserSportExperiencesQueryVariables = Exact<{
+  userId: Scalars['ID']['input'];
+}>;
 
+
+export type GetAdminUserSportExperiencesQuery = { __typename?: 'Query', userSportExperiences: Array<{ __typename?: 'SportExperience', userId: string, sportId: string }>, sports: Array<{ __typename?: 'Sport', id: string, name: string }> };
+
+export type AddAdminSportExperiencesMutationVariables = Exact<{
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+}>;
+
+
+export type AddAdminSportExperiencesMutation = { __typename?: 'Mutation', addSportExperiences: Array<{ __typename?: 'SportExperience', userId: string, sportId: string }> };
+
+export type DeleteAdminSportExperiencesMutationVariables = Exact<{
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+}>;
+
+
+export type DeleteAdminSportExperiencesMutation = { __typename?: 'Mutation', deleteSportExperiences: boolean };
+
+export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, name: string, role: Role } };
+
+
+export const GetAdminGroupsForClassesDocument = gql`
+    query GetAdminGroupsForClasses {
+  groups {
+    id
+    name
+    users {
+      id
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAdminGroupsForClassesQuery__
+ *
+ * To run a query within a React component, call `useGetAdminGroupsForClassesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAdminGroupsForClassesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAdminGroupsForClassesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAdminGroupsForClassesQuery(baseOptions?: Apollo.QueryHookOptions<GetAdminGroupsForClassesQuery, GetAdminGroupsForClassesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAdminGroupsForClassesQuery, GetAdminGroupsForClassesQueryVariables>(GetAdminGroupsForClassesDocument, options);
+      }
+export function useGetAdminGroupsForClassesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAdminGroupsForClassesQuery, GetAdminGroupsForClassesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAdminGroupsForClassesQuery, GetAdminGroupsForClassesQueryVariables>(GetAdminGroupsForClassesDocument, options);
+        }
+export function useGetAdminGroupsForClassesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAdminGroupsForClassesQuery, GetAdminGroupsForClassesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAdminGroupsForClassesQuery, GetAdminGroupsForClassesQueryVariables>(GetAdminGroupsForClassesDocument, options);
+        }
+export type GetAdminGroupsForClassesQueryHookResult = ReturnType<typeof useGetAdminGroupsForClassesQuery>;
+export type GetAdminGroupsForClassesLazyQueryHookResult = ReturnType<typeof useGetAdminGroupsForClassesLazyQuery>;
+export type GetAdminGroupsForClassesSuspenseQueryHookResult = ReturnType<typeof useGetAdminGroupsForClassesSuspenseQuery>;
+export type GetAdminGroupsForClassesQueryResult = Apollo.QueryResult<GetAdminGroupsForClassesQuery, GetAdminGroupsForClassesQueryVariables>;
+export const GetAdminGroupForClassDocument = gql`
+    query GetAdminGroupForClass($id: ID!) {
+  group(id: $id) {
+    id
+    name
+    users {
+      id
+      name
+      email
+      gender
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAdminGroupForClassQuery__
+ *
+ * To run a query within a React component, call `useGetAdminGroupForClassQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAdminGroupForClassQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAdminGroupForClassQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetAdminGroupForClassQuery(baseOptions: Apollo.QueryHookOptions<GetAdminGroupForClassQuery, GetAdminGroupForClassQueryVariables> & ({ variables: GetAdminGroupForClassQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAdminGroupForClassQuery, GetAdminGroupForClassQueryVariables>(GetAdminGroupForClassDocument, options);
+      }
+export function useGetAdminGroupForClassLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAdminGroupForClassQuery, GetAdminGroupForClassQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAdminGroupForClassQuery, GetAdminGroupForClassQueryVariables>(GetAdminGroupForClassDocument, options);
+        }
+export function useGetAdminGroupForClassSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAdminGroupForClassQuery, GetAdminGroupForClassQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAdminGroupForClassQuery, GetAdminGroupForClassQueryVariables>(GetAdminGroupForClassDocument, options);
+        }
+export type GetAdminGroupForClassQueryHookResult = ReturnType<typeof useGetAdminGroupForClassQuery>;
+export type GetAdminGroupForClassLazyQueryHookResult = ReturnType<typeof useGetAdminGroupForClassLazyQuery>;
+export type GetAdminGroupForClassSuspenseQueryHookResult = ReturnType<typeof useGetAdminGroupForClassSuspenseQuery>;
+export type GetAdminGroupForClassQueryResult = Apollo.QueryResult<GetAdminGroupForClassQuery, GetAdminGroupForClassQueryVariables>;
+export const CreateAdminGroupForClassDocument = gql`
+    mutation CreateAdminGroupForClass($input: CreateGroupInput!) {
+  createGroup(input: $input) {
+    id
+    name
+  }
+}
+    `;
+export type CreateAdminGroupForClassMutationFn = Apollo.MutationFunction<CreateAdminGroupForClassMutation, CreateAdminGroupForClassMutationVariables>;
+
+/**
+ * __useCreateAdminGroupForClassMutation__
+ *
+ * To run a mutation, you first call `useCreateAdminGroupForClassMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateAdminGroupForClassMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createAdminGroupForClassMutation, { data, loading, error }] = useCreateAdminGroupForClassMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateAdminGroupForClassMutation(baseOptions?: Apollo.MutationHookOptions<CreateAdminGroupForClassMutation, CreateAdminGroupForClassMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateAdminGroupForClassMutation, CreateAdminGroupForClassMutationVariables>(CreateAdminGroupForClassDocument, options);
+      }
+export type CreateAdminGroupForClassMutationHookResult = ReturnType<typeof useCreateAdminGroupForClassMutation>;
+export type CreateAdminGroupForClassMutationResult = Apollo.MutationResult<CreateAdminGroupForClassMutation>;
+export type CreateAdminGroupForClassMutationOptions = Apollo.BaseMutationOptions<CreateAdminGroupForClassMutation, CreateAdminGroupForClassMutationVariables>;
+export const UpdateAdminGroupForClassDocument = gql`
+    mutation UpdateAdminGroupForClass($id: ID!, $input: UpdateGroupInput!) {
+  updateGroup(id: $id, input: $input) {
+    id
+    name
+  }
+}
+    `;
+export type UpdateAdminGroupForClassMutationFn = Apollo.MutationFunction<UpdateAdminGroupForClassMutation, UpdateAdminGroupForClassMutationVariables>;
+
+/**
+ * __useUpdateAdminGroupForClassMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminGroupForClassMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminGroupForClassMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminGroupForClassMutation, { data, loading, error }] = useUpdateAdminGroupForClassMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminGroupForClassMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminGroupForClassMutation, UpdateAdminGroupForClassMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminGroupForClassMutation, UpdateAdminGroupForClassMutationVariables>(UpdateAdminGroupForClassDocument, options);
+      }
+export type UpdateAdminGroupForClassMutationHookResult = ReturnType<typeof useUpdateAdminGroupForClassMutation>;
+export type UpdateAdminGroupForClassMutationResult = Apollo.MutationResult<UpdateAdminGroupForClassMutation>;
+export type UpdateAdminGroupForClassMutationOptions = Apollo.BaseMutationOptions<UpdateAdminGroupForClassMutation, UpdateAdminGroupForClassMutationVariables>;
+export const DeleteAdminGroupForClassDocument = gql`
+    mutation DeleteAdminGroupForClass($id: ID!) {
+  deleteGroup(id: $id) {
+    id
+  }
+}
+    `;
+export type DeleteAdminGroupForClassMutationFn = Apollo.MutationFunction<DeleteAdminGroupForClassMutation, DeleteAdminGroupForClassMutationVariables>;
+
+/**
+ * __useDeleteAdminGroupForClassMutation__
+ *
+ * To run a mutation, you first call `useDeleteAdminGroupForClassMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteAdminGroupForClassMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteAdminGroupForClassMutation, { data, loading, error }] = useDeleteAdminGroupForClassMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteAdminGroupForClassMutation(baseOptions?: Apollo.MutationHookOptions<DeleteAdminGroupForClassMutation, DeleteAdminGroupForClassMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteAdminGroupForClassMutation, DeleteAdminGroupForClassMutationVariables>(DeleteAdminGroupForClassDocument, options);
+      }
+export type DeleteAdminGroupForClassMutationHookResult = ReturnType<typeof useDeleteAdminGroupForClassMutation>;
+export type DeleteAdminGroupForClassMutationResult = Apollo.MutationResult<DeleteAdminGroupForClassMutation>;
+export type DeleteAdminGroupForClassMutationOptions = Apollo.BaseMutationOptions<DeleteAdminGroupForClassMutation, DeleteAdminGroupForClassMutationVariables>;
+export const AddAdminGroupUsersForClassDocument = gql`
+    mutation AddAdminGroupUsersForClass($id: ID!, $input: UpdateGroupUsersInput!) {
+  addGroupUsers(id: $id, input: $input) {
+    id
+    users {
+      id
+      name
+      email
+      gender
+    }
+  }
+}
+    `;
+export type AddAdminGroupUsersForClassMutationFn = Apollo.MutationFunction<AddAdminGroupUsersForClassMutation, AddAdminGroupUsersForClassMutationVariables>;
+
+/**
+ * __useAddAdminGroupUsersForClassMutation__
+ *
+ * To run a mutation, you first call `useAddAdminGroupUsersForClassMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddAdminGroupUsersForClassMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addAdminGroupUsersForClassMutation, { data, loading, error }] = useAddAdminGroupUsersForClassMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddAdminGroupUsersForClassMutation(baseOptions?: Apollo.MutationHookOptions<AddAdminGroupUsersForClassMutation, AddAdminGroupUsersForClassMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddAdminGroupUsersForClassMutation, AddAdminGroupUsersForClassMutationVariables>(AddAdminGroupUsersForClassDocument, options);
+      }
+export type AddAdminGroupUsersForClassMutationHookResult = ReturnType<typeof useAddAdminGroupUsersForClassMutation>;
+export type AddAdminGroupUsersForClassMutationResult = Apollo.MutationResult<AddAdminGroupUsersForClassMutation>;
+export type AddAdminGroupUsersForClassMutationOptions = Apollo.BaseMutationOptions<AddAdminGroupUsersForClassMutation, AddAdminGroupUsersForClassMutationVariables>;
+export const RemoveAdminGroupUsersForClassDocument = gql`
+    mutation RemoveAdminGroupUsersForClass($id: ID!, $input: UpdateGroupUsersInput!) {
+  removeGroupUsers(id: $id, input: $input) {
+    id
+    users {
+      id
+      name
+      email
+      gender
+    }
+  }
+}
+    `;
+export type RemoveAdminGroupUsersForClassMutationFn = Apollo.MutationFunction<RemoveAdminGroupUsersForClassMutation, RemoveAdminGroupUsersForClassMutationVariables>;
+
+/**
+ * __useRemoveAdminGroupUsersForClassMutation__
+ *
+ * To run a mutation, you first call `useRemoveAdminGroupUsersForClassMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveAdminGroupUsersForClassMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeAdminGroupUsersForClassMutation, { data, loading, error }] = useRemoveAdminGroupUsersForClassMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRemoveAdminGroupUsersForClassMutation(baseOptions?: Apollo.MutationHookOptions<RemoveAdminGroupUsersForClassMutation, RemoveAdminGroupUsersForClassMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveAdminGroupUsersForClassMutation, RemoveAdminGroupUsersForClassMutationVariables>(RemoveAdminGroupUsersForClassDocument, options);
+      }
+export type RemoveAdminGroupUsersForClassMutationHookResult = ReturnType<typeof useRemoveAdminGroupUsersForClassMutation>;
+export type RemoveAdminGroupUsersForClassMutationResult = Apollo.MutationResult<RemoveAdminGroupUsersForClassMutation>;
+export type RemoveAdminGroupUsersForClassMutationOptions = Apollo.BaseMutationOptions<RemoveAdminGroupUsersForClassMutation, RemoveAdminGroupUsersForClassMutationVariables>;
 export const GetAdminCompetitionsDocument = gql`
     query GetAdminCompetitions {
   competitions {
@@ -1922,10 +2343,6 @@ export const GetAdminCompetitionDocument = gql`
         id
         name
       }
-    }
-    league {
-      id
-      name
     }
   }
 }
@@ -2164,6 +2581,10 @@ export const GetAdminTournamentDocument = gql`
     competition {
       id
       name
+      teams {
+        id
+        name
+      }
     }
     name
     bracketType
@@ -2755,6 +3176,43 @@ export function useCreateAdminTournamentMutation(baseOptions?: Apollo.MutationHo
 export type CreateAdminTournamentMutationHookResult = ReturnType<typeof useCreateAdminTournamentMutation>;
 export type CreateAdminTournamentMutationResult = Apollo.MutationResult<CreateAdminTournamentMutation>;
 export type CreateAdminTournamentMutationOptions = Apollo.BaseMutationOptions<CreateAdminTournamentMutation, CreateAdminTournamentMutationVariables>;
+export const GenerateAdminSubBracketDocument = gql`
+    mutation GenerateAdminSubBracket($input: GenerateSubBracketInput!) {
+  generateSubBracket(input: $input) {
+    id
+    name
+    bracketType
+    state
+    progress
+  }
+}
+    `;
+export type GenerateAdminSubBracketMutationFn = Apollo.MutationFunction<GenerateAdminSubBracketMutation, GenerateAdminSubBracketMutationVariables>;
+
+/**
+ * __useGenerateAdminSubBracketMutation__
+ *
+ * To run a mutation, you first call `useGenerateAdminSubBracketMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGenerateAdminSubBracketMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [generateAdminSubBracketMutation, { data, loading, error }] = useGenerateAdminSubBracketMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGenerateAdminSubBracketMutation(baseOptions?: Apollo.MutationHookOptions<GenerateAdminSubBracketMutation, GenerateAdminSubBracketMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GenerateAdminSubBracketMutation, GenerateAdminSubBracketMutationVariables>(GenerateAdminSubBracketDocument, options);
+      }
+export type GenerateAdminSubBracketMutationHookResult = ReturnType<typeof useGenerateAdminSubBracketMutation>;
+export type GenerateAdminSubBracketMutationResult = Apollo.MutationResult<GenerateAdminSubBracketMutation>;
+export type GenerateAdminSubBracketMutationOptions = Apollo.BaseMutationOptions<GenerateAdminSubBracketMutation, GenerateAdminSubBracketMutationVariables>;
 export const AssignAdminSeedTeamDocument = gql`
     mutation AssignAdminSeedTeam($input: AssignSeedTeamInput!) {
   assignSeedTeam(input: $input) {
@@ -3643,6 +4101,19 @@ export const GetAdminMatchesDocument = gql`
     competition {
       id
       name
+      type
+      sport {
+        id
+        name
+      }
+      tournaments {
+        id
+        name
+        bracketType
+        matches {
+          id
+        }
+      }
     }
     winnerTeam {
       id
@@ -3654,6 +4125,10 @@ export const GetAdminMatchesDocument = gql`
         name
       }
       score
+    }
+    judgment {
+      id
+      name
     }
   }
 }
@@ -3771,6 +4246,22 @@ export const GetAdminMatchDocument = gql`
         name
       }
       score
+    }
+    judgment {
+      id
+      name
+      user {
+        id
+        name
+      }
+      team {
+        id
+        name
+      }
+      group {
+        id
+        name
+      }
     }
   }
 }
@@ -4219,6 +4710,58 @@ export function useUpdateAdminSlotConnectionMutation(baseOptions?: Apollo.Mutati
 export type UpdateAdminSlotConnectionMutationHookResult = ReturnType<typeof useUpdateAdminSlotConnectionMutation>;
 export type UpdateAdminSlotConnectionMutationResult = Apollo.MutationResult<UpdateAdminSlotConnectionMutation>;
 export type UpdateAdminSlotConnectionMutationOptions = Apollo.BaseMutationOptions<UpdateAdminSlotConnectionMutation, UpdateAdminSlotConnectionMutationVariables>;
+export const GetAdminCompetitionJudgeOptionsDocument = gql`
+    query GetAdminCompetitionJudgeOptions($competitionId: ID!) {
+  competition(id: $competitionId) {
+    id
+    teams {
+      id
+      name
+      group {
+        id
+        name
+      }
+      users {
+        id
+        name
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAdminCompetitionJudgeOptionsQuery__
+ *
+ * To run a query within a React component, call `useGetAdminCompetitionJudgeOptionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAdminCompetitionJudgeOptionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAdminCompetitionJudgeOptionsQuery({
+ *   variables: {
+ *      competitionId: // value for 'competitionId'
+ *   },
+ * });
+ */
+export function useGetAdminCompetitionJudgeOptionsQuery(baseOptions: Apollo.QueryHookOptions<GetAdminCompetitionJudgeOptionsQuery, GetAdminCompetitionJudgeOptionsQueryVariables> & ({ variables: GetAdminCompetitionJudgeOptionsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAdminCompetitionJudgeOptionsQuery, GetAdminCompetitionJudgeOptionsQueryVariables>(GetAdminCompetitionJudgeOptionsDocument, options);
+      }
+export function useGetAdminCompetitionJudgeOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAdminCompetitionJudgeOptionsQuery, GetAdminCompetitionJudgeOptionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAdminCompetitionJudgeOptionsQuery, GetAdminCompetitionJudgeOptionsQueryVariables>(GetAdminCompetitionJudgeOptionsDocument, options);
+        }
+export function useGetAdminCompetitionJudgeOptionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAdminCompetitionJudgeOptionsQuery, GetAdminCompetitionJudgeOptionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAdminCompetitionJudgeOptionsQuery, GetAdminCompetitionJudgeOptionsQueryVariables>(GetAdminCompetitionJudgeOptionsDocument, options);
+        }
+export type GetAdminCompetitionJudgeOptionsQueryHookResult = ReturnType<typeof useGetAdminCompetitionJudgeOptionsQuery>;
+export type GetAdminCompetitionJudgeOptionsLazyQueryHookResult = ReturnType<typeof useGetAdminCompetitionJudgeOptionsLazyQuery>;
+export type GetAdminCompetitionJudgeOptionsSuspenseQueryHookResult = ReturnType<typeof useGetAdminCompetitionJudgeOptionsSuspenseQuery>;
+export type GetAdminCompetitionJudgeOptionsQueryResult = Apollo.QueryResult<GetAdminCompetitionJudgeOptionsQuery, GetAdminCompetitionJudgeOptionsQueryVariables>;
 export const SetAdminTiebreakPrioritiesDocument = gql`
     mutation SetAdminTiebreakPriorities($leagueId: ID!, $priorities: [TiebreakPriorityInput!]!) {
   setTiebreakPriorities(leagueId: $leagueId, priorities: $priorities) {
@@ -4267,6 +4810,13 @@ export const GetAdminSportsDocument = gql`
       id
       url
     }
+    scene {
+      id
+      scene {
+        id
+        name
+      }
+    }
   }
 }
     `;
@@ -4308,6 +4858,7 @@ export const GetAdminSportDocument = gql`
     id
     name
     weight
+    experiencedLimit
     image {
       id
       url
@@ -4403,6 +4954,7 @@ export const UpdateAdminSportDocument = gql`
     id
     name
     weight
+    experiencedLimit
   }
 }
     `;
@@ -5232,6 +5784,9 @@ export const GetAdminUsersDocument = gql`
     email
     gender
     role
+    identify {
+      microsoftUserId
+    }
     groups {
       id
       name
@@ -5240,6 +5795,14 @@ export const GetAdminUsersDocument = gql`
       id
       name
     }
+  }
+  sports {
+    id
+    name
+  }
+  allSportExperiences {
+    userId
+    sportId
   }
 }
     `;
@@ -5283,6 +5846,9 @@ export const GetAdminUserDocument = gql`
     email
     gender
     role
+    identify {
+      microsoftUserId
+    }
     groups {
       id
       name
@@ -5468,3 +6034,156 @@ export function useUpdateAdminUserRoleMutation(baseOptions?: Apollo.MutationHook
 export type UpdateAdminUserRoleMutationHookResult = ReturnType<typeof useUpdateAdminUserRoleMutation>;
 export type UpdateAdminUserRoleMutationResult = Apollo.MutationResult<UpdateAdminUserRoleMutation>;
 export type UpdateAdminUserRoleMutationOptions = Apollo.BaseMutationOptions<UpdateAdminUserRoleMutation, UpdateAdminUserRoleMutationVariables>;
+export const GetAdminUserSportExperiencesDocument = gql`
+    query GetAdminUserSportExperiences($userId: ID!) {
+  userSportExperiences(userId: $userId) {
+    userId
+    sportId
+  }
+  sports {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useGetAdminUserSportExperiencesQuery__
+ *
+ * To run a query within a React component, call `useGetAdminUserSportExperiencesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAdminUserSportExperiencesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAdminUserSportExperiencesQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useGetAdminUserSportExperiencesQuery(baseOptions: Apollo.QueryHookOptions<GetAdminUserSportExperiencesQuery, GetAdminUserSportExperiencesQueryVariables> & ({ variables: GetAdminUserSportExperiencesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAdminUserSportExperiencesQuery, GetAdminUserSportExperiencesQueryVariables>(GetAdminUserSportExperiencesDocument, options);
+      }
+export function useGetAdminUserSportExperiencesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAdminUserSportExperiencesQuery, GetAdminUserSportExperiencesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAdminUserSportExperiencesQuery, GetAdminUserSportExperiencesQueryVariables>(GetAdminUserSportExperiencesDocument, options);
+        }
+export function useGetAdminUserSportExperiencesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAdminUserSportExperiencesQuery, GetAdminUserSportExperiencesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAdminUserSportExperiencesQuery, GetAdminUserSportExperiencesQueryVariables>(GetAdminUserSportExperiencesDocument, options);
+        }
+export type GetAdminUserSportExperiencesQueryHookResult = ReturnType<typeof useGetAdminUserSportExperiencesQuery>;
+export type GetAdminUserSportExperiencesLazyQueryHookResult = ReturnType<typeof useGetAdminUserSportExperiencesLazyQuery>;
+export type GetAdminUserSportExperiencesSuspenseQueryHookResult = ReturnType<typeof useGetAdminUserSportExperiencesSuspenseQuery>;
+export type GetAdminUserSportExperiencesQueryResult = Apollo.QueryResult<GetAdminUserSportExperiencesQuery, GetAdminUserSportExperiencesQueryVariables>;
+export const AddAdminSportExperiencesDocument = gql`
+    mutation AddAdminSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+  addSportExperiences(sportId: $sportId, userIds: $userIds) {
+    userId
+    sportId
+  }
+}
+    `;
+export type AddAdminSportExperiencesMutationFn = Apollo.MutationFunction<AddAdminSportExperiencesMutation, AddAdminSportExperiencesMutationVariables>;
+
+/**
+ * __useAddAdminSportExperiencesMutation__
+ *
+ * To run a mutation, you first call `useAddAdminSportExperiencesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddAdminSportExperiencesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addAdminSportExperiencesMutation, { data, loading, error }] = useAddAdminSportExperiencesMutation({
+ *   variables: {
+ *      sportId: // value for 'sportId'
+ *      userIds: // value for 'userIds'
+ *   },
+ * });
+ */
+export function useAddAdminSportExperiencesMutation(baseOptions?: Apollo.MutationHookOptions<AddAdminSportExperiencesMutation, AddAdminSportExperiencesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddAdminSportExperiencesMutation, AddAdminSportExperiencesMutationVariables>(AddAdminSportExperiencesDocument, options);
+      }
+export type AddAdminSportExperiencesMutationHookResult = ReturnType<typeof useAddAdminSportExperiencesMutation>;
+export type AddAdminSportExperiencesMutationResult = Apollo.MutationResult<AddAdminSportExperiencesMutation>;
+export type AddAdminSportExperiencesMutationOptions = Apollo.BaseMutationOptions<AddAdminSportExperiencesMutation, AddAdminSportExperiencesMutationVariables>;
+export const DeleteAdminSportExperiencesDocument = gql`
+    mutation DeleteAdminSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+  deleteSportExperiences(sportId: $sportId, userIds: $userIds)
+}
+    `;
+export type DeleteAdminSportExperiencesMutationFn = Apollo.MutationFunction<DeleteAdminSportExperiencesMutation, DeleteAdminSportExperiencesMutationVariables>;
+
+/**
+ * __useDeleteAdminSportExperiencesMutation__
+ *
+ * To run a mutation, you first call `useDeleteAdminSportExperiencesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteAdminSportExperiencesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteAdminSportExperiencesMutation, { data, loading, error }] = useDeleteAdminSportExperiencesMutation({
+ *   variables: {
+ *      sportId: // value for 'sportId'
+ *      userIds: // value for 'userIds'
+ *   },
+ * });
+ */
+export function useDeleteAdminSportExperiencesMutation(baseOptions?: Apollo.MutationHookOptions<DeleteAdminSportExperiencesMutation, DeleteAdminSportExperiencesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteAdminSportExperiencesMutation, DeleteAdminSportExperiencesMutationVariables>(DeleteAdminSportExperiencesDocument, options);
+      }
+export type DeleteAdminSportExperiencesMutationHookResult = ReturnType<typeof useDeleteAdminSportExperiencesMutation>;
+export type DeleteAdminSportExperiencesMutationResult = Apollo.MutationResult<DeleteAdminSportExperiencesMutation>;
+export type DeleteAdminSportExperiencesMutationOptions = Apollo.BaseMutationOptions<DeleteAdminSportExperiencesMutation, DeleteAdminSportExperiencesMutationVariables>;
+export const GetMeDocument = gql`
+    query GetMe {
+  me {
+    id
+    name
+    role
+  }
+}
+    `;
+
+/**
+ * __useGetMeQuery__
+ *
+ * To run a query within a React component, call `useGetMeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetMeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetMeQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetMeQuery(baseOptions?: Apollo.QueryHookOptions<GetMeQuery, GetMeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetMeQuery, GetMeQueryVariables>(GetMeDocument, options);
+      }
+export function useGetMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetMeQuery, GetMeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetMeQuery, GetMeQueryVariables>(GetMeDocument, options);
+        }
+export function useGetMeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetMeQuery, GetMeQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetMeQuery, GetMeQueryVariables>(GetMeDocument, options);
+        }
+export type GetMeQueryHookResult = ReturnType<typeof useGetMeQuery>;
+export type GetMeLazyQueryHookResult = ReturnType<typeof useGetMeLazyQuery>;
+export type GetMeSuspenseQueryHookResult = ReturnType<typeof useGetMeSuspenseQuery>;
+export type GetMeQueryResult = Apollo.QueryResult<GetMeQuery, GetMeQueryVariables>;

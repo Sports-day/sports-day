@@ -2,6 +2,7 @@ import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemText, T
 import { TOP_HEADER_HEIGHT_XS, TOP_HEADER_HEIGHT_MD } from './TopHeader'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import SportsIcon from '@mui/icons-material/Sports'
+import SchoolIcon from '@mui/icons-material/School'
 import GroupsIcon from '@mui/icons-material/Groups'
 import PersonIcon from '@mui/icons-material/Person'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
@@ -28,6 +29,7 @@ type NavItem = {
 const PREPARATION_ITEMS: NavItem[] = [
   { key: 'sports', label: '競技', icon: <SportsIcon fontSize="small" />, permission: 'sports.view' },
   { key: 'competitions', label: '大会', icon: <EmojiEventsIcon fontSize="small" />, permission: 'competitions.view' },
+  { key: 'classes', label: 'クラス', icon: <SchoolIcon fontSize="small" />, permission: 'classes.view' },
   { key: 'teams', label: 'チーム', icon: <GroupsIcon fontSize="small" />, permission: 'teams.view' },
   { key: 'users', label: 'ユーザー', icon: <PersonIcon fontSize="small" />, permission: 'users.view' },
   { key: 'locations', label: '場所', icon: <LocationOnIcon fontSize="small" />, permission: 'locations.view' },
@@ -185,6 +187,7 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
           overflow: 'hidden',
+          borderRight: 'none',
         },
       }}
     >

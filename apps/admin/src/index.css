@@ -8,3 +8,28 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+
+/* ─── スクロールバー (Webkit) ─── */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(91, 109, 198, 0.35);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(91, 109, 198, 0.55);
+}
+
+/* ─── スクロールバー (Firefox) ─── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(91, 109, 198, 0.35) transparent;
+}

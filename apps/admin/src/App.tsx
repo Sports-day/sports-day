@@ -8,6 +8,8 @@ import { GlobalToast } from "@/components/ui/GlobalToast";
 import { registerNavigate } from "@/hooks/useAppNavigation";
 import { ResetToListContext } from "@/hooks/useResetToList";
 import { useAuth } from "@/hooks/useAuth";
+import { CurrentUserContext, useCurrentUserQuery } from "@/hooks/useCurrentUser";
+import { checkSidebarPermission } from "@/lib/permissions";
 import { userManager } from "@/lib/userManager";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -18,6 +20,7 @@ const SportsPage = lazy(() => import("@/pages/SportsPage"));
 const TeamsPage = lazy(() => import("@/pages/TeamsPage"));
 const UsersPage = lazy(() => import("@/pages/UsersPage"));
 const LocationsPage = lazy(() => import("@/pages/LocationsPage"));
+const ClassesPage = lazy(() => import("@/pages/ClassesPage"));
 const TagsPage = lazy(() => import("@/pages/TagsPage"));
 const ImagesPage = lazy(() => import("@/pages/ImagesPage"));
 const ActiveMatchesPage = lazy(() => import("@/pages/ActiveMatchesPage"));
@@ -43,14 +46,23 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { loggedIn, loading } = useAuth()
+  const { currentUser, loading: meLoading } = useCurrentUserQuery()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [resetKey, setResetKey] = useState(0)
 
   useEffect(() => {
-    registerNavigate((page: string) => navigate(keyToPath(page)))
+    registerNavigate((page: string, params?: Record<string, string>) => {
+      const path = keyToPath(page)
+      if (params && Object.keys(params).length > 0) {
+        const search = new URLSearchParams(params).toString()
+        navigate(`${path}?${search}`)
+      } else {
+        navigate(path)
+      }
+    })
   }, [navigate])
 
-  if (loading) return <PageFallback />
+  if (loading || meLoading) return <PageFallback />
 
   // 未ログインならログインページへリダイレクト
   if (!loggedIn) {
@@ -90,7 +102,7 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
         onMobileClose={() => setMobileOpen(false)}
         onLogout={handleLogout}
         onHome={onPrivacy}
-        checkPermission={() => true}
+        checkPermission={currentUser ? (key) => checkSidebarPermission(currentUser.role, key) : undefined}
       />
       <Box
         component="main"
@@ -105,20 +117,23 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
       >
         <ErrorBoundary>
           <Suspense fallback={<PageFallback />}>
-            <ResetToListContext.Provider value={resetKey}>
-              <Routes>
-                <Route path="/competitions" element={<CompetitionsPage />} />
-                <Route path="/sports" element={<SportsPage />} />
-                <Route path="/teams" element={<TeamsPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/locations" element={<LocationsPage />} />
-                <Route path="/tags" element={<TagsPage />} />
-                <Route path="/images" element={<ImagesPage />} />
-                <Route path="/active-matches" element={<ActiveMatchesPage />} />
-                <Route path="/information" element={<InformationPage />} />
-                <Route path="*" element={<Navigate to="/competitions" replace />} />
-              </Routes>
-            </ResetToListContext.Provider>
+            <CurrentUserContext.Provider value={{ currentUser, loading: meLoading }}>
+              <ResetToListContext.Provider value={resetKey}>
+                <Routes>
+                  <Route path="/competitions" element={<CompetitionsPage />} />
+                  <Route path="/sports" element={<SportsPage />} />
+                  <Route path="/classes" element={<ClassesPage />} />
+                  <Route path="/teams" element={<TeamsPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/locations" element={<LocationsPage />} />
+                  <Route path="/tags" element={<TagsPage />} />
+                  <Route path="/images" element={<ImagesPage />} />
+                  <Route path="/active-matches" element={<ActiveMatchesPage />} />
+                  <Route path="/information" element={<InformationPage />} />
+                  <Route path="*" element={<Navigate to="/competitions" replace />} />
+                </Routes>
+              </ResetToListContext.Provider>
+            </CurrentUserContext.Provider>
           </Suspense>
         </ErrorBoundary>
       </Box>

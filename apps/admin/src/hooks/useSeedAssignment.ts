@@ -6,7 +6,10 @@ import {
 } from '@/gql/__generated__/graphql'
 
 export function useSeedAssignment(tournamentId: string) {
-  const { data } = useGetAdminTournamentQuery({ variables: { id: tournamentId } })
+  const { data } = useGetAdminTournamentQuery({
+    variables: { id: tournamentId },
+    skip: !tournamentId,
+  })
 
   const slots = data?.tournament?.slots ?? []
 
@@ -47,19 +50,11 @@ export function useSeedAssignment(tournamentId: string) {
     [initialAssignments, assignments],
   )
 
-  // トーナメントに参加しているチーム一覧（slots の matchEntry.team から重複除去）
-  const teams: { id: string; name: string }[] = useMemo(() => {
-    const seen = new Set<string>()
-    const result: { id: string; name: string }[] = []
-    for (const s of slots) {
-      const team = s.matchEntry?.team
-      if (team && !seen.has(team.id)) {
-        seen.add(team.id)
-        result.push({ id: team.id, name: team.name })
-      }
-    }
-    return result
-  }, [slots])
+  // コンペティションのエントリー全員をシード選択候補として使う
+  const teams: { id: string; name: string }[] = useMemo(
+    () => data?.tournament?.competition?.teams ?? [],
+    [data],
+  )
 
   const [assignSeedTeam] = useAssignAdminSeedTeamMutation({
     refetchQueries: ['GetAdminTournament'],
@@ -70,6 +65,13 @@ export function useSeedAssignment(tournamentId: string) {
 
   const setAssignment = (seedNumber: number, teamId: string) => {
     setAssignments((prev) => ({ ...prev, [seedNumber]: teamId }))
+  }
+
+  /** slotId を直接指定してチームを割り当てる（タイミング問題なし） */
+  const assignSlotDirectly = async (slotId: string, teamId: string | null) => {
+    await assignSeedTeam({
+      variables: { input: { slotId, teamId: teamId || null } },
+    })
   }
 
   const saveAssignments = async () => {
@@ -91,8 +93,60 @@ export function useSeedAssignment(tournamentId: string) {
   }
 
   /**
+   * スロット ID と seed 番号を直接指定してシードを交換する。
+   * ブラケットをまたいだ操作でも正しい tournamentId を使える。
+   */
+  const swapSeedsFromSlots = async (
+    slotIdA: string,
+    seedA: number,
+    slotIdB: string,
+    seedB: number,
+    tid: string,
+  ) => {
+    await updateSeedNumbers({
+      variables: {
+        tournamentId: tid,
+        seeds: [
+          { slotId: slotIdA, seedNumber: seedB },
+          { slotId: slotIdB, seedNumber: seedA },
+        ],
+      },
+    })
+    setAssignments({})
+  }
+
+  /**
+   * 2つの試合のシードを一度にアトミックに入れ替える。
+   * 4スロットを1回のミューテーションで更新することで競合を防ぐ。
+   * スロットIDまたはシード番号が欠損している場合は false を返す。
+   */
+  const swapMatchSeeds = async (
+    matchA: { slot1: { slotId?: string; seedNumber?: number }; slot2: { slotId?: string; seedNumber?: number } },
+    matchB: { slot1: { slotId?: string; seedNumber?: number }; slot2: { slotId?: string; seedNumber?: number } },
+    tid: string,
+  ): Promise<boolean> => {
+    const { slotId: idA1, seedNumber: sA1 } = matchA.slot1
+    const { slotId: idA2, seedNumber: sA2 } = matchA.slot2
+    const { slotId: idB1, seedNumber: sB1 } = matchB.slot1
+    const { slotId: idB2, seedNumber: sB2 } = matchB.slot2
+    if (!idA1 || !idA2 || !idB1 || !idB2 || sA1 == null || sA2 == null || sB1 == null || sB2 == null) return false
+    await updateSeedNumbers({
+      variables: {
+        tournamentId: tid,
+        seeds: [
+          { slotId: idA1, seedNumber: sB1 },
+          { slotId: idA2, seedNumber: sB2 },
+          { slotId: idB1, seedNumber: sA1 },
+          { slotId: idB2, seedNumber: sA2 },
+        ],
+      },
+    })
+    setAssignments({})
+    return true
+  }
+
+  /**
    * シード番号の順序を入れ替える
-   * @param reorderedSeeds - 新しい順序の { slotId, seedNumber } 配列
    */
   const reorderSeeds = async (reorderedSeeds: { slotId: string; seedNumber: number }[]) => {
     await updateSeedNumbers({
@@ -107,26 +161,6 @@ export function useSeedAssignment(tournamentId: string) {
     setAssignments({})
   }
 
-  /**
-   * 2つのシード番号を交換する
-   */
-  const swapSeeds = async (seedA: number, seedB: number) => {
-    const slotIdA = seedToSlotId[seedA]
-    const slotIdB = seedToSlotId[seedB]
-    if (!slotIdA || !slotIdB) return
-
-    await updateSeedNumbers({
-      variables: {
-        tournamentId,
-        seeds: [
-          { slotId: slotIdA, seedNumber: seedB },
-          { slotId: slotIdB, seedNumber: seedA },
-        ],
-      },
-    })
-    setAssignments({})
-  }
-
   return {
     seedNumbers,
     assignments: mergedAssignments,
@@ -136,7 +170,9 @@ export function useSeedAssignment(tournamentId: string) {
     version: seedSlots.length,
     setAssignment,
     saveAssignments,
+    assignSlotDirectly,
+    swapSeedsFromSlots,
+    swapMatchSeeds,
     reorderSeeds,
-    swapSeeds,
   }
 }

@@ -44,6 +44,9 @@ const theme = createTheme({
           color: '#2F3C8C',
           boxShadow: 'none',
         },
+        text: {
+          boxShadow: 'none',
+        },
         contained: {
           backgroundColor: '#5F6DC2',
           color: '#FFFFFF',
