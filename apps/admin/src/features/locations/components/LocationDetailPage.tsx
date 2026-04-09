@@ -59,7 +59,7 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
         </Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             場所の編集
@@ -72,7 +72,10 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
               onChange={(e) => setName(e.target.value)}
               fullWidth
               size="small"
+              error={!name.trim() && dirty}
+              helperText={!name.trim() && dirty ? 'この項目は必須です' : name.length >= 60 ? `${name.length}/64文字` : ''}
               sx={CARD_FIELD_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
             />
 
             <Box sx={{ display: 'flex', gap: 1 }}>

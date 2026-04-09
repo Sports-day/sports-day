@@ -56,6 +56,10 @@ export function useTeamBulkRename() {
         updated.push({ ...row, status: 'エラー', errorReason: '新しい名前が空です' })
         continue
       }
+      if (row.afterName.length > 64) {
+        updated.push({ ...row, status: 'エラー', errorReason: '名前は64文字以内にしてください' })
+        continue
+      }
       try {
         await updateTeam({
           variables: { id: row.id, input: { name: row.afterName } },

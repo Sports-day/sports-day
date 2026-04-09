@@ -47,7 +47,7 @@ export function TagCreatePage({ onBack }: Props) {
           タグ作成
         </Typography>
 
-        <TextField fullWidth size="small" label="名前*" value={name} onChange={(e) => setName(e.target.value)} error={submitted && !name.trim()} helperText={submitted && !name.trim() ? 'この項目は必須です' : ''} sx={INPUT_SX} />
+        <TextField fullWidth size="small" label="名前*" value={name} onChange={(e) => setName(e.target.value)} error={submitted && !name.trim()} helperText={submitted && !name.trim() ? 'この項目は必須です' : name.length >= 60 ? `${name.length}/64文字` : ''} sx={INPUT_SX} slotProps={{ htmlInput: { maxLength: 64 } }} />
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button

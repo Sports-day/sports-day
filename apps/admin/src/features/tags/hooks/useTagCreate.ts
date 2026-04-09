@@ -9,7 +9,7 @@ export function useTagCreate() {
 
   const handleCreate = async () => {
     if (!name.trim()) return
-    await createScene({ variables: { input: { name } } })
+    await createScene({ variables: { input: { name: name.slice(0, 64) } } })
     setName('')
   }
 

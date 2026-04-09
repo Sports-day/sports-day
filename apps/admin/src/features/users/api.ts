@@ -8,8 +8,17 @@ export const GET_ADMIN_USERS = gql`
       email
       gender
       role
+      identify { microsoftUserId }
       groups { id name }
       teams { id name }
+    }
+    sports {
+      id
+      name
+    }
+    allSportExperiences {
+      userId
+      sportId
     }
   }
 `
@@ -22,6 +31,7 @@ export const GET_ADMIN_USER = gql`
       email
       gender
       role
+      identify { microsoftUserId }
       groups { id name }
       teams { id name }
     }
@@ -64,5 +74,33 @@ export const UPDATE_ADMIN_USER_ROLE = gql`
       id
       role
     }
+  }
+`
+
+export const GET_ADMIN_USER_SPORT_EXPERIENCES = gql`
+  query GetAdminUserSportExperiences($userId: ID!) {
+    userSportExperiences(userId: $userId) {
+      userId
+      sportId
+    }
+    sports {
+      id
+      name
+    }
+  }
+`
+
+export const ADD_ADMIN_SPORT_EXPERIENCES = gql`
+  mutation AddAdminSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+    addSportExperiences(sportId: $sportId, userIds: $userIds) {
+      userId
+      sportId
+    }
+  }
+`
+
+export const DELETE_ADMIN_SPORT_EXPERIENCES = gql`
+  mutation DeleteAdminSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+    deleteSportExperiences(sportId: $sportId, userIds: $userIds)
   }
 `

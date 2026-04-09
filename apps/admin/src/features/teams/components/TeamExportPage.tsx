@@ -32,7 +32,7 @@ export function TeamExportPage({ onBack }: Props) {
         </Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             競技の情報

@@ -37,7 +37,9 @@ export function ImageCreatePage({ onBack }: Props) {
   }, [handleFileSelect])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    selectFile(e.target.files?.[0] ?? null)
+    const f = e.target.files?.[0] ?? null
+    if (f && !f.type.startsWith('image/')) return
+    selectFile(f)
   }
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -119,7 +121,7 @@ export function ImageCreatePage({ onBack }: Props) {
               ここにファイルをドロップ、またはクリックして選択
             </Typography>
             <Typography sx={{ fontSize: '12px', color: '#5B6DC6', opacity: 0.7 }}>
-              JPEG, PNG, GIF, WebP に対応
+              JPEG, PNG, GIF, WebP に対応（10MB以下）
             </Typography>
           </Box>
         ) : (
@@ -192,7 +194,7 @@ export function ImageCreatePage({ onBack }: Props) {
 
         {error && (
           <Typography sx={{ fontSize: '13px', color: '#D71212', mt: 1.5 }}>
-            {error.message}
+            アップロードに失敗しました。ファイルを確認して再度お試しください。
           </Typography>
         )}
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useApolloClient } from '@apollo/client'
 import { useCreateAdminImageUploadUrlMutation, GetAdminImagesDocument } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useImageCreate(onSuccess?: () => void) {
   const [file, setFile] = useState<File | null>(null)
@@ -23,7 +24,14 @@ export function useImageCreate(onSuccess?: () => void) {
     }
   }, [client])
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
   const handleFileSelect = (selectedFile: File | null) => {
+    if (selectedFile && selectedFile.size > MAX_FILE_SIZE) {
+      setError(new Error('ファイルサイズは10MB以下にしてください'))
+      setFile(null)
+      return
+    }
     setFile(selectedFile)
     setError(null)
   }
@@ -58,6 +66,7 @@ export function useImageCreate(onSuccess?: () => void) {
       onSuccess?.()
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast('画像のアップロードに失敗しました。')
     } finally {
       setUploading(false)
     }

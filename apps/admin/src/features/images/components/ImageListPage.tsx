@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useImages } from '../hooks/useImages'
+import { QueryError } from '@/components/ui/QueryError'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 
 const CLICKABLE_CELL_SX = {
@@ -29,7 +30,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
   const { data: images, loading, error } = useImages()
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
-  if (error) return <Typography sx={{ color: '#D71212', mt: 2 }}>データの取得に失敗しました</Typography>
+  if (error) return <QueryError />
 
   return (
     <Box>
@@ -37,7 +38,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
         画像
       </Typography>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
             <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>

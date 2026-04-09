@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import {
   useGetAdminInformationQuery,
   useUpdateAdminInformationMutation,
   useDeleteAdminInformationMutation,
   GetAdminInformationsDocument,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 import type { Announcement } from '../types'
 
 function parseStatus(s: string | null | undefined): Announcement['status'] {
@@ -16,27 +17,25 @@ export function useAnnouncementDetail(id: string) {
   const { data, loading, error } = useGetAdminInformationQuery({ variables: { id } })
   const item = data?.Information
 
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [status, setStatus] = useState<Announcement['status']>('draft')
+  // サーバー値 + 編集差分パターン
+  const serverTitle = item?.title ?? ''
+  const serverContent = item?.content ?? ''
+  const serverStatus = parseStatus(item?.status)
+
+  const [editTitle, setEditTitle] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState<string | null>(null)
+  const [editStatus, setEditStatus] = useState<Announcement['status'] | null>(null)
   const [mutationError, setMutationError] = useState<Error | null>(null)
-  const initialState = useRef({ title: '', content: '', status: 'draft' as Announcement['status'] })
 
-  useEffect(() => {
-    if (item) {
-      const t = item.title
-      const c = item.content
-      const s = parseStatus(item.status)
-      setTitle(t)
-      setContent(c)
-      setStatus(s)
-      initialState.current = { title: t, content: c, status: s }
-    }
-  }, [item?.title, item?.content, item?.status])
+  const title = editTitle ?? serverTitle
+  const content = editContent ?? serverContent
+  const status = editStatus ?? serverStatus
 
-  const dirty = title !== initialState.current.title
-    || content !== initialState.current.content
-    || status !== initialState.current.status
+  const setTitle = (v: string) => setEditTitle(v)
+  const setContent = (v: string) => setEditContent(v)
+  const setStatus = (v: Announcement['status']) => setEditStatus(v)
+
+  const dirty = editTitle !== null || editContent !== null || editStatus !== null
 
   const [updateInformation] = useUpdateAdminInformationMutation({
     refetchQueries: [{ query: GetAdminInformationsDocument }],
@@ -46,13 +45,18 @@ export function useAnnouncementDetail(id: string) {
   })
 
   const handleSave = async () => {
+    if (!title.trim() || !content.trim()) return
     try {
       await updateInformation({
-        variables: { id, input: { title, content, status } },
+        variables: { id, input: { title: title.slice(0, 64), content: content.slice(0, 1000), status } },
       })
+      setEditTitle(null)
+      setEditContent(null)
+      setEditStatus(null)
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 
@@ -62,6 +66,7 @@ export function useAnnouncementDetail(id: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 

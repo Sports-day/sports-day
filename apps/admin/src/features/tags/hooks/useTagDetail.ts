@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import {
   useGetAdminSceneForTagQuery,
   useUpdateAdminSceneForTagMutation,
@@ -11,17 +11,12 @@ export function useTagDetail(tagId: string) {
   const { data, loading, error } = useGetAdminSceneForTagQuery({ variables: { id: tagId } })
   const scene = data?.scene
 
-  const [name, setName] = useState('')
-  const initialName = useRef('')
-
-  useEffect(() => {
-    if (scene?.name !== undefined) {
-      setName(scene.name)
-      initialName.current = scene.name
-    }
-  }, [scene?.name])
-
-  const dirty = name !== initialName.current
+  // サーバー値 + 編集差分パターン
+  const serverName = scene?.name ?? ''
+  const [editName, setEditName] = useState<string | null>(null)
+  const name = editName ?? serverName
+  const setName = (v: string) => setEditName(v)
+  const dirty = editName !== null
 
   const [updateScene] = useUpdateAdminSceneForTagMutation({
     refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
@@ -34,7 +29,9 @@ export function useTagDetail(tagId: string) {
   })
 
   const handleSave = async () => {
-    await updateScene({ variables: { id: tagId, input: { name } } })
+    if (!name.trim()) return
+    await updateScene({ variables: { id: tagId, input: { name: name.slice(0, 64) } } })
+    setEditName(null)
   }
 
   const handleDelete = async () => {

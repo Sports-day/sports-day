@@ -87,7 +87,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
       </Breadcrumbs>
 
       {/* 編集カード */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             チームを編集
@@ -95,12 +95,15 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <TextField
-              label="チーム名"
+              label="チーム名*"
               fullWidth
               size="small"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              error={!name.trim() && dirty}
+              helperText={!name.trim() && dirty ? 'この項目は必須です' : name.length >= 60 ? `${name.length}/64文字` : ''}
               sx={CARD_FIELD_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
             />
 
             <SceneSelect
@@ -124,7 +127,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty}
+                disabled={!dirty || !name.trim()}
                 sx={SAVE_BUTTON_SX}
               >
                 保存
@@ -135,7 +138,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
       </Card>
 
       {/* メンバーカード */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {teamName}のメンバー

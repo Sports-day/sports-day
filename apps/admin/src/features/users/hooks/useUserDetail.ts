@@ -6,8 +6,12 @@ import {
   useUpdateAdminUserMutation,
   useUpdateAdminUserRoleMutation,
   useDeleteAdminUserMutation,
+  useGetAdminUserSportExperiencesQuery,
+  useAddAdminSportExperiencesMutation,
+  useDeleteAdminSportExperiencesMutation,
   GetAdminUsersDocument,
 } from '@/gql/__generated__/graphql'
+import { useMsGraphUser } from '@/hooks/useMsGraphUsers'
 
 const GENDER_SCENES = [
   { id: '男', name: '男' },
@@ -25,13 +29,23 @@ export function useUserDetail(userId: string) {
     skip: !userId,
   })
   const { data: groupsData } = useGetAdminGroupsQuery()
+  const { data: expData } = useGetAdminUserSportExperiencesQuery({
+    variables: { userId },
+    skip: !userId,
+  })
   const user = data?.user
+
+  const { msGraphUser, loading: msGraphLoading } = useMsGraphUser(
+    user?.identify?.microsoftUserId,
+  )
 
   const [gender, setGender] = useState('')
   const [groupId, setGroupId] = useState('')
   const [role, setRole] = useState('')
+  const [experiencedSportIds, setExperiencedSportIds] = useState<string[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const initialState = useRef({ gender: '', groupId: '', role: '' })
+  const initialState = useRef({ gender: '', groupId: '', role: '', experiencedSportIds: [] as string[] })
+  const experienceInitialized = useRef(false)
 
   useEffect(() => {
     if (user) {
@@ -40,16 +54,27 @@ export function useUserDetail(userId: string) {
       setGender(g)
       setGroupId(gid)
       setRole(user.role)
-      initialState.current = { gender: g, groupId: gid, role: user.role }
+      initialState.current = { gender: g, groupId: gid, role: user.role, experiencedSportIds: initialState.current.experiencedSportIds }
     }
   }, [user])
 
+  // 経験者スポーツの初期化
+  useEffect(() => {
+    if (experienceInitialized.current || !expData?.userSportExperiences) return
+    const ids = expData.userSportExperiences.map((e) => e.sportId)
+    setExperiencedSportIds(ids)
+    initialState.current.experiencedSportIds = ids
+    experienceInitialized.current = true
+  }, [expData])
+
+  const allSports = (expData?.sports ?? []).map((s) => ({ id: s.id, name: s.name }))
   const groups = groupsData?.groups ?? []
 
   const dirty =
     gender !== initialState.current.gender ||
     groupId !== initialState.current.groupId ||
-    role !== initialState.current.role
+    role !== initialState.current.role ||
+    JSON.stringify([...experiencedSportIds].sort()) !== JSON.stringify([...initialState.current.experiencedSportIds].sort())
 
   const [updateUser] = useUpdateAdminUserMutation({
     refetchQueries: [{ query: GetAdminUsersDocument }],
@@ -62,6 +87,9 @@ export function useUserDetail(userId: string) {
   const [deleteUser] = useDeleteAdminUserMutation({
     refetchQueries: [{ query: GetAdminUsersDocument }],
   })
+
+  const [addSportExperiences] = useAddAdminSportExperiencesMutation()
+  const [deleteSportExperiences] = useDeleteAdminSportExperiencesMutation()
 
   const handleSave = async () => {
     if (!userId) return
@@ -80,6 +108,19 @@ export function useUserDetail(userId: string) {
         variables: { userId, role: role as Role },
       })
     }
+
+    // 経験者スポーツの差分保存
+    const prevSet = new Set(initialState.current.experiencedSportIds)
+    const currSet = new Set(experiencedSportIds)
+    const toAdd = experiencedSportIds.filter((id) => !prevSet.has(id))
+    const toRemove = initialState.current.experiencedSportIds.filter((id) => !currSet.has(id))
+    for (const sportId of toAdd) {
+      await addSportExperiences({ variables: { sportId, userIds: [userId] } })
+    }
+    for (const sportId of toRemove) {
+      await deleteSportExperiences({ variables: { sportId, userIds: [userId] } })
+    }
+    initialState.current.experiencedSportIds = [...experiencedSportIds]
   }
 
   const handleDeleteUser = async () => {
@@ -89,7 +130,8 @@ export function useUserDetail(userId: string) {
   }
 
   return {
-    userName: user?.name ?? '',
+    userName: msGraphUser?.displayName ?? user?.name ?? '',
+    userEmail: msGraphUser?.mail ?? user?.email ?? '',
     gender,
     setGender,
     groupId,
@@ -103,9 +145,12 @@ export function useUserDetail(userId: string) {
     deleteDialogOpen,
     openDeleteDialog: () => setDeleteDialogOpen(true),
     closeDeleteDialog: () => setDeleteDialogOpen(false),
+    experiencedSportIds,
+    setExperiencedSportIds,
+    allSports,
     genderScenes: GENDER_SCENES,
     roleScenes: ROLE_SCENES,
-    loading,
+    loading: loading || msGraphLoading,
     error: error ?? null,
   }
 }

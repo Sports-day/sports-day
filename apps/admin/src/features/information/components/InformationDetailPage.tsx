@@ -40,7 +40,7 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
         <Typography sx={BREADCRUMB_CURRENT_SX}>{announcementTitle}</Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {announcementTitle}を編集
@@ -53,17 +53,23 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
               size="small"
+              error={!title.trim() && dirty}
+              helperText={!title.trim() && dirty ? 'この項目は必須です' : title.length >= 60 ? `${title.length}/64文字` : ''}
               sx={CARD_FIELD_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
             />
             <TextField
-              label="内容"
+              label="内容*"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               fullWidth
               size="small"
               multiline
               rows={4}
+              error={!content.trim() && dirty}
+              helperText={!content.trim() && dirty ? 'この項目は必須です' : `${content.length}/1000文字`}
               sx={CARD_FIELD_SX}
+              slotProps={{ htmlInput: { maxLength: 1000 } }}
             />
 
             <TextField
@@ -92,7 +98,7 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty}
+                disabled={!dirty || !title.trim() || !content.trim()}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

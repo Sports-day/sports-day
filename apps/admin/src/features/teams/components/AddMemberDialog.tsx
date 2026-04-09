@@ -11,8 +11,9 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useGetAdminUsersQuery } from '@/gql/__generated__/graphql'
+import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 type Props = {
@@ -24,12 +25,27 @@ type Props = {
 export function AddMemberDialog({ open, onClose, onAdd }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const { data } = useGetAdminUsersQuery({ skip: !open })
-  const users = (data?.users ?? []).map(u => ({
-    id: u.id,
-    userName: u.name,
-    gender: u.gender ?? '',
-    email: u.email,
-  }))
+
+  const microsoftUserIds = useMemo(
+    () =>
+      (data?.users ?? [])
+        .map((u) => u.identify?.microsoftUserId)
+        .filter((id): id is string => !!id),
+    [data],
+  )
+  const { msGraphUsers } = useMsGraphUsers(microsoftUserIds)
+
+  const users = (data?.users ?? []).map(u => {
+    const msUser = u.identify?.microsoftUserId
+      ? msGraphUsers.get(u.identify.microsoftUserId)
+      : undefined
+    return {
+      id: u.id,
+      userName: msUser?.displayName ?? u.name,
+      gender: u.gender ?? '',
+      email: msUser?.mail ?? u.email,
+    }
+  })
 
   const toggle = (id: string) => {
     setSelectedIds((prev) =>

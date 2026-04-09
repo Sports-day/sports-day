@@ -19,7 +19,7 @@ export function useLocationCreate(onSave: () => void) {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return
-    await createLocation({ variables: { input: { name: form.name } } })
+    await createLocation({ variables: { input: { name: form.name.slice(0, 64) } } })
     onSave()
   }
 

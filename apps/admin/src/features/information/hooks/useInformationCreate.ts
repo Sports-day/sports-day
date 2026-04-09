@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCreateAdminInformationMutation, GetAdminInformationsDocument } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useInformationCreate(onSave: () => void) {
   const [title, setTitle] = useState('')
@@ -12,15 +13,16 @@ export function useInformationCreate(onSave: () => void) {
   })
 
   const handleCreate = async () => {
-    if (!title.trim()) return
+    if (!title.trim() || !content.trim()) return
     try {
       await createInformation({
-        variables: { input: { title, content, status } },
+        variables: { input: { title: title.slice(0, 64), content: content.slice(0, 1000), status } },
       })
       setMutationError(null)
       onSave()
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 

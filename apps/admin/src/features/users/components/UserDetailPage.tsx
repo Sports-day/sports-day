@@ -31,6 +31,9 @@ export function UserDetailPage({ userId, onBack }: Props) {
     groups,
     role,
     setRole,
+    experiencedSportIds,
+    setExperiencedSportIds,
+    allSports,
     dirty,
     handleSave,
     handleDeleteUser,
@@ -69,7 +72,7 @@ export function UserDetailPage({ userId, onBack }: Props) {
       </Breadcrumbs>
 
       {/* カード */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {userName}さんの情報
@@ -98,6 +101,15 @@ export function UserDetailPage({ userId, onBack }: Props) {
               onChange={(id) => setRole(id ?? '')}
               scenes={roleScenes}
               label="ロール"
+            />
+
+            {/* 経験者スポーツ */}
+            <SceneSelect
+              multiple
+              value={experiencedSportIds}
+              onChange={setExperiencedSportIds}
+              scenes={allSports}
+              label="経験者（部活動所属）"
             />
 
             {/* ボタン */}

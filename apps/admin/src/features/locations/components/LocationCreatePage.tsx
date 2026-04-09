@@ -31,7 +31,7 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
         </Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             場所の作成
@@ -45,8 +45,9 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
               fullWidth
               size="small"
               error={submitted && !form.name.trim()}
-              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : ''}
+              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : form.name.length >= 60 ? `${form.name.length}/64文字` : ''}
               sx={CARD_FIELD_CREATE_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
             />
 
             <Box sx={{ display: 'flex', gap: 1 }}>

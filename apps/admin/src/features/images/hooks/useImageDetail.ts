@@ -4,6 +4,7 @@ import {
   useDeleteAdminImageMutation,
   GetAdminImagesDocument,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useImageDetail(imageId: string) {
   const { data, loading, error } = useGetAdminImageQuery({ variables: { id: imageId } })
@@ -21,6 +22,7 @@ export function useImageDetail(imageId: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 

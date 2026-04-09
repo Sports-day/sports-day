@@ -4,6 +4,7 @@ import {
   useGetAdminUsersQuery,
   useCreateAdminUserMutation,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 const VALID_GENDERS = ['男性', '女性']
 
@@ -69,6 +70,7 @@ export function useUserCsv() {
       setRows([])
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 
