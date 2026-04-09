@@ -185,7 +185,7 @@ export function ActiveMatchLeaguePage({
       )}
 
       {/* ─── リーグ表カード ─── */}
-      <Card sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
         <CardContent sx={{ pb: '12px !important', overflow: 'hidden' }}>
           {/* タイトル + 試合を再生成 (インライン) */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
@@ -283,7 +283,7 @@ export function ActiveMatchLeaguePage({
       </Card>
 
       {/* ─── 試合一覧カード ─── */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ pb: '12px !important' }}>
           {/* タイトル + 一括編集 (インライン) */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>

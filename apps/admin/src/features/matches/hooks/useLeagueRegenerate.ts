@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGenerateAdminRoundRobinMutation } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
   const [isOpen, setIsOpen] = useState(false)
@@ -38,6 +39,7 @@ export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
       closeOverlay()
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 

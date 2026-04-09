@@ -1,65 +1,245 @@
-import { useState, useCallback } from 'react'
-import { Box, Button, Card, CardContent, Typography } from '@mui/material'
-import GroupsIcon from '@mui/icons-material/Groups'
-import { useCompetitions } from '@/features/competitions'
-import type { Competition } from '@/features/competitions'
-import { ActiveMatchLeaguePage } from './ActiveMatchLeaguePage'
-import { ActiveMatchTournamentPage } from './ActiveMatchTournamentPage'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { navigateToPage } from '@/hooks/useAppNavigation'
+import {
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  Typography,
+} from '@mui/material'
+import { useActiveMatches } from '../hooks/useActiveMatches'
+import type { MatchRow } from '../hooks/useActiveMatches'
+import { MatchCard } from './MatchCard'
+import { useMatchEdit } from '../hooks/useMatchEdit'
+import type { ActiveMatch, ActiveTeam } from '../types'
+import { MatchEditPage } from './MatchEditPage'
 import { CARD_GRADIENT } from '@/styles/commonSx'
 import { useResetToList } from '@/hooks/useResetToList'
+import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
+import { useFilterParams } from '@/hooks/useFilterParams'
+
+function toActiveMatch(row: MatchRow): ActiveMatch {
+  return {
+    id: row.id,
+    teamAId: row.teamAId,
+    teamBId: row.teamBId,
+    scoreA: row.scoreA,
+    scoreB: row.scoreB,
+    status: row.status === 'FINISHED' ? 'finished'
+      : row.status === 'ONGOING' ? 'ongoing'
+      : row.status === 'CANCELED' ? 'cancelled'
+      : 'standby',
+    winner: row.winnerTeamId === row.teamAId ? 'teamA'
+      : row.winnerTeamId === row.teamBId ? 'teamB'
+      : undefined,
+    time: row.time,
+    judgmentName: row.judgmentName,
+  }
+}
+
+function toActiveTeam(id: string, name: string): ActiveTeam {
+  return { id, name, shortName: name }
+}
+
+const STATUS_OPTIONS = [
+  { value: 'STANDBY', label: 'スタンバイ' },
+  { value: 'ONGOING', label: '進行中' },
+  { value: 'FINISHED', label: '終了' },
+  { value: 'CANCELED', label: '中止' },
+]
+
+const COMPETITION_TYPE_OPTIONS = [
+  { value: 'LEAGUE', label: 'リーグ' },
+  { value: 'TOURNAMENT', label: 'トーナメント' },
+]
 
 type View =
   | { type: 'list' }
-  | { type: 'league'; competitionId: string; competitionName: string; leagueId: string; leagueName: string }
-  | { type: 'tournament'; competitionId: string; competitionName: string; tournamentId: string; tournamentName: string }
+  | { type: 'edit'; row: MatchRow }
+  | { type: 'pending-deeplink'; matchId: string }
 
 export function ActiveMatchesPage() {
-  const [view, setView] = useState<View>({ type: 'list' })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const matchIdParam = searchParams.get('matchId')
+  const fromParam = searchParams.get('from')
+  const fromCompetitionId = searchParams.get('competitionId')
+  const fromCompetitionName = searchParams.get('competitionName')
+
+  const [view, setView] = useState<View>(
+    matchIdParam ? { type: 'pending-deeplink', matchId: matchIdParam } : { type: 'list' },
+  )
+
+  // トーナメント詳細から遷移してきた場合の戻り先情報（初回マウント時のURLパラメータから一度だけ初期化）
+  const [tournamentReturn] = useState<{
+    competitionId: string
+    competitionName: string
+  } | null>(
+    fromParam === 'tournament' && fromCompetitionId && fromCompetitionName
+      ? { competitionId: fromCompetitionId, competitionName: fromCompetitionName }
+      : null,
+  )
+
+  // searchParams の matchId が変わったら pending-deeplink に遷移
+  const prevMatchIdRef = useRef(matchIdParam)
+  useEffect(() => {
+    if (matchIdParam && matchIdParam !== prevMatchIdRef.current) {
+      setView({ type: 'pending-deeplink', matchId: matchIdParam })
+    }
+    prevMatchIdRef.current = matchIdParam
+  }, [matchIdParam])
 
   useResetToList(view.type === 'list', useCallback(() => setView({ type: 'list' }), []))
-  const { data: competitions } = useCompetitions()
 
-  const handleSelectCompetition = (competition: Competition) => {
-    if (competition.type === 'LEAGUE') {
-      setView({
-        type: 'league',
-        competitionId: competition.id,
-        competitionName: competition.name,
-        leagueId: competition.id,
-        leagueName: competition.name,
-      })
-    } else if (competition.type === 'TOURNAMENT') {
-      setView({
-        type: 'tournament',
-        competitionId: competition.id,
-        competitionName: competition.name,
-        tournamentId: competition.id,
-        tournamentName: competition.name,
+  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['sport', 'compType', 'bracket', 'status'])
+  const sportFilter = fp.sport
+  const compTypeFilter = fp.compType
+  const bracketFilter = fp.bracket
+  const statusFilter = fp.status
+
+  const {
+    matches,
+    sports,
+    loading,
+    error,
+    refetch,
+  } = useActiveMatches(sportFilter)
+
+  const matchEdit = useMatchEdit()
+
+  // matchId クエリパラメータによるディープリンク
+  useEffect(() => {
+    if (view.type !== 'pending-deeplink' || loading || matches.length === 0) return
+    const row = matches.find(m => m.id === view.matchId)
+    if (row) {
+      matchEdit.openMatch(toActiveMatch(row))
+      setView({ type: 'edit', row })
+    } else {
+      setView({ type: 'list' })
+    }
+    // from/competitionId/competitionName は tournamentReturn に保存済みのでまとめてクリア
+    setSearchParams({}, { replace: true })
+  }, [view, matches, loading]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // トーナメント選択時のみブラケット選択肢を生成
+  const bracketOptions = useMemo(() => {
+    if (compTypeFilter !== 'TOURNAMENT') return []
+    const map = new Map<string, string>()
+    for (const m of matches) {
+      if (m.competitionType === 'TOURNAMENT' && m.bracketType) {
+        if (!map.has(m.bracketType)) {
+          map.set(m.bracketType, m.bracketType === 'MAIN' ? 'メインブラケット' : 'サブブラケット')
+        }
+      }
+    }
+    return Array.from(map, ([value, label]) => ({ value, label }))
+  }, [matches, compTypeFilter])
+
+  const filterDefs: FilterDef[] = useMemo(() => {
+    const defs: FilterDef[] = [
+      {
+        key: 'sport',
+        label: '競技',
+        options: sports.map(s => ({ value: s.id, label: s.name })),
+      },
+      {
+        key: 'compType',
+        label: '大会形式',
+        options: COMPETITION_TYPE_OPTIONS,
+      },
+    ]
+    if (compTypeFilter === 'TOURNAMENT' && bracketOptions.length > 0) {
+      defs.push({
+        key: 'bracket',
+        label: 'ブラケット',
+        options: bracketOptions,
       })
     }
+    defs.push({
+      key: 'status',
+      label: 'ステータス',
+      options: STATUS_OPTIONS,
+    })
+    return defs
+  }, [sports, compTypeFilter, bracketOptions])
+
+  const filterValues = useMemo(() => ({
+    sport: sportFilter,
+    compType: compTypeFilter,
+    bracket: bracketFilter,
+    status: statusFilter,
+  }), [sportFilter, compTypeFilter, bracketFilter, statusFilter])
+
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    setFilter(key, value)
+    if (key === 'compType') {
+      setFilter('bracket', '')
+    }
+  }, [setFilter])
+
+  const filteredMatches = useMemo(() => {
+    let result = matches
+    if (compTypeFilter) result = result.filter(m => m.competitionType === compTypeFilter)
+    if (bracketFilter) result = result.filter(m => m.bracketType === bracketFilter)
+    if (statusFilter) result = result.filter(m => m.status === statusFilter)
+    return result
+  }, [matches, compTypeFilter, statusFilter])
+
+  const handleCardClick = (row: MatchRow) => {
+    matchEdit.openMatch(toActiveMatch(row))
+    setView({ type: 'edit', row })
   }
 
-  if (view.type === 'league') {
-    return (
-      <ActiveMatchLeaguePage
-        competitionId={view.competitionId}
-        competitionName={view.competitionName}
-        leagueId={view.leagueId}
-        leagueName={view.leagueName}
-        onBackToList={() => setView({ type: 'list' })}
-        onBackToCompetition={() => setView({ type: 'list' })}
-      />
-    )
+  if (view.type === 'pending-deeplink') {
+    return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress size={28} /></Box>
   }
 
-  if (view.type === 'tournament') {
+  if (view.type === 'edit' && matchEdit.selectedMatch) {
+    const { row } = view
     return (
-      <ActiveMatchTournamentPage
-        competitionName={view.competitionName}
-        tournamentId={view.tournamentId}
-        tournamentName={view.tournamentName}
-        onBackToList={() => setView({ type: 'list' })}
-        onBackToCompetition={() => setView({ type: 'list' })}
+      <MatchEditPage
+        match={matchEdit.selectedMatch}
+        teamA={toActiveTeam(row.teamAId, row.teamAName)}
+        teamB={toActiveTeam(row.teamBId, row.teamBName)}
+        context={{
+          leagueId: row.competitionId,
+          leagueName: row.competitionName,
+          competitionName: row.sportName,
+          competitionType: row.competitionType,
+        }}
+        form={{
+          scoreA: matchEdit.scoreA,
+          scoreB: matchEdit.scoreB,
+          winner: matchEdit.winner,
+          matchStatus: matchEdit.matchStatus,
+          onScoreAChange: matchEdit.setScoreA,
+          onScoreBChange: matchEdit.setScoreB,
+          onWinnerChange: matchEdit.setWinner,
+          onMatchStatusChange: matchEdit.setMatchStatus,
+        }}
+        nav={{
+          onBack: tournamentReturn
+            ? () => navigateToPage('competitions', {
+                competitionId: tournamentReturn.competitionId,
+                competitionName: tournamentReturn.competitionName,
+                type: 'TOURNAMENT',
+              })
+            : () => { matchEdit.closeMatch(); setView({ type: 'list' }) },
+          onBackToList: () => { matchEdit.closeMatch(); setView({ type: 'list' }) },
+          onBackToCompetition: tournamentReturn
+            ? () => navigateToPage('competitions', {
+                competitionId: tournamentReturn.competitionId,
+                competitionName: tournamentReturn.competitionName,
+                type: 'TOURNAMENT',
+              })
+            : () => { matchEdit.closeMatch(); setView({ type: 'list' }) },
+        }}
+        onReset={matchEdit.resetMatch}
+        onSave={async () => {
+          await matchEdit.saveMatch()
+          refetch()
+          setView({ type: 'list' })
+        }}
       />
     )
   }
@@ -70,39 +250,56 @@ export function ActiveMatchesPage() {
         試合
       </Typography>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
-        <CardContent>
-          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
-            大会から選ぶ
-          </Typography>
+      <Box sx={{ mb: 2 }}>
+        <SearchFilterBar
+          filters={filterDefs}
+          filterValues={filterValues}
+          onFilterChange={handleFilterChange}
+          resultCount={filteredMatches.length}
+          onReset={resetFilters}
+        />
+      </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1 }}>
-            {competitions.map((competition) => (
-              <Button
-                key={competition.id}
-                variant="text"
-                onClick={() => handleSelectCompetition(competition)}
-                sx={{
-                  backgroundColor: '#EFF0F8',
-                  width: '100%',
-                  height: 50,
-                  borderRadius: 1,
-                  justifyContent: 'flex-start',
-                  px: 2,
-                  '&.MuiButton-root': { border: 'none', outline: 'none' },
-                  '&:hover': { backgroundColor: '#E5E6F0' },
-                  '&:focus-visible': { outline: 'none' },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <GroupsIcon sx={{ fontSize: 20, color: '#4A5ABB' }} />
-                  <Typography sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400 }}>
-                    {competition.name}
-                  </Typography>
-                </Box>
-              </Button>
-            ))}
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
+              すべての試合
+            </Typography>
+            <Typography sx={{ fontSize: '13px', color: '#666', ml: 'auto' }}>
+              {filteredMatches.length}件
+            </Typography>
           </Box>
+
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={28} />
+            </Box>
+          ) : error ? (
+            <Typography sx={{ color: '#D71212', py: 2 }}>データの取得に失敗しました</Typography>
+          ) : filteredMatches.length === 0 ? (
+            <Typography sx={{ fontSize: '13px', color: '#888', py: 6, textAlign: 'center' }}>
+              {sportFilter || compTypeFilter || bracketFilter || statusFilter ? '条件に一致する試合がありません' : '試合がありません'}
+            </Typography>
+          ) : (
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(3, 1fr)',
+              },
+              gap: 1.5,
+            }}>
+              {filteredMatches.map((row) => (
+                <MatchCard
+                  key={row.id}
+                  match={row}
+                  onClick={() => handleCardClick(row)}
+                />
+              ))}
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Box>

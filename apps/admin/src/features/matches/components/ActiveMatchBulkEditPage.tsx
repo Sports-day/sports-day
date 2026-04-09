@@ -109,7 +109,7 @@ export function ActiveMatchBulkEditPage({
       </Breadcrumbs>
 
       {/* 1枚のカード（フォーム＋テーブル） */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 
           {/* タイトル */}

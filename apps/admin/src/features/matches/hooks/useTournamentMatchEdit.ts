@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useUpdateAdminMatchResultMutation, MatchStatus } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 import type { TournamentMatchView } from '@/features/competitions/types'
 
 export function useTournamentMatchEdit() {
@@ -23,8 +24,10 @@ export function useTournamentMatchEdit() {
   const saveMatch = async () => {
     if (!selectedMatch) return
 
-    const s1 = score1 === '' ? 0 : Number(score1)
-    const s2 = score2 === '' ? 0 : Number(score2)
+    const rawS1 = Number(score1)
+    const rawS2 = Number(score2)
+    const s1 = score1 === '' ? 0 : (Number.isFinite(rawS1) && rawS1 >= 0 && Number.isInteger(rawS1) ? rawS1 : 0)
+    const s2 = score2 === '' ? 0 : (Number.isFinite(rawS2) && rawS2 >= 0 && Number.isInteger(rawS2) ? rawS2 : 0)
 
     const gqlStatus =
       status === 'FINISHED' ? MatchStatus.Finished :
@@ -57,6 +60,7 @@ export function useTournamentMatchEdit() {
       closeMatch()
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 

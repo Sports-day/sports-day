@@ -37,7 +37,7 @@ export function ActiveMatchTournamentPage({
         <Typography sx={BREADCRUMB_CURRENT_SX}>{tournamentName}</Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 1 }}>
             ブラケット構成

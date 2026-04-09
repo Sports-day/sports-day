@@ -65,7 +65,7 @@ export function LeagueRegenerateOverlay({
       </Breadcrumbs>
 
       {/* フォームカード */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
             リーグ一覧

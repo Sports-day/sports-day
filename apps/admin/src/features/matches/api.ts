@@ -16,9 +16,13 @@ export const GET_ADMIN_MATCHES = gql`
       time
       status
       location { id name }
-      competition { id name }
+      competition {
+        id name type sport { id name }
+        tournaments { id name bracketType matches { id } }
+      }
       winnerTeam { id }
       entries { id team { id name } score }
+      judgment { id name }
     }
   }
 `
@@ -48,6 +52,7 @@ export const GET_ADMIN_MATCH = gql`
       location { id name }
       competition { id name }
       entries { id team { id name } score }
+      judgment { id name user { id name } team { id name } group { id name } }
     }
   }
 `
@@ -149,6 +154,20 @@ export const UPDATE_ADMIN_SLOT_CONNECTION = gql`
       sourceType
       sourceMatch { id }
       seedNumber
+    }
+  }
+`
+
+export const GET_ADMIN_COMPETITION_JUDGE_OPTIONS = gql`
+  query GetAdminCompetitionJudgeOptions($competitionId: ID!) {
+    competition(id: $competitionId) {
+      id
+      teams {
+        id
+        name
+        group { id name }
+        users { id name }
+      }
     }
   }
 `

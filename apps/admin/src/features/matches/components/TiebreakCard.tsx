@@ -44,7 +44,7 @@ export function TiebreakCard({ leagueId, tiedGroups }: Props) {
   }
 
   return (
-    <Card sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
+    <Card elevation={0} sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
       <CardContent sx={{ pb: '12px !important' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
           <WarningAmberIcon sx={{ fontSize: 20, color: '#E68A00' }} />

@@ -4,6 +4,7 @@ import {
   useUpdateAdminMatchResultMutation,
   MatchStatus,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export type BulkEditRow = {
   matchId: string
@@ -51,8 +52,10 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
       .map((line) => {
         const parts = line.split(',').map((s) => s.trim())
         const matchId = parts[0] ?? ''
-        const scoreA = Number(parts[1] ?? 0)
-        const scoreB = Number(parts[2] ?? 0)
+        const rawA = Number(parts[1] ?? 0)
+        const rawB = Number(parts[2] ?? 0)
+        const scoreA = Number.isFinite(rawA) && rawA >= 0 && Number.isInteger(rawA) ? rawA : 0
+        const scoreB = Number.isFinite(rawB) && rawB >= 0 && Number.isInteger(rawB) ? rawB : 0
         const teams = matchTeamMap.get(matchId)
         return {
           matchId,
@@ -66,9 +69,12 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
   }
 
   const execute = async () => {
+    if (parsedRows.length === 0) return
     try {
       for (const row of parsedRows) {
+        if (!row.matchId) continue
         const match = compMatches.find(m => m.id === row.matchId)
+        if (!match) continue
         const results = (match?.entries ?? [])
           .map((e, i) => ({
             teamId: e.team?.id ?? '',
@@ -86,6 +92,7 @@ export function useBulkEdit(competitionId: string, _leagueId: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
     close()
   }

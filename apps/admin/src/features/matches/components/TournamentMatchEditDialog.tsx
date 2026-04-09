@@ -95,8 +95,12 @@ export function TournamentMatchEditDialog({
               size="small"
               placeholder="0"
               value={score1}
-              onChange={(e) => onScore1Change(e.target.value)}
-              inputProps={{ type: 'number', min: 0 }}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === '' || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 999)) onScore1Change(v)
+              }}
+              error={score1 !== '' && (Number(score1) < 0 || !Number.isInteger(Number(score1)))}
+              inputProps={{ type: 'number', min: 0, step: 1 }}
               sx={{ ...FIELD_SX, width: '80px' }}
             />
           </Box>
@@ -120,8 +124,12 @@ export function TournamentMatchEditDialog({
               size="small"
               placeholder="0"
               value={score2}
-              onChange={(e) => onScore2Change(e.target.value)}
-              inputProps={{ type: 'number', min: 0 }}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === '' || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 999)) onScore2Change(v)
+              }}
+              error={score2 !== '' && (Number(score2) < 0 || !Number.isInteger(Number(score2)))}
+              inputProps={{ type: 'number', min: 0, step: 1 }}
               sx={{ ...FIELD_SX, width: '80px' }}
             />
           </Box>

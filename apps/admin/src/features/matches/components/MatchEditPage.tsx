@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Box,
   Breadcrumbs,
@@ -8,8 +9,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import RefreshIcon from '@mui/icons-material/Refresh'
 import CheckIcon from '@mui/icons-material/Check'
+import EditIcon from '@mui/icons-material/Edit'
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import type { ActiveMatch, ActiveTeam } from '../types'
 import type { WinnerType, MatchStatusType } from '../hooks/useMatchEdit'
 import { MatchDetailsCard } from './MatchDetailsCard'
@@ -47,6 +49,7 @@ type MatchContext = {
   leagueId: string
   leagueName: string
   competitionName: string
+  competitionType?: string
 }
 
 type ScoreForm = {
@@ -82,6 +85,8 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
   const { scoreA, scoreB, winner, matchStatus, onScoreAChange, onScoreBChange, onWinnerChange, onMatchStatusChange } = form
   const { onBack, onBackToList, onBackToCompetition } = nav
 
+  const [detailOpen, setDetailOpen] = useState(false)
+
   const handleSave = () => {
     onSave()
     showToast('変更が保存されました')
@@ -103,168 +108,214 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
           {competitionName}
         </ButtonBase>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
-          {leagueName}(ID:{context.leagueId})
+          {leagueName}
         </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
-          試合(ID:{match.id})
+          試合
         </Typography>
       </Breadcrumbs>
 
-      {/* ─── カード1: スコア・勝者・状態 ─── */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      {/* タイトル + 編集ボタン */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography sx={{ fontSize: '22px', fontWeight: 700, color: '#2F3C8C' }}>
+          {teamA.shortName} vs {teamB.shortName}
+        </Typography>
+        <Button
+          variant={detailOpen ? 'contained' : 'outlined'}
+          size="small"
+          startIcon={detailOpen
+            ? <KeyboardArrowUpIcon sx={{ fontSize: 18 }} />
+            : <EditIcon sx={{ fontSize: 16 }} />
+          }
+          onClick={() => setDetailOpen(!detailOpen)}
+          sx={detailOpen ? {
+            backgroundColor: '#3949AB',
+            color: '#fff',
+            borderRadius: '20px',
+            height: '33px',
+            px: 2,
+            fontSize: '12px',
+            fontWeight: 600,
+            boxShadow: '0 2px 8px rgba(57, 73, 171, 0.3)',
+            '&:hover': { backgroundColor: '#2F3C8C', boxShadow: '0 2px 12px rgba(57, 73, 171, 0.4)' },
+          } : {
+            color: '#4A5ABB',
+            border: 'none',
+            borderRadius: '20px',
+            height: '33px',
+            px: 2,
+            fontSize: '12px',
+            fontWeight: 600,
+            backgroundColor: '#E8EAF6',
+            boxShadow: 'none',
+            '&:hover': { backgroundColor: '#DCE0F5' },
+          }}
+        >
+          {detailOpen ? '閉じる' : '詳細設定'}
+        </Button>
+      </Box>
+
+      {/* 詳細設定（展開式） */}
+      <MatchDetailsCard
+        match={match}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        competitionId={context.leagueId}
+        competitionType={context.competitionType}
+      />
+
+      {/* ─── 試合結果の登録（常時展開） ─── */}
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {/* タイトル（グラデーションカード内、E1E4F6の外） */}
           <Typography sx={{ fontSize: '15px', fontWeight: 700, color: '#2F3C8C' }}>
-            試合 {teamA.shortName} vs {teamB.shortName}の結果を登録
+            試合結果の登録
           </Typography>
 
-          {/* 内側カード（E1E4F6） */}
           <Box sx={{ backgroundColor: '#E1E4F6', borderRadius: 1, p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* 情報タグ行 + 下線 */}
-          <Box sx={{ pb: 1.5, borderBottom: '1px solid #5B6DC6' }}>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {[
-                { label: '審判', value: '未登録' },
-                { label: '試合場所', value: 'Soccer Field 1' },
-                { label: '試合開始', value: match.time ?? '未設定' },
-              ].map((item) => (
-                <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#4A5ABB' }} />
-                  <Typography sx={{ fontSize: '12px', color: '#2F3C8C' }}>
-                    {item.label}: {item.value}
+            {/* 情報タグ行 */}
+            <Box sx={{ pb: 1.5, borderBottom: '1px solid #5B6DC6' }}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {[
+                  { label: '審判', value: match.judgmentName || '未登録' },
+                  { label: '試合場所', value: 'Soccer Field 1' },
+                  { label: '試合開始', value: match.time ?? '未設定' },
+                ].map((item) => (
+                  <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#4A5ABB' }} />
+                    <Typography sx={{ fontSize: '12px', color: '#2F3C8C' }}>
+                      {item.label}: {item.value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* スコア入力エリア */}
+            <Box sx={{ pb: 1.5, borderBottom: '1px solid #5B6DC6' }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
+                <Box sx={{ flex: 1, backgroundColor: '#D8DEEB', borderRadius: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
+                    {teamA.shortName}のスコア
                   </Typography>
+                  <TextField
+                    size="small"
+                    value={scoreA}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      if (v === '' || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 999)) onScoreAChange(v)
+                    }}
+                    error={scoreA !== '' && (Number(scoreA) < 0 || !Number.isInteger(Number(scoreA)))}
+                    inputProps={{ type: 'number', min: 0, step: 1, style: { textAlign: 'center', fontSize: '24px', fontWeight: 700 } }}
+                    sx={SCORE_INPUT_SX('#D8DEEB')}
+                  />
                 </Box>
-              ))}
-            </Box>
-          </Box>
-
-          {/* スコア入力エリア + 下線 */}
-          <Box sx={{ pb: 1.5, borderBottom: '1px solid #5B6DC6' }}>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
-              <Box sx={{ flex: 1, backgroundColor: '#D8DEEB', borderRadius: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
-                  {teamA.shortName}のスコア
-                </Typography>
-                <TextField
-                  size="small"
-                  value={scoreA}
-                  onChange={(e) => onScoreAChange(e.target.value)}
-                  inputProps={{ type: 'number', min: 0, style: { textAlign: 'center', fontSize: '24px', fontWeight: 700 } }}
-                  sx={SCORE_INPUT_SX('#D8DEEB')}
-                />
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', px: 1 }}>
-                <Typography sx={{ fontSize: '18px', fontWeight: 700, color: '#2F3C8C' }}>VS</Typography>
-              </Box>
-              <Box sx={{ flex: 1, backgroundColor: '#DEDAEB', borderRadius: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
-                  {teamB.shortName}のスコア
-                </Typography>
-                <TextField
-                  size="small"
-                  value={scoreB}
-                  onChange={(e) => onScoreBChange(e.target.value)}
-                  inputProps={{ type: 'number', min: 0, style: { textAlign: 'center', fontSize: '24px', fontWeight: 700 } }}
-                  sx={SCORE_INPUT_SX('#DEDAEB')}
-                />
-              </Box>
-            </Box>
-          </Box>
-
-          {/* 勝ったのは / 試合の状態 */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {/* 勝ったのは */}
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
-                勝ったのは
-              </Typography>
-              <Box sx={{ display: 'flex' }}>
-                {([
-                  { value: 'teamA' as WinnerType, label: teamA.shortName },
-                  { value: 'draw' as WinnerType, label: '引き分け' },
-                  { value: 'teamB' as WinnerType, label: teamB.shortName },
-                ] as { value: WinnerType; label: string }[]).map((opt, i, arr) => (
-                  <ButtonBase
-                    key={opt.value}
-                    onClick={() => onWinnerChange(winner === opt.value ? null : opt.value)}
-                    sx={{
-                      ...TOGGLE_BTN_SX(winner === opt.value, '#D6DBF2'),
-                      py: 1,
-                      borderRadius: i === 0 ? '4px 0 0 4px' : i === arr.length - 1 ? '0 4px 4px 0' : 0,
-                      borderLeft: i === 0 ? '1px solid #5B6DC6' : 'none',
+                <Box sx={{ display: 'flex', alignItems: 'center', px: 1 }}>
+                  <Typography sx={{ fontSize: '18px', fontWeight: 700, color: '#2F3C8C' }}>VS</Typography>
+                </Box>
+                <Box sx={{ flex: 1, backgroundColor: '#DEDAEB', borderRadius: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
+                    {teamB.shortName}のスコア
+                  </Typography>
+                  <TextField
+                    size="small"
+                    value={scoreB}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      if (v === '' || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 999)) onScoreBChange(v)
                     }}
-                  >
-                    {opt.label}
-                  </ButtonBase>
-                ))}
+                    error={scoreB !== '' && (Number(scoreB) < 0 || !Number.isInteger(Number(scoreB)))}
+                    inputProps={{ type: 'number', min: 0, step: 1, style: { textAlign: 'center', fontSize: '24px', fontWeight: 700 } }}
+                    sx={SCORE_INPUT_SX('#DEDAEB')}
+                  />
+                </Box>
               </Box>
             </Box>
 
-            {/* 試合の状態 */}
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
-                試合の状態
-              </Typography>
-              <Box sx={{ display: 'flex' }}>
-                {([
-                  { value: 'cancelled' as MatchStatusType, label: '中止' },
-                  { value: 'standby' as MatchStatusType, label: 'スタンバイ' },
-                  { value: 'ongoing' as MatchStatusType, label: '進行中' },
-                  { value: 'finished' as MatchStatusType, label: '完了' },
-                ] as { value: MatchStatusType; label: string }[]).map((opt, i, arr) => (
-                  <ButtonBase
-                    key={opt.value}
-                    onClick={() => onMatchStatusChange(matchStatus === opt.value ? null : opt.value)}
-                    sx={{
-                      ...TOGGLE_BTN_SX(matchStatus === opt.value, '#D3DCE7'),
-                      py: 1,
-                      borderRadius: i === 0 ? '4px 0 0 4px' : i === arr.length - 1 ? '0 4px 4px 0' : 0,
-                      borderLeft: i === 0 ? '1px solid #5B6DC6' : 'none',
-                    }}
-                  >
-                    {opt.label}
-                  </ButtonBase>
-                ))}
+            {/* 勝ったのは / 試合の状態 */}
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
+                  勝ったのは
+                </Typography>
+                <Box sx={{ display: 'flex' }}>
+                  {([
+                    { value: 'teamA' as WinnerType, label: teamA.shortName },
+                    { value: 'draw' as WinnerType, label: '引き分け' },
+                    { value: 'teamB' as WinnerType, label: teamB.shortName },
+                  ] as { value: WinnerType; label: string }[]).map((opt, i, arr) => (
+                    <ButtonBase
+                      key={opt.value}
+                      onClick={() => onWinnerChange(winner === opt.value ? null : opt.value)}
+                      sx={{
+                        ...TOGGLE_BTN_SX(winner === opt.value, '#D6DBF2'),
+                        py: 1,
+                        borderRadius: i === 0 ? '4px 0 0 4px' : i === arr.length - 1 ? '0 4px 4px 0' : 0,
+                        borderLeft: i === 0 ? '1px solid #5B6DC6' : 'none',
+                      }}
+                    >
+                      {opt.label}
+                    </ButtonBase>
+                  ))}
+                </Box>
+              </Box>
+
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C', textAlign: 'center' }}>
+                  試合の状態
+                </Typography>
+                <Box sx={{ display: 'flex' }}>
+                  {([
+                    { value: 'cancelled' as MatchStatusType, label: '中止' },
+                    { value: 'standby' as MatchStatusType, label: 'スタンバイ' },
+                    { value: 'ongoing' as MatchStatusType, label: '進行中' },
+                    { value: 'finished' as MatchStatusType, label: '完了' },
+                  ] as { value: MatchStatusType; label: string }[]).map((opt, i, arr) => (
+                    <ButtonBase
+                      key={opt.value}
+                      onClick={() => onMatchStatusChange(matchStatus === opt.value ? null : opt.value)}
+                      sx={{
+                        ...TOGGLE_BTN_SX(matchStatus === opt.value, '#D3DCE7'),
+                        py: 1,
+                        borderRadius: i === 0 ? '4px 0 0 4px' : i === arr.length - 1 ? '0 4px 4px 0' : 0,
+                        borderLeft: i === 0 ? '1px solid #5B6DC6' : 'none',
+                      }}
+                    >
+                      {opt.label}
+                    </ButtonBase>
+                  ))}
+                </Box>
               </Box>
             </Box>
-          </Box>
 
-          {/* 元に戻す / 保存 */}
-          <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon sx={{ color: '#D71212' }} />}
-              onClick={handleReset}
-              sx={{
-                fontSize: '13px',
-                color: '#D71212',
-                borderColor: '#D71212',
-                backgroundColor: 'transparent',
-                whiteSpace: 'nowrap',
-                '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
-              }}
-            >
-              元に戻す
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<CheckIcon />}
-              onClick={handleSave}
-              fullWidth
-              sx={{ ...SAVE_BUTTON_SX, fontSize: '13px' }}
-            >
-              保存
-            </Button>
-          </Box>
-          {/* 内側カード閉じ */}
+            {/* 元に戻す / 保存 */}
+            <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+              <Button
+                variant="outlined"
+                onClick={handleReset}
+                sx={{
+                  fontSize: '13px',
+                  color: '#D71212',
+                  borderColor: '#D71212',
+                  backgroundColor: 'transparent',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
+                }}
+              >
+                元に戻す
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<CheckIcon />}
+                onClick={handleSave}
+                fullWidth
+                sx={{ ...SAVE_BUTTON_SX, fontSize: '13px' }}
+              >
+                保存
+              </Button>
+            </Box>
           </Box>
         </CardContent>
       </Card>
-
-      {/* ─── カード2: 試合の詳細設定 ─── */}
-      <MatchDetailsCard match={match} />
-
     </Box>
   )
 }
-
