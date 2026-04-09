@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite --port 3001",
-    "dev:polling": "CHOKIDAR_USEPOLLING=true vite --port 3001",
+    "dev": "vite --port 3000",
+    "dev:polling": "CHOKIDAR_USEPOLLING=true vite --port 3000",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",

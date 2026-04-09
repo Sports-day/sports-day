@@ -21,7 +21,7 @@ export default defineConfig({
       manifest: false,
     }),
   ],
-  server: { port: 3001, host: true },
+  server: { port: 3000, host: true },
   base: process.env.VITE_BASE_PATH || "/",
   resolve: {
     alias: {

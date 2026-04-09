@@ -18,6 +18,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/api/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/offline" element={<OfflinePage />} />
 
       <Route element={<ProtectedRoute />}>
