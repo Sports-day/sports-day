@@ -27,7 +27,9 @@ export const LeagueRankList = (props: LeagueRankListProps) => {
         skip: !props.leagueId,
     });
 
-    const standings = standingsData?.leagueStandings ?? [];
+    const standings = (standingsData?.leagueStandings ?? []).filter(
+        (s, i, arr) => arr.findIndex(x => x.team.id === s.team.id) === i
+    );
 
     // 勝ち点率の計算: points / (試合数 * 3)
     const computeWinRate = (s: typeof standings[number]) => {
@@ -101,35 +103,38 @@ export const LeagueRankList = (props: LeagueRankListProps) => {
                 </Stack>
             }
 
-            <Box
-                width={"100%"}
-                sx={{
-                    overflow: "auto",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                    "&::-webkit-scrollbar": {
-                        display: "none"
-                    }
-                }}
-            >
-                <Stack sx={{width: "100%"}} direction={"row"} spacing={0.5}>
-                    {/*Ranking List*/}
-                    {
-                        standings.map((standing) => {
+            {standings.length === 0 ? (
+                <Typography pl={2} py={2} fontSize={"14px"} color={theme.palette.text.secondary}>
+                    ランキングデータがありません
+                </Typography>
+            ) : (
+                <Box
+                    width={"100%"}
+                    sx={{
+                        overflow: "auto",
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                        "&::-webkit-scrollbar": {
+                            display: "none"
+                        }
+                    }}
+                >
+                    <Stack sx={{width: "100%"}} direction={"row"} spacing={0.5}>
+                        {standings.map((standing, index) => {
                             const team = teams.find(value => value.id === standing.team.id)
                             return (
                                 <LeagueRankListCard
-                                    key={standing.team.id}
+                                    key={`${standing.id}-${index}`}
                                     rank={standing.rank}
                                     teamName={team?.name ?? "不明"}
                                     teamId={standing.team.id}
                                     winRate={computeWinRate(standing)}
                                 />
                             )
-                        })
-                    }
-                </Stack>
-            </Box>
+                        })}
+                    </Stack>
+                </Box>
+            )}
         </>
 
     )

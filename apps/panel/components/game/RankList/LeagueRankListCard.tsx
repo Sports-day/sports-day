@@ -56,29 +56,31 @@ export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
                         >
                             {props.teamName}
                         </Typography>
-                        <Stack
-                            direction={"row"}
-                            spacing={1}
-                            alignItems={"center"}
-                        >
-                            <Box
-                                sx={{
-                                    px: 0.8,
-                                    height:"16px",
-                                    borderRadius: "5px",
-                                    backgroundColor: theme.palette.text.secondary,
-                                    justifyContent: "center",
-                                    alignItems: "center"
-                                }}
+                        {props.winRate >= 0 && (
+                            <Stack
+                                direction={"row"}
+                                spacing={1}
+                                alignItems={"center"}
                             >
-                                <Typography color={theme.palette.background.default} fontSize={"10px"} fontWeight={"600"}>
-                                    勝ち点率
+                                <Box
+                                    sx={{
+                                        px: 0.8,
+                                        height:"16px",
+                                        borderRadius: "5px",
+                                        backgroundColor: theme.palette.text.secondary,
+                                        justifyContent: "center",
+                                        alignItems: "center"
+                                    }}
+                                >
+                                    <Typography color={theme.palette.background.default} fontSize={"10px"} fontWeight={"600"}>
+                                        勝ち点率
+                                    </Typography>
+                                </Box>
+                                <Typography fontSize={"14px"} color={theme.palette.text.primary}>
+                                    {props.winRate.toFixed(3)}
                                 </Typography>
-                            </Box>
-                            <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                                {props.winRate.toFixed(3)}
-                            </Typography>
-                        </Stack>
+                            </Stack>
+                        )}
                     </Stack>
 
                 </Button>

@@ -13,13 +13,14 @@ import {
     HiChartBar,
     HiOutlineExclamationTriangle, HiUser
 } from "react-icons/hi2";
-import type { GetPanelSportsQuery, GetPanelTeamsQuery, GetPanelUsersQuery, GetPanelCompetitionsQuery } from "@/src/gql/__generated__/graphql";
+import { type GetPanelSportsQuery, type GetPanelTeamsQuery, type GetPanelUsersQuery, type GetPanelCompetitionsQuery, CompetitionType } from "@/src/gql/__generated__/graphql";
 import {Fragment, useState} from "react";
 import * as React from "react";
 import { Link } from "react-router-dom";
 import Rank from "./Rank"
 import {useTheme} from "@mui/material/styles";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
+import {TournamentRankList} from "@/components/game/RankList/TournamentRankList";
 
 type PanelSport = GetPanelSportsQuery["sports"][number];
 type PanelTeam = GetPanelTeamsQuery["teams"][number];
@@ -125,7 +126,7 @@ export const Overview = (props: OverviewProps) => {
                                 alignItems={"flex-start"}
                             >
                                 <Typography sx={{fontSize: "14px", color: theme.palette.text.primary}}>
-                                    リーグ内順位
+                                    {props.myGame.type === CompetitionType.League ? "リーグ内順位" : "順位"}
                                 </Typography>
                                 <Rank rank={props.myTeamRank}/>
                             </Stack>
@@ -287,14 +288,23 @@ export const Overview = (props: OverviewProps) => {
                                     color={theme.palette.text.primary}
                                     textAlign={"center"}
                                 >
-                                    あなたのリーグ内順位
+                                    {props.myGame.type === CompetitionType.League ? "あなたのリーグ内順位" : "あなたの順位"}
                                 </Typography>
-                                <LeagueRankList
-                                    dashboard={true}
-                                    myTeamRank={props.myTeamRank}
-                                    myTeam={props.myTeam}
-                                    leagueId={props.myGame.league?.id}
-                                />
+                                {props.myGame.type === CompetitionType.League ? (
+                                    <LeagueRankList
+                                        dashboard={true}
+                                        myTeamRank={props.myTeamRank}
+                                        myTeam={props.myTeam}
+                                        leagueId={props.myGame.league?.id}
+                                    />
+                                ) : (
+                                    <TournamentRankList
+                                        dashboard={true}
+                                        myTeamRank={props.myTeamRank}
+                                        myTeam={props.myTeam}
+                                        competitionId={props.myGame.id}
+                                    />
+                                )}
                             </Stack>
 
 
