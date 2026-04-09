@@ -66,13 +66,26 @@ func FormatSportResponse(sport *db_model.Sport) *Sport {
 	if sport.ImageID.Valid {
 		imageID = &sport.ImageID.String
 	}
+	var experiencedLimit *int32
+	if sport.ExperiencedLimit.Valid {
+		v := int32(sport.ExperiencedLimit.Int64)
+		experiencedLimit = &v
+	}
 	return &Sport{
-		ID:           sport.ID,
-		Name:         sport.Name,
-		Weight:       int32(sport.Weight),
-		RankingRules: []*RankingRule{},
-		Rules:        []*Rule{},
-		ImageID:      imageID,
+		ID:               sport.ID,
+		Name:             sport.Name,
+		Weight:           int32(sport.Weight),
+		ExperiencedLimit: experiencedLimit,
+		RankingRules:     []*RankingRule{},
+		Rules:            []*Rule{},
+		ImageID:          imageID,
+	}
+}
+
+func FormatSportExperienceResponse(exp *db_model.SportExperience) *SportExperience {
+	return &SportExperience{
+		UserID:  exp.UserID,
+		SportID: exp.SportID,
 	}
 }
 

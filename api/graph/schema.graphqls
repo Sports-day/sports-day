@@ -51,6 +51,7 @@ input UpdateSportsInput {
   name: String
   weight: Int
   imageId: ID
+  experiencedLimit: Int
 }
 
 input CreateTeamInput {
@@ -189,6 +190,16 @@ input RankingRuleInput {
 input TiebreakPriorityInput {
   teamId: ID!
   priority: Int!
+}
+
+"""
+サブブラケット自動生成
+"""
+input GenerateSubBracketInput {
+  competitionId: ID!
+  name: String!
+  teamCount: Int!
+  placementMethod: PlacementMethod
 }
 
 """
@@ -380,6 +391,18 @@ type Query {
   画像一覧を取得する
   """
   images: [Image!]!
+  """
+  指定スポーツの経験者一覧を取得する
+  """
+  sportExperiences(sportId: ID!): [SportExperience!]!
+  """
+  指定ユーザーの経験者スポーツ一覧を取得する
+  """
+  userSportExperiences(userId: ID!): [SportExperience!]!
+  """
+  全ての経験者データを取得する
+  """
+  allSportExperiences: [SportExperience!]!
 }
 
 input CreateImageUploadURLInput {
@@ -537,6 +560,10 @@ type Mutation {
   """
   generateBracket(input: GenerateBracketInput!): [Tournament!]! @hasPermission(permission: "competition:write")
   """
+  サブブラケット自動生成（試合構造含む）
+  """
+  generateSubBracket(input: GenerateSubBracketInput!): Tournament! @hasPermission(permission: "competition:write")
+  """
   SUBブラケット手動追加
   """
   createTournament(input: CreateTournamentInput!): Tournament! @hasPermission(permission: "competition:write")
@@ -611,4 +638,12 @@ type Mutation {
   ユーザーのロールを更新する（user:manage パーミッションが必要）
   """
   updateUserRole(userId: ID!, role: Role!): User! @hasPermission(permission: "user:manage")
+  """
+  スポーツの経験者を追加する
+  """
+  addSportExperiences(sportId: ID!, userIds: [ID!]!): [SportExperience!]! @hasPermission(permission: "team:write")
+  """
+  スポーツの経験者を削除する
+  """
+  deleteSportExperiences(sportId: ID!, userIds: [ID!]!): Boolean! @hasPermission(permission: "team:write")
 }

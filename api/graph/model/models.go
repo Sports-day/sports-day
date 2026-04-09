@@ -117,12 +117,13 @@ type Scene struct {
 }
 
 type Sport struct {
-	ID           string         `json:"id"`
-	Name         string         `json:"name"`
-	Weight       int32          `json:"weight"`
-	RankingRules []*RankingRule `json:"rankingRules"`
-	Rules        []*Rule        `json:"rules"`
-	ImageID      *string        `json:"imageId"`
+	ID               string         `json:"id"`
+	Name             string         `json:"name"`
+	Weight           int32          `json:"weight"`
+	ExperiencedLimit *int32         `json:"experiencedLimit,omitempty"`
+	RankingRules     []*RankingRule `json:"rankingRules"`
+	Rules            []*Rule        `json:"rules"`
+	ImageID          *string        `json:"imageId"`
 }
 
 type SportScene struct {

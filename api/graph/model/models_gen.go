@@ -141,6 +141,14 @@ type GenerateRoundRobinInput struct {
 	LocationID    *string `json:"locationId,omitempty"`
 }
 
+// サブブラケット自動生成
+type GenerateSubBracketInput struct {
+	CompetitionID   string           `json:"competitionId"`
+	Name            string           `json:"name"`
+	TeamCount       int32            `json:"teamCount"`
+	PlacementMethod *PlacementMethod `json:"placementMethod,omitempty"`
+}
+
 type Image struct {
 	ID     string  `json:"id"`
 	URL    *string `json:"url,omitempty"`
@@ -220,6 +228,11 @@ type SlotInput struct {
 	SourceType    SlotSourceType `json:"sourceType"`
 	SourceMatchID *string        `json:"sourceMatchId,omitempty"`
 	SeedNumber    *int32         `json:"seedNumber,omitempty"`
+}
+
+type SportExperience struct {
+	UserID  string `json:"userId"`
+	SportID string `json:"sportId"`
 }
 
 // SUBブラケット定義（自動生成用）
@@ -319,9 +332,10 @@ type UpdateSlotConnectionInput struct {
 }
 
 type UpdateSportsInput struct {
-	Name    *string `json:"name,omitempty"`
-	Weight  *int32  `json:"weight,omitempty"`
-	ImageID *string `json:"imageId,omitempty"`
+	Name             *string `json:"name,omitempty"`
+	Weight           *int32  `json:"weight,omitempty"`
+	ImageID          *string `json:"imageId,omitempty"`
+	ExperiencedLimit *int32  `json:"experiencedLimit,omitempty"`
 }
 
 type UpdateTeamInput struct {

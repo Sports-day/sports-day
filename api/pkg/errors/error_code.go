@@ -53,6 +53,7 @@ var (
 	ErrSceneCannotDeleteByCompetition = NewError("SCENE_CANNOT_DELETE_BY_COMPETITION", "このシーンは大会に紐づいているため削除できません")
 	ErrSportSceneAlreadyExists        = NewError("SPORT_SCENE_ALREADY_EXISTS", "このスポーツとシーンの組み合わせは既に存在します")
 	ErrSportEntryAlreadyExists        = NewError("SPORT_ENTRY_ALREADY_EXISTS", "このスポーツシーンとチームの組み合わせは既に存在します")
+	ErrExperiencedLimitExceeded       = NewError("EXPERIENCED_LIMIT_EXCEEDED", "チームの経験者数が上限を超えています")
 
 	ErrPromotionRuleNotFound   = NewError("PROMOTION_RULE_NOT_FOUND", "進出ルールが見つかりません")
 	ErrSavePromotionRule       = NewError("PROMOTION_RULE_SAVE_FAILED", "進出ルールの保存に失敗しました")

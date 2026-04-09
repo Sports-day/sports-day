@@ -24,6 +24,7 @@ const (
 	PermSportWrite       = "sport:write"
 	PermLocationWrite    = "location:write"
 	PermSceneWrite       = "scene:write"
+	PermEntryWrite       = "entry:write"
 	PermInformationWrite = "information:write"
 	PermRuleWrite        = "rule:write"
 	PermImageWrite       = "image:write"

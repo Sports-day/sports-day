@@ -23,4 +23,12 @@ type Sports interface {
 		sportID string,
 		imageID string,
 	) error
+
+	ListAllExperiences(ctx context.Context, db *gorm.DB) ([]*db_model.SportExperience, error)
+	ListExperiencesBySportID(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.SportExperience, error)
+	ListExperiencesByUserID(ctx context.Context, db *gorm.DB, userID string) ([]*db_model.SportExperience, error)
+	AddExperiences(ctx context.Context, db *gorm.DB, sportID string, userIDs []string) ([]*db_model.SportExperience, error)
+	DeleteExperiences(ctx context.Context, db *gorm.DB, sportID string, userIDs []string) error
+	// 指定sportに登録されているチームごとの経験者数の最大値を返す
+	MaxExperiencedCountPerTeam(ctx context.Context, db *gorm.DB, sportID string) (int, error)
 }

@@ -148,6 +148,7 @@ type ComplexityRoot struct {
 		AddGroupUsers            func(childComplexity int, id string, input model.UpdateGroupUsersInput) int
 		AddMatchEntries          func(childComplexity int, id string, input model.UpdateMatchEntriesInput) int
 		AddSportEntries          func(childComplexity int, id string, input model.AddSportEntriesInput) int
+		AddSportExperiences      func(childComplexity int, sportID string, userIds []string) int
 		AddSportScenes           func(childComplexity int, id string, input model.AddSportScenesInput) int
 		AssignSeedTeam           func(childComplexity int, input model.AssignSeedTeamInput) int
 		CreateCompetition        func(childComplexity int, input model.CreateCompetitionInput) int
@@ -180,6 +181,7 @@ type ComplexityRoot struct {
 		DeleteScene              func(childComplexity int, id string) int
 		DeleteSportEntries       func(childComplexity int, id string, input model.DeleteSportEntriesInput) int
 		DeleteSportEntry         func(childComplexity int, id string) int
+		DeleteSportExperiences   func(childComplexity int, sportID string, userIds []string) int
 		DeleteSportScene         func(childComplexity int, id string) int
 		DeleteSportScenes        func(childComplexity int, id string, input model.DeleteSportScenesInput) int
 		DeleteSports             func(childComplexity int, id string) int
@@ -189,6 +191,7 @@ type ComplexityRoot struct {
 		DeleteUser               func(childComplexity int, id string) int
 		GenerateBracket          func(childComplexity int, input model.GenerateBracketInput) int
 		GenerateRoundRobin       func(childComplexity int, id string, input model.GenerateRoundRobinInput) int
+		GenerateSubBracket       func(childComplexity int, input model.GenerateSubBracketInput) int
 		RemoveGroupUsers         func(childComplexity int, id string, input model.UpdateGroupUsersInput) int
 		ResetTournamentBrackets  func(childComplexity int, competitionID string) int
 		RestoreScene             func(childComplexity int, id string) int
@@ -230,39 +233,42 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Competition       func(childComplexity int, id string) int
-		Competitions      func(childComplexity int) int
-		Group             func(childComplexity int, id string) int
-		Groups            func(childComplexity int) int
-		Image             func(childComplexity int, id string) int
-		Images            func(childComplexity int) int
-		Information       func(childComplexity int, id string) int
-		Informations      func(childComplexity int) int
-		Judgment          func(childComplexity int, id string) int
-		Judgments         func(childComplexity int) int
-		League            func(childComplexity int, id string) int
-		LeagueStandings   func(childComplexity int, leagueID string) int
-		Leagues           func(childComplexity int) int
-		Location          func(childComplexity int, id string) int
-		Locations         func(childComplexity int) int
-		Match             func(childComplexity int, id string) int
-		Matches           func(childComplexity int) int
-		Me                func(childComplexity int) int
-		PromotionRules    func(childComplexity int, sourceCompetitionID string) int
-		PromotionStatus   func(childComplexity int, targetCompetitionID string) int
-		Rule              func(childComplexity int, id string) int
-		Rules             func(childComplexity int) int
-		Scene             func(childComplexity int, id string) int
-		Scenes            func(childComplexity int) int
-		Sport             func(childComplexity int, id string) int
-		Sports            func(childComplexity int) int
-		Team              func(childComplexity int, id string) int
-		Teams             func(childComplexity int) int
-		Tournament        func(childComplexity int, id string) int
-		TournamentRanking func(childComplexity int, competitionID string) int
-		Tournaments       func(childComplexity int, competitionID string) int
-		User              func(childComplexity int, id string) int
-		Users             func(childComplexity int) int
+		AllSportExperiences  func(childComplexity int) int
+		Competition          func(childComplexity int, id string) int
+		Competitions         func(childComplexity int) int
+		Group                func(childComplexity int, id string) int
+		Groups               func(childComplexity int) int
+		Image                func(childComplexity int, id string) int
+		Images               func(childComplexity int) int
+		Information          func(childComplexity int, id string) int
+		Informations         func(childComplexity int) int
+		Judgment             func(childComplexity int, id string) int
+		Judgments            func(childComplexity int) int
+		League               func(childComplexity int, id string) int
+		LeagueStandings      func(childComplexity int, leagueID string) int
+		Leagues              func(childComplexity int) int
+		Location             func(childComplexity int, id string) int
+		Locations            func(childComplexity int) int
+		Match                func(childComplexity int, id string) int
+		Matches              func(childComplexity int) int
+		Me                   func(childComplexity int) int
+		PromotionRules       func(childComplexity int, sourceCompetitionID string) int
+		PromotionStatus      func(childComplexity int, targetCompetitionID string) int
+		Rule                 func(childComplexity int, id string) int
+		Rules                func(childComplexity int) int
+		Scene                func(childComplexity int, id string) int
+		Scenes               func(childComplexity int) int
+		Sport                func(childComplexity int, id string) int
+		SportExperiences     func(childComplexity int, sportID string) int
+		Sports               func(childComplexity int) int
+		Team                 func(childComplexity int, id string) int
+		Teams                func(childComplexity int) int
+		Tournament           func(childComplexity int, id string) int
+		TournamentRanking    func(childComplexity int, competitionID string) int
+		Tournaments          func(childComplexity int, competitionID string) int
+		User                 func(childComplexity int, id string) int
+		UserSportExperiences func(childComplexity int, userID string) int
+		Users                func(childComplexity int) int
 	}
 
 	RankingRule struct {
@@ -284,19 +290,25 @@ type ComplexityRoot struct {
 	}
 
 	Sport struct {
-		ID           func(childComplexity int) int
-		Image        func(childComplexity int) int
-		Name         func(childComplexity int) int
-		RankingRules func(childComplexity int) int
-		Rules        func(childComplexity int) int
-		Scene        func(childComplexity int) int
-		Weight       func(childComplexity int) int
+		ExperiencedLimit func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Image            func(childComplexity int) int
+		Name             func(childComplexity int) int
+		RankingRules     func(childComplexity int) int
+		Rules            func(childComplexity int) int
+		Scene            func(childComplexity int) int
+		Weight           func(childComplexity int) int
 	}
 
 	SportEntry struct {
 		ID         func(childComplexity int) int
 		SportScene func(childComplexity int) int
 		Team       func(childComplexity int) int
+	}
+
+	SportExperience struct {
+		SportID func(childComplexity int) int
+		UserID  func(childComplexity int) int
 	}
 
 	SportScene struct {
@@ -462,6 +474,7 @@ type MutationResolver interface {
 	UpdatePromotionRule(ctx context.Context, id string, input model.UpdatePromotionRuleInput) (*model.PromotionRule, error)
 	DeletePromotionRule(ctx context.Context, id string) (*model.PromotionRule, error)
 	GenerateBracket(ctx context.Context, input model.GenerateBracketInput) ([]*model.Tournament, error)
+	GenerateSubBracket(ctx context.Context, input model.GenerateSubBracketInput) (*model.Tournament, error)
 	CreateTournament(ctx context.Context, input model.CreateTournamentInput) (*model.Tournament, error)
 	UpdateTournament(ctx context.Context, id string, input model.UpdateTournamentInput) (*model.Tournament, error)
 	DeleteTournament(ctx context.Context, id string) (*model.Tournament, error)
@@ -483,6 +496,8 @@ type MutationResolver interface {
 	DeleteSportEntries(ctx context.Context, id string, input model.DeleteSportEntriesInput) (*model.SportScene, error)
 	DeleteSportEntry(ctx context.Context, id string) (*model.SportEntry, error)
 	UpdateUserRole(ctx context.Context, userID string, role model.Role) (*model.User, error)
+	AddSportExperiences(ctx context.Context, sportID string, userIds []string) ([]*model.SportExperience, error)
+	DeleteSportExperiences(ctx context.Context, sportID string, userIds []string) (bool, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -518,6 +533,9 @@ type QueryResolver interface {
 	Rules(ctx context.Context) ([]*model.Rule, error)
 	Image(ctx context.Context, id string) (*model.Image, error)
 	Images(ctx context.Context) ([]*model.Image, error)
+	SportExperiences(ctx context.Context, sportID string) ([]*model.SportExperience, error)
+	UserSportExperiences(ctx context.Context, userID string) ([]*model.SportExperience, error)
+	AllSportExperiences(ctx context.Context) ([]*model.SportExperience, error)
 }
 type RuleResolver interface {
 	Sport(ctx context.Context, obj *model.Rule) (*model.Sport, error)
@@ -975,6 +993,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddSportEntries(childComplexity, args["id"].(string), args["input"].(model.AddSportEntriesInput)), true
 
+	case "Mutation.addSportExperiences":
+		if e.complexity.Mutation.AddSportExperiences == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addSportExperiences_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddSportExperiences(childComplexity, args["sportId"].(string), args["userIds"].([]string)), true
+
 	case "Mutation.addSportScenes":
 		if e.complexity.Mutation.AddSportScenes == nil {
 			break
@@ -1359,6 +1389,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteSportEntry(childComplexity, args["id"].(string)), true
 
+	case "Mutation.deleteSportExperiences":
+		if e.complexity.Mutation.DeleteSportExperiences == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSportExperiences_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSportExperiences(childComplexity, args["sportId"].(string), args["userIds"].([]string)), true
+
 	case "Mutation.deleteSportScene":
 		if e.complexity.Mutation.DeleteSportScene == nil {
 			break
@@ -1466,6 +1508,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.GenerateRoundRobin(childComplexity, args["id"].(string), args["input"].(model.GenerateRoundRobinInput)), true
+
+	case "Mutation.generateSubBracket":
+		if e.complexity.Mutation.GenerateSubBracket == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_generateSubBracket_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GenerateSubBracket(childComplexity, args["input"].(model.GenerateSubBracketInput)), true
 
 	case "Mutation.removeGroupUsers":
 		if e.complexity.Mutation.RemoveGroupUsers == nil {
@@ -1811,6 +1865,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PromotionStatus.TargetCompetitionID(childComplexity), true
 
+	case "Query.allSportExperiences":
+		if e.complexity.Query.AllSportExperiences == nil {
+			break
+		}
+
+		return e.complexity.Query.AllSportExperiences(childComplexity), true
+
 	case "Query.competition":
 		if e.complexity.Query.Competition == nil {
 			break
@@ -2056,6 +2117,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Sport(childComplexity, args["id"].(string)), true
 
+	case "Query.sportExperiences":
+		if e.complexity.Query.SportExperiences == nil {
+			break
+		}
+
+		args, err := ec.field_Query_sportExperiences_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SportExperiences(childComplexity, args["sportId"].(string)), true
+
 	case "Query.sports":
 		if e.complexity.Query.Sports == nil {
 			break
@@ -2130,6 +2203,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
 
+	case "Query.userSportExperiences":
+		if e.complexity.Query.UserSportExperiences == nil {
+			break
+		}
+
+		args, err := ec.field_Query_userSportExperiences_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserSportExperiences(childComplexity, args["userId"].(string)), true
+
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
 			break
@@ -2200,6 +2285,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Scene.SportScenes(childComplexity), true
 
+	case "Sport.experiencedLimit":
+		if e.complexity.Sport.ExperiencedLimit == nil {
+			break
+		}
+
+		return e.complexity.Sport.ExperiencedLimit(childComplexity), true
+
 	case "Sport.id":
 		if e.complexity.Sport.ID == nil {
 			break
@@ -2269,6 +2361,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SportEntry.Team(childComplexity), true
+
+	case "SportExperience.sportId":
+		if e.complexity.SportExperience.SportID == nil {
+			break
+		}
+
+		return e.complexity.SportExperience.SportID(childComplexity), true
+
+	case "SportExperience.userId":
+		if e.complexity.SportExperience.UserID == nil {
+			break
+		}
+
+		return e.complexity.SportExperience.UserID(childComplexity), true
 
 	case "SportScene.entries":
 		if e.complexity.SportScene.Entries == nil {
@@ -2686,6 +2792,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputDeleteSportScenesInput,
 		ec.unmarshalInputGenerateBracketInput,
 		ec.unmarshalInputGenerateRoundRobinInput,
+		ec.unmarshalInputGenerateSubBracketInput,
 		ec.unmarshalInputJudgmentEntry,
 		ec.unmarshalInputMatchResultInput,
 		ec.unmarshalInputRankingRuleInput,
@@ -3020,6 +3127,47 @@ func (ec *executionContext) field_Mutation_addSportEntries_argsInput(
 	}
 
 	var zeroVal model.AddSportEntriesInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_addSportExperiences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_addSportExperiences_argsSportID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sportId"] = arg0
+	arg1, err := ec.field_Mutation_addSportExperiences_argsUserIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userIds"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_addSportExperiences_argsSportID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sportId"))
+	if tmp, ok := rawArgs["sportId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_addSportExperiences_argsUserIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+	if tmp, ok := rawArgs["userIds"]; ok {
+		return ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
 	return zeroVal, nil
 }
 
@@ -3831,6 +3979,47 @@ func (ec *executionContext) field_Mutation_deleteSportEntry_argsID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteSportExperiences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteSportExperiences_argsSportID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sportId"] = arg0
+	arg1, err := ec.field_Mutation_deleteSportExperiences_argsUserIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userIds"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_deleteSportExperiences_argsSportID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sportId"))
+	if tmp, ok := rawArgs["sportId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSportExperiences_argsUserIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
+	if tmp, ok := rawArgs["userIds"]; ok {
+		return ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteSportScene_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4071,6 +4260,29 @@ func (ec *executionContext) field_Mutation_generateRoundRobin_argsInput(
 	}
 
 	var zeroVal model.GenerateRoundRobinInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_generateSubBracket_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_generateSubBracket_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_generateSubBracket_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.GenerateSubBracketInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNGenerateSubBracketInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐGenerateSubBracketInput(ctx, tmp)
+	}
+
+	var zeroVal model.GenerateSubBracketInput
 	return zeroVal, nil
 }
 
@@ -5326,6 +5538,29 @@ func (ec *executionContext) field_Query_scene_argsID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_sportExperiences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_sportExperiences_argsSportID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["sportId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_sportExperiences_argsSportID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sportId"))
+	if tmp, ok := rawArgs["sportId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_sport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5434,6 +5669,29 @@ func (ec *executionContext) field_Query_tournaments_argsCompetitionID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("competitionId"))
 	if tmp, ok := rawArgs["competitionId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_userSportExperiences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_userSportExperiences_argsUserID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_userSportExperiences_argsUserID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+	if tmp, ok := rawArgs["userId"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
@@ -5717,11 +5975,14 @@ func (ec *executionContext) _Competition_sport(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Sport)
 	fc.Result = res
-	return ec.marshalOSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
+	return ec.marshalNSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Competition_sport(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5738,6 +5999,8 @@ func (ec *executionContext) fieldContext_Competition_sport(_ context.Context, fi
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -8809,6 +9072,8 @@ func (ec *executionContext) fieldContext_Mutation_createSports(ctx context.Conte
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -8907,6 +9172,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteSports(ctx context.Conte
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -9005,6 +9272,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSports(ctx context.Conte
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -12076,6 +12345,8 @@ func (ec *executionContext) fieldContext_Mutation_setRankingRules(ctx context.Co
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -12570,6 +12841,110 @@ func (ec *executionContext) fieldContext_Mutation_generateBracket(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_generateBracket_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_generateSubBracket(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_generateSubBracket(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().GenerateSubBracket(rctx, fc.Args["input"].(model.GenerateSubBracketInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "competition:write")
+			if err != nil {
+				var zeroVal *model.Tournament
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal *model.Tournament
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Tournament); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.Tournament`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Tournament)
+	fc.Result = res
+	return ec.marshalNTournament2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐTournament(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_generateSubBracket(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tournament_id(ctx, field)
+			case "competition":
+				return ec.fieldContext_Tournament_competition(ctx, field)
+			case "name":
+				return ec.fieldContext_Tournament_name(ctx, field)
+			case "bracketType":
+				return ec.fieldContext_Tournament_bracketType(ctx, field)
+			case "placementMethod":
+				return ec.fieldContext_Tournament_placementMethod(ctx, field)
+			case "displayOrder":
+				return ec.fieldContext_Tournament_displayOrder(ctx, field)
+			case "state":
+				return ec.fieldContext_Tournament_state(ctx, field)
+			case "progress":
+				return ec.fieldContext_Tournament_progress(ctx, field)
+			case "matches":
+				return ec.fieldContext_Tournament_matches(ctx, field)
+			case "slots":
+				return ec.fieldContext_Tournament_slots(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tournament", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_generateSubBracket_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -14578,6 +14953,176 @@ func (ec *executionContext) fieldContext_Mutation_updateUserRole(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_addSportExperiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addSportExperiences(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddSportExperiences(rctx, fc.Args["sportId"].(string), fc.Args["userIds"].([]string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "team:write")
+			if err != nil {
+				var zeroVal []*model.SportExperience
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal []*model.SportExperience
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.SportExperience); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*sports-day/api/graph/model.SportExperience`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SportExperience)
+	fc.Result = res
+	return ec.marshalNSportExperience2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportExperienceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addSportExperiences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_SportExperience_userId(ctx, field)
+			case "sportId":
+				return ec.fieldContext_SportExperience_sportId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportExperience", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addSportExperiences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSportExperiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSportExperiences(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteSportExperiences(rctx, fc.Args["sportId"].(string), fc.Args["userIds"].([]string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			permission, err := ec.unmarshalNString2string(ctx, "team:write")
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasPermission == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasPermission is not implemented")
+			}
+			return ec.directives.HasPermission(ctx, nil, directive0, permission)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSportExperiences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSportExperiences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PromotionRule_id(ctx context.Context, field graphql.CollectedField, obj *model.PromotionRule) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PromotionRule_id(ctx, field)
 	if err != nil {
@@ -15338,6 +15883,8 @@ func (ec *executionContext) fieldContext_Query_sports(_ context.Context, field g
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -15398,6 +15945,8 @@ func (ec *executionContext) fieldContext_Query_sport(ctx context.Context, field 
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -17092,6 +17641,178 @@ func (ec *executionContext) fieldContext_Query_images(_ context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_sportExperiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sportExperiences(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SportExperiences(rctx, fc.Args["sportId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SportExperience)
+	fc.Result = res
+	return ec.marshalNSportExperience2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportExperienceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sportExperiences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_SportExperience_userId(ctx, field)
+			case "sportId":
+				return ec.fieldContext_SportExperience_sportId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportExperience", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sportExperiences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_userSportExperiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_userSportExperiences(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UserSportExperiences(rctx, fc.Args["userId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SportExperience)
+	fc.Result = res
+	return ec.marshalNSportExperience2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportExperienceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_userSportExperiences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_SportExperience_userId(ctx, field)
+			case "sportId":
+				return ec.fieldContext_SportExperience_sportId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportExperience", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_userSportExperiences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_allSportExperiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_allSportExperiences(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AllSportExperiences(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SportExperience)
+	fc.Result = res
+	return ec.marshalNSportExperience2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportExperienceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_allSportExperiences(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_SportExperience_userId(ctx, field)
+			case "sportId":
+				return ec.fieldContext_SportExperience_sportId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SportExperience", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -17438,6 +18159,8 @@ func (ec *executionContext) fieldContext_Rule_sport(_ context.Context, field gra
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -17759,6 +18482,47 @@ func (ec *executionContext) _Sport_weight(ctx context.Context, field graphql.Col
 }
 
 func (ec *executionContext) fieldContext_Sport_weight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Sport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Sport_experiencedLimit(ctx context.Context, field graphql.CollectedField, obj *model.Sport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sport_experiencedLimit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExperiencedLimit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int32)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Sport_experiencedLimit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Sport",
 		Field:      field,
@@ -18133,6 +18897,94 @@ func (ec *executionContext) fieldContext_SportEntry_team(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _SportExperience_userId(ctx context.Context, field graphql.CollectedField, obj *model.SportExperience) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportExperience_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportExperience_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SportExperience_sportId(ctx context.Context, field graphql.CollectedField, obj *model.SportExperience) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SportExperience_sportId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SportID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SportExperience_sportId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SportExperience",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SportScene_id(ctx context.Context, field graphql.CollectedField, obj *model.SportScene) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SportScene_id(ctx, field)
 	if err != nil {
@@ -18222,6 +19074,8 @@ func (ec *executionContext) fieldContext_SportScene_sport(_ context.Context, fie
 				return ec.fieldContext_Sport_name(ctx, field)
 			case "weight":
 				return ec.fieldContext_Sport_weight(ctx, field)
+			case "experiencedLimit":
+				return ec.fieldContext_Sport_experiencedLimit(ctx, field)
 			case "rankingRules":
 				return ec.fieldContext_Sport_rankingRules(ctx, field)
 			case "rules":
@@ -23701,6 +24555,54 @@ func (ec *executionContext) unmarshalInputGenerateRoundRobinInput(ctx context.Co
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputGenerateSubBracketInput(ctx context.Context, obj any) (model.GenerateSubBracketInput, error) {
+	var it model.GenerateSubBracketInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"competitionId", "name", "teamCount", "placementMethod"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "competitionId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("competitionId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CompetitionID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "teamCount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("teamCount"))
+			data, err := ec.unmarshalNInt2int32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TeamCount = data
+		case "placementMethod":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("placementMethod"))
+			data, err := ec.unmarshalOPlacementMethod2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐPlacementMethod(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PlacementMethod = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJudgmentEntry(ctx context.Context, obj any) (model.JudgmentEntry, error) {
 	var it model.JudgmentEntry
 	asMap := map[string]any{}
@@ -24504,7 +25406,7 @@ func (ec *executionContext) unmarshalInputUpdateSportsInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "weight", "imageId"}
+	fieldsInOrder := [...]string{"name", "weight", "imageId", "experiencedLimit"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -24532,6 +25434,13 @@ func (ec *executionContext) unmarshalInputUpdateSportsInput(ctx context.Context,
 				return it, err
 			}
 			it.ImageID = data
+		case "experiencedLimit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("experiencedLimit"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExperiencedLimit = data
 		}
 	}
 
@@ -24718,13 +25627,16 @@ func (ec *executionContext) _Competition(ctx context.Context, sel ast.SelectionS
 		case "sport":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
 				res = ec._Competition_sport(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -26180,6 +27092,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "generateSubBracket":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_generateSubBracket(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createTournament":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createTournament(ctx, field)
@@ -26323,6 +27242,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateUserRole":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateUserRole(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addSportExperiences":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addSportExperiences(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteSportExperiences":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSportExperiences(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -27200,6 +28133,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "sportExperiences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sportExperiences(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userSportExperiences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userSportExperiences(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "allSportExperiences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_allSportExperiences(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -27460,6 +28459,8 @@ func (ec *executionContext) _Sport(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "experiencedLimit":
+			out.Values[i] = ec._Sport_experiencedLimit(ctx, field, obj)
 		case "rankingRules":
 			out.Values[i] = ec._Sport_rankingRules(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -27647,6 +28648,50 @@ func (ec *executionContext) _SportEntry(ctx context.Context, sel ast.SelectionSe
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sportExperienceImplementors = []string{"SportExperience"}
+
+func (ec *executionContext) _SportExperience(ctx context.Context, sel ast.SelectionSet, obj *model.SportExperience) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sportExperienceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SportExperience")
+		case "userId":
+			out.Values[i] = ec._SportExperience_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sportId":
+			out.Values[i] = ec._SportExperience_sportId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -29486,6 +30531,11 @@ func (ec *executionContext) unmarshalNGenerateRoundRobinInput2sportsᚑdayᚋapi
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNGenerateSubBracketInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐGenerateSubBracketInput(ctx context.Context, v any) (model.GenerateSubBracketInput, error) {
+	res, err := ec.unmarshalInputGenerateSubBracketInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNGroup2sportsᚑdayᚋapiᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v model.Group) graphql.Marshaler {
 	return ec._Group(ctx, sel, &v)
 }
@@ -30519,6 +31569,60 @@ func (ec *executionContext) marshalNSportEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋm
 		return graphql.Null
 	}
 	return ec._SportEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSportExperience2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportExperienceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SportExperience) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSportExperience2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportExperience(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSportExperience2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSportExperience(ctx context.Context, sel ast.SelectionSet, v *model.SportExperience) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SportExperience(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSportScene2sportsᚑdayᚋapiᚋgraphᚋmodelᚐSportScene(ctx context.Context, sel ast.SelectionSet, v model.SportScene) graphql.Marshaler {

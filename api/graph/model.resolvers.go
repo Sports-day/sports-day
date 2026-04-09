@@ -652,7 +652,19 @@ func (r *tournamentSlotResolver) MatchEntry(ctx context.Context, obj *model.Tour
 	if entry == nil {
 		return nil, nil
 	}
-	return model.FormatMatchEntryResponse(entry), nil
+	matchEntry := model.FormatMatchEntryResponse(entry)
+
+	// TeamIDが有効な場合はチーム情報を設定
+	if entry.TeamID.Valid {
+		teams, err := loader.LoadTeams(ctx, []string{entry.TeamID.String})
+		if err != nil {
+			return nil, err
+		}
+		if len(teams) > 0 {
+			matchEntry.Team = model.FormatTeamResponse(teams[0])
+		}
+	}
+	return matchEntry, nil
 }
 
 // SourceMatch is the resolver for the sourceMatch field.

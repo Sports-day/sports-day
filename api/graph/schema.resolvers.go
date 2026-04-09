@@ -264,6 +264,17 @@ func (r *mutationResolver) CreateCompetition(ctx context.Context, input model.Cr
 	if err != nil {
 		return nil, err
 	}
+
+	// トーナメント型の場合、デフォルトブラケットを自動生成
+	if input.Type == model.CompetitionTypeTournament {
+		pm := model.PlacementMethodSeedOptimized
+		_, _ = r.TournamentService.GenerateBracket(ctx, &model.GenerateBracketInput{
+			CompetitionID:   competition.ID,
+			TeamCount:       4,
+			PlacementMethod: &pm,
+		})
+	}
+
 	return model.FormatCompetitionResponse(competition), nil
 }
 
@@ -278,6 +289,10 @@ func (r *mutationResolver) UpdateCompetition(ctx context.Context, id string, inp
 
 // DeleteCompetition is the resolver for the deleteCompetition field.
 func (r *mutationResolver) DeleteCompetition(ctx context.Context, id string) (*model.Competition, error) {
+	// トーナメントのブラケット・試合を先に削除（FK順序問題の回避）
+	if _, err := r.TournamentService.ResetTournamentBrackets(ctx, id); err != nil {
+		return nil, err
+	}
 	competition, err := r.CompetitionService.Delete(ctx, id)
 	if err != nil {
 		return nil, err
@@ -530,6 +545,21 @@ func (r *mutationResolver) GenerateBracket(ctx context.Context, input model.Gene
 	return r.computeBracketStateForTournaments(ctx, tournaments)
 }
 
+// GenerateSubBracket is the resolver for the generateSubBracket field.
+func (r *mutationResolver) GenerateSubBracket(ctx context.Context, input model.GenerateSubBracketInput) (*model.Tournament, error) {
+	tournament, err := r.TournamentService.GenerateSubBracket(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, tournament.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return model.FormatTournamentResponse(tournament, state, progress), nil
+}
+
 // CreateTournament is the resolver for the createTournament field.
 func (r *mutationResolver) CreateTournament(ctx context.Context, input model.CreateTournamentInput) (*model.Tournament, error) {
 	tournament, err := r.TournamentService.CreateTournament(ctx, &input)
@@ -734,6 +764,27 @@ func (r *mutationResolver) UpdateUserRole(ctx context.Context, userID string, ro
 		return nil, err
 	}
 	return model.FormatUserResponse(user), nil
+}
+
+// AddSportExperiences is the resolver for the addSportExperiences field.
+func (r *mutationResolver) AddSportExperiences(ctx context.Context, sportID string, userIds []string) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.AddExperiences(ctx, sportID, userIds)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
+}
+
+// DeleteSportExperiences is the resolver for the deleteSportExperiences field.
+func (r *mutationResolver) DeleteSportExperiences(ctx context.Context, sportID string, userIds []string) (bool, error) {
+	if err := r.SportService.DeleteExperiences(ctx, sportID, userIds); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Users is the resolver for the users field.
@@ -1137,6 +1188,45 @@ func (r *queryResolver) Images(ctx context.Context) ([]*model.Image, error) {
 		res = append(res, model.FormatImageResponse(img))
 	}
 	return res, nil
+}
+
+// SportExperiences is the resolver for the sportExperiences field.
+func (r *queryResolver) SportExperiences(ctx context.Context, sportID string) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.ListExperiencesBySportID(ctx, sportID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
+}
+
+// UserSportExperiences is the resolver for the userSportExperiences field.
+func (r *queryResolver) UserSportExperiences(ctx context.Context, userID string) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.ListExperiencesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
+}
+
+// AllSportExperiences is the resolver for the allSportExperiences field.
+func (r *queryResolver) AllSportExperiences(ctx context.Context) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.ListAllExperiences(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
 }
 
 // Mutation returns MutationResolver implementation.

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -80,6 +81,12 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 		}
 		if input.Weight != nil {
 			sport.Weight = int(*input.Weight)
+		}
+		if input.ExperiencedLimit != nil {
+			sport.ExperiencedLimit = sql.NullInt64{
+				Int64: int64(*input.ExperiencedLimit),
+				Valid: true,
+			}
 		}
 
 		sport, err = s.sportsRepository.Save(ctx, tx, sport)
@@ -183,3 +190,71 @@ func (s *Sport) SetImage(ctx context.Context, sportID string, imageID string) er
 		imageID,
 	)
 }
+
+func (s *Sport) ListAllExperiences(ctx context.Context) ([]*db_model.SportExperience, error) {
+	exps, err := s.sportsRepository.ListAllExperiences(ctx, s.db)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return exps, nil
+}
+
+func (s *Sport) ListExperiencesBySportID(ctx context.Context, sportID string) ([]*db_model.SportExperience, error) {
+	exps, err := s.sportsRepository.ListExperiencesBySportID(ctx, s.db, sportID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return exps, nil
+}
+
+func (s *Sport) ListExperiencesByUserID(ctx context.Context, userID string) ([]*db_model.SportExperience, error) {
+	exps, err := s.sportsRepository.ListExperiencesByUserID(ctx, s.db, userID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return exps, nil
+}
+
+func (s *Sport) AddExperiences(ctx context.Context, sportID string, userIDs []string) ([]*db_model.SportExperience, error) {
+	sport, err := s.sportsRepository.Get(ctx, s.db, sportID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	var result []*db_model.SportExperience
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		exps, err := s.sportsRepository.AddExperiences(ctx, tx, sportID, userIDs)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		result = exps
+
+		// 上限が設定されている場合、追加後にチームごとの経験者数を検証
+		if sport.ExperiencedLimit.Valid {
+			limit := int(sport.ExperiencedLimit.Int64)
+			maxCount, err := s.sportsRepository.MaxExperiencedCountPerTeam(ctx, tx, sportID)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			if maxCount > limit {
+				return errors.ErrExperiencedLimitExceeded
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (s *Sport) DeleteExperiences(ctx context.Context, sportID string, userIDs []string) error {
+	if _, err := s.sportsRepository.Get(ctx, s.db, sportID); err != nil {
+		return errors.Wrap(err)
+	}
+	if err := s.sportsRepository.DeleteExperiences(ctx, s.db, sportID, userIDs); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+

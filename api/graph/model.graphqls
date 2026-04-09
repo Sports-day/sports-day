@@ -147,10 +147,16 @@ type Sport {
   id: ID!
   name: String!
   weight: Int!
+  experiencedLimit: Int
   rankingRules: [RankingRule!]!
   rules: [Rule!]!
   image: Image
   scene: [SportScene!]
+}
+
+type SportExperience {
+  userId: ID!
+  sportId: ID!
 }
 
 type Image {
