@@ -10,7 +10,10 @@ import AppBreadcrumbs, {
 } from "@/components/layouts/AppBreadcrumbs";
 import { motion } from "framer-motion";
 import CircularUnderLoad from "./Loading";
-import { useGetSceneSportQuery } from "@/gql/__generated__/graphql";
+import {
+  useGetSceneSportQuery,
+  useGetSportExperienceQuery,
+} from "@/gql/__generated__/graphql";
 
 type MakingProps = {
   sports: string;
@@ -27,6 +30,12 @@ export default function MakingTeams({
 }: MakingProps) {
   const theme = useTheme();
   const { data, loading } = useGetSceneSportQuery();
+  const { data: expData } = useGetSportExperienceQuery({
+    variables: { sportId: sports },
+  });
+  const experiencedUserIds = new Set(
+    expData?.sportExperiences?.map((e) => e.userId) ?? [],
+  );
   const teams =
     data?.scenes
       ?.filter((s) => !s.isDeleted)
@@ -84,14 +93,36 @@ export default function MakingTeams({
             overflowY: "auto",
           }}
         >
-          <Typography
-            sx={(theme) => ({
-              ...theme.typography.buttonFont2,
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
               mb: "16px",
-            })}
+            }}
           >
-            作成したチーム一覧
-          </Typography>
+            <Typography
+              sx={(theme) => ({
+                ...theme.typography.buttonFont2,
+              })}
+            >
+              作成したチーム一覧
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  bgcolor: "#FF9800",
+                  flexShrink: 0,
+                }}
+              />
+              <Typography sx={{ fontSize: "11px", color: "#999" }}>
+                経験者
+              </Typography>
+            </Box>
+          </Box>
           <Box
             sx={{
               flex: 1,
@@ -125,7 +156,11 @@ export default function MakingTeams({
                         teamname={item.name}
                         type={type}
                         sports={sports}
-                        member={item.users.map((n) => ({ name: n.name }))}
+                        member={item.users.map((u) => ({
+                          id: u.id,
+                          name: u.name,
+                          isExperienced: experiencedUserIds.has(u.id),
+                        }))}
                       />
                     </Grid>
                   ))}

@@ -6,6 +6,11 @@ import EditButton from "../../buttons/EditButton";
 import CheckPopup_Confirm from "@/components/popups/CheckPopupConfirmPage";
 import { useState } from "react";
 
+type MemberInfo = {
+  name: string;
+  isExperienced: boolean;
+};
+
 type AllDataProps = {
   scenename: string;
   sceneid: string;
@@ -13,7 +18,7 @@ type AllDataProps = {
   sportid: string;
   teamname: string[];
   teamid: string[];
-  memberdata: string[][];
+  memberdata: MemberInfo[][];
 };
 
 export default function ConfirmCard({
@@ -199,8 +204,22 @@ export default function ConfirmCard({
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
+                              position: "relative",
                             }}
                           >
+                            {member.isExperienced && (
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  top: 8,
+                                  left: 8,
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: "50%",
+                                  bgcolor: "#FF9800",
+                                }}
+                              />
+                            )}
                             <Typography
                               noWrap
                               sx={{
@@ -209,7 +228,7 @@ export default function ConfirmCard({
                                 textAlign: "center",
                               }}
                             >
-                              {member}
+                              {member.name}
                             </Typography>
                           </Card>
                         </Grid>

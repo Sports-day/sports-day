@@ -50,6 +50,7 @@ export type Competition = {
   matches: Array<Match>;
   name: Scalars['String']['output'];
   scene: Scene;
+  sport: Sport;
   teams: Array<Team>;
   tournaments: Array<Tournament>;
   type: CompetitionType;
@@ -63,6 +64,7 @@ export enum CompetitionType {
 export type CreateCompetitionInput = {
   name: Scalars['String']['input'];
   sceneId: Scalars['ID']['input'];
+  sportId: Scalars['ID']['input'];
   type: CompetitionType;
 };
 
@@ -88,6 +90,8 @@ export type CreateJudgmentInput = {
 export type CreateLeagueInput = {
   defaultLocationId?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
+  sceneId: Scalars['ID']['input'];
+  sportId: Scalars['ID']['input'];
 };
 
 export type CreateLocationInput = {
@@ -176,6 +180,14 @@ export type GenerateRoundRobinInput = {
   startTime: Scalars['String']['input'];
 };
 
+/** サブブラケット自動生成 */
+export type GenerateSubBracketInput = {
+  competitionId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  placementMethod?: InputMaybe<PlacementMethod>;
+  teamCount: Scalars['Int']['input'];
+};
+
 export type Group = {
   __typename?: 'Group';
   id: Scalars['ID']['output'];
@@ -228,9 +240,12 @@ export type JudgmentEntry = {
 
 export type League = {
   __typename?: 'League';
+  drawPt: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  losePt: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   teams: Array<Team>;
+  winPt: Scalars['Int']['output'];
 };
 
 export type Location = {
@@ -280,6 +295,8 @@ export type Mutation = {
   addMatchEntries: Match;
   /** スポーツシーンにチームエントリーを一括追加する */
   addSportEntries: SportScene;
+  /** スポーツの経験者を追加する */
+  addSportExperiences: Array<SportExperience>;
   /** シーンにスポーツを一括追加する */
   addSportScenes: Scene;
   /** SEEDスロットへのチーム手動配置（teamId=null でクリア） */
@@ -334,6 +351,8 @@ export type Mutation = {
   deleteSportEntries: SportScene;
   /** スポーツエントリーを削除する */
   deleteSportEntry: SportEntry;
+  /** スポーツの経験者を削除する */
+  deleteSportExperiences: Scalars['Boolean']['output'];
   /** スポーツシーンを削除する */
   deleteSportScene: SportScene;
   /** シーンからスポーツを一括削除する */
@@ -350,6 +369,8 @@ export type Mutation = {
   generateBracket: Array<Tournament>;
   /** リーグの総当たり戦を自動生成する */
   generateRoundRobin: Array<Match>;
+  /** サブブラケット自動生成（試合構造含む） */
+  generateSubBracket: Tournament;
   removeGroupUsers: Group;
   /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
   resetTournamentBrackets: Competition;
@@ -388,6 +409,8 @@ export type Mutation = {
   /** トーナメント（ブラケット）を更新する */
   updateTournament: Tournament;
   updateUser: User;
+  /** ユーザーのロールを更新する（user:manage パーミッションが必要） */
+  updateUserRole: User;
 };
 
 
@@ -412,6 +435,12 @@ export type MutationAddMatchEntriesArgs = {
 export type MutationAddSportEntriesArgs = {
   id: Scalars['ID']['input'];
   input: AddSportEntriesInput;
+};
+
+
+export type MutationAddSportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -579,6 +608,12 @@ export type MutationDeleteSportEntryArgs = {
 };
 
 
+export type MutationDeleteSportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationDeleteSportSceneArgs = {
   id: Scalars['ID']['input'];
 };
@@ -623,6 +658,11 @@ export type MutationGenerateBracketArgs = {
 export type MutationGenerateRoundRobinArgs = {
   id: Scalars['ID']['input'];
   input: GenerateRoundRobinInput;
+};
+
+
+export type MutationGenerateSubBracketArgs = {
+  input: GenerateSubBracketInput;
 };
 
 
@@ -760,6 +800,12 @@ export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
 };
 
+
+export type MutationUpdateUserRoleArgs = {
+  role: Role;
+  userId: Scalars['ID']['input'];
+};
+
 export enum PlacementMethod {
   Balanced = 'BALANCED',
   Manual = 'MANUAL',
@@ -787,6 +833,8 @@ export type Query = {
   __typename?: 'Query';
   Information: Information;
   Informations: Array<Information>;
+  /** 全ての経験者データを取得する */
+  allSportExperiences: Array<SportExperience>;
   /** ID指定で大会を取得する */
   competition: Competition;
   /** 大会をまとめて取得する */
@@ -825,6 +873,8 @@ export type Query = {
   scene: Scene;
   scenes: Array<Scene>;
   sport: Sport;
+  /** 指定スポーツの経験者一覧を取得する */
+  sportExperiences: Array<SportExperience>;
   sports: Array<Sport>;
   /** ID指定でチームを取得する */
   team: Team;
@@ -837,6 +887,8 @@ export type Query = {
   /** competition内の全ブラケット取得 */
   tournaments: Array<Tournament>;
   user: User;
+  /** 指定ユーザーの経験者スポーツ一覧を取得する */
+  userSportExperiences: Array<SportExperience>;
   users: Array<User>;
 };
 
@@ -911,6 +963,11 @@ export type QuerySportArgs = {
 };
 
 
+export type QuerySportExperiencesArgs = {
+  sportId: Scalars['ID']['input'];
+};
+
+
 export type QueryTeamArgs = {
   id: Scalars['ID']['input'];
 };
@@ -935,6 +992,11 @@ export type QueryUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type QueryUserSportExperiencesArgs = {
+  userId: Scalars['ID']['input'];
+};
+
 export enum RankingConditionKey {
   AdminDecision = 'ADMIN_DECISION',
   GoalDiff = 'GOAL_DIFF',
@@ -953,6 +1015,12 @@ export type RankingRuleInput = {
   conditionKey: RankingConditionKey;
   priority: Scalars['Int']['input'];
 };
+
+export enum Role {
+  Admin = 'ADMIN',
+  Organizer = 'ORGANIZER',
+  Participant = 'PARTICIPANT'
+}
 
 export type Rule = {
   __typename?: 'Rule';
@@ -990,6 +1058,7 @@ export enum SlotSourceType {
 
 export type Sport = {
   __typename?: 'Sport';
+  experiencedLimit?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   image?: Maybe<Image>;
   name: Scalars['String']['output'];
@@ -1004,6 +1073,12 @@ export type SportEntry = {
   id: Scalars['ID']['output'];
   sportScene: SportScene;
   team: Team;
+};
+
+export type SportExperience = {
+  __typename?: 'SportExperience';
+  sportId: Scalars['ID']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 export type SportScene = {
@@ -1094,8 +1169,9 @@ export type UpdateCompetitionEntriesInput = {
 };
 
 export type UpdateCompetitionInput = {
-  imageId?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  sceneId?: InputMaybe<Scalars['ID']['input']>;
+  sportId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type UpdateGroupInput = {
@@ -1169,6 +1245,7 @@ export type UpdateSlotConnectionInput = {
 };
 
 export type UpdateSportsInput = {
+  experiencedLimit?: InputMaybe<Scalars['Int']['input']>;
   imageId?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   weight?: InputMaybe<Scalars['Int']['input']>;
@@ -1202,9 +1279,17 @@ export type User = {
   gender?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
+  identify: UserIdentify;
   judgments: Array<Judgment>;
   name: Scalars['String']['output'];
+  role: Role;
   teams: Array<Team>;
+};
+
+export type UserIdentify = {
+  __typename?: 'UserIdentify';
+  microsoftUserId?: Maybe<Scalars['String']['output']>;
+  sub: Scalars['ID']['output'];
 };
 
 export type GetSceneIdQueryVariables = Exact<{ [key: string]: never; }>;
@@ -1237,7 +1322,7 @@ export type GetSportQueryVariables = Exact<{
 }>;
 
 
-export type GetSportQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', name: string, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string, name: string } }> } };
+export type GetSportQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', name: string, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string, name: string, image?: { __typename?: 'Image', url?: string | null } | null } }> } };
 
 export type GetSportDetailQueryVariables = Exact<{
   sportId: Scalars['ID']['input'];
@@ -1263,12 +1348,17 @@ export type GetTeamDataQuery = { __typename?: 'Query', scenes: Array<{ __typenam
 export type GetSceneSportQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', name: string }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
+export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name: string }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
 
 export type GetAllTeamdataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', name: string }> } }> }> }> };
+export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name: string }> } }> }> }> };
+
+export type GetAllSportExperiencesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllSportExperiencesQuery = { __typename?: 'Query', allSportExperiences: Array<{ __typename?: 'SportExperience', userId: string, sportId: string }> };
 
 export type DeleteTeamFromPopupMutationVariables = Exact<{
   deleteTeamId: Scalars['ID']['input'];
@@ -1341,6 +1431,29 @@ export type DeleteTeamMutationVariables = Exact<{
 
 
 export type DeleteTeamMutation = { __typename?: 'Mutation', deleteTeam: { __typename?: 'Team', id: string } };
+
+export type GetSportExperienceQueryVariables = Exact<{
+  sportId: Scalars['ID']['input'];
+}>;
+
+
+export type GetSportExperienceQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', experiencedLimit?: number | null }, sportExperiences: Array<{ __typename?: 'SportExperience', userId: string }> };
+
+export type AddSportExperiencesMutationVariables = Exact<{
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+}>;
+
+
+export type AddSportExperiencesMutation = { __typename?: 'Mutation', addSportExperiences: Array<{ __typename?: 'SportExperience', userId: string, sportId: string }> };
+
+export type DeleteSportExperiencesMutationVariables = Exact<{
+  sportId: Scalars['ID']['input'];
+  userIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+}>;
+
+
+export type DeleteSportExperiencesMutation = { __typename?: 'Mutation', deleteSportExperiences: boolean };
 
 
 export const GetSceneIdDocument = gql`
@@ -1565,6 +1678,9 @@ export const GetSportDocument = gql`
       sport {
         id
         name
+        image {
+          url
+        }
       }
     }
   }
@@ -1756,6 +1872,7 @@ export const GetSceneSportDocument = gql`
           id
           name
           users {
+            id
             name
           }
         }
@@ -1820,6 +1937,7 @@ export const GetAllTeamdataDocument = gql`
           id
           name
           users {
+            id
             name
           }
         }
@@ -1860,6 +1978,46 @@ export type GetAllTeamdataQueryHookResult = ReturnType<typeof useGetAllTeamdataQ
 export type GetAllTeamdataLazyQueryHookResult = ReturnType<typeof useGetAllTeamdataLazyQuery>;
 export type GetAllTeamdataSuspenseQueryHookResult = ReturnType<typeof useGetAllTeamdataSuspenseQuery>;
 export type GetAllTeamdataQueryResult = Apollo.QueryResult<GetAllTeamdataQuery, GetAllTeamdataQueryVariables>;
+export const GetAllSportExperiencesDocument = gql`
+    query GetAllSportExperiences {
+  allSportExperiences {
+    userId
+    sportId
+  }
+}
+    `;
+
+/**
+ * __useGetAllSportExperiencesQuery__
+ *
+ * To run a query within a React component, call `useGetAllSportExperiencesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAllSportExperiencesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAllSportExperiencesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAllSportExperiencesQuery(baseOptions?: Apollo.QueryHookOptions<GetAllSportExperiencesQuery, GetAllSportExperiencesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAllSportExperiencesQuery, GetAllSportExperiencesQueryVariables>(GetAllSportExperiencesDocument, options);
+      }
+export function useGetAllSportExperiencesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllSportExperiencesQuery, GetAllSportExperiencesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAllSportExperiencesQuery, GetAllSportExperiencesQueryVariables>(GetAllSportExperiencesDocument, options);
+        }
+export function useGetAllSportExperiencesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllSportExperiencesQuery, GetAllSportExperiencesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAllSportExperiencesQuery, GetAllSportExperiencesQueryVariables>(GetAllSportExperiencesDocument, options);
+        }
+export type GetAllSportExperiencesQueryHookResult = ReturnType<typeof useGetAllSportExperiencesQuery>;
+export type GetAllSportExperiencesLazyQueryHookResult = ReturnType<typeof useGetAllSportExperiencesLazyQuery>;
+export type GetAllSportExperiencesSuspenseQueryHookResult = ReturnType<typeof useGetAllSportExperiencesSuspenseQuery>;
+export type GetAllSportExperiencesQueryResult = Apollo.QueryResult<GetAllSportExperiencesQuery, GetAllSportExperiencesQueryVariables>;
 export const DeleteTeamFromPopupDocument = gql`
     mutation DeleteTeamFromPopup($deleteTeamId: ID!) {
   deleteTeam(id: $deleteTeamId) {
@@ -2292,3 +2450,113 @@ export function useDeleteTeamMutation(baseOptions?: Apollo.MutationHookOptions<D
 export type DeleteTeamMutationHookResult = ReturnType<typeof useDeleteTeamMutation>;
 export type DeleteTeamMutationResult = Apollo.MutationResult<DeleteTeamMutation>;
 export type DeleteTeamMutationOptions = Apollo.BaseMutationOptions<DeleteTeamMutation, DeleteTeamMutationVariables>;
+export const GetSportExperienceDocument = gql`
+    query GetSportExperience($sportId: ID!) {
+  sport(id: $sportId) {
+    experiencedLimit
+  }
+  sportExperiences(sportId: $sportId) {
+    userId
+  }
+}
+    `;
+
+/**
+ * __useGetSportExperienceQuery__
+ *
+ * To run a query within a React component, call `useGetSportExperienceQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSportExperienceQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSportExperienceQuery({
+ *   variables: {
+ *      sportId: // value for 'sportId'
+ *   },
+ * });
+ */
+export function useGetSportExperienceQuery(baseOptions: Apollo.QueryHookOptions<GetSportExperienceQuery, GetSportExperienceQueryVariables> & ({ variables: GetSportExperienceQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSportExperienceQuery, GetSportExperienceQueryVariables>(GetSportExperienceDocument, options);
+      }
+export function useGetSportExperienceLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSportExperienceQuery, GetSportExperienceQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSportExperienceQuery, GetSportExperienceQueryVariables>(GetSportExperienceDocument, options);
+        }
+export function useGetSportExperienceSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetSportExperienceQuery, GetSportExperienceQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetSportExperienceQuery, GetSportExperienceQueryVariables>(GetSportExperienceDocument, options);
+        }
+export type GetSportExperienceQueryHookResult = ReturnType<typeof useGetSportExperienceQuery>;
+export type GetSportExperienceLazyQueryHookResult = ReturnType<typeof useGetSportExperienceLazyQuery>;
+export type GetSportExperienceSuspenseQueryHookResult = ReturnType<typeof useGetSportExperienceSuspenseQuery>;
+export type GetSportExperienceQueryResult = Apollo.QueryResult<GetSportExperienceQuery, GetSportExperienceQueryVariables>;
+export const AddSportExperiencesDocument = gql`
+    mutation AddSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+  addSportExperiences(sportId: $sportId, userIds: $userIds) {
+    userId
+    sportId
+  }
+}
+    `;
+export type AddSportExperiencesMutationFn = Apollo.MutationFunction<AddSportExperiencesMutation, AddSportExperiencesMutationVariables>;
+
+/**
+ * __useAddSportExperiencesMutation__
+ *
+ * To run a mutation, you first call `useAddSportExperiencesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddSportExperiencesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addSportExperiencesMutation, { data, loading, error }] = useAddSportExperiencesMutation({
+ *   variables: {
+ *      sportId: // value for 'sportId'
+ *      userIds: // value for 'userIds'
+ *   },
+ * });
+ */
+export function useAddSportExperiencesMutation(baseOptions?: Apollo.MutationHookOptions<AddSportExperiencesMutation, AddSportExperiencesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddSportExperiencesMutation, AddSportExperiencesMutationVariables>(AddSportExperiencesDocument, options);
+      }
+export type AddSportExperiencesMutationHookResult = ReturnType<typeof useAddSportExperiencesMutation>;
+export type AddSportExperiencesMutationResult = Apollo.MutationResult<AddSportExperiencesMutation>;
+export type AddSportExperiencesMutationOptions = Apollo.BaseMutationOptions<AddSportExperiencesMutation, AddSportExperiencesMutationVariables>;
+export const DeleteSportExperiencesDocument = gql`
+    mutation DeleteSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+  deleteSportExperiences(sportId: $sportId, userIds: $userIds)
+}
+    `;
+export type DeleteSportExperiencesMutationFn = Apollo.MutationFunction<DeleteSportExperiencesMutation, DeleteSportExperiencesMutationVariables>;
+
+/**
+ * __useDeleteSportExperiencesMutation__
+ *
+ * To run a mutation, you first call `useDeleteSportExperiencesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteSportExperiencesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteSportExperiencesMutation, { data, loading, error }] = useDeleteSportExperiencesMutation({
+ *   variables: {
+ *      sportId: // value for 'sportId'
+ *      userIds: // value for 'userIds'
+ *   },
+ * });
+ */
+export function useDeleteSportExperiencesMutation(baseOptions?: Apollo.MutationHookOptions<DeleteSportExperiencesMutation, DeleteSportExperiencesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteSportExperiencesMutation, DeleteSportExperiencesMutationVariables>(DeleteSportExperiencesDocument, options);
+      }
+export type DeleteSportExperiencesMutationHookResult = ReturnType<typeof useDeleteSportExperiencesMutation>;
+export type DeleteSportExperiencesMutationResult = Apollo.MutationResult<DeleteSportExperiencesMutation>;
+export type DeleteSportExperiencesMutationOptions = Apollo.BaseMutationOptions<DeleteSportExperiencesMutation, DeleteSportExperiencesMutationVariables>;

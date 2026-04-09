@@ -114,3 +114,29 @@ export const DELETE_TEAM = gql`
     }
   }
 `;
+
+export const GET_SPORT_EXPERIENCE = gql`
+  query GetSportExperience($sportId: ID!) {
+    sport(id: $sportId) {
+      experiencedLimit
+    }
+    sportExperiences(sportId: $sportId) {
+      userId
+    }
+  }
+`;
+
+export const ADD_SPORT_EXPERIENCES = gql`
+  mutation AddSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+    addSportExperiences(sportId: $sportId, userIds: $userIds) {
+      userId
+      sportId
+    }
+  }
+`;
+
+export const DELETE_SPORT_EXPERIENCES = gql`
+  mutation DeleteSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+    deleteSportExperiences(sportId: $sportId, userIds: $userIds)
+  }
+`;

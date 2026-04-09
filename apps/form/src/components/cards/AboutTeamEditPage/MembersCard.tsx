@@ -4,6 +4,7 @@ import {
   Box,
   Card,
   CardActionArea,
+  Chip,
   Typography,
   Button,
   Tooltip,
@@ -19,6 +20,9 @@ type MembersCardProps = {
   isInclude?: boolean;
   remove?: () => void;
   disable?: boolean;
+  isExperienced?: boolean;
+  onToggleExperience?: () => void;
+  experienceDisabled?: boolean;
 };
 
 export default function MembersCard({
@@ -29,6 +33,9 @@ export default function MembersCard({
   isInclude,
   remove,
   disable,
+  isExperienced,
+  onToggleExperience,
+  experienceDisabled,
 }: MembersCardProps) {
   const theme = useTheme();
   const handleClick = () => {
@@ -78,12 +85,48 @@ export default function MembersCard({
             {studentname}
           </Typography>
 
+          {onToggleExperience && (
+            <Chip
+              label="経験者"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!experienceDisabled || isExperienced) onToggleExperience();
+              }}
+              sx={{
+                ml: "4px",
+                flexShrink: 0,
+                height: 24,
+                fontSize: "11px",
+                fontWeight: 600,
+                cursor: experienceDisabled && !isExperienced ? "default" : "pointer",
+                transition: "all 0.15s",
+                ...(isExperienced
+                  ? {
+                      backgroundColor: "#FF9800",
+                      color: "#fff",
+                      border: "1px solid #FF9800",
+                      "&:hover": { backgroundColor: "#F57C00" },
+                    }
+                  : {
+                      backgroundColor: "transparent",
+                      color: "rgba(255,255,255,0.6)",
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      opacity: experienceDisabled ? 0.4 : 1,
+                      "&:hover": experienceDisabled
+                        ? {}
+                        : { borderColor: "rgba(255,255,255,0.6)" },
+                    }),
+              }}
+            />
+          )}
+
           <Button
             onClick={(e) => {
               e.stopPropagation();
               remove && remove();
             }}
-            sx={{ ml: "8px", minWidth: 28, p: "4px" }}
+            sx={{ minWidth: 28, p: "4px", flexShrink: 0 }}
           >
             <Typography sx={{ color: "white", fontSize: "20px", lineHeight: 1 }}>
               ×
@@ -91,6 +134,64 @@ export default function MembersCard({
           </Button>
         </Card>
       </motion.div>
+    );
+  }
+
+  if (isInclude && disable) {
+    return (
+      <Tooltip
+        title="このシーンの別チームに所属済みのため選択できません"
+        disableInteractive
+        placement="right-end"
+      >
+        <Card
+          sx={{
+            background: "#808080",
+            borderRadius: "10px",
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            minHeight: 40,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            p: "8px",
+            minWidth: 0,
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              color: "white",
+              position: "absolute",
+              left: 11,
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              border: "1.5px solid #fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "10px",
+              lineHeight: 1,
+            }}
+          >
+            /
+          </Box>
+          <Typography
+            sx={(theme) => ({
+              ...theme.typography.buttonFont1,
+              minWidth: 0,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            })}
+          >
+            {studentname}
+          </Typography>
+        </Card>
+      </Tooltip>
     );
   }
 
@@ -143,60 +244,6 @@ export default function MembersCard({
           {studentname}
         </Typography>
       </Card>
-    );
-  }
-
-  if (isInclude && !disable) {
-    return (
-      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 1 }} style={{ width: "100%" }}>
-        <CardActionArea
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
-        >
-          <Tooltip
-            title={
-              <>
-                <div>すでに他のチームに所属しています。</div>
-                <br />
-                <div>こちらのチームに追加することが可能です。</div>
-              </>
-            }
-            disableInteractive
-            placement="right-end"
-          >
-            <Card
-              sx={{
-                background: "#808080",
-                borderRadius: "10px",
-                width: "100%",
-                height: "100%",
-                minHeight: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                p: "8px",
-                minWidth: 0,
-                overflow: "hidden",
-              }}
-            >
-              <Typography
-                sx={(theme) => ({
-                  ...theme.typography.buttonFont1,
-                  minWidth: 0,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                })}
-              >
-                {studentname}
-              </Typography>
-            </Card>
-          </Tooltip>
-        </CardActionArea>
-      </motion.div>
     );
   }
 

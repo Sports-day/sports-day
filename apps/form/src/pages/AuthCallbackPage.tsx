@@ -17,9 +17,7 @@ export default function AuthCallbackPage() {
 
     userManager.signinRedirectCallback()
       .then(() => navigate('/', { replace: true }))
-      .catch(() => {
-        userManager.signinRedirect()
-      })
+      .catch(() => navigate('/login'))
   }, [navigate])
 
   return (

@@ -24,7 +24,12 @@ export default function SportChoice() {
     throw error;
   }
   const weatherType = data?.scene?.name ?? "不明な種別";
-  const sportData = data?.scene?.sportScenes?.map((ss) => ss.sport) ?? [];
+  const sportData =
+    data?.scene?.sportScenes?.map((ss) => ({
+      id: ss.sport.id,
+      name: ss.sport.name,
+      imageUrl: ss.sport.image?.url ?? null,
+    })) ?? [];
 
   return (
     <Box

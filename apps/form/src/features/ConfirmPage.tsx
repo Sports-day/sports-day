@@ -6,14 +6,24 @@ import ConfirmCard from "@/components/cards/AboutConfirmPage/ConfirmCard";
 import Conflicted from "@/components/cards/AboutConfirmPage/ConflictedCard";
 import NotSelected from "@/components/cards/AboutConfirmPage/NotSelectedCard";
 import CircularUnderLoad from "@/features/Loading";
-import { useGetAllTeamdataQuery } from "@/gql/__generated__/graphql";
+import {
+  useGetAllTeamdataQuery,
+  useGetAllSportExperiencesQuery,
+} from "@/gql/__generated__/graphql";
 
 export default function ConfirmPage() {
   const theme = useTheme();
   const { data, loading } = useGetAllTeamdataQuery({
-    notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
   });
+  const { data: expData, loading: expLoading } = useGetAllSportExperiencesQuery({
+    fetchPolicy: "cache-and-network",
+  });
+
+  // sportId+userId のセットで経験者判定
+  const experiencedSet = new Set(
+    expData?.allSportExperiences?.map((e) => `${e.sportId}:${e.userId}`) ?? [],
+  );
 
   const allData = data?.scenes
     ?.filter((s) => !s.isDeleted)
@@ -26,11 +36,14 @@ export default function ConfirmPage() {
       teamName: d.entries?.map((s) => s.team?.name),
       teamId: d.entries?.map((s) => s.team?.id),
       memberData: d.entries?.map((s) =>
-        s.team?.users?.map((u) => u.name),
+        s.team?.users?.map((u) => ({
+          name: u.name,
+          isExperienced: experiencedSet.has(`${d.sport?.id}:${u.id}`),
+        })),
       ),
     }));
 
-  if (loading) {
+  if (loading || expLoading) {
     return <CircularUnderLoad />;
   }
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -7,11 +7,14 @@ import {
   useGetSportsceneQuery,
   useGetSportsceneEntriesQuery,
   useGetTeamQuery,
+  useGetSportExperienceQuery,
   useCreateTeamMutation,
   useAddTeamMemberMutation,
   useCreateSportEntryMutation,
   useDeleteMemberMutation,
   useDeleteTeamMutation,
+  useAddSportExperiencesMutation,
+  useDeleteSportExperiencesMutation,
   GetSportsceneDocument,
   GetSportsceneEntriesDocument,
   GetTeamDocument,
@@ -33,6 +36,9 @@ export function useTeamEdit() {
   const [searchName, setSearchName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [experiencedIds, setExperiencedIds] = useState<Set<string>>(new Set());
+  const [experienceInitialized, setExperienceInitialized] = useState(false);
+  const initialExperiencedIds = useRef<Set<string>>(new Set());
 
   const teamId = searchParams?.get("teamid")?.trim() ?? "";
   const hasTeamId = teamId.length > 0;
@@ -45,6 +51,20 @@ export function useTeamEdit() {
       ? { variables: { teamId } }
       : { skip: true, variables: { teamId: "" } },
   );
+  const { data: experienceData, loading: experienceLoading } = useGetSportExperienceQuery({
+    variables: { sportId: sports },
+  });
+
+  const experiencedLimit = experienceData?.sport?.experiencedLimit ?? null;
+
+  // 既存の経験者データで初期化（一度だけ）
+  useEffect(() => {
+    if (experienceInitialized || !experienceData?.sportExperiences) return;
+    const ids = new Set(experienceData.sportExperiences.map((e) => e.userId));
+    setExperiencedIds(ids);
+    initialExperiencedIds.current = new Set(ids);
+    setExperienceInitialized(true);
+  }, [experienceData, experienceInitialized]);
 
   const sportScene = useMemo(() => {
     return sportSceneData?.scenes
@@ -61,7 +81,10 @@ export function useTeamEdit() {
     usersLoading ||
     sportSceneLoading ||
     sportSceneEntriesLoading ||
+    experienceLoading ||
     (hasTeamId && teamLoading);
+
+  const groupId = meData?.me?.groups?.[0]?.id ?? "";
 
   const teamMembersFromQuery = useMemo(() => {
     return (
@@ -112,11 +135,32 @@ export function useTeamEdit() {
     return all.filter((user) => !myTeamUserIdSet.has(user.id));
   }, [myTeamUserIds, sportSceneData?.scenes, type]);
 
+  // 選択中メンバーのうち経験者の数
+  const experiencedCount = useMemo(() => {
+    return selectedIds.filter((id) => experiencedIds.has(id)).length;
+  }, [selectedIds, experiencedIds]);
+
+  const experienceLimitReached = experiencedLimit !== null && experiencedCount >= experiencedLimit;
+
+  const toggleExperience = useCallback((userId: string) => {
+    setExperiencedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  }, []);
+
   const [addTeamMemberMutation] = useAddTeamMemberMutation();
   const [createSportEntryMutation] = useCreateSportEntryMutation();
   const [createTeamMutation] = useCreateTeamMutation();
   const [deleteMemberMutation] = useDeleteMemberMutation();
   const [deleteTeamMutation] = useDeleteTeamMutation();
+  const [addSportExperiencesMutation] = useAddSportExperiencesMutation();
+  const [deleteSportExperiencesMutation] = useDeleteSportExperiencesMutation();
 
   const addSelectedMember = (student: StudentInformation) => {
     setLocalSelectedMember((prev) => {
@@ -129,8 +173,7 @@ export function useTeamEdit() {
   };
 
   const createTeam = async (memberIds: string[]) => {
-    const groupId = meData?.me?.groups?.[0]?.id;
-    if (!groupId) throw new Error("グループ情報が取得できません");
+    if (!groupId) throw new Error("グループに所属していません。管理者にグループの割り当てを依頼してください。");
     const { data } = await createTeamMutation({
       variables: {
         input: {
@@ -169,6 +212,12 @@ export function useTeamEdit() {
       const base = prev ?? teamMembersFromQuery;
       return base.filter((s) => s.studentId !== studentId);
     });
+    // 経験者リストからも除外
+    setExperiencedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(studentId);
+      return next;
+    });
   };
 
   const submit = async () => {
@@ -200,6 +249,26 @@ export function useTeamEdit() {
         createdTeamId = newTeamId;
         await entryTeam(newTeamId, sportSceneId);
       }
+
+      // 経験者データを差分保存（自チームのメンバーのみ対象）
+      const selectedSet = new Set(selectedIds);
+      const currentExperienced = new Set(selectedIds.filter((id) => experiencedIds.has(id)));
+      const toAdd = [...currentExperienced].filter((id) => !initialExperiencedIds.current.has(id));
+      const toRemove = [...initialExperiencedIds.current].filter(
+        (id) => selectedSet.has(id) && !currentExperienced.has(id),
+      );
+
+      if (toAdd.length > 0) {
+        await addSportExperiencesMutation({
+          variables: { sportId: sports, userIds: toAdd },
+        });
+      }
+      if (toRemove.length > 0) {
+        await deleteSportExperiencesMutation({
+          variables: { sportId: sports, userIds: toRemove },
+        });
+      }
+
       await apolloClient.refetchQueries({
         include: [
           GetSportsceneDocument,
@@ -222,7 +291,9 @@ export function useTeamEdit() {
           // Rollback failed; keep original error path.
         }
       }
-      setSubmitError("送信に失敗しました。もう一度お試しください。");
+      const message =
+        error instanceof Error ? error.message : "送信に失敗しました。";
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -230,6 +301,7 @@ export function useTeamEdit() {
 
   return {
     loading,
+    groupId,
     selectedMember,
     selectedIds,
     searchName,
@@ -241,5 +313,9 @@ export function useTeamEdit() {
     submit,
     isSubmitting,
     submitError,
+    experiencedIds,
+    toggleExperience,
+    experiencedLimit,
+    experienceLimitReached,
   };
 }

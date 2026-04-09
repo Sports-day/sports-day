@@ -6,7 +6,7 @@ import SportCard from "@/components/cards/AboutSportPage/SportCard";
 import { motion } from "framer-motion";
 import { useGetTeamDataQuery } from "@/gql/__generated__/graphql";
 
-type WeatherData = { name: string; id: string };
+type WeatherData = { name: string; id: string; imageUrl: string | null };
 
 type Props = {
   weather: WeatherData[];
@@ -62,6 +62,7 @@ export default function SportCards({ weather, type }: Props) {
                 sportId={item.id}
                 type={type}
                 hasTeam={hasTeamMap.get(item.id) ?? false}
+                imageUrl={item.imageUrl}
               />
             </motion.div>
           </Grid>

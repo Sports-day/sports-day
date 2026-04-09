@@ -1,22 +1,21 @@
-import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { User } from 'oidc-client-ts'
-import { userManager } from '@/lib/userManager'
+import { Navigate, Outlet } from 'react-router-dom'
+import { CircularProgress, Box } from '@mui/material'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function ProtectedRoute() {
-  const [status, setStatus] = useState<'loading' | 'ok' | 'nologin'>('loading')
+  const { loggedIn, loading } = useAuth()
 
-  useEffect(() => {
-    userManager.getUser()
-      .then((u) => (u && !u.expired ? u : userManager.signinSilent()))
-      .then((u: User | null) => setStatus(u ? 'ok' : 'nologin'))
-      .catch(() => setStatus('nologin'))
-  }, [])
-
-  if (status === 'loading') return null
-  if (status === 'nologin') {
-    userManager.signinRedirect()
-    return null
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress size={32} sx={{ color: '#5F6DC2' }} />
+      </Box>
+    )
   }
+
+  if (!loggedIn) {
+    return <Navigate to="/login" replace />
+  }
+
   return <Outlet />
 }

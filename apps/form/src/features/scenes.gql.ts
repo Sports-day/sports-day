@@ -27,6 +27,9 @@ export const GET_SPORT = gql`
         sport {
           id
           name
+          image {
+            url
+          }
         }
       }
     }
@@ -89,6 +92,7 @@ export const GET_SCENE_SPORT = gql`
             id
             name
             users {
+              id
               name
             }
           }
@@ -122,11 +126,21 @@ export const GET_ALLTEAMDATA = gql`
             id
             name
             users {
+              id
               name
             }
           }
         }
       }
+    }
+  }
+`;
+
+export const GET_ALL_SPORT_EXPERIENCES = gql`
+  query GetAllSportExperiences {
+    allSportExperiences {
+      userId
+      sportId
     }
   }
 `;
