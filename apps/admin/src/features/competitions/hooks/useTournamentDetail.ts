@@ -1,4 +1,4 @@
-import { useGetAdminTournamentQuery } from '@/gql/__generated__/graphql'
+import { useGetAdminTournamentQuery, useGetAdminTournamentsQuery } from '@/gql/__generated__/graphql'
 import type { BracketView, TournamentMatchView, TournamentSlotView, TournamentDetailView } from '../types'
 
 /**
@@ -24,7 +24,7 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
     }
   }
 
-  // Match.id → round の計算（トポロジカル順）
+  // Match.id → round の計算（トポロジカル順：前方パス）
   const matchRound = new Map<string, number>()
   let changed = true
   while (changed) {
@@ -60,6 +60,7 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
   ): TournamentSlotView => {
     if (!slot) return { sourceType: 'SEED' }
     return {
+      slotId: slot.id,
       sourceType: slot.sourceType as TournamentSlotView['sourceType'],
       seedNumber: slot.seedNumber ?? undefined,
       sourceMatchId: slot.sourceMatch?.id,
@@ -100,34 +101,59 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
   }
 }
 
-export function useTournamentDetail(tournamentId: string, tournamentName: string): TournamentDetailView {
-  const { data } = useGetAdminTournamentQuery({
-    variables: { id: tournamentId },
-    skip: !tournamentId,
+export function useTournamentDetail(competitionId: string, tournamentName: string): TournamentDetailView {
+  // competitionIdから全トーナメント（MAIN + SUB）を取得
+  const { data: tournamentsData } = useGetAdminTournamentsQuery({
+    variables: { competitionId },
+    skip: !competitionId,
+  })
+  const allTournaments = tournamentsData?.tournaments ?? []
+  const mainTournament = allTournaments.find(t => t.bracketType === 'MAIN')
+  const resolvedTournamentId = mainTournament?.id ?? ''
+
+  // 全ブラケットの詳細を取得（MAINは個別に、SUBも個別に）
+  const { data: mainData } = useGetAdminTournamentQuery({
+    variables: { id: resolvedTournamentId },
+    skip: !resolvedTournamentId,
   })
 
-  if (!data?.tournament) {
-    return {
-      id: tournamentId,
-      name: tournamentName,
-      description: '',
-      teamCount: 0,
-      placementMethod: 'SEED_OPTIMIZED',
-      tag: '',
-      brackets: [],
+  // SUBブラケットのIDリストを取得
+  const subTournaments = allTournaments.filter(t => t.bracketType === 'SUB')
+
+  // 各SUBの詳細を取得（最大10個まで対応）
+  const sub0 = useGetAdminTournamentQuery({ variables: { id: subTournaments[0]?.id ?? '' }, skip: !subTournaments[0] })
+  const sub1 = useGetAdminTournamentQuery({ variables: { id: subTournaments[1]?.id ?? '' }, skip: !subTournaments[1] })
+  const sub2 = useGetAdminTournamentQuery({ variables: { id: subTournaments[2]?.id ?? '' }, skip: !subTournaments[2] })
+  const sub3 = useGetAdminTournamentQuery({ variables: { id: subTournaments[3]?.id ?? '' }, skip: !subTournaments[3] })
+  const sub4 = useGetAdminTournamentQuery({ variables: { id: subTournaments[4]?.id ?? '' }, skip: !subTournaments[4] })
+  const subQueries = [sub0, sub1, sub2, sub3, sub4]
+
+  const brackets: BracketView[] = []
+
+  // MAINブラケット
+  if (mainData?.tournament) {
+    brackets.push(buildBracket(mainData.tournament))
+  }
+
+  // SUBブラケット
+  for (let i = 0; i < subTournaments.length && i < 5; i++) {
+    const subData = subQueries[i]?.data
+    if (subData?.tournament) {
+      brackets.push(buildBracket(subData.tournament))
     }
   }
 
-  const t = data.tournament
-  const bracket = buildBracket(t)
+  const t = mainData?.tournament
 
   return {
-    id: t.id,
-    name: t.name,
+    id: resolvedTournamentId || competitionId,
+    name: t?.name ?? tournamentName,
     description: '',
-    teamCount: t.slots.length,
-    placementMethod: (t.placementMethod ?? 'SEED_OPTIMIZED') as TournamentDetailView['placementMethod'],
+    teamCount: t?.slots?.length ?? 0,
+    placementMethod: (t?.placementMethod ?? 'SEED_OPTIMIZED') as TournamentDetailView['placementMethod'],
     tag: '',
-    brackets: [bracket],
+    sportId: '',
+    sceneId: '',
+    brackets,
   }
 }

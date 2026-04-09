@@ -22,13 +22,14 @@ import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { navigateToPage } from '@/hooks/useAppNavigation'
 import { useLeagueDetail } from '../hooks/useLeagueDetail'
+import { useActiveMatchLeague } from '@/features/matches/hooks/useActiveMatchLeague'
 import { ProgressionRulesEditor } from './ProgressionRulesEditor'
 import { AddEntryDialog } from './AddEntryDialog'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SportSelect } from './SportSelect'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
-import { showToast } from '@/lib/toast'
+import { showToast, showErrorToast } from '@/lib/toast'
 
 type Props = {
   leagueId: string
@@ -67,6 +68,8 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
     handleProgressionRuleChange,
   } = useLeagueDetail(leagueId, leagueName, competitionId)
 
+  const { league: leagueStandings, grid, statsMap, rankLabels } = useActiveMatchLeague(competitionId, leagueId)
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   useUnsavedWarning(dirty)
 
@@ -76,8 +79,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
       onSaved?.(form.name.trim())
       showToast('リーグを保存しました')
     } catch (e) {
-      console.error('保存エラー:', e)
-      showToast('保存に失敗しました')
+      showErrorToast('保存に失敗しました。')
     }
   }
 
@@ -100,7 +102,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
       </Breadcrumbs>
 
       {/* 編集カード */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             リーグを編集
@@ -113,7 +115,10 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
               onChange={handleChange('name')}
               fullWidth
               size="small"
+              error={!form.name.trim() && dirty}
+              helperText={!form.name.trim() && dirty ? 'この項目は必須です' : form.name.length >= 60 ? `${form.name.length}/64文字` : ''}
               sx={CARD_FIELD_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
             />
 
             <SportSelect value={form.sportId || null} onChange={(id) => setSportId(id ?? '')} sports={sports} />
@@ -132,7 +137,9 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                 value={form.winPt}
                 onChange={handleChange('winPt')}
                 size="small"
-                slotProps={{ htmlInput: { min: 0 } }}
+                error={Number(form.winPt) < 0 || !Number.isInteger(Number(form.winPt))}
+                helperText={Number(form.winPt) < 0 ? '0以上の値を入力してください' : !Number.isInteger(Number(form.winPt)) ? '整数を入力してください' : ''}
+                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
                 sx={CARD_FIELD_SX}
               />
               <TextField
@@ -141,7 +148,9 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                 value={form.drawPt}
                 onChange={handleChange('drawPt')}
                 size="small"
-                slotProps={{ htmlInput: { min: 0 } }}
+                error={Number(form.drawPt) < 0 || !Number.isInteger(Number(form.drawPt))}
+                helperText={Number(form.drawPt) < 0 ? '0以上の値を入力してください' : !Number.isInteger(Number(form.drawPt)) ? '整数を入力してください' : ''}
+                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
                 sx={CARD_FIELD_SX}
               />
               <TextField
@@ -150,7 +159,9 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                 value={form.losePt}
                 onChange={handleChange('losePt')}
                 size="small"
-                slotProps={{ htmlInput: { min: 0 } }}
+                error={Number(form.losePt) < 0 || !Number.isInteger(Number(form.losePt))}
+                helperText={Number(form.losePt) < 0 ? '0以上の値を入力してください' : !Number.isInteger(Number(form.losePt)) ? '整数を入力してください' : ''}
+                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
                 sx={CARD_FIELD_SX}
               />
             </Box>
@@ -184,7 +195,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty || !form.name.trim()}
+                disabled={!dirty || !form.name.trim() || [form.winPt, form.drawPt, form.losePt].some(v => Number(v) < 0 || !Number.isInteger(Number(v)))}
                 sx={SAVE_BUTTON_SX}
               >
                 保存
@@ -194,8 +205,129 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
         </CardContent>
       </Card>
 
+      {/* リーグ表カード */}
+      {leagueStandings && leagueStandings.matches.length > 0 && (
+        <Card elevation={0} sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
+          <CardContent sx={{ pb: '12px !important', overflow: 'hidden' }}>
+            <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 1.5 }}>
+              {leagueName} リーグ表
+            </Typography>
+            <Box sx={{ overflowX: 'auto', mx: 0.5 }}>
+              <Table size="small" sx={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#E1E4F6', fontWeight: 600, color: '#2F3C8C' }} />
+                    {leagueStandings.teams.map((team) => (
+                      <TableCell key={team.id} sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#E6E9F5', fontWeight: 600, color: '#2F3C8C' }}>
+                        {team.shortName}
+                      </TableCell>
+                    ))}
+                    {['勝ち点率', '総得点率', '順位'].map((header) => (
+                      <TableCell key={header} sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#D5D9EF', fontWeight: 600, color: '#2F3C8C', whiteSpace: 'nowrap' }}>
+                        {header}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {leagueStandings.teams.map((team, rowIdx) => {
+                    const stats = statsMap.get(team.id) ?? { points: 0, goalsFor: 0, goalsAgainst: 0, matchesPlayed: 0, winRate: 0, totalGoalRate: 0 }
+                    const rankLbl = rankLabels.get(team.id) ?? ''
+                    return (
+                      <TableRow key={team.id}>
+                        <TableCell sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#E6E9F5', fontWeight: 600, color: '#2F3C8C' }}>
+                          {team.shortName}
+                        </TableCell>
+                        {grid[rowIdx].map((cell, colIdx) => {
+                          if (cell.type === 'diagonal') {
+                            return <TableCell key={colIdx} sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#E1E4F6' }} />
+                          }
+                          const m = cell.match
+                          let resultMark = ''
+                          let resultColor = '#2F3C8C'
+                          let scoreLine = ''
+                          let statusText = ''
+
+                          if (!m) {
+                            statusText = '-'
+                          } else if (m.status === 'finished') {
+                            const isRowTeamA = m.teamAId === cell.rowTeam.id
+                            const rowWon = (isRowTeamA && m.winner === 'teamA') || (!isRowTeamA && m.winner === 'teamB')
+                            const isDraw = !m.winner || m.winner === 'draw'
+                            if (isDraw) {
+                              resultMark = '△'
+                              resultColor = '#F9A825'
+                            } else if (rowWon) {
+                              resultMark = '○'
+                              resultColor = '#2E7D32'
+                            } else {
+                              resultMark = '×'
+                              resultColor = '#D71212'
+                            }
+                            scoreLine = `${cell.homeScore}-${cell.awayScore}`
+                          } else if (m.status === 'ongoing') {
+                            statusText = '進行中'
+                            resultColor = '#F57C00'
+                          } else if (m.status === 'cancelled') {
+                            statusText = '中止'
+                            resultColor = '#9E9E9E'
+                          } else {
+                            statusText = '待機'
+                            resultColor = '#9E9E9E'
+                          }
+
+                          return (
+                            <TableCell
+                              key={colIdx}
+                              onClick={() => m && navigateToPage('active-matches', { matchId: m.id })}
+                              sx={{
+                                border: '1px solid #5B6DC6',
+                                py: 1.5,
+                                px: 1,
+                                fontSize: '11px',
+                                textAlign: 'center',
+                                backgroundColor: '#E6E9F5',
+                                ...(m ? { cursor: 'pointer', '&:hover': { backgroundColor: '#D6DBF2' } } : {}),
+                              }}
+                            >
+                              {resultMark ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+                                  <Typography sx={{ fontSize: '14px', fontWeight: 700, color: resultColor, lineHeight: 1 }}>
+                                    {resultMark}
+                                  </Typography>
+                                  <Typography sx={{ fontSize: '10px', fontWeight: 600, color: '#2F3C8C', lineHeight: 1 }}>
+                                    {scoreLine}
+                                  </Typography>
+                                </Box>
+                              ) : (
+                                <Typography sx={{ fontSize: '10px', fontWeight: 500, color: resultColor, whiteSpace: 'nowrap' }}>
+                                  {statusText}
+                                </Typography>
+                              )}
+                            </TableCell>
+                          )
+                        })}
+                        <TableCell sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#D5D9EF', color: '#2F3C8C', fontWeight: 500 }}>
+                          {stats.winRate.toFixed(3)}
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#D5D9EF', color: '#2F3C8C', fontWeight: 500 }}>
+                          {stats.totalGoalRate.toFixed(3)}
+                        </TableCell>
+                        <TableCell sx={{ border: '1px solid #5B6DC6', py: 2.7, px: 2.25, fontSize: '11px', textAlign: 'center', backgroundColor: '#D5D9EF', color: '#2F3C8C', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {rankLbl}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
       {/* エントリーカード */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {leagueName}のエントリー

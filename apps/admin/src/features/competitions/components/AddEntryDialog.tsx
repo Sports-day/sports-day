@@ -136,15 +136,6 @@ export function AddEntryDialog({ open, leagueName, existingTeamNames = [], onClo
             gap: 0.5,
             mt: 0.5,
             pr: 0.5,
-            '&::-webkit-scrollbar': { width: 6 },
-            '&::-webkit-scrollbar-track': { backgroundColor: 'transparent' },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: '#B0B8D9',
-              borderRadius: 3,
-              '&:hover': { backgroundColor: '#8A94C0' },
-            },
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#B0B8D9 transparent',
           }}
         >
           {filteredTeams.length === 0 ? (

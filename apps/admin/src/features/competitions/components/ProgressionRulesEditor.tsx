@@ -2,7 +2,7 @@ import { Box, Chip, Divider, FormControl, InputLabel, ListSubheader, MenuItem, S
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import CheckIcon from '@mui/icons-material/Check'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import type { ProgressionRule, ProgressionTarget } from '../hooks/useLeagueDetail'
+import type { ProgressionRule, ProgressionTarget } from '../types'
 import { CARD_FIELD_SX } from '@/styles/commonSx'
 import {
   COLOR_PRIMARY_DARK,
@@ -115,6 +115,7 @@ export function ProgressionRulesEditor({
                         .filter(r => r.rank !== rank && r.targetId)
                         .map(r => r.targetId),
                     )
+                    const hasBoth = availableTargets.leagues.length > 0 && availableTargets.tournaments.length > 0
                     return (
                       <Box
                         key={rank}
@@ -152,6 +153,16 @@ export function ProgressionRulesEditor({
                                   borderRadius: 1.5,
                                   boxShadow: '0 4px 16px rgba(47, 60, 140, 0.15)',
                                   mt: 0.5,
+                                  '@media (min-width: 900px)': { minWidth: hasBoth ? 420 : 280 },
+                                },
+                              },
+                              MenuListProps: {
+                                sx: {
+                                  '@media (min-width: 900px)': hasBoth ? {
+                                    columns: 2,
+                                    columnGap: '16px',
+                                    columnRule: '1px solid #D0D4E4',
+                                  } : {},
                                 },
                               },
                             }}
@@ -177,50 +188,8 @@ export function ProgressionRulesEditor({
                               )
                             }}
                           >
-                            {availableTargets.leagues.length > 0 && [
-                              <ListSubheader key="league-header" sx={{ fontSize: '11px', color: '#1565C0', fontWeight: 700, bgcolor: COLOR_BG_DEFAULT, lineHeight: '28px' }}>
-                                リーグ
-                              </ListSubheader>,
-                              ...availableTargets.leagues.map(target => {
-                                const isSelected = target.id === rule?.targetId
-                                return (
-                                  <MenuItem
-                                    key={target.id}
-                                    value={target.id}
-                                    disabled={usedTargetIds.has(target.id)}
-                                    onClick={(e) => {
-                                      if (isSelected) {
-                                        e.preventDefault()
-                                        onRuleChange(rank, '')
-                                      }
-                                    }}
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: 1,
-                                      py: 1,
-                                      backgroundColor: isSelected ? '#E8EAF6' : 'transparent',
-                                      '&:hover': { backgroundColor: isSelected ? '#DCE0F5' : '#E5E6F0' },
-                                    }}
-                                  >
-                                    <Chip
-                                      label="リーグ"
-                                      size="small"
-                                      sx={{ height: 20, fontSize: '10px', fontWeight: 600, backgroundColor: '#E3F2FD', color: '#1565C0' }}
-                                    />
-                                    <Typography sx={{ fontSize: '13px', color: COLOR_PRIMARY_DARK, fontWeight: isSelected ? 600 : 400, flex: 1 }}>
-                                      {target.name}
-                                    </Typography>
-                                    {isSelected && <CheckIcon sx={{ fontSize: 16, color: COLOR_PRIMARY_BUTTON }} />}
-                                  </MenuItem>
-                                )
-                              }),
-                            ]}
-                            {availableTargets.leagues.length > 0 && availableTargets.tournaments.length > 0 && (
-                              <Divider key="divider" sx={{ my: 0.5 }} />
-                            )}
                             {availableTargets.tournaments.length > 0 && [
-                              <ListSubheader key="tournament-header" sx={{ fontSize: '11px', color: '#6A1B9A', fontWeight: 700, bgcolor: COLOR_BG_DEFAULT, lineHeight: '28px' }}>
+                              <ListSubheader key="tournament-header" sx={{ fontSize: '11px', color: '#6A1B9A', fontWeight: 700, bgcolor: COLOR_BG_DEFAULT, lineHeight: '28px', borderBottom: '1px solid #E0E0E0', mb: 0.5 }}>
                                 トーナメント
                               </ListSubheader>,
                               ...availableTargets.tournaments.map(target => {
@@ -241,6 +210,7 @@ export function ProgressionRulesEditor({
                                       alignItems: 'center',
                                       gap: 1,
                                       py: 1,
+                                      breakInside: 'avoid',
                                       backgroundColor: isSelected ? '#E8EAF6' : 'transparent',
                                       '&:hover': { backgroundColor: isSelected ? '#DCE0F5' : '#E5E6F0' },
                                     }}
@@ -249,6 +219,49 @@ export function ProgressionRulesEditor({
                                       label="トーナメント"
                                       size="small"
                                       sx={{ height: 20, fontSize: '10px', fontWeight: 600, backgroundColor: '#F3E5F5', color: '#6A1B9A' }}
+                                    />
+                                    <Typography sx={{ fontSize: '13px', color: COLOR_PRIMARY_DARK, fontWeight: isSelected ? 600 : 400, flex: 1 }}>
+                                      {target.name}
+                                    </Typography>
+                                    {isSelected && <CheckIcon sx={{ fontSize: 16, color: COLOR_PRIMARY_BUTTON }} />}
+                                  </MenuItem>
+                                )
+                              }),
+                            ]}
+                            {availableTargets.leagues.length > 0 && availableTargets.tournaments.length > 0 && (
+                              <Divider key="divider" sx={{ my: 0.5, '@media (min-width: 900px)': { display: 'none' } }} />
+                            )}
+                            {availableTargets.leagues.length > 0 && [
+                              <ListSubheader key="league-header" sx={{ fontSize: '11px', color: '#1565C0', fontWeight: 700, bgcolor: COLOR_BG_DEFAULT, lineHeight: '28px', borderBottom: '1px solid #E0E0E0', mb: 0.5, ...(hasBoth ? { '@media (min-width: 900px)': { breakBefore: 'column' } } : {}) }}>
+                                リーグ
+                              </ListSubheader>,
+                              ...availableTargets.leagues.map(target => {
+                                const isSelected = target.id === rule?.targetId
+                                return (
+                                  <MenuItem
+                                    key={target.id}
+                                    value={target.id}
+                                    disabled={usedTargetIds.has(target.id)}
+                                    onClick={(e) => {
+                                      if (isSelected) {
+                                        e.preventDefault()
+                                        onRuleChange(rank, '')
+                                      }
+                                    }}
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 1,
+                                      py: 1,
+                                      breakInside: 'avoid',
+                                      backgroundColor: isSelected ? '#E8EAF6' : 'transparent',
+                                      '&:hover': { backgroundColor: isSelected ? '#DCE0F5' : '#E5E6F0' },
+                                    }}
+                                  >
+                                    <Chip
+                                      label="リーグ"
+                                      size="small"
+                                      sx={{ height: 20, fontSize: '10px', fontWeight: 600, backgroundColor: '#E3F2FD', color: '#1565C0' }}
                                     />
                                     <Typography sx={{ fontSize: '13px', color: COLOR_PRIMARY_DARK, fontWeight: isSelected ? 600 : 400, flex: 1 }}>
                                       {target.name}

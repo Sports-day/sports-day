@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CompetitionListPage } from './CompetitionListPage'
 import { CompetitionCreatePage } from './CompetitionCreatePage'
 import { LeagueDetailPage } from './LeagueDetailPage'
@@ -9,9 +10,25 @@ import { useResetToList } from '@/hooks/useResetToList'
 type View = 'list' | 'create' | 'league-detail' | 'tournament-detail'
 
 export function CompetitionsContainer() {
-  const [view, setView] = useState<View>('list')
-  const [competitionId, setCompetitionId] = useState('')
-  const [competitionName, setCompetitionName] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 試合詳細からの戻り先ディープリンク（?competitionId=xxx&competitionName=xxx&type=TOURNAMENT）
+  const [view, setView] = useState<View>(() => {
+    const cid = searchParams.get('competitionId')
+    const cname = searchParams.get('competitionName')
+    const ctype = searchParams.get('type')
+    if (cid && cname) return ctype === 'LEAGUE' ? 'league-detail' : 'tournament-detail'
+    return 'list'
+  })
+  const [competitionId, setCompetitionId] = useState(() => searchParams.get('competitionId') ?? '')
+  const [competitionName, setCompetitionName] = useState(() => searchParams.get('competitionName') ?? '')
+
+  // ディープリンクで開いた場合はURLパラメータをクリア
+  useEffect(() => {
+    if (searchParams.get('competitionId')) {
+      setSearchParams({}, { replace: true })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useResetToList(view === 'list', useCallback(() => setView('list'), []))
 

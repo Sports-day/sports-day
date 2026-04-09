@@ -38,7 +38,7 @@ export function CompetitionCreatePage({ onBack, onSave }: Props) {
         新規作成
       </Typography>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             大会の情報
@@ -48,14 +48,14 @@ export function CompetitionCreatePage({ onBack, onSave }: Props) {
             <TextField
               label="大会名*"
               placeholder="例: バスケットボール晴天時"
-              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : undefined}
+              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : form.name.length >= 60 ? `${form.name.length}/64文字` : undefined}
               value={form.name}
               onChange={handleChange('name')}
               fullWidth
               size="small"
               error={submitted && !form.name.trim()}
               sx={FIELD_SX}
-              slotProps={{ inputLabel: { shrink: true } }}
+              slotProps={{ inputLabel: { shrink: true }, htmlInput: { maxLength: 64 } }}
             />
 
             <SportSelect value={sportId || null} onChange={(id) => setSportId(id ?? '')} sports={sports} />

@@ -5,6 +5,7 @@ import {
   useGetAdminSportsWithScenesQuery,
   CompetitionType,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 type CompetitionCreateForm = {
   name: string
@@ -41,7 +42,7 @@ export function useCompetitionCreate(onSuccess: (id: string, name: string, type:
       const result = await createCompetition({
         variables: {
           input: {
-            name: form.name,
+            name: form.name.slice(0, 64),
             type: form.competitionType,
             sportId: form.sportId,
             sceneId: form.sceneId,
@@ -55,6 +56,7 @@ export function useCompetitionCreate(onSuccess: (id: string, name: string, type:
       onSuccess(created.id, created.name, created.type)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
   }
 

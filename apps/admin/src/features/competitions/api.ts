@@ -21,7 +21,6 @@ export const GET_ADMIN_COMPETITION = gql`
       sport { id name }
       scene { id name }
       teams { id name group { id name } }
-      league { id name }
     }
   }
 `
@@ -84,7 +83,7 @@ export const GET_ADMIN_TOURNAMENT = gql`
   query GetAdminTournament($id: ID!) {
     tournament(id: $id) {
       id
-      competition { id name }
+      competition { id name teams { id name } }
       name
       bracketType
       placementMethod
@@ -238,6 +237,18 @@ export const CREATE_ADMIN_TOURNAMENT = gql`
       id
       name
       bracketType
+    }
+  }
+`
+
+export const GENERATE_ADMIN_SUB_BRACKET = gql`
+  mutation GenerateAdminSubBracket($input: GenerateSubBracketInput!) {
+    generateSubBracket(input: $input) {
+      id
+      name
+      bracketType
+      state
+      progress
     }
   }
 `

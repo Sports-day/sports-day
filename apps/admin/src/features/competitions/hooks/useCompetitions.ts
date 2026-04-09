@@ -8,6 +8,8 @@ export function useCompetitions() {
     name: c.name,
     type: c.type,
     sceneName: c.scene.name,
+    sportId: c.sport.id,
+    sportName: c.sport.name,
   }))
   return { data: competitions, loading, error: error ?? null }
 }

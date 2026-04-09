@@ -3,11 +3,14 @@ export type Competition = {
   name: string
   type: string
   sceneName: string
+  sportId: string
+  sportName: string
 }
 
 // ─── Tournament bracket types ───
 
 export type TournamentSlotView = {
+  slotId?: string
   sourceType: 'SEED' | 'MATCH_WINNER' | 'MATCH_LOSER'
   sourceMatchId?: string
   seedNumber?: number
@@ -42,5 +45,20 @@ export type TournamentDetailView = {
   teamCount: number
   placementMethod: 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
   tag: string
+  sportId: string
+  sceneId: string
   brackets: BracketView[]
+}
+
+// ─── Progression rule types (shared between league & tournament) ───
+
+export type ProgressionRule = {
+  rank: number
+  targetId: string
+}
+
+export type ProgressionTarget = {
+  id: string
+  name: string
+  type: 'league' | 'tournament'
 }
