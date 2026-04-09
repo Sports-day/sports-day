@@ -2,7 +2,6 @@ import {
     Box,
     Stack,
     Typography,
-    DialogContentText,
     useTheme
 } from "@mui/material";
 import {
@@ -166,14 +165,16 @@ export const DocsOverall = () => {
                     </TimelineContent>
                 </TimelineItem>
             </Timeline>
-            <DialogContentText
+            <Box
                 id="scroll-dialog-description"
                 tabIndex={-1}
-                color={theme.palette.text.primary}
-                lineHeight={"27px"}
+                sx={{
+                    color: theme.palette.text.primary,
+                    lineHeight: "27px",
+                }}
             >
                 <ReactMarkdown>{markdown}</ReactMarkdown>
-            </DialogContentText>
+            </Box>
 
         </Stack>
     )
