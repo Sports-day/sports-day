@@ -73,7 +73,10 @@ export default function DiscoverPage() {
 
     const [searchText, setSearchText] = React.useState("");
     const filteredUsers = searchText
-        ? users.filter(user => user.name.toLowerCase().includes(searchText.toLowerCase()))
+        ? users.filter(user =>
+            user.name.toLowerCase().includes(searchText.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchText.toLowerCase())
+        )
         : [];
 
     const [value, setValue] = React.useState(0);
@@ -175,7 +178,7 @@ export default function DiscoverPage() {
                                             color: `${theme.palette.text.primary}FF`,
                                             border: `1px solid ${theme.palette.text.primary}4D`,
                                             borderRadius: "15px"
-                                        }} label={"学籍番号で検索"} {...a11yProps(1)} />
+                                        }} label={"名前で検索"} {...a11yProps(1)} />
                                         <Tab sx={{
                                             zIndex: 1,
                                             mr: 1,
@@ -207,7 +210,7 @@ export default function DiscoverPage() {
                                                 fullWidth
                                                 value={searchText}
                                                 onChange={event => setSearchText(event.target.value)}
-                                                placeholder="学籍番号を入力"
+                                                placeholder="名前またはメールアドレスを入力"
                                             />
                                         </Box>
 
