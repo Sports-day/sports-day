@@ -164,7 +164,7 @@ export default function Page() {
                                                         <Typography pl={2} pt={2}>
                                                             すべての競技
                                                         </Typography>
-                                                        {sports
+                                                        {[...sports]
                                                             .sort((a, b) => b.weight - a.weight)
                                                             .map((sport) => {
                                                                 return (

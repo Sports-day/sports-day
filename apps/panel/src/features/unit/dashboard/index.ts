@@ -69,6 +69,70 @@ export const useFetchDashboard = () => {
   const [myTeamRankState, setMyTeamRank] = useState<number>(0);
   const [myJudgeMatchesState, setMyJudgeMatches] = useState<GqlMatch[]>([]);
 
+  // 全サブクエリの完了を検知してデータを処理
+  const allLoaded =
+    !isFetchingImages &&
+    !isFetchingLocations &&
+    !isFetchingTeams &&
+    !isFetchingSports &&
+    !isFetchingGames &&
+    !isFetchingMatches &&
+    !isFetchingUsers &&
+    !isFetchingUserinfo;
+
+  useEffect(() => {
+    if (!allLoaded) return;
+
+    if (user) {
+      const myTeamIds = (user as GqlMeUser).teams.map((t) => t.id);
+
+      if (myTeamIds.length > 0) {
+        const myCompetitions = (games as GqlCompetition[]).filter((c) =>
+          c.teams.some((t) => myTeamIds.includes(t.id))
+        );
+
+        if (myCompetitions.length > 0) {
+          const competitionsByWeight = [...myCompetitions].sort((a, b) => {
+            const sportA = sports.find((s) => s.id === a.sport?.id);
+            const sportB = sports.find((s) => s.id === b.sport?.id);
+            return (sportB?.weight ?? 0) - (sportA?.weight ?? 0);
+          });
+          const myCompetition = competitionsByWeight[0];
+          setMyGame(myCompetition);
+
+          const myTeam = teams.find(
+            (t) =>
+              myTeamIds.includes(t.id) &&
+              myCompetition.teams.some((ct) => ct.id === t.id)
+          );
+
+          if (myTeam) {
+            setMyTeam(myTeam);
+            setMyTeamUsers(myTeam.users);
+
+            const mySport = sports.find((s) => s.id === myCompetition.sport?.id);
+            if (mySport) setMySport(mySport);
+
+            const myCompetitionMatches = matches.filter(
+              (m) => m.competition.id === myCompetition.id
+            );
+            setMyTeamMatches(
+              myCompetitionMatches.filter((m) =>
+                m.entries.some((e) => e.team?.id === myTeam.id)
+              )
+            );
+
+            setMyJudgeMatches(
+              matches.filter((m) => m.judgment?.team?.id === myTeam.id)
+            );
+          }
+        }
+      }
+    }
+
+    setIsFetching(false);
+  }, [allLoaded, user, games, sports, teams, matches]);
+
   // myGame が確定したら standings / ranking を取得してランクを更新
   const myGameLeagueId = myGameState?.league?.id ?? '';
   const isLeagueGame = myGameState?.type === CompetitionType.League;
@@ -89,83 +153,6 @@ export const useFetchDashboard = () => {
     const rank = leagueRank ?? tournamentRank;
     if (rank !== undefined) setMyTeamRank(rank);
   }, [standingsData, rankingData, myTeamState]);
-
-  if (
-    !isFetchingImages &&
-    !isFetchingLocations &&
-    !isFetchingTeams &&
-    !isFetchingSports &&
-    !isFetchingGames &&
-    !isFetchingMatches &&
-    !isFetchingUsers &&
-    !isFetchingUserinfo &&
-    isFetching
-  ) {
-    fetchBlock: {
-      if (!user) break fetchBlock;
-
-      // me.teams → 自分が所属するチーム ID 一覧
-      const myTeamIds = (user as GqlMeUser).teams.map((t) => t.id);
-      if (myTeamIds.length === 0) break fetchBlock;
-
-      // competitions（旧 games）のうち、自分のチームが参加しているものを抽出
-      const myCompetitions = (games as GqlCompetition[]).filter((c) =>
-        c.teams.some((t) => myTeamIds.includes(t.id))
-      );
-      if (myCompetitions.length === 0) break fetchBlock;
-
-      // competition の sport weight でソートして最重要 competition を決定
-      const competitionsByWeight = [...myCompetitions].sort((a, b) => {
-        const sportA = sports.find((s) =>
-          s.scene?.some((ss) => ss.scene.id === a.scene.id)
-        );
-        const sportB = sports.find((s) =>
-          s.scene?.some((ss) => ss.scene.id === b.scene.id)
-        );
-        return (sportB?.weight ?? 0) - (sportA?.weight ?? 0);
-      });
-      const myCompetition = competitionsByWeight[0];
-      setMyGame(myCompetition);
-
-      // my team（teams 一覧から、competition に参加かつ自分が所属するチームを特定）
-      const myTeam = teams.find(
-        (t) =>
-          myTeamIds.includes(t.id) &&
-          myCompetition.teams.some((ct) => ct.id === t.id)
-      );
-      if (!myTeam) break fetchBlock;
-      setMyTeam(myTeam);
-
-      // my team users（team.users から取得）
-      setMyTeamUsers(myTeam.users);
-
-      // my sport
-      const mySport = sports.find((s) =>
-        s.scene?.some((ss) => ss.scene.id === myCompetition.scene.id)
-      );
-      if (!mySport) break fetchBlock;
-      setMySport(mySport);
-
-      // my competition matches → my team matches
-      const myCompetitionMatches = matches.filter(
-        (m) => m.competition.id === myCompetition.id
-      );
-      const myTeamMatches = myCompetitionMatches.filter((m) =>
-        m.entries.some((e) => e.team?.id === myTeam.id)
-      );
-      setMyTeamMatches(myTeamMatches);
-
-      // 順位は useEffect 内で leagueStandings / tournamentRanking から更新される
-
-      // 自分のチームが審判を担当する試合
-      const myJudgeMatches = matches.filter(
-        (m) => m.judgment?.team?.id === myTeam.id
-      );
-      setMyJudgeMatches(myJudgeMatches);
-    }
-
-    setIsFetching(false);
-  }
 
   return {
     isFetching: isFetching,
