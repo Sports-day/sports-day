@@ -28,7 +28,7 @@ export default function Confirm() {
         <Warning warncomment="全員が正しくチームに登録されているかを確認してください"></Warning>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px", mb: "8px" }}>
           <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#FF9800", flexShrink: 0 }} />
-          <Typography sx={{ fontSize: "11px", color: "#999" }}>経験者</Typography>
+          <Typography sx={{ fontSize: "11px", color: "#999", lineHeight: 1 }}>経験者</Typography>
         </Box>
         <ConfirmPage />
       </Stack>

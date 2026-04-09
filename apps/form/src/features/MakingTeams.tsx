@@ -118,7 +118,7 @@ export default function MakingTeams({
                   flexShrink: 0,
                 }}
               />
-              <Typography sx={{ fontSize: "11px", color: "#999" }}>
+              <Typography sx={{ fontSize: "11px", color: "#999", lineHeight: 1 }}>
                 経験者
               </Typography>
             </Box>
