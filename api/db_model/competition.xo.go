@@ -9,9 +9,13 @@ import (
 
 // Competition represents a row from 'sportsday.competitions'.
 type Competition struct {
-	ID      string         `json:"id"`       // 主キー
-	Name    string         `json:"name"`     // 大会名
-	Type    string         `json:"type"`     // 大会種別
-	SceneID string         `json:"scene_id"` // シーンID
-	SportID sql.NullString `json:"sport_id"` // 競技ID
+	ID                string         `json:"id"`                  // 主キー
+	Name              string         `json:"name"`                // 大会名
+	Type              string         `json:"type"`                // 大会種別
+	SceneID           string         `json:"scene_id"`            // シーンID
+	SportID           sql.NullString `json:"sport_id"`            // 競技ID
+	StartTime         sql.NullTime   `json:"start_time"`          // スケジュール開始時刻
+	MatchDuration     sql.NullInt64  `json:"match_duration"`      // 試合時間（分）
+	BreakDuration     sql.NullInt64  `json:"break_duration"`      // 休憩時間（分）
+	DefaultLocationID sql.NullString `json:"default_location_id"` // デフォルト場所ID
 }
