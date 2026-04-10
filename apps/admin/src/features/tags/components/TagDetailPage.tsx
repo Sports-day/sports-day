@@ -1,6 +1,7 @@
 import { Box, Breadcrumbs, Button, ButtonBase, Card, CardContent, TextField, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
+import { BackButton } from '@/components/ui/BackButton'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { useTagDetail } from '../hooks/useTagDetail'
@@ -38,6 +39,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           タグ

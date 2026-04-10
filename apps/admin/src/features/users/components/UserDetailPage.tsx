@@ -9,6 +9,7 @@ import {
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
+import { BackButton } from '@/components/ui/BackButton'
 import { useUserDetail } from '../hooks/useUserDetail'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { showToast } from '@/lib/toast'
@@ -62,6 +63,7 @@ export function UserDetailPage({ userId, onBack }: Props) {
   return (
     <Box>
       {/* パンくずリスト */}
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           ユーザー

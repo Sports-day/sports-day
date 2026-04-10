@@ -23,6 +23,7 @@ import { LeagueRegenerateOverlay } from './LeagueRegenerateOverlay'
 import { ActiveMatchBulkEditPage } from './ActiveMatchBulkEditPage'
 import { MatchEditPage } from './MatchEditPage'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
+import { BackButton } from '@/components/ui/BackButton'
 import { showToast } from '@/lib/toast'
 import { useExecuteProgression } from '../hooks/useExecuteProgression'
 import { TiebreakCard } from './TiebreakCard'
@@ -79,6 +80,7 @@ export function ActiveMatchLeaguePage({
   if (!league) {
     return (
       <Box>
+        <BackButton onClick={onBackToList} />
         <Breadcrumbs separator="/" sx={{ mb: 2 }}>
           <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>試合</ButtonBase>
           <Typography sx={BREADCRUMB_CURRENT_SX}>{leagueName}</Typography>
@@ -170,6 +172,7 @@ export function ActiveMatchLeaguePage({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合

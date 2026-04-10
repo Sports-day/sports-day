@@ -1,4 +1,5 @@
 import { Box, Breadcrumbs, Button, ButtonBase, Chip, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import { useImageDetail } from '../hooks/useImageDetail'
 import { showToast } from '@/lib/toast'
 import { DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
@@ -19,6 +20,7 @@ export function ImageDetailPage({ imageId, onBack }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           画像

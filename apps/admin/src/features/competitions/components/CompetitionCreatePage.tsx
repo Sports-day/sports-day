@@ -7,6 +7,7 @@ import { SportSelect } from './SportSelect'
 import { CompetitionTypeSelect } from './CompetitionTypeSelect'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX, CARD_FIELD_SX } from '@/styles/commonSx'
+import { BackButton } from '@/components/ui/BackButton'
 
 const FIELD_SX = {
   ...CARD_FIELD_SX,
@@ -25,6 +26,7 @@ export function CompetitionCreatePage({ onBack, onSave }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 1 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           大会

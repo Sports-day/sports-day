@@ -1,4 +1,5 @@
 import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, TextField, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import { useState } from 'react'
 import { useSportCreate } from '../hooks/useSportCreate'
 import { showToast } from '@/lib/toast'
@@ -22,6 +23,7 @@ export function SportCreatePage({ onBack, onSave }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           競技

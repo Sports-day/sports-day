@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import CheckIcon from '@mui/icons-material/Check'
+import { BackButton } from '@/components/ui/BackButton'
 import { useTeamBulkRename } from '../hooks/useTeamBulkRename'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
@@ -45,6 +46,7 @@ export function TeamBulkRenamePage({ onBack }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           チーム

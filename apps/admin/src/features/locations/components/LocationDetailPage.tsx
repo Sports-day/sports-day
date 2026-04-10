@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
+import { BackButton } from '@/components/ui/BackButton'
 import { useLocationDetail } from '../hooks/useLocationDetail'
 import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, CARD_FIELD_SX } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
@@ -50,6 +51,7 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           場所

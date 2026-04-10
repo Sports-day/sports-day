@@ -16,6 +16,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
+import { BackButton } from '@/components/ui/BackButton'
 import { useClassDetail } from '../hooks/useClassDetail'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { showToast } from '@/lib/toast'
@@ -72,6 +73,7 @@ export function ClassDetailPage({ classId, onBack }: Props) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           クラス

@@ -1,6 +1,7 @@
 import { Box, Breadcrumbs, Card, CardContent, Divider, Typography } from '@mui/material'
 import { ButtonBase } from '@mui/material'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
+import { BackButton } from '@/components/ui/BackButton'
 import { showToast } from '@/lib/toast'
 import { useTournamentDetail } from '@/features/competitions/hooks/useTournamentDetail'
 import { TournamentBracketView } from '@/features/competitions/components/TournamentBracketView'
@@ -30,6 +31,7 @@ export function ActiveMatchTournamentPage({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合

@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react'
 import { Box, Breadcrumbs, ButtonBase, Button, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import InsertPhotoIcon from '@mui/icons-material/InsertPhoto'
 import CloseIcon from '@mui/icons-material/Close'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import { useImageCreate } from '../hooks/useImageCreate'
 import { showToast } from '@/lib/toast'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
@@ -72,6 +74,7 @@ export function ImageCreatePage({ onBack }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           画像
@@ -193,9 +196,12 @@ export function ImageCreatePage({ onBack }: Props) {
         )}
 
         {error && (
-          <Typography sx={{ fontSize: '13px', color: '#D71212', mt: 1.5 }}>
-            アップロードに失敗しました。ファイルを確認して再度お試しください。
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5, backgroundColor: '#F5F0FF', borderRadius: 1, px: 1.5, py: 1, border: '1px solid #D5D9EF' }}>
+            <ErrorOutlineIcon sx={{ fontSize: 18, color: '#5B6DC6' }} />
+            <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
+              アップロードに失敗しました。ファイルを確認して再度お試しください。
+            </Typography>
+          </Box>
         )}
 
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>

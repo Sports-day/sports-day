@@ -1,4 +1,5 @@
 import { Box, Breadcrumbs, Button, ButtonBase, Card, CardContent, MenuItem, TextField, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import CheckIcon from '@mui/icons-material/Check'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
@@ -33,6 +34,7 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           お知らせ

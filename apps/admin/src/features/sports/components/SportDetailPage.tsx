@@ -14,6 +14,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
 import ImageIcon from '@mui/icons-material/Image'
 import CloseIcon from '@mui/icons-material/Close'
+import { BackButton } from '@/components/ui/BackButton'
 import { useSportDetail } from '../hooks/useSportDetail'
 import { ImageSelectDialog } from './ImageSelectDialog'
 import { SportRulesSection } from './SportRulesSection'
@@ -83,6 +84,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           競技

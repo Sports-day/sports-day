@@ -1,4 +1,5 @@
 import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import { useState } from 'react'
 import { useTagCreate } from '../hooks/useTagCreate'
 import { showToast } from '@/lib/toast'
@@ -35,6 +36,7 @@ export function TagCreatePage({ onBack }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           タグ

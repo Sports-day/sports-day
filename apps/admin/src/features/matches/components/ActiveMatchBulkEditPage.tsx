@@ -21,6 +21,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckIcon from '@mui/icons-material/Check'
 import { useLocations } from '@/features/locations/hooks/useLocations'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BackButton } from '@/components/ui/BackButton'
 import type { BulkEditRow } from '../hooks/useBulkEdit'
 
 const FIELD_SX = {
@@ -93,6 +94,7 @@ export function ActiveMatchBulkEditPage({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
