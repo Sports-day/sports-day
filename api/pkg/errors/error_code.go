@@ -55,6 +55,8 @@ var (
 	ErrSportEntryAlreadyExists        = NewError("SPORT_ENTRY_ALREADY_EXISTS", "このスポーツシーンとチームの組み合わせは既に存在します")
 	ErrExperiencedLimitExceeded       = NewError("EXPERIENCED_LIMIT_EXCEEDED", "チームの経験者数が上限を超えています")
 
+	ErrMatchesInProgress = NewError("MATCHES_IN_PROGRESS", "進行中または終了した試合があるためエントリーを変更できません")
+
 	ErrPromotionRuleNotFound   = NewError("PROMOTION_RULE_NOT_FOUND", "進出ルールが見つかりません")
 	ErrSavePromotionRule       = NewError("PROMOTION_RULE_SAVE_FAILED", "進出ルールの保存に失敗しました")
 	ErrDeletePromotionRule     = NewError("PROMOTION_RULE_DELETE_FAILED", "進出ルールの削除に失敗しました")

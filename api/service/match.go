@@ -157,9 +157,11 @@ func (s *Match) UpdateDetail(ctx context.Context, id string, input model.UpdateM
 			return nil, errors.Wrap(err)
 		}
 		match.Time = parsedTime
+		match.TimeManual = true
 	}
 	if input.LocationID != nil {
 		match.LocationID = pkggorm.ToNullString(input.LocationID)
+		match.LocationManual = true
 	}
 
 	match, err = s.matchRepository.Save(ctx, s.db, match)

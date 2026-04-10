@@ -55,6 +55,10 @@ type Competition {
   matches: [Match!]!
   league: League
   tournaments: [Tournament!]!
+  startTime: String
+  matchDuration: Int
+  breakDuration: Int
+  defaultLocation: Location
 }
 
 type Location {
@@ -85,6 +89,8 @@ type Match {
   winnerTeam: Team
   entries: [MatchEntry!]!
   judgment: Judgment
+  timeManual: Boolean!
+  locationManual: Boolean!
 }
 
 type Judgment {

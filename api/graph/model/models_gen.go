@@ -16,6 +16,13 @@ type AddSportScenesInput struct {
 	SportIds []string `json:"sportIds"`
 }
 
+type ApplyCompetitionDefaultsInput struct {
+	StartTime     string  `json:"startTime"`
+	MatchDuration int32   `json:"matchDuration"`
+	BreakDuration int32   `json:"breakDuration"`
+	LocationID    *string `json:"locationId,omitempty"`
+}
+
 // SEEDスロットへのチーム手動配置
 type AssignSeedTeamInput struct {
 	SlotID string  `json:"slotId"`

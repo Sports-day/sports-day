@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"math/rand"
+	"sort"
+	"time"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
+	pkggorm "sports-day/api/pkg/gorm"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
 
@@ -63,7 +66,10 @@ func (s *Competition) Create(ctx context.Context, input *model.CreateCompetition
 		// LEAGUE型の場合はLeagueレコードも自動作成
 		if input.Type == model.CompetitionTypeLeague {
 			league := &db_model.League{
-				ID: competitionID,
+				ID:     competitionID,
+				WinPt:  3,
+				DrawPt: 1,
+				LosePt: 0,
 			}
 			if _, err := s.leagueRepository.Save(ctx, tx, league); err != nil {
 				return errors.ErrSaveLeague
@@ -144,6 +150,11 @@ func (s *Competition) AddEntries(ctx context.Context, competitionId string, team
 	var competition *db_model.Competition
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 進行中/終了試合チェック
+		if err := s.checkNoMatchesInProgress(ctx, tx, competitionId); err != nil {
+			return err
+		}
+
 		// tx を使って大会取得
 		comp, err := s.competitionRepository.Get(ctx, tx, competitionId)
 		if err != nil {
@@ -160,22 +171,51 @@ func (s *Competition) AddEntries(ctx context.Context, competitionId string, team
 	})
 
 	if err != nil {
-		return nil, errors.ErrAddCompetitionEntry
+		return nil, err
 	}
 	return competition, nil
 }
 
 func (s *Competition) DeleteEntries(ctx context.Context, competitionId string, teamIds []string) (*db_model.Competition, error) {
-	competition, err := s.competitionRepository.Get(ctx, s.db, competitionId)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
+	var competition *db_model.Competition
 
-	_, err = s.competitionRepository.DeleteCompetitionEntries(ctx, s.db, competitionId, teamIds)
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 進行中/終了試合チェック
+		if err := s.checkNoMatchesInProgress(ctx, tx, competitionId); err != nil {
+			return err
+		}
+
+		comp, err := s.competitionRepository.Get(ctx, tx, competitionId)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		competition = comp
+
+		if _, err := s.competitionRepository.DeleteCompetitionEntries(ctx, tx, competitionId, teamIds); err != nil {
+			return errors.Wrap(err)
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		return nil, errors.ErrDeleteCompetitionEntry
+		return nil, err
 	}
 	return competition, nil
+}
+
+// checkNoMatchesInProgress は大会内にONGOINGまたはFINISHEDの試合がないことを確認する。
+func (s *Competition) checkNoMatchesInProgress(ctx context.Context, tx *gorm.DB, competitionId string) error {
+	matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{competitionId})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	for _, m := range matches {
+		if m.Status == "ONGOING" || m.Status == "FINISHED" {
+			return errors.ErrMatchesInProgress
+		}
+	}
+	return nil
 }
 
 func (s *Competition) GetCompetitionsMapByIDs(ctx context.Context, competitionIDs []string) (map[string]*db_model.Competition, error) {
@@ -1198,4 +1238,87 @@ func (s *Competition) FindBySceneID(ctx context.Context, sceneID string) ([]*db_
 		return nil, errors.Wrap(err)
 	}
 	return competitions, nil
+}
+
+// ApplyDefaults は大会のスケジュールパラメータを保存し、試合時間を自動適用する。
+// 手動設定された試合は変更せず、新たな基準点として後続の試合時間をずらす。
+func (s *Competition) ApplyDefaults(ctx context.Context, id string, input *model.ApplyCompetitionDefaultsInput) ([]*db_model.Match, error) {
+	startTime, err := time.Parse(time.RFC3339, input.StartTime)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	var allMatches []*db_model.Match
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		// 1. スケジュールパラメータをcompetitionに保存
+		comp, err := s.competitionRepository.Get(ctx, tx, id)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		comp.StartTime = sql.NullTime{Valid: true, Time: startTime}
+		comp.MatchDuration = sql.NullInt64{Valid: true, Int64: int64(input.MatchDuration)}
+		comp.BreakDuration = sql.NullInt64{Valid: true, Int64: int64(input.BreakDuration)}
+		comp.DefaultLocationID = pkggorm.ToNullString(input.LocationID)
+
+		if _, err := s.competitionRepository.Save(ctx, tx, comp); err != nil {
+			return errors.ErrSaveCompetition
+		}
+
+		// 2. 大会の全試合を取得
+		matches, err := s.matchRepository.BatchGetMatchesByCompetitionIDs(ctx, tx, []string{id})
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		// 3. ID順（ULID=生成順）にソート
+		sort.Slice(matches, func(i, j int) bool {
+			return matches[i].ID < matches[j].ID
+		})
+
+		// 4. 手動変更を基準点として後続試合の時間をずらすロジック
+		interval := time.Duration(input.MatchDuration+input.BreakDuration) * time.Minute
+		anchor := startTime
+		autoIndex := 0
+
+		// デフォルト場所の設定
+		locationID := pkggorm.ToNullString(input.LocationID)
+
+		for _, m := range matches {
+			needsSave := false
+
+			// 時間の適用
+			if m.TimeManual {
+				// 手動設定: 時間は変更せず、新たな基準点にする
+				anchor = m.Time.Add(interval)
+				autoIndex = 0
+			} else {
+				// 自動設定: anchor + autoIndex * interval
+				m.Time = anchor.Add(time.Duration(autoIndex) * interval)
+				needsSave = true
+				autoIndex++
+			}
+
+			// 場所の適用: 手動設定でない試合のみ
+			if !m.LocationManual && locationID.Valid {
+				m.LocationID = locationID
+				needsSave = true
+			}
+
+			if needsSave {
+				if _, err := s.matchRepository.Save(ctx, tx, m); err != nil {
+					return errors.ErrSaveMatch
+				}
+			}
+		}
+
+		allMatches = matches
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return allMatches, nil
 }

@@ -287,6 +287,13 @@ input UpdatePromotionRuleInput {
   slot: Int
 }
 
+input ApplyCompetitionDefaultsInput {
+  startTime: String!
+  matchDuration: Int!
+  breakDuration: Int!
+  locationId: ID
+}
+
 input CreateRuleInput {
   rule: String!
   sportId: ID
@@ -535,6 +542,14 @@ type Mutation {
   リーグの総当たり戦を自動生成する
   """
   generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]! @hasPermission(permission: "competition:write")
+  """
+  リーグの総当たり戦をデフォルト設定で再生成する（既存試合を削除して再作成）
+  """
+  regenerateRoundRobin(id: ID!): [Match!]! @hasPermission(permission: "competition:write")
+  """
+  大会のデフォルト設定を適用する（手動設定された試合時間・場所はスキップ）
+  """
+  applyCompetitionDefaults(id: ID!, input: ApplyCompetitionDefaultsInput!): [Match!]! @hasPermission(permission: "competition:write")
   """
   スポーツのランキングルールを設定する（全削除→再挿入）
   """

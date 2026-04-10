@@ -98,6 +98,21 @@ func (r *competitionResolver) Tournaments(ctx context.Context, obj *model.Compet
 	return r.computeBracketStateForTournaments(ctx, tournaments)
 }
 
+// DefaultLocation is the resolver for the defaultLocation field.
+func (r *competitionResolver) DefaultLocation(ctx context.Context, obj *model.Competition) (*model.Location, error) {
+	if obj.DefaultLocationID == "" {
+		return nil, nil
+	}
+	locations, err := loader.LoadLocations(ctx, []string{obj.DefaultLocationID})
+	if err != nil {
+		return nil, err
+	}
+	if len(locations) == 0 || locations[0] == nil {
+		return nil, nil
+	}
+	return model.FormatLocationResponse(locations[0]), nil
+}
+
 // Teams is the resolver for the teams field.
 func (r *groupResolver) Teams(ctx context.Context, obj *model.Group) ([]*model.Team, error) {
 	groupTeams, err := loader.LoadGroupTeams(ctx, obj.ID)

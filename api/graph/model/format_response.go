@@ -122,12 +122,35 @@ func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
 	if competition.SportID.Valid {
 		sportID = competition.SportID.String
 	}
+	var startTime *string
+	if competition.StartTime.Valid {
+		s := competition.StartTime.Time.Format(time.RFC3339)
+		startTime = &s
+	}
+	var matchDuration *int32
+	if competition.MatchDuration.Valid {
+		d := int32(competition.MatchDuration.Int64)
+		matchDuration = &d
+	}
+	var breakDuration *int32
+	if competition.BreakDuration.Valid {
+		d := int32(competition.BreakDuration.Int64)
+		breakDuration = &d
+	}
+	var defaultLocationID string
+	if competition.DefaultLocationID.Valid {
+		defaultLocationID = competition.DefaultLocationID.String
+	}
 	return &Competition{
-		ID:      competition.ID,
-		Name:    competition.Name,
-		Type:    CompetitionType(competition.Type),
-		SportID: sportID,
-		SceneID: competition.SceneID,
+		ID:                competition.ID,
+		Name:              competition.Name,
+		Type:              CompetitionType(competition.Type),
+		SportID:           sportID,
+		SceneID:           competition.SceneID,
+		StartTime:         startTime,
+		MatchDuration:     matchDuration,
+		BreakDuration:     breakDuration,
+		DefaultLocationID: defaultLocationID,
 	}
 }
 
@@ -149,6 +172,8 @@ func FormatMatchResponse(match *db_model.Match) *Match {
 		LocationId:    locationId,
 		CompetitionId: match.CompetitionID,
 		WinnerTeamId:  winnerTeamId,
+		TimeManual:     match.TimeManual,
+		LocationManual: match.LocationManual,
 	}
 }
 

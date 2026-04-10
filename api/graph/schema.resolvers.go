@@ -453,6 +453,35 @@ func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, in
 	return res, nil
 }
 
+// RegenerateRoundRobin is the resolver for the regenerateRoundRobin field.
+func (r *mutationResolver) RegenerateRoundRobin(ctx context.Context, id string) ([]*model.Match, error) {
+	matches, err := r.LeagueService.RegenerateRoundRobin(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if matches == nil {
+		return []*model.Match{}, nil
+	}
+	result := make([]*model.Match, len(matches))
+	for i, m := range matches {
+		result[i] = model.FormatMatchResponse(m)
+	}
+	return result, nil
+}
+
+// ApplyCompetitionDefaults is the resolver for the applyCompetitionDefaults field.
+func (r *mutationResolver) ApplyCompetitionDefaults(ctx context.Context, id string, input model.ApplyCompetitionDefaultsInput) ([]*model.Match, error) {
+	matches, err := r.CompetitionService.ApplyDefaults(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.Match, len(matches))
+	for i, m := range matches {
+		result[i] = model.FormatMatchResponse(m)
+	}
+	return result, nil
+}
+
 // SetRankingRules is the resolver for the setRankingRules field.
 func (r *mutationResolver) SetRankingRules(ctx context.Context, sportID string, rules []*model.RankingRuleInput) (*model.Sport, error) {
 	inputs := make([]model.RankingRuleInput, len(rules))

@@ -19,11 +19,15 @@ type Team struct {
 }
 
 type Competition struct {
-	ID      string          `json:"id"`
-	Name    string          `json:"name"`
-	Type    CompetitionType `json:"type"`
-	SportID string          `json:"sportId"`
-	SceneID string          `json:"sceneId"`
+	ID                string          `json:"id"`
+	Name              string          `json:"name"`
+	Type              CompetitionType `json:"type"`
+	SportID           string          `json:"sportId"`
+	SceneID           string          `json:"sceneId"`
+	StartTime         *string         `json:"startTime,omitempty"`
+	MatchDuration     *int32          `json:"matchDuration,omitempty"`
+	BreakDuration     *int32          `json:"breakDuration,omitempty"`
+	DefaultLocationID string          `json:"defaultLocationId"`
 }
 
 type Match struct {
@@ -33,6 +37,8 @@ type Match struct {
 	LocationId    string      `json:"locationId"`
 	CompetitionId string      `json:"competitionId"`
 	WinnerTeamId  string      `json:"winnerTeamId"`
+	TimeManual     bool        `json:"timeManual"`
+	LocationManual bool        `json:"locationManual"`
 }
 
 type Location struct {
