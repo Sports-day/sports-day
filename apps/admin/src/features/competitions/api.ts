@@ -21,6 +21,10 @@ export const GET_ADMIN_COMPETITION = gql`
       sport { id name }
       scene { id name }
       teams { id name group { id name } }
+      startTime
+      matchDuration
+      breakDuration
+      defaultLocation { id name }
     }
   }
 `
@@ -315,6 +319,28 @@ export const RESET_ADMIN_TOURNAMENT_BRACKETS = gql`
   mutation ResetAdminTournamentBrackets($competitionId: ID!) {
     resetTournamentBrackets(competitionId: $competitionId) {
       id
+    }
+  }
+`
+
+export const REGENERATE_ADMIN_ROUND_ROBIN = gql`
+  mutation RegenerateAdminRoundRobin($id: ID!) {
+    regenerateRoundRobin(id: $id) {
+      id
+      time
+      status
+    }
+  }
+`
+
+export const APPLY_ADMIN_COMPETITION_DEFAULTS = gql`
+  mutation ApplyAdminCompetitionDefaults($id: ID!, $input: ApplyCompetitionDefaultsInput!) {
+    applyCompetitionDefaults(id: $id, input: $input) {
+      id
+      time
+      timeManual
+      location { id name }
+      locationManual
     }
   }
 `

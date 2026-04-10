@@ -13,9 +13,14 @@ import {
   useDeleteAdminPromotionRuleMutation,
   useAddAdminCompetitionEntriesMutation,
   useDeleteAdminCompetitionEntriesMutation,
+  useRegenerateAdminRoundRobinMutation,
+  GetAdminLeagueDocument,
+  GetAdminLeagueStandingsDocument,
   GetAdminPromotionRulesDocument,
   GetAdminCompetitionDocument,
+  GetAdminCompetitionMatchesDocument,
   GetAdminCompetitionsDocument,
+  GetAdminMatchesDocument,
   CompetitionType,
 } from '@/gql/__generated__/graphql'
 
@@ -135,6 +140,14 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   const [deleteCompetitionEntries] = useDeleteAdminCompetitionEntriesMutation({
     refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
   })
+  const [regenerateRoundRobin] = useRegenerateAdminRoundRobinMutation({
+    refetchQueries: [
+      { query: GetAdminMatchesDocument },
+      { query: GetAdminCompetitionMatchesDocument, variables: { competitionId } },
+      { query: GetAdminLeagueDocument, variables: { id: leagueId } },
+      { query: GetAdminLeagueStandingsDocument, variables: { leagueId } },
+    ],
+  })
 
   // ─── プログレッションルール初期化 ─────────────────────
   useEffect(() => {
@@ -195,11 +208,17 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     try {
       await updateCompetition({
         variables: { id: competitionId, input: { name: n, sportId: form.sportId || undefined, sceneId: form.sceneId || undefined } },
-        refetchQueries: ['GetAdminCompetitions', 'GetAdminCompetition'],
+        refetchQueries: [
+          { query: GetAdminCompetitionsDocument },
+          { query: GetAdminCompetitionDocument, variables: { id: competitionId } },
+        ],
       })
       if (editWinPt !== null || editDrawPt !== null || editLosePt !== null) {
         await updateLeagueRule({
           variables: { id: leagueId, input: { winPt: form.winPt, drawPt: form.drawPt, losePt: form.losePt } },
+          refetchQueries: [
+            { query: GetAdminLeagueDocument, variables: { id: leagueId } },
+          ],
         })
       }
 
@@ -267,6 +286,12 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       await deleteCompetitionEntries({
         variables: { id: competitionId, input: { teamIds: [entry.teamId] } },
       })
+      // エントリー変更後にラウンドロビンを自動再生成
+      try {
+        await regenerateRoundRobin({ variables: { id: competitionId } })
+      } catch (regenErr) {
+        console.error('regenerateRoundRobin failed:', regenErr)
+      }
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
@@ -283,6 +308,12 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       await addCompetitionEntries({
         variables: { id: competitionId, input: { teamIds: selectedIds } },
       })
+      // エントリー変更後にラウンドロビンを自動再生成
+      try {
+        await regenerateRoundRobin({ variables: { id: competitionId } })
+      } catch (regenErr) {
+        console.error('regenerateRoundRobin failed:', regenErr)
+      }
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))

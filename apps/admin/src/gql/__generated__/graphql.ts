@@ -25,6 +25,13 @@ export type AddSportScenesInput = {
   sportIds: Array<Scalars['ID']['input']>;
 };
 
+export type ApplyCompetitionDefaultsInput = {
+  breakDuration: Scalars['Int']['input'];
+  locationId?: InputMaybe<Scalars['ID']['input']>;
+  matchDuration: Scalars['Int']['input'];
+  startTime: Scalars['String']['input'];
+};
+
 /** SEEDスロットへのチーム手動配置 */
 export type AssignSeedTeamInput = {
   slotId: Scalars['ID']['input'];
@@ -47,12 +54,16 @@ export const BracketType = {
 export type BracketType = typeof BracketType[keyof typeof BracketType];
 export type Competition = {
   __typename?: 'Competition';
+  breakDuration?: Maybe<Scalars['Int']['output']>;
+  defaultLocation?: Maybe<Location>;
   id: Scalars['ID']['output'];
   league?: Maybe<League>;
+  matchDuration?: Maybe<Scalars['Int']['output']>;
   matches: Array<Match>;
   name: Scalars['String']['output'];
   scene: Scene;
   sport: Sport;
+  startTime?: Maybe<Scalars['String']['output']>;
   teams: Array<Team>;
   tournaments: Array<Tournament>;
   type: CompetitionType;
@@ -265,8 +276,10 @@ export type Match = {
   id: Scalars['ID']['output'];
   judgment?: Maybe<Judgment>;
   location?: Maybe<Location>;
+  locationManual: Scalars['Boolean']['output'];
   status: MatchStatus;
   time: Scalars['String']['output'];
+  timeManual: Scalars['Boolean']['output'];
   winnerTeam?: Maybe<Team>;
 };
 
@@ -299,9 +312,12 @@ export type Mutation = {
   addMatchEntries: Match;
   /** スポーツシーンにチームエントリーを一括追加する */
   addSportEntries: SportScene;
+  /** スポーツの経験者を追加する */
   addSportExperiences: Array<SportExperience>;
   /** シーンにスポーツを一括追加する */
   addSportScenes: Scene;
+  /** 大会のデフォルト設定を適用する（手動設定された試合時間・場所はスキップ） */
+  applyCompetitionDefaults: Array<Match>;
   /** SEEDスロットへのチーム手動配置（teamId=null でクリア） */
   assignSeedTeam: TournamentSlot;
   /** 大会を作成する */
@@ -310,6 +326,8 @@ export type Mutation = {
   /** 画像アップロード用のURLを発行する */
   createImageUploadURL: ImageUploadUrl;
   createInformation: Information;
+  /** 審判を作成する */
+  createJudgment: Judgment;
   /** リーグを追加する */
   createLeague: League;
   /** 場所を追加する */
@@ -352,6 +370,7 @@ export type Mutation = {
   deleteSportEntries: SportScene;
   /** スポーツエントリーを削除する */
   deleteSportEntry: SportEntry;
+  /** スポーツの経験者を削除する */
   deleteSportExperiences: Scalars['Boolean']['output'];
   /** スポーツシーンを削除する */
   deleteSportScene: SportScene;
@@ -371,6 +390,8 @@ export type Mutation = {
   generateRoundRobin: Array<Match>;
   /** サブブラケット自動生成（試合構造含む） */
   generateSubBracket: Tournament;
+  /** リーグの総当たり戦をデフォルト設定で再生成する（既存試合を削除して再作成） */
+  regenerateRoundRobin: Array<Match>;
   removeGroupUsers: Group;
   /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
   resetTournamentBrackets: Competition;
@@ -409,7 +430,7 @@ export type Mutation = {
   /** トーナメント（ブラケット）を更新する */
   updateTournament: Tournament;
   updateUser: User;
-  /** ユ���ザーのロールを変更す�� */
+  /** ユーザーのロールを更新する（user:manage パーミッションが必要） */
   updateUserRole: User;
 };
 
@@ -450,6 +471,12 @@ export type MutationAddSportScenesArgs = {
 };
 
 
+export type MutationApplyCompetitionDefaultsArgs = {
+  id: Scalars['ID']['input'];
+  input: ApplyCompetitionDefaultsInput;
+};
+
+
 export type MutationAssignSeedTeamArgs = {
   input: AssignSeedTeamInput;
 };
@@ -472,6 +499,11 @@ export type MutationCreateImageUploadUrlArgs = {
 
 export type MutationCreateInformationArgs = {
   input: CreateInformationInput;
+};
+
+
+export type MutationCreateJudgmentArgs = {
+  input: CreateJudgmentInput;
 };
 
 
@@ -661,6 +693,11 @@ export type MutationGenerateSubBracketArgs = {
 };
 
 
+export type MutationRegenerateRoundRobinArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveGroupUsersArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGroupUsersInput;
@@ -829,6 +866,7 @@ export type Query = {
   __typename?: 'Query';
   Information: Information;
   Informations: Array<Information>;
+  /** 全ての経験者データを取得する */
   allSportExperiences: Array<SportExperience>;
   /** ID指定で大会を取得する */
   competition: Competition;
@@ -868,6 +906,7 @@ export type Query = {
   scene: Scene;
   scenes: Array<Scene>;
   sport: Sport;
+  /** 指定スポーツの経験者一覧を取得する */
   sportExperiences: Array<SportExperience>;
   sports: Array<Sport>;
   /** ID指定でチームを取得する */
@@ -881,6 +920,7 @@ export type Query = {
   /** competition内の全ブラケット取得 */
   tournaments: Array<Tournament>;
   user: User;
+  /** 指定ユーザーの経験者スポーツ一覧を取得する */
   userSportExperiences: Array<SportExperience>;
   users: Array<User>;
 };
@@ -1348,7 +1388,7 @@ export type GetAdminCompetitionQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminCompetitionQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string } }> } };
+export type GetAdminCompetitionQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, startTime?: string | null, matchDuration?: number | null, breakDuration?: number | null, sport: { __typename?: 'Sport', id: string, name: string }, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string } }>, defaultLocation?: { __typename?: 'Location', id: string, name: string } | null } };
 
 export type GetAdminLeaguesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1543,6 +1583,21 @@ export type ResetAdminTournamentBracketsMutationVariables = Exact<{
 
 export type ResetAdminTournamentBracketsMutation = { __typename?: 'Mutation', resetTournamentBrackets: { __typename?: 'Competition', id: string } };
 
+export type RegenerateAdminRoundRobinMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type RegenerateAdminRoundRobinMutation = { __typename?: 'Mutation', regenerateRoundRobin: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus }> };
+
+export type ApplyAdminCompetitionDefaultsMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: ApplyCompetitionDefaultsInput;
+}>;
+
+
+export type ApplyAdminCompetitionDefaultsMutation = { __typename?: 'Mutation', applyCompetitionDefaults: Array<{ __typename?: 'Match', id: string, time: string, timeManual: boolean, locationManual: boolean, location?: { __typename?: 'Location', id: string, name: string } | null }> };
+
 export type GetAdminTournamentRankingQueryVariables = Exact<{
   competitionId: Scalars['ID']['input'];
 }>;
@@ -1652,14 +1707,14 @@ export type GetAdminLocationsForMatchesQuery = { __typename?: 'Query', locations
 export type GetAdminMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, tournaments: Array<{ __typename?: 'Tournament', id: string, name: string, bracketType: BracketType, matches: Array<{ __typename?: 'Match', id: string }> }> }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null } | null }> };
+export type GetAdminMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, timeManual: boolean, status: MatchStatus, locationManual: boolean, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, tournaments: Array<{ __typename?: 'Tournament', id: string, name: string, bracketType: BracketType, matches: Array<{ __typename?: 'Match', id: string }> }> }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null } | null }> };
 
 export type GetAdminCompetitionMatchesQueryVariables = Exact<{
   competitionId: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminCompetitionMatchesQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }> } };
+export type GetAdminCompetitionMatchesQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, matches: Array<{ __typename?: 'Match', id: string, time: string, timeManual: boolean, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }> }> } };
 
 export type GetAdminMatchQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -2343,6 +2398,13 @@ export const GetAdminCompetitionDocument = gql`
         id
         name
       }
+    }
+    startTime
+    matchDuration
+    breakDuration
+    defaultLocation {
+      id
+      name
     }
   }
 }
@@ -3479,6 +3541,82 @@ export function useResetAdminTournamentBracketsMutation(baseOptions?: Apollo.Mut
 export type ResetAdminTournamentBracketsMutationHookResult = ReturnType<typeof useResetAdminTournamentBracketsMutation>;
 export type ResetAdminTournamentBracketsMutationResult = Apollo.MutationResult<ResetAdminTournamentBracketsMutation>;
 export type ResetAdminTournamentBracketsMutationOptions = Apollo.BaseMutationOptions<ResetAdminTournamentBracketsMutation, ResetAdminTournamentBracketsMutationVariables>;
+export const RegenerateAdminRoundRobinDocument = gql`
+    mutation RegenerateAdminRoundRobin($id: ID!) {
+  regenerateRoundRobin(id: $id) {
+    id
+    time
+    status
+  }
+}
+    `;
+export type RegenerateAdminRoundRobinMutationFn = Apollo.MutationFunction<RegenerateAdminRoundRobinMutation, RegenerateAdminRoundRobinMutationVariables>;
+
+/**
+ * __useRegenerateAdminRoundRobinMutation__
+ *
+ * To run a mutation, you first call `useRegenerateAdminRoundRobinMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRegenerateAdminRoundRobinMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [regenerateAdminRoundRobinMutation, { data, loading, error }] = useRegenerateAdminRoundRobinMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRegenerateAdminRoundRobinMutation(baseOptions?: Apollo.MutationHookOptions<RegenerateAdminRoundRobinMutation, RegenerateAdminRoundRobinMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RegenerateAdminRoundRobinMutation, RegenerateAdminRoundRobinMutationVariables>(RegenerateAdminRoundRobinDocument, options);
+      }
+export type RegenerateAdminRoundRobinMutationHookResult = ReturnType<typeof useRegenerateAdminRoundRobinMutation>;
+export type RegenerateAdminRoundRobinMutationResult = Apollo.MutationResult<RegenerateAdminRoundRobinMutation>;
+export type RegenerateAdminRoundRobinMutationOptions = Apollo.BaseMutationOptions<RegenerateAdminRoundRobinMutation, RegenerateAdminRoundRobinMutationVariables>;
+export const ApplyAdminCompetitionDefaultsDocument = gql`
+    mutation ApplyAdminCompetitionDefaults($id: ID!, $input: ApplyCompetitionDefaultsInput!) {
+  applyCompetitionDefaults(id: $id, input: $input) {
+    id
+    time
+    timeManual
+    location {
+      id
+      name
+    }
+    locationManual
+  }
+}
+    `;
+export type ApplyAdminCompetitionDefaultsMutationFn = Apollo.MutationFunction<ApplyAdminCompetitionDefaultsMutation, ApplyAdminCompetitionDefaultsMutationVariables>;
+
+/**
+ * __useApplyAdminCompetitionDefaultsMutation__
+ *
+ * To run a mutation, you first call `useApplyAdminCompetitionDefaultsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useApplyAdminCompetitionDefaultsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [applyAdminCompetitionDefaultsMutation, { data, loading, error }] = useApplyAdminCompetitionDefaultsMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useApplyAdminCompetitionDefaultsMutation(baseOptions?: Apollo.MutationHookOptions<ApplyAdminCompetitionDefaultsMutation, ApplyAdminCompetitionDefaultsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ApplyAdminCompetitionDefaultsMutation, ApplyAdminCompetitionDefaultsMutationVariables>(ApplyAdminCompetitionDefaultsDocument, options);
+      }
+export type ApplyAdminCompetitionDefaultsMutationHookResult = ReturnType<typeof useApplyAdminCompetitionDefaultsMutation>;
+export type ApplyAdminCompetitionDefaultsMutationResult = Apollo.MutationResult<ApplyAdminCompetitionDefaultsMutation>;
+export type ApplyAdminCompetitionDefaultsMutationOptions = Apollo.BaseMutationOptions<ApplyAdminCompetitionDefaultsMutation, ApplyAdminCompetitionDefaultsMutationVariables>;
 export const GetAdminTournamentRankingDocument = gql`
     query GetAdminTournamentRanking($competitionId: ID!) {
   tournamentRanking(competitionId: $competitionId) {
@@ -4093,11 +4231,13 @@ export const GetAdminMatchesDocument = gql`
   matches {
     id
     time
+    timeManual
     status
     location {
       id
       name
     }
+    locationManual
     competition {
       id
       name
@@ -4172,6 +4312,7 @@ export const GetAdminCompetitionMatchesDocument = gql`
     matches {
       id
       time
+      timeManual
       status
       location {
         id

@@ -20,10 +20,12 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import DeleteIcon from '@mui/icons-material/Delete'
+import ScheduleIcon from '@mui/icons-material/Schedule'
 import SportsScoreIcon from '@mui/icons-material/SportsScore'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { navigateToPage } from '@/hooks/useAppNavigation'
+import { BackButton } from '@/components/ui/BackButton'
 import {
   BREADCRUMB_CURRENT_SX,
   BREADCRUMB_LINK_SX,
@@ -53,6 +55,7 @@ import { useTournamentDetail } from '../hooks/useTournamentDetail'
 import { TournamentBracketView } from './TournamentBracketView'
 import { useTournamentEdit } from '../hooks/useTournamentEdit'
 import { useSeedAssignment } from '@/hooks/useSeedAssignment'
+import { useCompetitionDefaults } from '../hooks/useCompetitionDefaults'
 import type { TournamentMatchView } from '../types'
 
 const PLACEMENT_OPTIONS = [
@@ -116,6 +119,7 @@ export function TournamentDetailPage({
     handleRegenerateSubBracket,
   } = useTournamentEdit(competitionId, competitionName)
 
+  const defaults = useCompetitionDefaults(competitionId)
   const [activeBracketId, setActiveBracketId] = useState('')
   const seed = useSeedAssignment(activeBracketId)
   const client = useApolloClient()
@@ -350,6 +354,7 @@ export function TournamentDetailPage({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           大会
@@ -380,6 +385,71 @@ export function TournamentDetailPage({
             <SportSelect value={form.sportId || null} onChange={(id) => setSportId(id ?? '')} sports={sports} />
 
             <SceneSelect value={form.sceneId || null} onChange={(id) => setSceneId(id ?? '')} scenes={scenes} label="タグ" />
+
+            <TextField
+              label="デフォルト場所"
+              select
+              value={defaults.form.locationId}
+              onChange={(e) => defaults.setForm(prev => ({ ...prev, locationId: e.target.value }))}
+              size="small"
+              fullWidth
+              sx={CARD_FIELD_SX}
+              slotProps={{ select: { displayEmpty: true } }}
+            >
+              <MenuItem value=""><Typography sx={{ fontSize: '14px', color: '#2F3C8C', opacity: 0.5 }}>未設定</Typography></MenuItem>
+              {defaults.locations.map(loc => (
+                <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+              ))}
+            </TextField>
+
+            <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
+
+            <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
+              試合時間設定
+            </Typography>
+            <TextField
+              label="開始時刻"
+              type="datetime-local"
+              value={defaults.form.startTime}
+              onChange={(e) => defaults.setForm(prev => ({ ...prev, startTime: e.target.value }))}
+              size="small"
+              fullWidth
+              sx={CARD_FIELD_SX}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="試合時間（分）"
+                type="number"
+                value={defaults.form.matchDuration}
+                onChange={(e) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, Number(e.target.value)) }))}
+                size="small"
+                fullWidth
+                sx={CARD_FIELD_SX}
+                slotProps={{ htmlInput: { min: 1, max: 999 } }}
+              />
+              <TextField
+                label="休憩時間（分）"
+                type="number"
+                value={defaults.form.breakDuration}
+                onChange={(e) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, Number(e.target.value)) }))}
+                size="small"
+                fullWidth
+                sx={CARD_FIELD_SX}
+                slotProps={{ htmlInput: { min: 0, max: 999 } }}
+              />
+            </Box>
+
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<ScheduleIcon />}
+              onClick={defaults.handleApply}
+              disabled={!defaults.isValid || !defaults.dirty || defaults.loading}
+              sx={SAVE_BUTTON_SX}
+            >
+              {defaults.loading ? '適用中...' : 'デフォルト設定を試合に適用'}
+            </Button>
 
             <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
 
@@ -808,6 +878,7 @@ export function TournamentDetailPage({
           }
         }}
       />
+
     </Box>
   )
 }

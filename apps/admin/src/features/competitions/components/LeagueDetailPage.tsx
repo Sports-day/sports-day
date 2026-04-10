@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Divider,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -17,11 +18,13 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import DeleteIcon from '@mui/icons-material/Delete'
+import ScheduleIcon from '@mui/icons-material/Schedule'
 import SportsScoreIcon from '@mui/icons-material/SportsScore'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { navigateToPage } from '@/hooks/useAppNavigation'
 import { useLeagueDetail } from '../hooks/useLeagueDetail'
+import { useCompetitionDefaults } from '../hooks/useCompetitionDefaults'
 import { useActiveMatchLeague } from '@/features/matches/hooks/useActiveMatchLeague'
 import { ProgressionRulesEditor } from './ProgressionRulesEditor'
 import { AddEntryDialog } from './AddEntryDialog'
@@ -30,6 +33,7 @@ import { SportSelect } from './SportSelect'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
 import { showToast, showErrorToast } from '@/lib/toast'
+import { BackButton } from '@/components/ui/BackButton'
 
 type Props = {
   leagueId: string
@@ -68,10 +72,16 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
     handleProgressionRuleChange,
   } = useLeagueDetail(leagueId, leagueName, competitionId)
 
+  const defaults = useCompetitionDefaults(competitionId)
+
   const { league: leagueStandings, grid, statsMap, rankLabels } = useActiveMatchLeague(competitionId, leagueId)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [entryConfirmAction, setEntryConfirmAction] = useState<(() => Promise<void>) | null>(null)
   useUnsavedWarning(dirty)
+
+  const hasMatches = leagueStandings != null && leagueStandings.matches.length > 0
+  const hasInProgressMatches = leagueStandings?.matches.some(m => m.status === 'ongoing' || m.status === 'finished') ?? false
 
   const onSave = async () => {
     try {
@@ -92,6 +102,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           大会
@@ -124,6 +135,71 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
             <SportSelect value={form.sportId || null} onChange={(id) => setSportId(id ?? '')} sports={sports} />
 
             <SceneSelect value={form.sceneId || null} onChange={(id) => setSceneId(id ?? '')} scenes={scenes} label="タグ" />
+
+            <TextField
+              label="デフォルト場所"
+              select
+              value={defaults.form.locationId}
+              onChange={(e) => defaults.setForm(prev => ({ ...prev, locationId: e.target.value }))}
+              size="small"
+              fullWidth
+              sx={CARD_FIELD_SX}
+              slotProps={{ select: { displayEmpty: true } }}
+            >
+              <MenuItem value=""><Typography sx={{ fontSize: '14px', color: '#2F3C8C', opacity: 0.5 }}>未設定</Typography></MenuItem>
+              {defaults.locations.map(loc => (
+                <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+              ))}
+            </TextField>
+
+            <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
+
+            <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
+              試合時間設定
+            </Typography>
+            <TextField
+              label="開始時刻"
+              type="datetime-local"
+              value={defaults.form.startTime}
+              onChange={(e) => defaults.setForm(prev => ({ ...prev, startTime: e.target.value }))}
+              size="small"
+              fullWidth
+              sx={CARD_FIELD_SX}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="試合時間（分）"
+                type="number"
+                value={defaults.form.matchDuration}
+                onChange={(e) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, Number(e.target.value)) }))}
+                size="small"
+                fullWidth
+                sx={CARD_FIELD_SX}
+                slotProps={{ htmlInput: { min: 1, max: 999 } }}
+              />
+              <TextField
+                label="休憩時間（分）"
+                type="number"
+                value={defaults.form.breakDuration}
+                onChange={(e) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, Number(e.target.value)) }))}
+                size="small"
+                fullWidth
+                sx={CARD_FIELD_SX}
+                slotProps={{ htmlInput: { min: 0, max: 999 } }}
+              />
+            </Box>
+
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<ScheduleIcon />}
+              onClick={defaults.handleApply}
+              disabled={!defaults.isValid || !defaults.dirty || defaults.loading}
+              sx={SAVE_BUTTON_SX}
+            >
+              {defaults.loading ? '適用中...' : 'デフォルト設定を試合に適用'}
+            </Button>
 
             <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
 
@@ -279,7 +355,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                           return (
                             <TableCell
                               key={colIdx}
-                              onClick={() => m && navigateToPage('active-matches', { matchId: m.id })}
+                              onClick={() => m && navigateToPage('active-matches', { matchId: m.id, from: 'league', competitionId, competitionName: leagueName })}
                               sx={{
                                 border: '1px solid #5B6DC6',
                                 py: 1.5,
@@ -349,8 +425,14 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                   <TableCell sx={CARD_TABLE_CELL_SX}>{entry.teamClass}</TableCell>
                   <TableCell sx={{ ...CARD_TABLE_CELL_SX, width: 48, p: 0, textAlign: 'center' }}>
                     <DeleteIcon
-                      onClick={() => handleDeleteEntry(entry.id)}
-                      sx={{ fontSize: 20, color: '#D71212', cursor: 'pointer', opacity: 0.7, '&:hover': { opacity: 1 } }}
+                      onClick={() => {
+                        if (hasMatches) {
+                          setEntryConfirmAction(() => () => handleDeleteEntry(entry.id))
+                        } else {
+                          handleDeleteEntry(entry.id)
+                        }
+                      }}
+                      sx={{ fontSize: 20, color: hasInProgressMatches ? '#ccc' : '#D71212', cursor: hasInProgressMatches ? 'not-allowed' : 'pointer', opacity: 0.7, '&:hover': { opacity: hasInProgressMatches ? 0.7 : 1 }, pointerEvents: hasInProgressMatches ? 'none' : 'auto' }}
                     />
                   </TableCell>
                 </TableRow>
@@ -373,6 +455,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
               fullWidth
               startIcon={<AddIcon />}
               onClick={handleOpenAddDialog}
+              disabled={hasInProgressMatches}
               sx={SAVE_BUTTON_SX}
             >
               エントリーを追加
@@ -386,7 +469,14 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
         leagueName={leagueName}
         existingTeamNames={entries.map(e => e.teamName)}
         onClose={handleCloseAddDialog}
-        onAdd={handleAddEntries}
+        onAdd={(selectedIds) => {
+          if (hasMatches) {
+            handleCloseAddDialog()
+            setEntryConfirmAction(() => () => handleAddEntries(selectedIds))
+          } else {
+            handleAddEntries(selectedIds)
+          }
+        }}
       />
 
       <ConfirmDialog
@@ -395,6 +485,18 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
         description={`「${leagueName}」を削除します。この操作は元に戻せません。`}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={onConfirmDelete}
+      />
+
+      <ConfirmDialog
+        open={entryConfirmAction !== null}
+        title="試合が再生成されます"
+        description="エントリーを変更すると、既存の試合が全て削除され、総当たり戦が再生成されます。試合に設定した審判・場所などの情報はリセットされます。"
+        onClose={() => setEntryConfirmAction(null)}
+        onConfirm={async () => {
+          const action = entryConfirmAction
+          setEntryConfirmAction(null)
+          await action?.()
+        }}
       />
     </Box>
   )
