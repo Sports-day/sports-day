@@ -9,8 +9,9 @@ const STORAGE_PREFIX = 'filter:'
  * - 別ページから戻る → sessionStorage から復元
  *
  * @param keys - 管理するフィルターキーの配列（例: ['keyword', 'type', 'sport']）
+ * @param defaults - 初回アクセス時に適用するデフォルト値（URL・sessionStorageに値がない場合のみ）
  */
-export function useFilterParams(keys: readonly string[]) {
+export function useFilterParams(keys: readonly string[], defaults?: Readonly<Record<string, string>>) {
   const { pathname } = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const storageKey = STORAGE_PREFIX + pathname
@@ -25,7 +26,23 @@ export function useFilterParams(keys: readonly string[]) {
     if (hasAny) return
 
     const saved = sessionStorage.getItem(storageKey)
-    if (!saved) return
+    if (!saved) {
+      // sessionStorage にもない場合はデフォルト値を適用
+      if (defaults) {
+        const next = new URLSearchParams(searchParams)
+        let changed = false
+        for (const key of keys) {
+          if (defaults[key]) {
+            next.set(key, defaults[key])
+            changed = true
+          }
+        }
+        if (changed) {
+          setSearchParams(next, { replace: true })
+        }
+      }
+      return
+    }
 
     try {
       const obj = JSON.parse(saved) as Record<string, string>

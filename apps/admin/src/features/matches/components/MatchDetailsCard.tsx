@@ -27,6 +27,7 @@ import {
   useGetAdminTournamentsQuery,
   useGetAdminTournamentQuery,
   useUpdateAdminSlotConnectionMutation,
+  useAssignAdminSeedTeamMutation,
   SlotSourceType,
 } from '@/gql/__generated__/graphql'
 import { CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
@@ -64,17 +65,22 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
   const { data: tournamentsData } = useGetAdminTournamentsQuery({
     variables: { competitionId: competitionId ?? '' },
     skip: !isTournament || !competitionId,
+    fetchPolicy: 'cache-and-network',
   })
   const subBrackets = (tournamentsData?.tournaments ?? []).filter(t => t.bracketType === 'SUB')
 
-  const sub0 = useGetAdminTournamentQuery({ variables: { id: subBrackets[0]?.id ?? '' }, skip: !subBrackets[0] })
-  const sub1 = useGetAdminTournamentQuery({ variables: { id: subBrackets[1]?.id ?? '' }, skip: !subBrackets[1] })
-  const sub2 = useGetAdminTournamentQuery({ variables: { id: subBrackets[2]?.id ?? '' }, skip: !subBrackets[2] })
-  const subQueries = [sub0, sub1, sub2]
+  const fetchOpts = { fetchPolicy: 'cache-and-network' as const }
+  const sub0 = useGetAdminTournamentQuery({ variables: { id: subBrackets[0]?.id ?? '' }, skip: !subBrackets[0], ...fetchOpts })
+  const sub1 = useGetAdminTournamentQuery({ variables: { id: subBrackets[1]?.id ?? '' }, skip: !subBrackets[1], ...fetchOpts })
+  const sub2 = useGetAdminTournamentQuery({ variables: { id: subBrackets[2]?.id ?? '' }, skip: !subBrackets[2], ...fetchOpts })
+  const sub3 = useGetAdminTournamentQuery({ variables: { id: subBrackets[3]?.id ?? '' }, skip: !subBrackets[3], ...fetchOpts })
+  const sub4 = useGetAdminTournamentQuery({ variables: { id: subBrackets[4]?.id ?? '' }, skip: !subBrackets[4], ...fetchOpts })
+  const subQueries = [sub0, sub1, sub2, sub3, sub4]
+  const maxSub = 5
 
   type SlotConnection = { slotId: string; bracketName: string; bracketId: string; role: 'MATCH_WINNER' | 'MATCH_LOSER' }
   const currentConnections: SlotConnection[] = []
-  for (let i = 0; i < subBrackets.length && i < 3; i++) {
+  for (let i = 0; i < subBrackets.length && i < maxSub; i++) {
     const subData = subQueries[i]?.data?.tournament
     if (!subData) continue
     for (const slot of subData.slots) {
@@ -87,39 +93,84 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
   const loserConnection  = currentConnections.find(c => c.role === 'MATCH_LOSER')
 
   type SlotOption = { slotId: string; bracketName: string; bracketId: string; label: string }
-  const availableSlots: SlotOption[] = []
-  for (let i = 0; i < subBrackets.length && i < 3; i++) {
+  const allSlots: SlotOption[] = []
+  for (let i = 0; i < subBrackets.length && i < maxSub; i++) {
     const subData = subQueries[i]?.data?.tournament
     if (!subData) continue
     for (const slot of subData.slots) {
       if (slot.sourceType === 'SEED' || slot.sourceMatch?.id === match.id) {
-        availableSlots.push({ slotId: slot.id, bracketName: subData.name, bracketId: subData.id, label: `${subData.name} — Seed ${slot.seedNumber ?? '?'}` })
+        const teamName = slot.matchEntry?.team?.name
+        const seedLabel = slot.seedNumber != null ? `Seed ${slot.seedNumber}` : 'スロット'
+        const label = teamName
+          ? `${subData.name} — ${seedLabel} (${teamName})`
+          : `${subData.name} — ${seedLabel}`
+        allSlots.push({ slotId: slot.id, bracketName: subData.name, bracketId: subData.id, label })
       }
     }
   }
+  // 勝者/敗者で相手方が既に使っているスロットを除外
+  const winnerSlots = allSlots.filter(s => s.slotId !== loserConnection?.slotId)
+  const loserSlots = allSlots.filter(s => s.slotId !== winnerConnection?.slotId)
 
-  const [updateSlotConnection] = useUpdateAdminSlotConnectionMutation({ refetchQueries: ['GetAdminTournament'] })
+  const [updateSlotConnection] = useUpdateAdminSlotConnectionMutation({ refetchQueries: [] })
+  const [assignSeedTeam] = useAssignAdminSeedTeamMutation({ refetchQueries: [] })
 
+  // updateSlotConnection はバックエンドで clearSeedTeamsIfReady を呼び、
+  // READY状態（全SEEDにチーム割当済）のブラケットの全SEEDチーム割当をクリアする。
+  // TournamentDetailPage の handleSwapMatches と同様に、変更前に保存→変更後に復元する。
   const handleSlotSourceChange = async (role: 'MATCH_WINNER' | 'MATCH_LOSER', targetSlotId: string) => {
     const existing = role === 'MATCH_WINNER' ? winnerConnection : loserConnection
+
+    // 影響を受けるブラケットのSEED割り当てを保存
+    const affectedBracketIds = new Set<string>()
+    if (existing) affectedBracketIds.add(existing.bracketId)
+    if (targetSlotId) {
+      const target = allSlots.find(s => s.slotId === targetSlotId)
+      if (target) affectedBracketIds.add(target.bracketId)
+    }
+    const savedSeeds: { slotId: string; teamId: string }[] = []
+    for (const bracketId of affectedBracketIds) {
+      const subIdx = subBrackets.findIndex(b => b.id === bracketId)
+      if (subIdx === -1 || subIdx >= maxSub) continue
+      const subData = subQueries[subIdx]?.data?.tournament
+      if (!subData) continue
+      for (const slot of subData.slots) {
+        // 変更対象のスロット以外でSEEDかつチーム割当済みのものを保存
+        if (slot.sourceType === 'SEED' && slot.matchEntry?.team?.id
+            && slot.id !== targetSlotId && slot.id !== existing?.slotId) {
+          savedSeeds.push({ slotId: slot.id, teamId: slot.matchEntry.team.id })
+        }
+      }
+    }
+
+    // スロット接続を変更
     if (existing && existing.slotId !== targetSlotId) {
       await updateSlotConnection({ variables: { input: { slotId: existing.slotId, sourceType: SlotSourceType.Seed, sourceMatchId: null, seedNumber: null } } })
     }
-    if (targetSlotId === '') {
-      if (existing) showToast('進出先を解除しました')
-      return
-    }
-    await updateSlotConnection({
-      variables: {
-        input: {
-          slotId: targetSlotId,
-          sourceType: role === 'MATCH_WINNER' ? SlotSourceType.MatchWinner : SlotSourceType.MatchLoser,
-          sourceMatchId: match.id,
-          seedNumber: null,
+    if (targetSlotId !== '') {
+      await updateSlotConnection({
+        variables: {
+          input: {
+            slotId: targetSlotId,
+            sourceType: role === 'MATCH_WINNER' ? SlotSourceType.MatchWinner : SlotSourceType.MatchLoser,
+            sourceMatchId: match.id,
+            seedNumber: null,
+          },
         },
-      },
-    })
-    showToast('進出先を設定しました')
+      })
+    }
+
+    // clearSeedTeamsIfReady でクリアされた可能性のあるSEED割り当てを復元
+    for (const { slotId, teamId } of savedSeeds) {
+      try { await assignSeedTeam({ variables: { input: { slotId, teamId } } }) } catch { /* 続行 */ }
+    }
+
+    // 全ての変更完了後にまとめてrefetch
+    await Promise.all(
+      subQueries.filter((_, i) => i < subBrackets.length).map(q => q.refetch()),
+    )
+
+    showToast(targetSlotId === '' && existing ? '進出先を解除しました' : '進出先を設定しました')
   }
 
   const onSave = async () => { await handleSave(); onClose() }
@@ -315,7 +366,7 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
                 <Typography sx={{ fontSize: '11px', color: '#5B6DC6', mb: 0.5 }}>
                   この試合の勝者・敗者をサブブラケットのスロットに送ります
                 </Typography>
-                {availableSlots.length > 0 ? (
+                {allSlots.length > 0 ? (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <FormControl size="small" fullWidth>
                       <InputLabel shrink sx={{ fontSize: '13px', color: '#2F3C8C' }}>勝者の進出先</InputLabel>
@@ -328,7 +379,7 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
                         sx={{ ...CARD_FIELD_SX['& .MuiOutlinedInput-root'] }}
                       >
                         <MenuItem value=""><Typography sx={{ fontSize: '13px', color: '#9E9E9E' }}>なし</Typography></MenuItem>
-                        {availableSlots.map(s => (
+                        {winnerSlots.map(s => (
                           <MenuItem key={`w-${s.slotId}`} value={s.slotId}>
                             <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{s.label}</Typography>
                           </MenuItem>
@@ -346,7 +397,7 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
                         sx={{ ...CARD_FIELD_SX['& .MuiOutlinedInput-root'] }}
                       >
                         <MenuItem value=""><Typography sx={{ fontSize: '13px', color: '#9E9E9E' }}>なし</Typography></MenuItem>
-                        {availableSlots.map(s => (
+                        {loserSlots.map(s => (
                           <MenuItem key={`l-${s.slotId}`} value={s.slotId}>
                             <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{s.label}</Typography>
                           </MenuItem>

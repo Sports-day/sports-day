@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Box,
   Breadcrumbs,
@@ -14,8 +14,10 @@ import EditIcon from '@mui/icons-material/Edit'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import type { ActiveMatch, ActiveTeam } from '../types'
 import type { WinnerType, MatchStatusType } from '../hooks/useMatchEdit'
+import { useGetAdminMatchQuery } from '@/gql/__generated__/graphql'
 import { MatchDetailsCard } from './MatchDetailsCard'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { BackButton } from '@/components/ui/BackButton'
 import { showToast } from '@/lib/toast'
 
 // ─── 定数 ────────────────────────────────────────────────
@@ -87,6 +89,24 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
 
   const [detailOpen, setDetailOpen] = useState(false)
 
+  // 最新の試合データを取得（情報タグ表示用）
+  const { data: matchData } = useGetAdminMatchQuery({
+    variables: { id: match.id },
+    fetchPolicy: 'cache-and-network',
+  })
+  const matchDetail = matchData?.match
+
+  const infoTags = useMemo(() => {
+    const judgmentLabel = matchDetail?.judgment?.user?.name
+      ?? matchDetail?.judgment?.team?.name
+      ?? matchDetail?.judgment?.group?.name
+      ?? matchDetail?.judgment?.name
+      ?? '未登録'
+    const locationLabel = matchDetail?.location?.name ?? '未設定'
+    const timeLabel = matchDetail?.time ? formatMatchTime(matchDetail.time) : '未設定'
+    return { judgmentLabel, locationLabel, timeLabel }
+  }, [matchDetail])
+
   const handleSave = () => {
     onSave()
     showToast('変更が保存されました')
@@ -100,6 +120,7 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
@@ -176,9 +197,9 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
             <Box sx={{ pb: 1.5, borderBottom: '1px solid #5B6DC6' }}>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 {[
-                  { label: '審判', value: match.judgmentName || '未登録' },
-                  { label: '試合場所', value: 'Soccer Field 1' },
-                  { label: '試合開始', value: match.time ?? '未設定' },
+                  { label: '審判', value: infoTags.judgmentLabel },
+                  { label: '試合場所', value: infoTags.locationLabel },
+                  { label: '試合開始', value: infoTags.timeLabel },
                 ].map((item) => (
                   <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#4A5ABB' }} />
@@ -318,4 +339,11 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
       </Card>
     </Box>
   )
+}
+
+function formatMatchTime(isoString: string): string {
+  const d = new Date(isoString)
+  if (isNaN(d.getTime())) return isoString
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }

@@ -14,8 +14,10 @@ export const GET_ADMIN_MATCHES = gql`
     matches {
       id
       time
+      timeManual
       status
       location { id name }
+      locationManual
       competition {
         id name type sport { id name }
         tournaments { id name bracketType matches { id } }
@@ -34,6 +36,7 @@ export const GET_ADMIN_COMPETITION_MATCHES = gql`
       matches {
         id
         time
+        timeManual
         status
         location { id name }
         winnerTeam { id }

@@ -8,6 +8,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material'
+import { QueryError } from '@/components/ui/QueryError'
 import { useActiveMatches } from '../hooks/useActiveMatches'
 import type { MatchRow } from '../hooks/useActiveMatches'
 import { MatchCard } from './MatchCard'
@@ -34,6 +35,7 @@ function toActiveMatch(row: MatchRow): ActiveMatch {
       : row.winnerTeamId === row.teamBId ? 'teamB'
       : undefined,
     time: row.time,
+    locationId: row.locationId || undefined,
     judgmentName: row.judgmentName,
   }
 }
@@ -70,13 +72,14 @@ export function ActiveMatchesPage() {
     matchIdParam ? { type: 'pending-deeplink', matchId: matchIdParam } : { type: 'list' },
   )
 
-  // トーナメント詳細から遷移してきた場合の戻り先情報（初回マウント時のURLパラメータから一度だけ初期化）
-  const [tournamentReturn] = useState<{
+  // 大会詳細から遷移してきた場合の戻り先情報（初回マウント時のURLパラメータから一度だけ初期化）
+  const [competitionReturn] = useState<{
     competitionId: string
     competitionName: string
+    type: 'LEAGUE' | 'TOURNAMENT'
   } | null>(
-    fromParam === 'tournament' && fromCompetitionId && fromCompetitionName
-      ? { competitionId: fromCompetitionId, competitionName: fromCompetitionName }
+    (fromParam === 'tournament' || fromParam === 'league') && fromCompetitionId && fromCompetitionName
+      ? { competitionId: fromCompetitionId, competitionName: fromCompetitionName, type: fromParam === 'tournament' ? 'TOURNAMENT' : 'LEAGUE' }
       : null,
   )
 
@@ -91,7 +94,7 @@ export function ActiveMatchesPage() {
 
   useResetToList(view.type === 'list', useCallback(() => setView({ type: 'list' }), []))
 
-  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['sport', 'compType', 'bracket', 'status'])
+  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['sport', 'compType', 'bracket', 'status'], { status: 'ONGOING' })
   const sportFilter = fp.sport
   const compTypeFilter = fp.compType
   const bracketFilter = fp.bracket
@@ -117,7 +120,7 @@ export function ActiveMatchesPage() {
     } else {
       setView({ type: 'list' })
     }
-    // from/competitionId/competitionName は tournamentReturn に保存済みのでまとめてクリア
+    // from/competitionId/competitionName は competitionReturn に保存済みのでまとめてクリア
     setSearchParams({}, { replace: true })
   }, [view, matches, loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -218,19 +221,19 @@ export function ActiveMatchesPage() {
           onMatchStatusChange: matchEdit.setMatchStatus,
         }}
         nav={{
-          onBack: tournamentReturn
+          onBack: competitionReturn
             ? () => navigateToPage('competitions', {
-                competitionId: tournamentReturn.competitionId,
-                competitionName: tournamentReturn.competitionName,
-                type: 'TOURNAMENT',
+                competitionId: competitionReturn.competitionId,
+                competitionName: competitionReturn.competitionName,
+                type: competitionReturn.type,
               })
             : () => { matchEdit.closeMatch(); setView({ type: 'list' }) },
           onBackToList: () => { matchEdit.closeMatch(); setView({ type: 'list' }) },
-          onBackToCompetition: tournamentReturn
+          onBackToCompetition: competitionReturn
             ? () => navigateToPage('competitions', {
-                competitionId: tournamentReturn.competitionId,
-                competitionName: tournamentReturn.competitionName,
-                type: 'TOURNAMENT',
+                competitionId: competitionReturn.competitionId,
+                competitionName: competitionReturn.competitionName,
+                type: competitionReturn.type,
               })
             : () => { matchEdit.closeMatch(); setView({ type: 'list' }) },
         }}
@@ -276,7 +279,7 @@ export function ActiveMatchesPage() {
               <CircularProgress size={28} />
             </Box>
           ) : error ? (
-            <Typography sx={{ color: '#D71212', py: 2 }}>データの取得に失敗しました</Typography>
+            <QueryError onRetry={refetch} />
           ) : filteredMatches.length === 0 ? (
             <Typography sx={{ fontSize: '13px', color: '#888', py: 6, textAlign: 'center' }}>
               {sportFilter || compTypeFilter || bracketFilter || statusFilter ? '条件に一致する試合がありません' : '試合がありません'}

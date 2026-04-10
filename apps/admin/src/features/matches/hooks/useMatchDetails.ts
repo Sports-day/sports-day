@@ -28,7 +28,7 @@ type CompetitionJudgeData = {
 
 export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
   const [locationId, setLocationId] = useState(match.locationId ?? '')
-  const [time, setTime] = useState(match.time ?? new Date().toISOString().slice(0, 16))
+  const [time, setTime] = useState(toDatetimeLocal(match.time))
   const [judgmentType, setJudgmentType] = useState<JudgeType | null>(null)
   const [judgmentTargetId, setJudgmentTargetId] = useState('')
   const [mutationError, setMutationError] = useState<Error | null>(null)
@@ -118,7 +118,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
       await updateMatchDetail({
         variables: {
           id: match.id,
-          input: { time, locationId: locationId || undefined },
+          input: { time: new Date(time).toISOString(), locationId: locationId || undefined },
         },
         refetchQueries: ['GetAdminCompetitionMatches', 'GetAdminMatches'],
       })
@@ -158,7 +158,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
 
   const handleReset = () => {
     setLocationId(match.locationId ?? '')
-    setTime(match.time ?? new Date().toISOString().slice(0, 16))
+    setTime(toDatetimeLocal(match.time))
     // 審判を matchData から復元
     const j = matchData?.match?.judgment
     if (j?.group?.id) { setJudgmentType('group'); setJudgmentTargetId(j.group.id) }
@@ -178,4 +178,12 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     handleSave, handleReset,
     error: mutationError,
   }
+}
+
+function toDatetimeLocal(isoString?: string): string {
+  if (!isoString) return new Date().toISOString().slice(0, 16)
+  const d = new Date(isoString)
+  if (isNaN(d.getTime())) return new Date().toISOString().slice(0, 16)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }

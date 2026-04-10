@@ -13,6 +13,7 @@ export type MatchRow = {
   bracketName: string
   sportId: string
   sportName: string
+  locationId: string
   locationName: string
   teamAId: string
   teamAName: string
@@ -66,6 +67,7 @@ export function useActiveMatches(sportFilter = '') {
         bracketName: bracket?.name ?? '',
         sportId: m.competition.sport.id,
         sportName: m.competition.sport.name,
+        locationId: m.location?.id ?? '',
         locationName: m.location?.name ?? '',
         teamAId: entry0?.team?.id ?? '',
         teamAName: entry0?.team?.name ?? '',
