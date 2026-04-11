@@ -13,6 +13,7 @@ export const GET_MATCHES = gql`
       competition {
         id
         name
+        type
         sport {
           id
         }
@@ -33,10 +34,48 @@ export const GET_MATCHES = gql`
         score
       }
       judgment {
+        id
+        isAttending
+        user {
+          id
+        }
         team {
           id
           name
         }
+        group {
+          id
+        }
+      }
+    }
+  }
+`;
+
+export const MARK_PANEL_JUDGMENT_ATTENDANCE = gql`
+  mutation MarkPanelJudgmentAttendance($matchId: ID!) {
+    markJudgmentAttendance(matchId: $matchId) {
+      id
+      isAttending
+    }
+  }
+`;
+
+export const SUBMIT_PANEL_MATCH_SCORE = gql`
+  mutation SubmitPanelMatchScore($matchId: ID!, $input: SubmitScoreInput!) {
+    submitMatchScore(matchId: $matchId, input: $input) {
+      id
+      status
+      entries {
+        id
+        team {
+          id
+          name
+        }
+        score
+      }
+      winnerTeam {
+        id
+        name
       }
     }
   }
@@ -74,6 +113,7 @@ export const GET_MATCH = gql`
       judgment {
         id
         name
+        isAttending
         user {
           id
           name
@@ -81,6 +121,9 @@ export const GET_MATCH = gql`
         team {
           id
           name
+        }
+        group {
+          id
         }
       }
     }

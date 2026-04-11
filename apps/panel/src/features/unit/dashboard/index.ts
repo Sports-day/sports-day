@@ -47,6 +47,7 @@ export type DashboardDataType = {
   myTeamMatches: GqlMatch[];
   myTeamRank: number;
   myJudgeMatches: GqlMatch[];
+  refetchMatches: () => Promise<unknown>;
 };
 
 export const useFetchDashboard = () => {
@@ -57,7 +58,7 @@ export const useFetchDashboard = () => {
   const { teams, isFetching: isFetchingTeams } = useFetchTeams();
   const { sports, isFetching: isFetchingSports } = useFetchSports(true);
   const { games, isFetching: isFetchingGames } = useFetchGames(true);
-  const { matches, isFetching: isFetchingMatches } = useFetchMatches();
+  const { matches, isFetching: isFetchingMatches, refresh: refetchMatches } = useFetchMatches();
   const { users, isFetching: isFetchingUsers } = useFetchUsers();
   const { user, isFetching: isFetchingUserinfo } = useFetchUserinfo();
 
@@ -170,5 +171,6 @@ export const useFetchDashboard = () => {
     myTeamMatches: myTeamMatchesState,
     myTeamRank: myTeamRankState,
     myJudgeMatches: myJudgeMatchesState,
+    refetchMatches: refetchMatches,
   } as DashboardDataType;
 };

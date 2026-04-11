@@ -357,7 +357,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                             fullWidth disableElevation
                             variant={"contained"}
                             component={Link}
-                            to={`/sports/${props.match.competition.scene.id}`}
+                            to={`/sports/${props.match.competition.sport.id}`}
                         >
                             <Stack
                                 direction={"row"}

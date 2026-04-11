@@ -14,6 +14,10 @@ import {motion} from "framer-motion";
 import {OtherInfo} from "@/components/dashboard/Overview/OtherInfo";
 import CircleContainer from "@/components/layouts/circleContainer";
 import JudgeSchedule from "@/components/dashboard/schedule/judgeSchedule";
+import {MatchApproachingAlert} from "@/components/dashboard/MatchApproachingAlert";
+import {MatchResultPopup} from "@/components/dashboard/MatchResultPopup";
+import {JudgeScoreReminder} from "@/components/dashboard/JudgeScoreReminder";
+import {useMatchPolling} from "@/src/hooks/useMatchPolling";
 
 export default function Page() {
     //  Unit Hook
@@ -31,8 +35,10 @@ export default function Page() {
         myTeamUsers,
         myTeamMatches,
         myTeamRank,
-        myJudgeMatches
+        myJudgeMatches,
+        refetchMatches,
     } = useFetchDashboard()
+    useMatchPolling(myJudgeMatches, refetchMatches)
     const gridValue = myJudgeMatches.length > 0 ? 6 : 12;
 
     return (
@@ -94,6 +100,11 @@ export default function Page() {
                                             pb: 9
                                         }}
                                     >
+                                            <Container maxWidth="xl" sx={{ px: 1, pt: 1 }}>
+                                                <MatchApproachingAlert />
+                                            </Container>
+                                            <MatchResultPopup myTeamMatches={myTeamMatches} />
+                                            <JudgeScoreReminder judgeMatches={myJudgeMatches} />
                                             <CircleContainer>
                                                 {mySport && myTeam && myGame &&
                                                     <Box>
