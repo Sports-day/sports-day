@@ -96,8 +96,6 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
         overflow: 'hidden',
       }}
     >
-      <Divider />
-
       <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: COLOR_PRIMARY_DARK, opacity: 0.55, letterSpacing: '0.08em' }}>
         準備
       </Typography>

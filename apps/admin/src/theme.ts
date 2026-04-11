@@ -1,4 +1,6 @@
 import { createTheme } from '@mui/material/styles'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import { createElement } from 'react'
 
 const theme = createTheme({
   palette: {
@@ -78,11 +80,23 @@ const theme = createTheme({
         slotProps: { inputLabel: { shrink: true } },
       },
     },
+    MuiSelect: {
+      defaultProps: {
+        IconComponent: (props: React.ComponentProps<'svg'>) =>
+          createElement(KeyboardArrowDownIcon, { ...props, style: { ...props.style, fontSize: 20, color: '#5B6DC6' } }),
+      },
+    },
+    MuiNativeSelect: {
+      defaultProps: {
+        IconComponent: (props: React.ComponentProps<'svg'>) =>
+          createElement(KeyboardArrowDownIcon, { ...props, style: { ...props.style, fontSize: 20, color: '#5B6DC6' } }),
+      },
+    },
     MuiDrawer: {
       styleOverrides: {
         paper: {
           backgroundColor: '#D9DCED',
-          borderRight: '1px solid #5F6DC2',
+          borderRight: 'none',
         },
       },
     },
