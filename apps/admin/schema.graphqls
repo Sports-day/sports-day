@@ -5,14 +5,12 @@ enum Role {
 }
 
 type UserIdentify {
-  sub: ID!
+  sub: ID
   microsoftUserId: String
 }
 
 type User {
   id: ID!
-  name: String!
-  email: String!
   identify: UserIdentify!
   role: Role!
   groups: [Group!]!
@@ -271,14 +269,21 @@ type Rule {
 directive @hasPermission(permission: String!) on FIELD_DEFINITION
 
 input CreateUserInput {
-  name: String!
-  email: String!
+  microsoftUserId: String!
+  groupId: ID
 }
 
-input UpdateUserInput {
-  name: String
-  email: String
+"""
+CSVインポート等でユーザーを一括作成するための入力
+"""
+input BatchCreateUsersInput {
+  users: [CreateUserInput!]!
 }
+
+type BatchCreateUsersResult {
+  users: [User!]!
+}
+
 
 input CreateGroupInput {
   name: String!
@@ -704,7 +709,10 @@ type ImageUploadURL {
 
 type Mutation {
   createUser(input: CreateUserInput!): User! @hasPermission(permission: "user:write")
-  updateUser(id: ID!, input: UpdateUserInput!): User! @hasPermission(permission: "user:write")
+  """
+  ユーザーを一括作成する（CSV インポート用）
+  """
+  batchCreateUsers(input: BatchCreateUsersInput!): BatchCreateUsersResult! @hasPermission(permission: "user:write")
   deleteUser(id: ID!): User! @hasPermission(permission: "user:write")
   createGroup(input: CreateGroupInput!): Group! @hasPermission(permission: "group:write")
   deleteGroup(id: ID!): Group! @hasPermission(permission: "group:write")

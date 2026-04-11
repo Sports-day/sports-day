@@ -18,7 +18,7 @@ export const GET_ADMIN_GROUP_FOR_CLASS = gql`
     group(id: $id) {
       id
       name
-      users { id name email }
+      users { id identify { microsoftUserId } }
     }
   }
 `
@@ -53,7 +53,7 @@ export const ADD_ADMIN_GROUP_USERS_FOR_CLASS = gql`
   mutation AddAdminGroupUsersForClass($id: ID!, $input: UpdateGroupUsersInput!) {
     addGroupUsers(id: $id, input: $input) {
       id
-      users { id name email }
+      users { id identify { microsoftUserId } }
     }
   }
 `
@@ -62,7 +62,7 @@ export const REMOVE_ADMIN_GROUP_USERS_FOR_CLASS = gql`
   mutation RemoveAdminGroupUsersForClass($id: ID!, $input: UpdateGroupUsersInput!) {
     removeGroupUsers(id: $id, input: $input) {
       id
-      users { id name email }
+      users { id identify { microsoftUserId } }
     }
   }
 `

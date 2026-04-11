@@ -97,8 +97,7 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
   const matchDetail = matchData?.match
 
   const infoTags = useMemo(() => {
-    const judgmentLabel = matchDetail?.judgment?.user?.name
-      ?? matchDetail?.judgment?.team?.name
+    const judgmentLabel = matchDetail?.judgment?.team?.name
       ?? matchDetail?.judgment?.group?.name
       ?? matchDetail?.judgment?.name
       ?? '未登録'

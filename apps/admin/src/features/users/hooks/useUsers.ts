@@ -41,8 +41,8 @@ export function useUsers() {
       : undefined
     return {
       id: u.id,
-      name: msUser?.displayName ?? u.name,
-      email: msUser?.mail ?? u.email,
+      name: msUser?.displayName ?? '',
+      email: msUser?.mail ?? '',
       role: u.role,
       groupName: u.groups[0]?.name ?? '',
       teams: u.teams.map((t) => ({ id: t.id, name: t.name })),

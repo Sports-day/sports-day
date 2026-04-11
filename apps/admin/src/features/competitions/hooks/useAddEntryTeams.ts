@@ -28,7 +28,7 @@ export function useAddEntryTeams(sportId: string) {
     return (teamsData?.teams ?? []).map(t => {
       const members: EntryTeamMember[] = (t.users ?? []).map(u => ({
         id: u.id,
-        name: u.name,
+        name: '',
         isExperienced: sportId ? experiencedUserIds.has(u.id) : false,
       }))
       return {
