@@ -58,10 +58,9 @@ export function UserDetailPage({ userId, onBack }: Props) {
   }
 
   return (
-    <Box>
-      {/* パンくずリスト */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <BackButton onClick={onBack} />
-      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+      <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           ユーザー
         </ButtonBase>

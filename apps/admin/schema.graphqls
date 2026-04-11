@@ -11,6 +11,8 @@ type UserIdentify {
 
 type User {
   id: ID!
+  name: String
+  email: String
   identify: UserIdentify!
   role: Role!
   groups: [Group!]!

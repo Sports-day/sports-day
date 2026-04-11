@@ -35,9 +35,9 @@ export function TagCreatePage({ onBack }: Props) {
   }
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <BackButton onClick={onBack} />
-      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+      <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           タグ
         </ButtonBase>

@@ -112,8 +112,8 @@ export function useUserDetail(userId: string) {
   }
 
   return {
-    userName: msGraphUser?.displayName ?? '',
-    userEmail: msGraphUser?.mail ?? '',
+    userName: msGraphUser?.displayName ?? user?.name ?? '',
+    userEmail: msGraphUser?.mail ?? user?.email ?? '',
     groupId,
     setGroupId,
     groups,

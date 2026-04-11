@@ -4,6 +4,8 @@ export const GET_ADMIN_USERS = gql`
   query GetAdminUsers {
     users {
       id
+      name
+      email
       role
       identify { microsoftUserId }
       groups { id name }
@@ -24,6 +26,8 @@ export const GET_ADMIN_USER = gql`
   query GetAdminUser($id: ID!) {
     user(id: $id) {
       id
+      name
+      email
       role
       identify { microsoftUserId }
       groups { id name }

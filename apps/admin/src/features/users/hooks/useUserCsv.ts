@@ -5,7 +5,7 @@ import {
   useBatchCreateAdminUsersMutation,
 } from '@/gql/__generated__/graphql'
 import { userManager } from '@/lib/userManager'
-import { fetchMsGraphUsersByEmails } from '@/lib/graphApi'
+import { resolveUsersByEmails } from '@/lib/graphApi'
 import { showErrorToast } from '@/lib/toast'
 
 export type UserCsvRow = {
@@ -62,7 +62,7 @@ export function useUserCsv() {
       }
 
       const emails = pendingRows.map((r) => r.email)
-      const msUsers = await fetchMsGraphUsersByEmails(user.access_token, emails)
+      const msUsers = await resolveUsersByEmails(user.access_token, emails)
 
       const groups = groupsData?.groups ?? []
       const groupNameToId = new Map(groups.map((g) => [g.name, g.id]))

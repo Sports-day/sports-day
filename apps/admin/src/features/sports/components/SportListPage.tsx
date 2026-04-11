@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Box,
   Button,
@@ -18,7 +18,6 @@ import { QueryError } from '@/components/ui/QueryError'
 import { PdfExportDialog } from '@/features/competitions/components/PdfExportDialog'
 import { CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
-import { useFilterParams } from '@/hooks/useFilterParams'
 import { DragHandle } from '@/components/ui/DragHandle'
 import { useDisplayOrderDnD } from '@/hooks/useDisplayOrderDnD'
 import { useUpdateAdminSportsDisplayOrderMutation } from '@/gql/__generated__/graphql'
@@ -29,15 +28,23 @@ type Props = {
 }
 
 export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
-  const { data: sports, loading, error } = useSports()
-  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'scene'])
-  const { data: competitions } = useCompetitions()
+  const {
+    data: filtered,
+    allData: sports,
+    keyword,
+    sceneFilter,
+    sceneOptions,
+    setFilter,
+    handleFilterChange,
+    resetFilters,
+    loading,
+    error,
+  } = useSports()
+  const { allData: competitions } = useCompetitions()
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false)
   const [pdfSportId, setPdfSportId] = useState('')
   const [pdfSceneId, setPdfSceneId] = useState('')
 
-  const keyword = fp.keyword
-  const sceneFilter = fp.scene
   const hasFilter = !!(keyword || sceneFilter)
 
   const [reorderMutation] = useUpdateAdminSportsDisplayOrderMutation({
@@ -74,33 +81,11 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
     }
   }
 
-  const sceneOptions = useMemo(() => {
-    const set = new Set<string>()
-    for (const s of sports) {
-      for (const name of s.sceneNames) set.add(name)
-    }
-    return Array.from(set).sort().map(name => ({ value: name, label: name }))
-  }, [sports])
-
   const filterDefs: FilterDef[] = useMemo(() => [
     { key: 'scene', label: 'シーン', options: sceneOptions },
   ], [sceneOptions])
 
   const filterValues = useMemo(() => ({ scene: sceneFilter }), [sceneFilter])
-
-  const handleFilterChange = useCallback((key: string, value: string) => {
-    setFilter(key, value)
-  }, [setFilter])
-
-  const filtered = useMemo(() => {
-    let result = sports
-    if (keyword) {
-      const kw = keyword.toLowerCase()
-      result = result.filter(s => s.name.toLowerCase().includes(kw))
-    }
-    if (sceneFilter) result = result.filter(s => s.sceneNames.includes(sceneFilter))
-    return result
-  }, [sports, keyword, sceneFilter])
 
   const renderItems = hasFilter ? filtered : displayItems
 

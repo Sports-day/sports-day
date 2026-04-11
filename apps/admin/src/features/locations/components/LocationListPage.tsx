@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import {
   Box,
   Button,
@@ -17,7 +16,6 @@ import { useLocations } from '../hooks/useLocations'
 import { QueryError } from '@/components/ui/QueryError'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar } from '@/components/ui/SearchFilterBar'
-import { useFilterParams } from '@/hooks/useFilterParams'
 
 type Props = {
   onNavigateToCreate: () => void
@@ -25,15 +23,7 @@ type Props = {
 }
 
 export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props) {
-  const { data: locations, loading, error } = useLocations()
-  const { values: fp, set: setFilter } = useFilterParams(['keyword'])
-  const keyword = fp.keyword
-
-  const filtered = useMemo(() => {
-    if (!keyword) return locations
-    const kw = keyword.toLowerCase()
-    return locations.filter(l => l.name.toLowerCase().includes(kw))
-  }, [locations, keyword])
+  const { data: filtered, keyword, setFilter, loading, error } = useLocations()
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
