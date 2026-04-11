@@ -1,6 +1,5 @@
 export { TeamListPage } from './components/TeamListPage'
-export { TeamExportPage } from './components/TeamExportPage'
-export { TeamBulkRenamePage } from './components/TeamBulkRenamePage'
+export { TeamCreatePage } from './components/TeamCreatePage'
 export { TeamDetailPage } from './components/TeamDetailPage'
 export { useTeams } from './hooks/useTeams'
 export type { Team } from './types'
