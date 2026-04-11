@@ -24,7 +24,7 @@ export const GET_ADMIN_MATCHES = gql`
       }
       winnerTeam { id }
       entries { id team { id name } score }
-      judgment { id name }
+      judgment { id name isAttending user { id } team { id } group { id } }
     }
   }
 `
@@ -55,7 +55,7 @@ export const GET_ADMIN_MATCH = gql`
       location { id name }
       competition { id name }
       entries { id team { id name } score }
-      judgment { id name user { id name } team { id name } group { id name } }
+      judgment { id name isAttending user { id name } team { id name } group { id name } }
     }
   }
 `

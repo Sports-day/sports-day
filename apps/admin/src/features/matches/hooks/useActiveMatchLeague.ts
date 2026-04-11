@@ -146,6 +146,15 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
     })
   )
 
+  // 試合順番マップ（time昇順 → 1-indexed）
+  const matchOrderMap = new Map<string, number>()
+  const sorted = [...activeMatches].sort((a, b) => {
+    const ta = a.time ? new Date(a.time).getTime() : 0
+    const tb = b.time ? new Date(b.time).getTime() : 0
+    return ta - tb || a.id.localeCompare(b.id)
+  })
+  sorted.forEach((m, i) => matchOrderMap.set(m.id, i + 1))
+
   const allFinished = activeMatches.length > 0 && activeMatches.every(m => m.status === 'finished')
 
   // 同順位チームのグループを検出
@@ -160,5 +169,5 @@ export function useActiveMatchLeague(competitionId: string, leagueId: string) {
     .map(([rank, teams]) => ({ rank, teams }))
     .sort((a, b) => a.rank - b.rank)
 
-  return { league, grid, allFinished, statsMap, rankLabels, tiedGroups, loading, error: error ?? null }
+  return { league, grid, allFinished, statsMap, rankLabels, matchOrderMap, tiedGroups, loading, error: error ?? null }
 }

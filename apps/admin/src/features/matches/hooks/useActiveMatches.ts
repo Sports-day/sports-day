@@ -23,6 +23,8 @@ export type MatchRow = {
   scoreB: number
   winnerTeamId: string
   judgmentName: string
+  hasJudgment: boolean
+  judgmentIsAttending: boolean
 }
 
 type SportOption = { id: string; name: string }
@@ -77,6 +79,8 @@ export function useActiveMatches(sportFilter = '') {
         scoreB: entry1?.score ?? 0,
         winnerTeamId: m.winnerTeam?.id ?? '',
         judgmentName: m.judgment?.name ?? '',
+        hasJudgment: m.judgment != null && !!(m.judgment.user || m.judgment.team || m.judgment.group || m.judgment.name),
+        judgmentIsAttending: m.judgment?.isAttending ?? false,
       }
     }).sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
   }, [data])

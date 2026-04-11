@@ -74,7 +74,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
 
   const defaults = useCompetitionDefaults(competitionId)
 
-  const { league: leagueStandings, grid, statsMap, rankLabels } = useActiveMatchLeague(competitionId, leagueId)
+  const { league: leagueStandings, grid, statsMap, rankLabels, matchOrderMap } = useActiveMatchLeague(competitionId, leagueId)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [entryConfirmAction, setEntryConfirmAction] = useState<(() => Promise<void>) | null>(null)
@@ -352,6 +352,8 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                             resultColor = '#9E9E9E'
                           }
 
+                          const orderNum = m ? matchOrderMap.get(m.id) : undefined
+
                           return (
                             <TableCell
                               key={colIdx}
@@ -363,9 +365,15 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                                 fontSize: '11px',
                                 textAlign: 'center',
                                 backgroundColor: '#E6E9F5',
+                                position: 'relative',
                                 ...(m ? { cursor: 'pointer', '&:hover': { backgroundColor: '#D6DBF2' } } : {}),
                               }}
                             >
+                              {orderNum != null && (
+                                <Typography sx={{ position: 'absolute', top: 2, left: 4, fontSize: '10px', fontWeight: 500, color: '#8890C4', lineHeight: 1 }}>
+                                  #{orderNum}
+                                </Typography>
+                              )}
                               {resultMark ? (
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
                                   <Typography sx={{ fontSize: '14px', fontWeight: 700, color: resultColor, lineHeight: 1 }}>
@@ -498,6 +506,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
           await action?.()
         }}
       />
+
     </Box>
   )
 }

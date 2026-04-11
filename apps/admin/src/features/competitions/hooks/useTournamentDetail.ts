@@ -92,6 +92,7 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
       score2: entry1?.score ?? null,
       winnerTeamId: match.winnerTeam?.id ?? null,
       status: toStatus(match.status),
+      time: match.time,
     }
   })
 

@@ -2,6 +2,7 @@ export type Competition = {
   id: string
   name: string
   type: string
+  sceneId: string
   sceneName: string
   sportId: string
   sportName: string
@@ -28,6 +29,7 @@ export type TournamentMatchView = {
   score2?: number | null
   winnerTeamId?: string | null
   status: 'STANDBY' | 'ONGOING' | 'FINISHED'
+  time?: string
 }
 
 export type BracketView = {

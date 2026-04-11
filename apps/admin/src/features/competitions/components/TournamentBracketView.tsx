@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Box, Chip, LinearProgress, Typography } from '@mui/material'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import AccountTreeIcon from '@mui/icons-material/AccountTree'
@@ -284,6 +284,7 @@ function TeamRow({ label, score, isWinner, isLoser, isBottom, empty, seedNumber,
 
 type MatchCardProps = {
   match: TournamentMatchView
+  orderNumber?: number
   onClick?: (match: TournamentMatchView) => void
   onSeedClick?: (seedNumber: number, currentTeamId: string | null | undefined, anchorEl: HTMLElement, slotId: string | undefined) => void
   draggable?: boolean
@@ -294,7 +295,7 @@ type MatchCardProps = {
   isDragOver?: boolean
 }
 
-function MatchCard({ match, onClick, onSeedClick, draggable, onDragStart, onDragOver, onDragEnd, onDrop, isDragOver }: MatchCardProps) {
+function MatchCard({ match, orderNumber, onClick, onSeedClick, draggable, onDragStart, onDragOver, onDragEnd, onDrop, isDragOver }: MatchCardProps) {
   const { slot1, slot2, score1, score2, winnerTeamId, status } = match
   const win1 = !!(winnerTeamId && winnerTeamId === slot1.teamId)
   const win2 = !!(winnerTeamId && winnerTeamId === slot2.teamId)
@@ -335,9 +336,16 @@ function MatchCard({ match, onClick, onSeedClick, draggable, onDragStart, onDrag
         px: 1.5, py: 0.5, backgroundColor: C.header,
         borderBottom: `1px solid rgba(63,81,181,0.12)`, minHeight: 28,
       }}>
-        <Typography sx={{ fontSize: '11px', color: C.headerText, fontWeight: 700, letterSpacing: 0.3 }}>
-          {match.label ?? '試合'}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+          {orderNumber != null && (
+            <Typography sx={{ fontSize: '11px', color: '#8890C4', fontWeight: 700, lineHeight: 1 }}>
+              #{orderNumber}
+            </Typography>
+          )}
+          <Typography sx={{ fontSize: '11px', color: C.headerText, fontWeight: 700, letterSpacing: 0.3 }}>
+            {match.label ?? '試合'}
+          </Typography>
+        </Box>
         <StatusBadge status={status} />
       </Box>
       <TeamRow
@@ -383,6 +391,18 @@ function BracketTree({ matches, bracketType, onMatchClick, onSeedClick, onSwapMa
   onSwapMatches?: (matchA: TournamentMatchView, matchB: TournamentMatchView) => void
 }) {
   const [dragOverMatchId, setDragOverMatchId] = useState<string | null>(null)
+
+  // 試合順番マップ（time昇順 → 1-indexed）
+  const matchOrderMap = useMemo(() => {
+    const map = new Map<string, number>()
+    const sorted = [...matches].sort((a, b) => {
+      const ta = a.time ? new Date(a.time).getTime() : 0
+      const tb = b.time ? new Date(b.time).getTime() : 0
+      return ta - tb || a.id.localeCompare(b.id)
+    })
+    sorted.forEach((m, i) => map.set(m.id, i + 1))
+    return map
+  }, [matches])
 
   if (matches.length === 0) return null
 
@@ -546,6 +566,7 @@ function BracketTree({ matches, bracketType, onMatchClick, onSeedClick, onSwapMa
               >
                 <MatchCard
                   match={match}
+                  orderNumber={matchOrderMap.get(match.id)}
                   onClick={onMatchClick}
                   onSeedClick={onSeedClick}
                   draggable={canDrag}

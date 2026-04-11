@@ -7,6 +7,7 @@ export function useCompetitions() {
     id: c.id,
     name: c.name,
     type: c.type,
+    sceneId: c.scene.id,
     sceneName: c.scene.name,
     sportId: c.sport.id,
     sportName: c.sport.name,

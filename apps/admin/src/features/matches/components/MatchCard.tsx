@@ -115,6 +115,19 @@ export function MatchCard({ match, onClick }: Props) {
             </Typography>
           </Box>
         )}
+        <Box sx={{ flex: 1 }} />
+        {match.hasJudgment && (
+          <Chip
+            label={match.judgmentIsAttending ? '審判到着' : '審判未着'}
+            size="small"
+            sx={{
+              fontSize: '9px',
+              height: 18,
+              backgroundColor: match.judgmentIsAttending ? '#E8F5E9' : '#F5F5F5',
+              color: match.judgmentIsAttending ? '#2E7D32' : '#9E9E9E',
+            }}
+          />
+        )}
       </Box>
     </Box>
   )
