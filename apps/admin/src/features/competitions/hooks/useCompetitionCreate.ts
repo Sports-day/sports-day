@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ChangeEvent } from 'react'
 import {
   useCreateAdminCompetitionMutation,
+  useGenerateAdminBracketMutation,
   useGetAdminSportsWithScenesQuery,
   CompetitionType,
 } from '@/gql/__generated__/graphql'
@@ -24,6 +25,7 @@ export function useCompetitionCreate(onSuccess: (id: string, name: string, type:
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
   const [createCompetition] = useCreateAdminCompetitionMutation()
+  const [generateBracket] = useGenerateAdminBracketMutation()
   const { data: sportsData } = useGetAdminSportsWithScenesQuery()
   const allSports = sportsData?.sports ?? []
   const sports = allSports.map(s => ({ id: s.id, name: s.name }))
@@ -52,6 +54,21 @@ export function useCompetitionCreate(onSuccess: (id: string, name: string, type:
       })
       const created = result.data?.createCompetition
       if (!created) return
+
+      // トーナメント型の場合はブラケットを自動生成
+      if (form.competitionType === CompetitionType.Tournament) {
+        await generateBracket({
+          variables: {
+            input: {
+              competitionId: created.id,
+              teamCount: 4,
+              placementMethod: 'SEED_OPTIMIZED',
+            },
+          },
+          refetchQueries: ['GetAdminTournaments', 'GetAdminTournament'],
+        })
+      }
+
       setMutationError(null)
       onSuccess(created.id, created.name, created.type)
     } catch (e) {

@@ -102,7 +102,7 @@ export function useTournamentEdit(competitionId: string, competitionName: string
 
   const teamCount = editTeamCount ?? serverTeamCount
   const placementMethod = editPlacementMethod ?? serverPlacementMethod
-  const bracketNeedsGeneration = !mainTournament
+  const bracketNeedsGeneration = !mainTournament || (tournament?.matches?.length === 0 && tournament?.slots?.length === 0)
   const bracketChanged = editTeamCount !== null || editPlacementMethod !== null
 
   // ─── 自動進出 ──────────────────────────────────────
