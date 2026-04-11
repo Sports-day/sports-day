@@ -9,7 +9,7 @@ export type SportsListProps = {
 }
 
 export default function SportsList(props: SportsListProps) {
-    const sorted = [...props.sports].sort((a, b) => b.weight - a.weight);
+    const sorted = [...props.sports].sort((a, b) => a.displayOrder - b.displayOrder);
     return (
         <>
             <Stack direction="row" spacing={10} padding={2} alignItems="center" justifyContent="center">

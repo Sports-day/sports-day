@@ -176,7 +176,7 @@ export default function Page() {
                                                             すべての競技
                                                         </Typography>
                                                         {[...sports]
-                                                            .sort((a, b) => b.weight - a.weight)
+                                                            .sort((a, b) => a.displayOrder - b.displayOrder)
                                                             .map((sport) => {
                                                                 return (
                                                                     <Grid size={12} key={sport.id}>

@@ -96,7 +96,7 @@ export const useFetchDashboard = () => {
           const competitionsByWeight = [...myCompetitions].sort((a, b) => {
             const sportA = sports.find((s) => s.id === a.sport?.id);
             const sportB = sports.find((s) => s.id === b.sport?.id);
-            return (sportB?.weight ?? 0) - (sportA?.weight ?? 0);
+            return (sportA?.displayOrder ?? 0) - (sportB?.displayOrder ?? 0);
           });
           const myCompetition = competitionsByWeight[0];
           setMyGame(myCompetition);

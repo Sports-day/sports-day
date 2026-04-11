@@ -5,7 +5,7 @@ export const GET_SPORTS = gql`
     sports {
       id
       name
-      weight
+      displayOrder
       image {
         id
         url
@@ -26,7 +26,7 @@ export const GET_SPORT = gql`
     sport(id: $id) {
       id
       name
-      weight
+      displayOrder
       rules {
         id
         rule
