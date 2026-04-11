@@ -58,8 +58,20 @@ func (r location) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*d
 
 func (r location) List(ctx context.Context, db *gorm.DB) ([]*db_model.Location, error) {
 	var locations []*db_model.Location
-	if err := db.Find(&locations).Error; err != nil {
+	if err := db.Order("display_order ASC, created_at ASC").Find(&locations).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return locations, nil
+}
+
+func (r location) UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			if err := tx.Model(&db_model.Location{}).Where("id = ?", item.ID).
+				Update("display_order", item.DisplayOrder).Error; err != nil {
+				return errors.Wrap(err)
+			}
+		}
+		return nil
+	})
 }

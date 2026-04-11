@@ -29,7 +29,7 @@ DELETE FROM locations;
 DELETE FROM `sports`;
 
 -- ─── Sports ─────────────────────────────────────────────
-INSERT INTO sports (id, name, weight)
+INSERT INTO sports (id, name, display_order)
 VALUES
   ('01KNP89C5Z5J4KD9RWA1EWJJ22', 'フットサル', 1),
   ('01KNP89C5ZZ1PTDGV7JC1HVRNM', 'バスケットボール', 2),

@@ -13,4 +13,6 @@ type Information interface {
 	Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Information, error)
 	Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Information, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Information, error)
+	MaxDisplayOrder(ctx context.Context, db *gorm.DB) (int, error)
+	UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error
 }

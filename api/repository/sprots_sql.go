@@ -28,10 +28,31 @@ func (r *sportsRepository) Get(ctx context.Context, db *gorm.DB, id string) (*db
 
 func (r *sportsRepository) List(ctx context.Context, db *gorm.DB) ([]*db_model.Sport, error) {
 	var sports []*db_model.Sport
-	if err := db.Find(&sports).Error; err != nil {
+	if err := db.Order("display_order ASC, created_at ASC").Find(&sports).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return sports, nil
+}
+
+func (r *sportsRepository) MaxDisplayOrder(ctx context.Context, db *gorm.DB) (int, error) {
+	var max int
+	err := db.Model(&db_model.Sport{}).Select("COALESCE(MAX(display_order), 0)").Scan(&max).Error
+	if err != nil {
+		return 0, errors.Wrap(err)
+	}
+	return max, nil
+}
+
+func (r *sportsRepository) UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			if err := tx.Model(&db_model.Sport{}).Where("id = ?", item.ID).
+				Update("display_order", item.DisplayOrder).Error; err != nil {
+				return errors.Wrap(err)
+			}
+		}
+		return nil
+	})
 }
 
 func (r *sportsRepository) Save(ctx context.Context, db *gorm.DB, sport *db_model.Sport) (*db_model.Sport, error) {

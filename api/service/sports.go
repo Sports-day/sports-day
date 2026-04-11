@@ -48,12 +48,18 @@ func (s *Sport) List(ctx context.Context) ([]*db_model.Sport, error) {
 }
 
 func (s *Sport) Create(ctx context.Context, input *model.CreateSportsInput) (*db_model.Sport, error) {
-	sport := &db_model.Sport{
-		ID:   ulid.Make(),
-		Name: input.Name,
+	maxOrder, err := s.sportsRepository.MaxDisplayOrder(ctx, s.db)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
 
-	sport, err := s.sportsRepository.Save(ctx, s.db, sport)
+	sport := &db_model.Sport{
+		ID:           ulid.Make(),
+		Name:         input.Name,
+		DisplayOrder: maxOrder + 1,
+	}
+
+	sport, err = s.sportsRepository.Save(ctx, s.db, sport)
 	if err != nil {
 		return nil, errors.ErrSaveSport
 	}
@@ -79,8 +85,8 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 		if input.Name != nil {
 			sport.Name = *input.Name
 		}
-		if input.Weight != nil {
-			sport.Weight = int(*input.Weight)
+		if input.DisplayOrder != nil {
+			sport.DisplayOrder = int(*input.DisplayOrder)
 		}
 		if input.ExperiencedLimit != nil {
 			sport.ExperiencedLimit = sql.NullInt64{
@@ -258,3 +264,6 @@ func (s *Sport) DeleteExperiences(ctx context.Context, sportID string, userIDs [
 	return nil
 }
 
+func (s *Sport) UpdateDisplayOrders(ctx context.Context, items []repository.DisplayOrderItem) error {
+	return s.sportsRepository.UpdateDisplayOrders(ctx, s.db, items)
+}

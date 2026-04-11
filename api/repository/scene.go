@@ -34,4 +34,5 @@ type Scene interface {
 	BatchGetSportScenesBySceneIDs(ctx context.Context, db *gorm.DB, sceneIDs []string) ([]*db_model.SportScene, error)
 	BatchGetSportEntriesBySportSceneIDs(ctx context.Context, db *gorm.DB, sportSceneIDs []string) ([]*db_model.SportEntry, error)
 	BatchGetSportEntriesByTeamIDs(ctx context.Context, db *gorm.DB, teamIDs []string) ([]*db_model.SportEntry, error)
+	UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error
 }

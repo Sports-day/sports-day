@@ -117,3 +117,7 @@ func (s *Image) CreateUploadURL(ctx context.Context, filename string) (*db_model
 
 	return img, presigned.URL, nil
 }
+
+func (s *Image) UpdateDisplayOrders(ctx context.Context, items []repository.DisplayOrderItem) error {
+	return s.imageRepository.UpdateDisplayOrders(ctx, s.db, items)
+}

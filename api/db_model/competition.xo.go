@@ -18,4 +18,5 @@ type Competition struct {
 	MatchDuration     sql.NullInt64  `json:"match_duration"`      // 試合時間（分）
 	BreakDuration     sql.NullInt64  `json:"break_duration"`      // 休憩時間（分）
 	DefaultLocationID sql.NullString `json:"default_location_id"` // デフォルト場所ID
+	DisplayOrder      int            `json:"display_order"`       // 表示順
 }

@@ -10,7 +10,7 @@ import (
 type Sport struct {
 	ID               string         `json:"id"`                // ID
 	Name             string         `json:"name"`              // スポーツ名
-	Weight           int            `json:"weight"`            // 表示順
+	DisplayOrder     int            `json:"display_order"`     // 表示順
 	ImageID          sql.NullString `json:"image_id"`          // image_id
 	ExperiencedLimit sql.NullInt64  `json:"experienced_limit"` // 経験者上限
 }

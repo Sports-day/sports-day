@@ -48,14 +48,20 @@ func (s *Competition) SetTournamentService(ts *Tournament) {
 func (s *Competition) Create(ctx context.Context, input *model.CreateCompetitionInput) (*db_model.Competition, error) {
 	var result *db_model.Competition
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	maxOrder, err := s.competitionRepository.MaxDisplayOrder(ctx, s.db)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
 		competitionID := ulid.Make()
 		competition := &db_model.Competition{
-			ID:      competitionID,
-			Name:    input.Name,
-			Type:    input.Type.String(),
-			SceneID: input.SceneID,
-			SportID: sql.NullString{Valid: true, String: input.SportID},
+			ID:           competitionID,
+			Name:         input.Name,
+			Type:         input.Type.String(),
+			SceneID:      input.SceneID,
+			SportID:      sql.NullString{Valid: true, String: input.SportID},
+			DisplayOrder: maxOrder + 1,
 		}
 
 		saved, err := s.competitionRepository.Save(ctx, tx, competition)
@@ -1321,4 +1327,8 @@ func (s *Competition) ApplyDefaults(ctx context.Context, id string, input *model
 		return nil, errors.Wrap(err)
 	}
 	return allMatches, nil
+}
+
+func (s *Competition) UpdateDisplayOrders(ctx context.Context, items []repository.DisplayOrderItem) error {
+	return s.competitionRepository.UpdateDisplayOrders(ctx, s.db, items)
 }

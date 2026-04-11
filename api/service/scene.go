@@ -263,3 +263,7 @@ func (s *Scene) GetScenesMapByIDs(ctx context.Context, ids []string) (map[string
 	}
 	return sceneMap, nil
 }
+
+func (s *Scene) UpdateDisplayOrders(ctx context.Context, items []repository.DisplayOrderItem) error {
+	return s.sceneRepo.UpdateDisplayOrders(ctx, s.db, items)
+}

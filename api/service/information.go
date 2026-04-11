@@ -30,13 +30,19 @@ func (s *Information) Create(ctx context.Context, input *model.CreateInformation
 		status = *input.Status
 	}
 
-	information := &db_model.Information{
-		ID:      ulid.Make(),
-		Title:   input.Title,
-		Content: input.Content,
-		Status:  status,
+	maxOrder, err := s.informationRepository.MaxDisplayOrder(ctx, s.db)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
-	information, err := s.informationRepository.Save(ctx, s.db, information)
+
+	information := &db_model.Information{
+		ID:           ulid.Make(),
+		Title:        input.Title,
+		Content:      input.Content,
+		Status:       status,
+		DisplayOrder: maxOrder + 1,
+	}
+	information, err = s.informationRepository.Save(ctx, s.db, information)
 	if err != nil {
 		return nil, errors.ErrSaveInformation
 	}
@@ -90,4 +96,8 @@ func (s *Information) GetAll(ctx context.Context) ([]*db_model.Information, erro
 		return nil, errors.Wrap(err)
 	}
 	return informations, nil
+}
+
+func (s *Information) UpdateDisplayOrders(ctx context.Context, items []repository.DisplayOrderItem) error {
+	return s.informationRepository.UpdateDisplayOrders(ctx, s.db, items)
 }

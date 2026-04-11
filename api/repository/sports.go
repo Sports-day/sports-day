@@ -31,4 +31,6 @@ type Sports interface {
 	DeleteExperiences(ctx context.Context, db *gorm.DB, sportID string, userIDs []string) error
 	// 指定sportに登録されているチームごとの経験者数の最大値を返す
 	MaxExperiencedCountPerTeam(ctx context.Context, db *gorm.DB, sportID string) (int, error)
+	MaxDisplayOrder(ctx context.Context, db *gorm.DB) (int, error)
+	UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error
 }

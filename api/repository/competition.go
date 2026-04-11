@@ -26,4 +26,6 @@ type Competition interface {
 	DeletePromotionRule(ctx context.Context, db *gorm.DB, id string) (*db_model.PromotionRule, error)
 	ListBySourceCompetitionID(ctx context.Context, db *gorm.DB, sourceCompetitionID string) ([]*db_model.PromotionRule, error)
 	ListByTargetCompetitionID(ctx context.Context, db *gorm.DB, targetCompetitionID string) ([]*db_model.PromotionRule, error)
+	MaxDisplayOrder(ctx context.Context, db *gorm.DB) (int, error)
+	UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error
 }

@@ -8,8 +8,9 @@ import (
 
 // Image represents a row from 'sportsday.images'.
 type Image struct {
-	ID         string         `json:"id"`          // image id
-	Status     string         `json:"status"`      // status
-	URL        sql.NullString `json:"url"`         // url
-	UploadedAt sql.NullTime   `json:"uploaded_at"` // uploaded_at
+	ID           string         `json:"id"`            // image id
+	Status       string         `json:"status"`        // status
+	URL          sql.NullString `json:"url"`           // url
+	DisplayOrder int            `json:"display_order"` // 表示順
+	UploadedAt   sql.NullTime   `json:"uploaded_at"`   // uploaded_at
 }
