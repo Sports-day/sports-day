@@ -6,6 +6,7 @@ export const GET_ADMIN_IMAGES = gql`
       id
       url
       status
+      displayOrder
     }
   }
 `
@@ -34,5 +35,11 @@ export const DELETE_ADMIN_IMAGE = gql`
     deleteImage(id: $id) {
       id
     }
+  }
+`
+
+export const UPDATE_ADMIN_IMAGES_DISPLAY_ORDER = gql`
+  mutation UpdateAdminImagesDisplayOrder($input: [DisplayOrderItem!]!) {
+    updateImagesDisplayOrder(input: $input)
   }
 `

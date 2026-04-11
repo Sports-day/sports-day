@@ -6,6 +6,7 @@ export function useLocations() {
   const locations: Location[] = (data?.locations ?? []).map(l => ({
     id: l.id,
     name: l.name,
+    displayOrder: l.displayOrder,
   }))
   return { data: locations, loading, error: error ?? null }
 }

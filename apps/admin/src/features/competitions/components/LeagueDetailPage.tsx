@@ -19,7 +19,6 @@ import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ScheduleIcon from '@mui/icons-material/Schedule'
-import SportsScoreIcon from '@mui/icons-material/SportsScore'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { navigateToPage } from '@/hooks/useAppNavigation'
@@ -32,6 +31,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SportSelect } from './SportSelect'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
+import { DateTimeInput } from '@/components/ui/DateTimeInput'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { showToast, showErrorToast } from '@/lib/toast'
 import { BackButton } from '@/components/ui/BackButton'
 
@@ -157,36 +158,29 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
             <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
               試合時間設定
             </Typography>
-            <TextField
+            <DateTimeInput
               label="開始時刻"
-              type="datetime-local"
               value={defaults.form.startTime}
-              onChange={(e) => defaults.setForm(prev => ({ ...prev, startTime: e.target.value }))}
-              size="small"
-              fullWidth
-              sx={CARD_FIELD_SX}
-              slotProps={{ inputLabel: { shrink: true } }}
+              onChange={(v) => defaults.setForm(prev => ({ ...prev, startTime: v }))}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
+              <NumberInput
                 label="試合時間（分）"
-                type="number"
                 value={defaults.form.matchDuration}
-                onChange={(e) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, Number(e.target.value)) }))}
-                size="small"
+                onChange={(v) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, v) }))}
+                min={1}
+                max={999}
                 fullWidth
                 sx={CARD_FIELD_SX}
-                slotProps={{ htmlInput: { min: 1, max: 999 } }}
               />
-              <TextField
+              <NumberInput
                 label="休憩時間（分）"
-                type="number"
                 value={defaults.form.breakDuration}
-                onChange={(e) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, Number(e.target.value)) }))}
-                size="small"
+                onChange={(v) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, v) }))}
+                min={0}
+                max={999}
                 fullWidth
                 sx={CARD_FIELD_SX}
-                slotProps={{ htmlInput: { min: 0, max: 999 } }}
               />
             </Box>
 
@@ -207,37 +201,37 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
               勝ち点設定
             </Typography>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
+              <NumberInput
                 label="勝ち"
-                type="number"
                 value={form.winPt}
-                onChange={handleChange('winPt')}
-                size="small"
+                onChange={(v) => handleChange('winPt')({ target: { value: String(v) } } as React.ChangeEvent<HTMLInputElement>)}
+                min={0}
+                max={999}
+                fullWidth
                 error={Number(form.winPt) < 0 || !Number.isInteger(Number(form.winPt))}
                 helperText={Number(form.winPt) < 0 ? '0以上の値を入力してください' : !Number.isInteger(Number(form.winPt)) ? '整数を入力してください' : ''}
-                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
                 sx={CARD_FIELD_SX}
               />
-              <TextField
+              <NumberInput
                 label="引き分け"
-                type="number"
                 value={form.drawPt}
-                onChange={handleChange('drawPt')}
-                size="small"
+                onChange={(v) => handleChange('drawPt')({ target: { value: String(v) } } as React.ChangeEvent<HTMLInputElement>)}
+                min={0}
+                max={999}
+                fullWidth
                 error={Number(form.drawPt) < 0 || !Number.isInteger(Number(form.drawPt))}
                 helperText={Number(form.drawPt) < 0 ? '0以上の値を入力してください' : !Number.isInteger(Number(form.drawPt)) ? '整数を入力してください' : ''}
-                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
                 sx={CARD_FIELD_SX}
               />
-              <TextField
+              <NumberInput
                 label="負け"
-                type="number"
                 value={form.losePt}
-                onChange={handleChange('losePt')}
-                size="small"
+                onChange={(v) => handleChange('losePt')({ target: { value: String(v) } } as React.ChangeEvent<HTMLInputElement>)}
+                min={0}
+                max={999}
+                fullWidth
                 error={Number(form.losePt) < 0 || !Number.isInteger(Number(form.losePt))}
                 helperText={Number(form.losePt) < 0 ? '0以上の値を入力してください' : !Number.isInteger(Number(form.losePt)) ? '整数を入力してください' : ''}
-                slotProps={{ htmlInput: { min: 0, max: 999, step: 1 } }}
                 sx={CARD_FIELD_SX}
               />
             </Box>
@@ -448,16 +442,6 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
             </TableBody>
           </Table>
           <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-            {entries.length >= 2 && (
-              <Button
-                variant="outlined"
-                startIcon={<SportsScoreIcon />}
-                onClick={() => navigateToPage('active-matches')}
-                sx={{ ...DELETE_BUTTON_SX, flexShrink: 0, borderColor: '#5B6DC6', color: '#2F3C8C', '&:hover': { backgroundColor: '#E8EAF6', borderColor: '#3949AB' }, '& .MuiButton-startIcon': { color: '#5B6DC6' } }}
-              >
-                試合ページで確認する
-              </Button>
-            )}
             <Button
               variant="contained"
               fullWidth

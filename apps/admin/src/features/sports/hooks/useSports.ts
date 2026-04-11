@@ -6,7 +6,7 @@ export function useSports() {
   const sports: Sport[] = (data?.sports ?? []).map(s => ({
     id: s.id,
     name: s.name,
-    weight: s.weight,
+    displayOrder: s.displayOrder,
     imageUrl: s.image?.url ?? '',
     sceneNames: (s.scene ?? []).map(sc => sc.scene.name),
     scenes: (s.scene ?? []).map(sc => ({ sceneId: sc.scene.id, sceneName: sc.scene.name })),

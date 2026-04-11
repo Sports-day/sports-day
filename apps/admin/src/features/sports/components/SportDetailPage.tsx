@@ -35,8 +35,6 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
     sport,
     name,
     setName,
-    weight,
-    setWeight,
     experiencedLimit,
     setExperiencedLimit,
     imageId,
@@ -83,9 +81,9 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
   const dndOptions = rankingConditionOptions.map(o => ({ value: o.value as string, label: o.label }))
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <BackButton onClick={onBack} />
-      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+      <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           競技
         </ButtonBase>
@@ -179,7 +177,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
               />
             </Box>
 
-            {/* 右: 名称・重み・タグ */}
+            {/* 右: 名称・タグ */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 label="名称*"
@@ -194,19 +192,6 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
               />
 
               <TextField
-                label="重み"
-                type="number"
-                value={weight}
-                onChange={(e) => setWeight(Number(e.target.value))}
-                fullWidth
-                size="small"
-                error={weight < 0 || !Number.isInteger(weight)}
-                helperText={weight < 0 ? '0以上の値を入力してください' : !Number.isInteger(weight) ? '整数を入力してください' : ''}
-                sx={CARD_FIELD_SX}
-                slotProps={{ htmlInput: { min: 0, step: 1 } }}
-              />
-
-              <TextField
                 label="経験者上限（1チームあたり）"
                 type="number"
                 value={experiencedLimit ?? ''}
@@ -218,7 +203,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
                 size="small"
                 helperText="未設定の場合は制限なし"
                 sx={CARD_FIELD_SX}
-                slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                slotProps={{ htmlInput: { min: 0, step: 1 }, formHelperText: { sx: { color: '#5F6DC2', opacity: 0.5, ml: 0 } } }}
               />
 
               <SceneSelect multiple value={sceneIds} onChange={setSceneIds} scenes={allScenes} />
@@ -252,7 +237,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
               fullWidth
               startIcon={<CheckIcon />}
               onClick={handleSaveWithToast}
-              disabled={!dirty || !name.trim() || weight < 0 || !Number.isInteger(weight)}
+              disabled={!dirty || !name.trim()}
               sx={SAVE_BUTTON_SX}
             >
               保存

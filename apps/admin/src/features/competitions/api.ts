@@ -5,6 +5,7 @@ export const GET_ADMIN_COMPETITIONS = gql`
     competitions {
       id
       name
+      displayOrder
       type
       sport { id name }
       scene { id name }
@@ -352,5 +353,11 @@ export const GET_ADMIN_TOURNAMENT_RANKING = gql`
       team { id name }
       isTied
     }
+  }
+`
+
+export const UPDATE_ADMIN_COMPETITIONS_DISPLAY_ORDER = gql`
+  mutation UpdateAdminCompetitionsDisplayOrder($input: [DisplayOrderItem!]!) {
+    updateCompetitionsDisplayOrder(input: $input)
   }
 `

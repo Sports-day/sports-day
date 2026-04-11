@@ -44,7 +44,7 @@ export function AddEntryDialog({ open, leagueName, sportId = '', existingTeamNam
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {

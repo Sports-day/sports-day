@@ -7,6 +7,7 @@ export const GET_ADMIN_INFORMATIONS = gql`
       title
       content
       status
+      displayOrder
     }
   }
 `
@@ -49,5 +50,11 @@ export const DELETE_ADMIN_INFORMATION = gql`
     deleteInformation(id: $id) {
       id
     }
+  }
+`
+
+export const UPDATE_ADMIN_INFORMATIONS_DISPLAY_ORDER = gql`
+  mutation UpdateAdminInformationsDisplayOrder($input: [DisplayOrderItem!]!) {
+    updateInformationsDisplayOrder(input: $input)
   }
 `

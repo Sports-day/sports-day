@@ -7,6 +7,9 @@ import { CompetitionCard } from './CompetitionCard'
 import { CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { DragHandle } from '@/components/ui/DragHandle'
+import { useDisplayOrderDnD } from '@/hooks/useDisplayOrderDnD'
+import { useUpdateAdminCompetitionsDisplayOrderMutation } from '@/gql/__generated__/graphql'
 
 type Props = {
   onNavigateToCreate: () => void
@@ -25,6 +28,21 @@ export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }:
   const typeFilter = fp.type
   const sportFilter = fp.sport
   const sceneFilter = fp.scene
+  const hasFilter = !!(keyword || typeFilter || sportFilter || sceneFilter)
+
+  const [reorderMutation] = useUpdateAdminCompetitionsDisplayOrderMutation({
+    refetchQueries: ['GetAdminCompetitions'],
+    awaitRefetchQueries: true,
+  })
+
+  const {
+    displayItems,
+    dragIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useDisplayOrderDnD(competitions, (input) => reorderMutation({ variables: { input } }))
 
   const sportOptions = useMemo(() => {
     const map = new Map<string, string>()
@@ -74,6 +92,8 @@ export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }:
     return result
   }, [competitions, keyword, typeFilter, sportFilter, sceneFilter])
 
+  const renderItems = hasFilter ? filtered : displayItems
+
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
 
@@ -113,18 +133,30 @@ export function CompetitionListPage({ onNavigateToCreate, onSelectCompetition }:
             </Button>
           </Box>
 
-          {filtered.length === 0 ? (
+          {renderItems.length === 0 ? (
             <Typography sx={{ py: 8, color: '#888', fontSize: '13px', textAlign: 'center' }}>
-              {keyword || typeFilter || sportFilter || sceneFilter ? '条件に一致する大会がありません' : 'データがありません'}
+              {hasFilter ? '条件に一致する大会がありません' : 'データがありません'}
             </Typography>
           ) : (
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1 }}>
-              {filtered.map((competition) => (
-                <CompetitionCard
+              {renderItems.map((competition, index) => (
+                <Box
                   key={competition.id}
-                  competition={competition}
-                  onSelect={() => onSelectCompetition(competition.id, competition.name, competition.type)}
-                />
+                  draggable={!hasFilter}
+                  onDragStart={() => !hasFilter && handleDragStart(index)}
+                  onDragOver={(e) => !hasFilter && handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  sx={{
+                    opacity: dragIndex === index ? 0.5 : 1,
+                    borderLeft: dragOverIndex === index && dragIndex !== index ? '3px solid #3949AB' : '3px solid transparent',
+                  }}
+                >
+                  <CompetitionCard
+                    competition={competition}
+                    onSelect={() => onSelectCompetition(competition.id, competition.name, competition.type)}
+                    dragHandle={<DragHandle disabled={hasFilter} />}
+                  />
+                </Box>
               ))}
             </Box>
           )}

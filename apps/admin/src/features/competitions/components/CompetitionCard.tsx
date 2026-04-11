@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import { Box, Button, Typography } from '@mui/material'
 import GroupsIcon from '@mui/icons-material/Groups'
 import type { Competition } from '../types'
@@ -5,9 +6,10 @@ import type { Competition } from '../types'
 type CompetitionCardProps = {
   competition: Competition
   onSelect?: () => void
+  dragHandle?: ReactNode
 }
 
-export function CompetitionCard({ competition, onSelect }: CompetitionCardProps) {
+export function CompetitionCard({ competition, onSelect, dragHandle }: CompetitionCardProps) {
   return (
     <Button
       variant="text"
@@ -24,7 +26,8 @@ export function CompetitionCard({ competition, onSelect }: CompetitionCardProps)
         '&:focus-visible': { outline: 'none' },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+        {dragHandle}
         <GroupsIcon sx={{ fontSize: 20, color: '#4A5ABB' }} />
         <Typography sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400 }}>
           {competition.name}

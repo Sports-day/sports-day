@@ -13,6 +13,7 @@ export function useAnnouncements() {
     title: i.title,
     content: i.content,
     status: parseStatus(i.status),
+    displayOrder: i.displayOrder,
   }))
   return { data: announcements, loading, error: error ?? null }
 }

@@ -6,6 +6,7 @@ export function useCompetitions() {
   const competitions: Competition[] = (data?.competitions ?? []).map(c => ({
     id: c.id,
     name: c.name,
+    displayOrder: c.displayOrder,
     type: c.type,
     sceneId: c.scene.id,
     sceneName: c.scene.name,

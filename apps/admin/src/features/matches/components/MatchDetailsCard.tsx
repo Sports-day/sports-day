@@ -31,6 +31,7 @@ import {
   SlotSourceType,
 } from '@/gql/__generated__/graphql'
 import { CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { DateTimeInput } from '@/components/ui/DateTimeInput'
 import { showToast } from '@/lib/toast'
 
 // ─── 審判タイプ設定 ───────────────────────────────────────
@@ -210,15 +211,10 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
             </FormControl>
 
             {/* 開始時刻 */}
-            <TextField
+            <DateTimeInput
               label="開始時刻"
-              type="datetime-local"
-              size="small"
-              fullWidth
               value={time}
-              onChange={(e) => setTime(e.target.value)}
-              sx={CARD_FIELD_SX}
-              InputLabelProps={{ shrink: true }}
+              onChange={setTime}
             />
 
             {/* ─── 審判セクション ─── */}

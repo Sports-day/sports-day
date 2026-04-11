@@ -7,6 +7,7 @@ export function useTags() {
   const tags: Tag[] = (data?.scenes ?? []).map(s => ({
     id: s.id,
     name: s.name,
+    displayOrder: s.displayOrder,
     isDeleted: s.isDeleted,
   }))
 

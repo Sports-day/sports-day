@@ -15,6 +15,9 @@ import {
 import { useAnnouncements } from '../hooks/useAnnouncements'
 import { QueryError } from '@/components/ui/QueryError'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
+import { DragHandle } from '@/components/ui/DragHandle'
+import { useDisplayOrderDnD } from '@/hooks/useDisplayOrderDnD'
+import { useUpdateAdminInformationsDisplayOrderMutation } from '@/gql/__generated__/graphql'
 
 type Props = {
   onCreateClick: () => void
@@ -23,6 +26,20 @@ type Props = {
 
 export function InformationListPage({ onCreateClick, onAnnouncementClick }: Props) {
   const { data: announcements, loading, error } = useAnnouncements()
+
+  const [reorderMutation] = useUpdateAdminInformationsDisplayOrderMutation({
+    refetchQueries: ['GetAdminInformations'],
+    awaitRefetchQueries: true,
+  })
+
+  const {
+    displayItems,
+    dragIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useDisplayOrderDnD(announcements, (input) => reorderMutation({ variables: { input } }))
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
@@ -53,29 +70,42 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
             <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
               <TableHead>
                 <TableRow>
+                  <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 40, px: 0.5 }} />
                   <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
                   <TableCell sx={LIST_TABLE_HEAD_SX}>内容</TableCell>
                   <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 120 }}>ステータス</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {announcements.length === 0 ? (
+                {displayItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                    <TableCell colSpan={4} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
                       データがありません
                     </TableCell>
                   </TableRow>
                 ) : (
-                  announcements.map((item) => (
+                  displayItems.map((item, index) => (
                     <TableRow
                       key={item.id}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
                       hover
                       onClick={() => onAnnouncementClick(item.id)}
-                      sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: '#E5E6F0' },
+                        opacity: dragIndex === index ? 0.5 : 1,
+                        borderLeft: dragOverIndex === index && dragIndex !== index ? '3px solid #3949AB' : '3px solid transparent',
+                      }}
                     >
+                      <TableCell sx={{ ...LIST_TABLE_CELL_SX, width: 40, px: 0.5 }}>
+                        <DragHandle />
+                      </TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.title}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{item.content}</TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>
+                      <TableCell sx={{ ...LIST_TABLE_CELL_SX, width: 120 }}>
                         <Chip
                           label={item.status === 'published' ? '公開中' : '下書き'}
                           size="small"
@@ -84,7 +114,7 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
                             color: item.status === 'published' ? '#3949AB' : '#9E9E9E',
                             fontSize: '11px',
                             fontWeight: 600,
-                            height: 22,
+                            height: 20,
                           }}
                         />
                       </TableCell>

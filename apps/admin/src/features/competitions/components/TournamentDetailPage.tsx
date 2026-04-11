@@ -42,6 +42,8 @@ import { ProgressionRulesEditor } from './ProgressionRulesEditor'
 import { AddEntryDialog } from './AddEntryDialog'
 import { SportSelect } from './SportSelect'
 import { SceneSelect } from '@/components/ui/SceneSelect'
+import { DateTimeInput } from '@/components/ui/DateTimeInput'
+import { NumberInput } from '@/components/ui/NumberInput'
 import { useApolloClient } from '@apollo/client'
 import {
   useUpdateAdminSlotConnectionMutation,
@@ -407,36 +409,29 @@ export function TournamentDetailPage({
             <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
               試合時間設定
             </Typography>
-            <TextField
+            <DateTimeInput
               label="開始時刻"
-              type="datetime-local"
               value={defaults.form.startTime}
-              onChange={(e) => defaults.setForm(prev => ({ ...prev, startTime: e.target.value }))}
-              size="small"
-              fullWidth
-              sx={CARD_FIELD_SX}
-              slotProps={{ inputLabel: { shrink: true } }}
+              onChange={(v) => defaults.setForm(prev => ({ ...prev, startTime: v }))}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
+              <NumberInput
                 label="試合時間（分）"
-                type="number"
                 value={defaults.form.matchDuration}
-                onChange={(e) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, Number(e.target.value)) }))}
-                size="small"
+                onChange={(v) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, v) }))}
+                min={1}
+                max={999}
                 fullWidth
                 sx={CARD_FIELD_SX}
-                slotProps={{ htmlInput: { min: 1, max: 999 } }}
               />
-              <TextField
+              <NumberInput
                 label="休憩時間（分）"
-                type="number"
                 value={defaults.form.breakDuration}
-                onChange={(e) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, Number(e.target.value)) }))}
-                size="small"
+                onChange={(v) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, v) }))}
+                min={0}
+                max={999}
                 fullWidth
                 sx={CARD_FIELD_SX}
-                slotProps={{ htmlInput: { min: 0, max: 999 } }}
               />
             </Box>
 
@@ -457,14 +452,13 @@ export function TournamentDetailPage({
               メインブラケット設定
             </Typography>
 
-            <TextField
+            <NumberInput
               label="参加チーム数*"
-              type="number"
-              value={teamCount}
-              onChange={handleChange('teamCount')}
+              value={Number(teamCount)}
+              onChange={(v) => handleChange('teamCount')({ target: { value: String(v) } } as React.ChangeEvent<HTMLInputElement>)}
+              min={2}
+              max={64}
               fullWidth
-              size="small"
-              slotProps={{ htmlInput: { min: 2, max: 64, step: 1 } }}
               error={Number(teamCount) < 2 || Number(teamCount) > 64 || !Number.isInteger(Number(teamCount))}
               helperText={Number(teamCount) < 2 || Number(teamCount) > 64 ? '2〜64の範囲で入力してください' : !Number.isInteger(Number(teamCount)) ? '整数を入力してください' : ''}
               sx={CARD_FIELD_SX}
@@ -547,14 +541,13 @@ export function TournamentDetailPage({
                 slotProps={{ htmlInput: { maxLength: 64 } }}
                 helperText={subCreateName.length >= 60 ? `${subCreateName.length}/64文字` : ''}
               />
-              <TextField
+              <NumberInput
                 label="参加チーム数*"
-                type="number"
                 value={subCreateTeamCount}
-                onChange={(e) => setSubCreateTeamCount(Number(e.target.value))}
+                onChange={(v) => setSubCreateTeamCount(v)}
+                min={2}
+                max={64}
                 fullWidth
-                size="small"
-                slotProps={{ htmlInput: { min: 2, max: 64, step: 1 } }}
                 error={subCreateTeamCount < 2 || subCreateTeamCount > 64 || !Number.isInteger(subCreateTeamCount)}
                 helperText={subCreateTeamCount < 2 || subCreateTeamCount > 64 ? '2〜64の範囲で入力してください' : ''}
                 sx={CARD_FIELD_SX}
@@ -655,14 +648,13 @@ export function TournamentDetailPage({
                     }}
                   />
 
-                  <TextField
+                  <NumberInput
                     label="参加チーム数"
-                    type="number"
                     value={currentTeamCount}
-                    onChange={(e) => setSubEdits(prev => ({ ...prev, [sub.id]: { ...prev[sub.id], teamCount: Number(e.target.value) } }))}
+                    onChange={(v) => setSubEdits(prev => ({ ...prev, [sub.id]: { ...prev[sub.id], teamCount: v } }))}
+                    min={2}
+                    max={64}
                     fullWidth
-                    size="small"
-                    slotProps={{ htmlInput: { min: 2, max: 64, step: 1 } }}
                     error={currentTeamCount < 2 || currentTeamCount > 64 || !Number.isInteger(currentTeamCount)}
                     helperText={currentTeamCount < 2 || currentTeamCount > 64 ? '2〜64の範囲で入力してください' : ''}
                     sx={CARD_FIELD_SX}

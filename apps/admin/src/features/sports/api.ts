@@ -5,7 +5,7 @@ export const GET_ADMIN_SPORTS = gql`
     sports {
       id
       name
-      weight
+      displayOrder
       image { id url }
       scene {
         id
@@ -20,7 +20,7 @@ export const GET_ADMIN_SPORT = gql`
     sport(id: $id) {
       id
       name
-      weight
+      displayOrder
       experiencedLimit
       image { id url }
       rankingRules {
@@ -50,7 +50,7 @@ export const UPDATE_ADMIN_SPORT = gql`
     updateSports(id: $id, input: $input) {
       id
       name
-      weight
+      displayOrder
       experiencedLimit
     }
   }
@@ -126,5 +126,11 @@ export const DELETE_ADMIN_SPORT_SCENE = gql`
     deleteSportScene(id: $id) {
       id
     }
+  }
+`
+
+export const UPDATE_ADMIN_SPORTS_DISPLAY_ORDER = gql`
+  mutation UpdateAdminSportsDisplayOrder($input: [DisplayOrderItem!]!) {
+    updateSportsDisplayOrder(input: $input)
   }
 `

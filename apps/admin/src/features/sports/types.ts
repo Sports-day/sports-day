@@ -6,7 +6,7 @@ export type SportScene = {
 export type Sport = {
   id: string
   name: string
-  weight: number
+  displayOrder: number
   imageUrl: string
   sceneNames: string[]
   scenes: SportScene[]

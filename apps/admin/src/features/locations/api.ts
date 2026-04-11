@@ -5,6 +5,7 @@ export const GET_ADMIN_LOCATIONS = gql`
     locations {
       id
       name
+      displayOrder
     }
   }
 `
@@ -41,5 +42,11 @@ export const DELETE_ADMIN_LOCATION = gql`
     deleteLocation(id: $id) {
       id
     }
+  }
+`
+
+export const UPDATE_ADMIN_LOCATIONS_DISPLAY_ORDER = gql`
+  mutation UpdateAdminLocationsDisplayOrder($input: [DisplayOrderItem!]!) {
+    updateLocationsDisplayOrder(input: $input)
   }
 `

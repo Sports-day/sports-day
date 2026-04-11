@@ -21,6 +21,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckIcon from '@mui/icons-material/Check'
 import { useLocations } from '@/features/locations/hooks/useLocations'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { DateTimeInput } from '@/components/ui/DateTimeInput'
 import { BackButton } from '@/components/ui/BackButton'
 import type { BulkEditRow } from '../hooks/useBulkEdit'
 
@@ -120,14 +121,10 @@ export function ActiveMatchBulkEditPage({
           </Typography>
 
           {/* 1試合目開始時刻 */}
-          <TextField
+          <DateTimeInput
             label="1試合目開始時刻"
-            type="datetime-local"
-            size="small"
             value={filterDate}
-            onChange={(e) => onFilterDateChange(e.target.value)}
-            sx={FIELD_SX}
-            InputLabelProps={{ shrink: true }}
+            onChange={onFilterDateChange}
           />
 
           {/* 開催場所 */}

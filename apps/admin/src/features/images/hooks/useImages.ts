@@ -7,6 +7,7 @@ export function useImages() {
     id: i.id,
     url: i.url ?? '',
     status: i.status,
+    displayOrder: i.displayOrder,
   }))
   return { data: images, loading, error: error ?? null }
 }

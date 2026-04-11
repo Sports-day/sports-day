@@ -3,4 +3,5 @@ export type Announcement = {
   title: string
   content: string
   status: 'published' | 'draft'
+  displayOrder: number
 }

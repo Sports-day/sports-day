@@ -19,6 +19,9 @@ import { PdfExportDialog } from '@/features/competitions/components/PdfExportDia
 import { CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
 import { useFilterParams } from '@/hooks/useFilterParams'
+import { DragHandle } from '@/components/ui/DragHandle'
+import { useDisplayOrderDnD } from '@/hooks/useDisplayOrderDnD'
+import { useUpdateAdminSportsDisplayOrderMutation } from '@/gql/__generated__/graphql'
 
 type Props = {
   onNavigateToCreate: () => void
@@ -33,7 +36,24 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
   const [pdfSportId, setPdfSportId] = useState('')
   const [pdfSceneId, setPdfSceneId] = useState('')
 
-  // sport+scene の組み合わせリスト（PDF出力用、リーグのみ）
+  const keyword = fp.keyword
+  const sceneFilter = fp.scene
+  const hasFilter = !!(keyword || sceneFilter)
+
+  const [reorderMutation] = useUpdateAdminSportsDisplayOrderMutation({
+    refetchQueries: ['GetAdminSports'],
+    awaitRefetchQueries: true,
+  })
+
+  const {
+    displayItems,
+    dragIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useDisplayOrderDnD(sports, (input) => reorderMutation({ variables: { input } }))
+
   const sportScenePairs = useMemo(() => {
     const map = new Map<string, { sportId: string; sceneId: string; sportName: string; sceneName: string }>()
     for (const c of competitions) {
@@ -53,8 +73,6 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
       setPdfDialogOpen(true)
     }
   }
-  const keyword = fp.keyword
-  const sceneFilter = fp.scene
 
   const sceneOptions = useMemo(() => {
     const set = new Set<string>()
@@ -83,6 +101,8 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
     if (sceneFilter) result = result.filter(s => s.sceneNames.includes(sceneFilter))
     return result
   }, [sports, keyword, sceneFilter])
+
+  const renderItems = hasFilter ? filtered : displayItems
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
@@ -173,44 +193,56 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
             )}
           </Box>
 
-          {filtered.length === 0 ? (
+          {renderItems.length === 0 ? (
             <Typography sx={{ py: 8, color: '#888', fontSize: '13px', textAlign: 'center' }}>
               {keyword || sceneFilter ? '条件に一致する競技がありません' : 'データがありません'}
             </Typography>
           ) : (
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1 }}>
-              {filtered.map((sport) => (
-                <Button
+              {renderItems.map((sport, index) => (
+                <Box
                   key={sport.id}
-                  variant="text"
-                  onClick={() => onSelectSport(sport.id)}
+                  draggable={!hasFilter}
+                  onDragStart={() => !hasFilter && handleDragStart(index)}
+                  onDragOver={(e) => !hasFilter && handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
                   sx={{
-                    backgroundColor: '#EFF0F8',
-                    width: '100%',
-                    height: 50,
-                    borderRadius: 1,
-                    justifyContent: 'flex-start',
-                    px: 2,
-                    '&.MuiButton-root': { border: 'none', outline: 'none' },
-                    '&:hover': { backgroundColor: '#E5E6F0' },
-                    '&:focus-visible': { outline: 'none' },
+                    opacity: dragIndex === index ? 0.5 : 1,
+                    borderLeft: dragOverIndex === index && dragIndex !== index ? '3px solid #3949AB' : '3px solid transparent',
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {sport.imageUrl ? (
-                      <Box
-                        component="img"
-                        src={sport.imageUrl}
-                        sx={{ width: 24, height: 24, borderRadius: 0.5, objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <SportsIcon sx={{ fontSize: 20, color: '#4A5ABB' }} />
-                    )}
-                    <Typography sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400 }}>
-                      {sport.name}
-                    </Typography>
-                  </Box>
-                </Button>
+                  <Button
+                    variant="text"
+                    onClick={() => onSelectSport(sport.id)}
+                    sx={{
+                      backgroundColor: '#EFF0F8',
+                      width: '100%',
+                      height: 50,
+                      borderRadius: 1,
+                      justifyContent: 'flex-start',
+                      px: 2,
+                      '&.MuiButton-root': { border: 'none', outline: 'none' },
+                      '&:hover': { backgroundColor: '#E5E6F0' },
+                      '&:focus-visible': { outline: 'none' },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                      <DragHandle disabled={hasFilter} />
+                      {sport.imageUrl ? (
+                        <Box
+                          component="img"
+                          src={sport.imageUrl}
+                          sx={{ width: 24, height: 24, borderRadius: 0.5, objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <SportsIcon sx={{ fontSize: 20, color: '#4A5ABB' }} />
+                      )}
+                      <Typography sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400 }}>
+                        {sport.name}
+                      </Typography>
+                    </Box>
+                  </Button>
+                </Box>
               ))}
             </Box>
           )}

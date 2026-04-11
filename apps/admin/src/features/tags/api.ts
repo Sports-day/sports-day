@@ -8,6 +8,7 @@ export const GET_ADMIN_SCENES_FOR_TAGS = gql`
     scenes {
       id
       name
+      displayOrder
       isDeleted
     }
   }
@@ -56,5 +57,11 @@ export const RESTORE_ADMIN_SCENE_FOR_TAG = gql`
       name
       isDeleted
     }
+  }
+`
+
+export const UPDATE_ADMIN_SCENES_DISPLAY_ORDER = gql`
+  mutation UpdateAdminScenesDisplayOrder($input: [DisplayOrderItem!]!) {
+    updateScenesDisplayOrder(input: $input)
   }
 `

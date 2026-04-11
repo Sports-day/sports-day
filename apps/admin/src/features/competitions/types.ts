@@ -1,6 +1,7 @@
 export type Competition = {
   id: string
   name: string
+  displayOrder: number
   type: string
   sceneId: string
   sceneName: string

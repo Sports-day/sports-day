@@ -99,7 +99,7 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
             <TableHead>
               <TableRow>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
-                <TableCell sx={LIST_TABLE_HEAD_SX}>状態</TableCell>
+                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 120 }}>状態</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -117,12 +117,13 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
                   >
                     {tag.name}
                   </TableCell>
-                  <TableCell sx={LIST_TABLE_CELL_SX}>
+                  <TableCell sx={{ ...LIST_TABLE_CELL_SX, width: 120 }}>
                     <Chip
                       label={tag.isDeleted ? '無効' : '有効'}
                       size="small"
                       sx={{
                         fontSize: '11px',
+                        height: 20,
                         backgroundColor: tag.isDeleted ? '#F5F5F5' : '#E8F5E9',
                         color: tag.isDeleted ? '#9E9E9E' : '#2E7D32',
                       }}
