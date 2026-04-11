@@ -25,6 +25,13 @@ export type AddSportScenesInput = {
   sportIds: Array<Scalars['ID']['input']>;
 };
 
+export type ApplyCompetitionDefaultsInput = {
+  breakDuration: Scalars['Int']['input'];
+  locationId?: InputMaybe<Scalars['ID']['input']>;
+  matchDuration: Scalars['Int']['input'];
+  startTime: Scalars['String']['input'];
+};
+
 /** SEEDスロットへのチーム手動配置 */
 export type AssignSeedTeamInput = {
   slotId: Scalars['ID']['input'];
@@ -45,12 +52,16 @@ export enum BracketType {
 
 export type Competition = {
   __typename?: 'Competition';
+  breakDuration?: Maybe<Scalars['Int']['output']>;
+  defaultLocation?: Maybe<Location>;
   id: Scalars['ID']['output'];
   league?: Maybe<League>;
+  matchDuration?: Maybe<Scalars['Int']['output']>;
   matches: Array<Match>;
   name: Scalars['String']['output'];
   scene: Scene;
   sport: Sport;
+  startTime?: Maybe<Scalars['String']['output']>;
   teams: Array<Team>;
   tournaments: Array<Tournament>;
   type: CompetitionType;
@@ -153,7 +164,6 @@ export type CreateTournamentMatchInput = {
 
 export type CreateUserInput = {
   email: Scalars['String']['input'];
-  gender?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
 };
 
@@ -222,6 +232,7 @@ export type Judgment = {
   __typename?: 'Judgment';
   group?: Maybe<Group>;
   id: Scalars['ID']['output'];
+  isAttending: Scalars['Boolean']['output'];
   name?: Maybe<Scalars['String']['output']>;
   team?: Maybe<Team>;
   user?: Maybe<User>;
@@ -262,8 +273,10 @@ export type Match = {
   id: Scalars['ID']['output'];
   judgment?: Maybe<Judgment>;
   location?: Maybe<Location>;
+  locationManual: Scalars['Boolean']['output'];
   status: MatchStatus;
   time: Scalars['String']['output'];
+  timeManual: Scalars['Boolean']['output'];
   winnerTeam?: Maybe<Team>;
 };
 
@@ -299,6 +312,8 @@ export type Mutation = {
   addSportExperiences: Array<SportExperience>;
   /** シーンにスポーツを一括追加する */
   addSportScenes: Scene;
+  /** 大会のデフォルト設定を適用する（手動設定された試合時間・場所はスキップ） */
+  applyCompetitionDefaults: Array<Match>;
   /** SEEDスロットへのチーム手動配置（teamId=null でクリア） */
   assignSeedTeam: TournamentSlot;
   /** 大会を作成する */
@@ -371,6 +386,10 @@ export type Mutation = {
   generateRoundRobin: Array<Match>;
   /** サブブラケット自動生成（試合構造含む） */
   generateSubBracket: Tournament;
+  /** 審判が出席を記録する（審判本人のみ実行可能） */
+  markJudgmentAttendance: Judgment;
+  /** リーグの総当たり戦をデフォルト設定で再生成する（既存試合を削除して再作成） */
+  regenerateRoundRobin: Array<Match>;
   removeGroupUsers: Group;
   /** トーナメント全体リセット（全ブラケット + 全試合を削除。competition_entries は維持） */
   resetTournamentBrackets: Competition;
@@ -379,6 +398,8 @@ export type Mutation = {
   setRankingRules: Sport;
   /** リーグのタイブレーク優先度を設定する */
   setTiebreakPriorities: Array<TiebreakPriority>;
+  /** 審判がスコアを提出する（審判本人のみ実行可能、試合は自動的にFINISHEDになる） */
+  submitMatchScore: Match;
   /** 大会の情報を更新する */
   updateCompetition: Competition;
   updateGroup: Group;
@@ -447,6 +468,12 @@ export type MutationAddSportExperiencesArgs = {
 export type MutationAddSportScenesArgs = {
   id: Scalars['ID']['input'];
   input: AddSportScenesInput;
+};
+
+
+export type MutationApplyCompetitionDefaultsArgs = {
+  id: Scalars['ID']['input'];
+  input: ApplyCompetitionDefaultsInput;
 };
 
 
@@ -666,6 +693,16 @@ export type MutationGenerateSubBracketArgs = {
 };
 
 
+export type MutationMarkJudgmentAttendanceArgs = {
+  matchId: Scalars['ID']['input'];
+};
+
+
+export type MutationRegenerateRoundRobinArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveGroupUsersArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGroupUsersInput;
@@ -691,6 +728,12 @@ export type MutationSetRankingRulesArgs = {
 export type MutationSetTiebreakPrioritiesArgs = {
   leagueId: Scalars['ID']['input'];
   priorities: Array<TiebreakPriorityInput>;
+};
+
+
+export type MutationSubmitMatchScoreArgs = {
+  input: SubmitScoreInput;
+  matchId: Scalars['ID']['input'];
 };
 
 
@@ -1110,6 +1153,12 @@ export type SubBracketInput = {
   sourceRound: Scalars['Int']['input'];
 };
 
+/** 審判がスコアを提出するための入力。statusは自動的にFINISHEDになる。 */
+export type SubmitScoreInput = {
+  results: Array<MatchResultInput>;
+  winnerTeamId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type Team = {
   __typename?: 'Team';
   competitions: Array<Competition>;
@@ -1269,14 +1318,12 @@ export type UpdateTournamentInput = {
 
 export type UpdateUserInput = {
   email?: InputMaybe<Scalars['String']['input']>;
-  gender?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
-  gender?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   identify: UserIdentify;
@@ -1362,14 +1409,29 @@ export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typena
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', team?: { __typename?: 'Team', id: string, name: string } | null } | null }> };
+export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
+
+export type MarkPanelJudgmentAttendanceMutationVariables = Exact<{
+  matchId: Scalars['ID']['input'];
+}>;
+
+
+export type MarkPanelJudgmentAttendanceMutation = { __typename?: 'Mutation', markJudgmentAttendance: { __typename?: 'Judgment', id: string, isAttending: boolean } };
+
+export type SubmitPanelMatchScoreMutationVariables = Exact<{
+  matchId: Scalars['ID']['input'];
+  input: SubmitScoreInput;
+}>;
+
+
+export type SubmitPanelMatchScoreMutation = { __typename?: 'Mutation', submitMatchScore: { __typename?: 'Match', id: string, status: MatchStatus, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null } };
 
 export type GetPanelMatchQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, user?: { __typename?: 'User', id: string, name: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null } | null } };
+export type GetPanelMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string, name: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null } };
 
 export type GetPanelSportsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1926,6 +1988,7 @@ export const GetPanelMatchesDocument = gql`
     competition {
       id
       name
+      type
       sport {
         id
       }
@@ -1946,9 +2009,17 @@ export const GetPanelMatchesDocument = gql`
       score
     }
     judgment {
+      id
+      isAttending
+      user {
+        id
+      }
       team {
         id
         name
+      }
+      group {
+        id
       }
     }
   }
@@ -1986,6 +2057,87 @@ export type GetPanelMatchesQueryHookResult = ReturnType<typeof useGetPanelMatche
 export type GetPanelMatchesLazyQueryHookResult = ReturnType<typeof useGetPanelMatchesLazyQuery>;
 export type GetPanelMatchesSuspenseQueryHookResult = ReturnType<typeof useGetPanelMatchesSuspenseQuery>;
 export type GetPanelMatchesQueryResult = Apollo.QueryResult<GetPanelMatchesQuery, GetPanelMatchesQueryVariables>;
+export const MarkPanelJudgmentAttendanceDocument = gql`
+    mutation MarkPanelJudgmentAttendance($matchId: ID!) {
+  markJudgmentAttendance(matchId: $matchId) {
+    id
+    isAttending
+  }
+}
+    `;
+export type MarkPanelJudgmentAttendanceMutationFn = Apollo.MutationFunction<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>;
+
+/**
+ * __useMarkPanelJudgmentAttendanceMutation__
+ *
+ * To run a mutation, you first call `useMarkPanelJudgmentAttendanceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useMarkPanelJudgmentAttendanceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [markPanelJudgmentAttendanceMutation, { data, loading, error }] = useMarkPanelJudgmentAttendanceMutation({
+ *   variables: {
+ *      matchId: // value for 'matchId'
+ *   },
+ * });
+ */
+export function useMarkPanelJudgmentAttendanceMutation(baseOptions?: Apollo.MutationHookOptions<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>(MarkPanelJudgmentAttendanceDocument, options);
+      }
+export type MarkPanelJudgmentAttendanceMutationHookResult = ReturnType<typeof useMarkPanelJudgmentAttendanceMutation>;
+export type MarkPanelJudgmentAttendanceMutationResult = Apollo.MutationResult<MarkPanelJudgmentAttendanceMutation>;
+export type MarkPanelJudgmentAttendanceMutationOptions = Apollo.BaseMutationOptions<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>;
+export const SubmitPanelMatchScoreDocument = gql`
+    mutation SubmitPanelMatchScore($matchId: ID!, $input: SubmitScoreInput!) {
+  submitMatchScore(matchId: $matchId, input: $input) {
+    id
+    status
+    entries {
+      id
+      team {
+        id
+        name
+      }
+      score
+    }
+    winnerTeam {
+      id
+      name
+    }
+  }
+}
+    `;
+export type SubmitPanelMatchScoreMutationFn = Apollo.MutationFunction<SubmitPanelMatchScoreMutation, SubmitPanelMatchScoreMutationVariables>;
+
+/**
+ * __useSubmitPanelMatchScoreMutation__
+ *
+ * To run a mutation, you first call `useSubmitPanelMatchScoreMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubmitPanelMatchScoreMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [submitPanelMatchScoreMutation, { data, loading, error }] = useSubmitPanelMatchScoreMutation({
+ *   variables: {
+ *      matchId: // value for 'matchId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSubmitPanelMatchScoreMutation(baseOptions?: Apollo.MutationHookOptions<SubmitPanelMatchScoreMutation, SubmitPanelMatchScoreMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SubmitPanelMatchScoreMutation, SubmitPanelMatchScoreMutationVariables>(SubmitPanelMatchScoreDocument, options);
+      }
+export type SubmitPanelMatchScoreMutationHookResult = ReturnType<typeof useSubmitPanelMatchScoreMutation>;
+export type SubmitPanelMatchScoreMutationResult = Apollo.MutationResult<SubmitPanelMatchScoreMutation>;
+export type SubmitPanelMatchScoreMutationOptions = Apollo.BaseMutationOptions<SubmitPanelMatchScoreMutation, SubmitPanelMatchScoreMutationVariables>;
 export const GetPanelMatchDocument = gql`
     query GetPanelMatch($id: ID!) {
   match(id: $id) {
@@ -2018,6 +2170,7 @@ export const GetPanelMatchDocument = gql`
     judgment {
       id
       name
+      isAttending
       user {
         id
         name
@@ -2025,6 +2178,9 @@ export const GetPanelMatchDocument = gql`
       team {
         id
         name
+      }
+      group {
+        id
       }
     }
   }
