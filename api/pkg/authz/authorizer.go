@@ -95,4 +95,3 @@ func (a *StaticAuthorizer) HasPermission(role string, permission string) bool {
 	}
 	return rolePerms[permission]
 }
-
