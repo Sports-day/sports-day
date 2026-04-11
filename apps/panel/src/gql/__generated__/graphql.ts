@@ -54,6 +54,7 @@ export type Competition = {
   __typename?: 'Competition';
   breakDuration?: Maybe<Scalars['Int']['output']>;
   defaultLocation?: Maybe<Location>;
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   league?: Maybe<League>;
   matchDuration?: Maybe<Scalars['Int']['output']>;
@@ -175,6 +176,11 @@ export type DeleteSportScenesInput = {
   sportIds: Array<Scalars['ID']['input']>;
 };
 
+export type DisplayOrderItem = {
+  displayOrder: Scalars['Int']['input'];
+  id: Scalars['ID']['input'];
+};
+
 /** ブラケット自動生成 */
 export type GenerateBracketInput = {
   competitionId: Scalars['ID']['input'];
@@ -209,6 +215,7 @@ export type Group = {
 
 export type Image = {
   __typename?: 'Image';
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   status: Scalars['String']['output'];
   url?: Maybe<Scalars['String']['output']>;
@@ -223,6 +230,7 @@ export type ImageUploadUrl = {
 export type Information = {
   __typename?: 'Information';
   content: Scalars['String']['output'];
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
@@ -261,6 +269,7 @@ export type League = {
 
 export type Location = {
   __typename?: 'Location';
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   matches: Array<Match>;
   name: Scalars['String']['output'];
@@ -402,14 +411,18 @@ export type Mutation = {
   submitMatchScore: Match;
   /** 大会の情報を更新する */
   updateCompetition: Competition;
+  updateCompetitionsDisplayOrder: Scalars['Boolean']['output'];
   updateGroup: Group;
+  updateImagesDisplayOrder: Scalars['Boolean']['output'];
   updateInformation: Information;
+  updateInformationsDisplayOrder: Scalars['Boolean']['output'];
   /** 審判の情報を更新する */
   updateJudgment: Judgment;
   /** リーグのルールを更新する */
   updateLeagueRule: League;
   /** 場所の情報を更新する */
   updateLocation: Location;
+  updateLocationsDisplayOrder: Scalars['Boolean']['output'];
   /** 試合の詳細情報を更新する */
   updateMatchDetail: Match;
   /** 試合結果を更新する */
@@ -418,11 +431,14 @@ export type Mutation = {
   updatePromotionRule: PromotionRule;
   updateRule: Rule;
   updateScene: Scene;
+  updateScenesDisplayOrder: Scalars['Boolean']['output'];
   /** seed_number 振り直し */
   updateSeedNumbers: Array<TournamentSlot>;
   /** スロット接続変更 */
   updateSlotConnection: TournamentSlot;
   updateSports: Sport;
+  /** 表示順を一括更新する */
+  updateSportsDisplayOrder: Scalars['Boolean']['output'];
   /** チームの情報を更新する */
   updateTeam: Team;
   /** チームメンバーを更新する */
@@ -743,15 +759,30 @@ export type MutationUpdateCompetitionArgs = {
 };
 
 
+export type MutationUpdateCompetitionsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
+};
+
+
 export type MutationUpdateGroupArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGroupInput;
 };
 
 
+export type MutationUpdateImagesDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
+};
+
+
 export type MutationUpdateInformationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateInformationInput;
+};
+
+
+export type MutationUpdateInformationsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
 };
 
 
@@ -770,6 +801,11 @@ export type MutationUpdateLeagueRuleArgs = {
 export type MutationUpdateLocationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateLocationInput;
+};
+
+
+export type MutationUpdateLocationsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
 };
 
 
@@ -803,6 +839,11 @@ export type MutationUpdateSceneArgs = {
 };
 
 
+export type MutationUpdateScenesDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
+};
+
+
 export type MutationUpdateSeedNumbersArgs = {
   seeds: Array<SeedNumberInput>;
   tournamentId: Scalars['ID']['input'];
@@ -817,6 +858,11 @@ export type MutationUpdateSlotConnectionArgs = {
 export type MutationUpdateSportsArgs = {
   id: Scalars['ID']['input'];
   input: UpdateSportsInput;
+};
+
+
+export type MutationUpdateSportsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
 };
 
 
@@ -1074,6 +1120,7 @@ export type Rule = {
 
 export type Scene = {
   __typename?: 'Scene';
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   isDeleted: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
@@ -1101,6 +1148,7 @@ export enum SlotSourceType {
 
 export type Sport = {
   __typename?: 'Sport';
+  displayOrder: Scalars['Int']['output'];
   experiencedLimit?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   image?: Maybe<Image>;
@@ -1108,7 +1156,6 @@ export type Sport = {
   rankingRules: Array<RankingRule>;
   rules: Array<Rule>;
   scene?: Maybe<Array<SportScene>>;
-  weight: Scalars['Int']['output'];
 };
 
 export type SportEntry = {
@@ -1294,10 +1341,10 @@ export type UpdateSlotConnectionInput = {
 };
 
 export type UpdateSportsInput = {
+  displayOrder?: InputMaybe<Scalars['Int']['input']>;
   experiencedLimit?: InputMaybe<Scalars['Int']['input']>;
   imageId?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  weight?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateTeamInput = {
@@ -1436,14 +1483,14 @@ export type GetPanelMatchQuery = { __typename?: 'Query', match: { __typename?: '
 export type GetPanelSportsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelSportsQuery = { __typename?: 'Query', sports: Array<{ __typename?: 'Sport', id: string, name: string, weight: number, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null }> };
+export type GetPanelSportsQuery = { __typename?: 'Query', sports: Array<{ __typename?: 'Sport', id: string, name: string, displayOrder: number, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null }> };
 
 export type GetPanelSportQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelSportQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, name: string, weight: number, rules: Array<{ __typename?: 'Rule', id?: string | null, rule: string }>, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', id: string, team: { __typename?: 'Team', id: string, name: string } }> }> | null } };
+export type GetPanelSportQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, name: string, displayOrder: number, rules: Array<{ __typename?: 'Rule', id?: string | null, rule: string }>, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', id: string, team: { __typename?: 'Team', id: string, name: string } }> }> | null } };
 
 export type GetPanelScenesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2224,7 +2271,7 @@ export const GetPanelSportsDocument = gql`
   sports {
     id
     name
-    weight
+    displayOrder
     image {
       id
       url
@@ -2276,7 +2323,7 @@ export const GetPanelSportDocument = gql`
   sport(id: $id) {
     id
     name
-    weight
+    displayOrder
     rules {
       id
       rule

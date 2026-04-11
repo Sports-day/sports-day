@@ -56,6 +56,7 @@ export type Competition = {
   __typename?: 'Competition';
   breakDuration?: Maybe<Scalars['Int']['output']>;
   defaultLocation?: Maybe<Location>;
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   league?: Maybe<League>;
   matchDuration?: Maybe<Scalars['Int']['output']>;
@@ -178,6 +179,11 @@ export type DeleteSportScenesInput = {
   sportIds: Array<Scalars['ID']['input']>;
 };
 
+export type DisplayOrderItem = {
+  displayOrder: Scalars['Int']['input'];
+  id: Scalars['ID']['input'];
+};
+
 /** ブラケット自動生成 */
 export type GenerateBracketInput = {
   competitionId: Scalars['ID']['input'];
@@ -212,6 +218,7 @@ export type Group = {
 
 export type Image = {
   __typename?: 'Image';
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   status: Scalars['String']['output'];
   url?: Maybe<Scalars['String']['output']>;
@@ -226,6 +233,7 @@ export type ImageUploadUrl = {
 export type Information = {
   __typename?: 'Information';
   content: Scalars['String']['output'];
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
@@ -264,6 +272,7 @@ export type League = {
 
 export type Location = {
   __typename?: 'Location';
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   matches: Array<Match>;
   name: Scalars['String']['output'];
@@ -390,6 +399,8 @@ export type Mutation = {
   generateRoundRobin: Array<Match>;
   /** サブブラケット自動生成（試合構造含む） */
   generateSubBracket: Tournament;
+  /** 審判が出席を記録する（審判本人のみ実行可能） */
+  markJudgmentAttendance: Judgment;
   /** リーグの総当たり戦をデフォルト設定で再生成する（既存試合を削除して再作成） */
   regenerateRoundRobin: Array<Match>;
   removeGroupUsers: Group;
@@ -400,16 +411,22 @@ export type Mutation = {
   setRankingRules: Sport;
   /** リーグのタイブレーク優先度を設定する */
   setTiebreakPriorities: Array<TiebreakPriority>;
+  /** 審判がスコアを提出する（審判本人のみ実行可能、試合は自動的にFINISHEDになる） */
+  submitMatchScore: Match;
   /** 大会の情報を更新する */
   updateCompetition: Competition;
+  updateCompetitionsDisplayOrder: Scalars['Boolean']['output'];
   updateGroup: Group;
+  updateImagesDisplayOrder: Scalars['Boolean']['output'];
   updateInformation: Information;
+  updateInformationsDisplayOrder: Scalars['Boolean']['output'];
   /** 審判の情報を更新する */
   updateJudgment: Judgment;
   /** リーグのルールを更新する */
   updateLeagueRule: League;
   /** 場所の情報を更新する */
   updateLocation: Location;
+  updateLocationsDisplayOrder: Scalars['Boolean']['output'];
   /** 試合の詳細情報を更新する */
   updateMatchDetail: Match;
   /** 試合結果を更新する */
@@ -418,11 +435,14 @@ export type Mutation = {
   updatePromotionRule: PromotionRule;
   updateRule: Rule;
   updateScene: Scene;
+  updateScenesDisplayOrder: Scalars['Boolean']['output'];
   /** seed_number 振り直し */
   updateSeedNumbers: Array<TournamentSlot>;
   /** スロット接続変更 */
   updateSlotConnection: TournamentSlot;
   updateSports: Sport;
+  /** 表示順を一括更新する */
+  updateSportsDisplayOrder: Scalars['Boolean']['output'];
   /** チームの情報を更新する */
   updateTeam: Team;
   /** チームメンバーを更新する */
@@ -693,6 +713,11 @@ export type MutationGenerateSubBracketArgs = {
 };
 
 
+export type MutationMarkJudgmentAttendanceArgs = {
+  matchId: Scalars['ID']['input'];
+};
+
+
 export type MutationRegenerateRoundRobinArgs = {
   id: Scalars['ID']['input'];
 };
@@ -726,9 +751,20 @@ export type MutationSetTiebreakPrioritiesArgs = {
 };
 
 
+export type MutationSubmitMatchScoreArgs = {
+  input: SubmitScoreInput;
+  matchId: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdateCompetitionArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCompetitionInput;
+};
+
+
+export type MutationUpdateCompetitionsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
 };
 
 
@@ -738,9 +774,19 @@ export type MutationUpdateGroupArgs = {
 };
 
 
+export type MutationUpdateImagesDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
+};
+
+
 export type MutationUpdateInformationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateInformationInput;
+};
+
+
+export type MutationUpdateInformationsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
 };
 
 
@@ -759,6 +805,11 @@ export type MutationUpdateLeagueRuleArgs = {
 export type MutationUpdateLocationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateLocationInput;
+};
+
+
+export type MutationUpdateLocationsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
 };
 
 
@@ -792,6 +843,11 @@ export type MutationUpdateSceneArgs = {
 };
 
 
+export type MutationUpdateScenesDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
+};
+
+
 export type MutationUpdateSeedNumbersArgs = {
   seeds: Array<SeedNumberInput>;
   tournamentId: Scalars['ID']['input'];
@@ -806,6 +862,11 @@ export type MutationUpdateSlotConnectionArgs = {
 export type MutationUpdateSportsArgs = {
   id: Scalars['ID']['input'];
   input: UpdateSportsInput;
+};
+
+
+export type MutationUpdateSportsDisplayOrderArgs = {
+  input: Array<DisplayOrderItem>;
 };
 
 
@@ -1066,6 +1127,7 @@ export type Rule = {
 
 export type Scene = {
   __typename?: 'Scene';
+  displayOrder: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   isDeleted: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
@@ -1094,6 +1156,7 @@ export const SlotSourceType = {
 export type SlotSourceType = typeof SlotSourceType[keyof typeof SlotSourceType];
 export type Sport = {
   __typename?: 'Sport';
+  displayOrder: Scalars['Int']['output'];
   experiencedLimit?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   image?: Maybe<Image>;
@@ -1101,7 +1164,6 @@ export type Sport = {
   rankingRules: Array<RankingRule>;
   rules: Array<Rule>;
   scene?: Maybe<Array<SportScene>>;
-  weight: Scalars['Int']['output'];
 };
 
 export type SportEntry = {
@@ -1144,6 +1206,12 @@ export type Standing = {
 export type SubBracketInput = {
   name: Scalars['String']['input'];
   sourceRound: Scalars['Int']['input'];
+};
+
+/** 審判がスコアを提出するための入力。statusは自動的にFINISHEDになる。 */
+export type SubmitScoreInput = {
+  results: Array<MatchResultInput>;
+  winnerTeamId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type Team = {
@@ -1281,10 +1349,10 @@ export type UpdateSlotConnectionInput = {
 };
 
 export type UpdateSportsInput = {
+  displayOrder?: InputMaybe<Scalars['Int']['input']>;
   experiencedLimit?: InputMaybe<Scalars['Int']['input']>;
   imageId?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  weight?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateTeamInput = {
@@ -1379,7 +1447,7 @@ export type RemoveAdminGroupUsersForClassMutation = { __typename?: 'Mutation', r
 export type GetAdminCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, scene: { __typename?: 'Scene', id: string, name: string } }> };
+export type GetAdminCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, displayOrder: number, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, scene: { __typename?: 'Scene', id: string, name: string } }> };
 
 export type GetAdminCompetitionQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1603,10 +1671,17 @@ export type GetAdminTournamentRankingQueryVariables = Exact<{
 
 export type GetAdminTournamentRankingQuery = { __typename?: 'Query', tournamentRanking: Array<{ __typename?: 'TournamentRanking', rank: number, isTied: boolean, team: { __typename?: 'Team', id: string, name: string } }> };
 
+export type UpdateAdminCompetitionsDisplayOrderMutationVariables = Exact<{
+  input: Array<DisplayOrderItem> | DisplayOrderItem;
+}>;
+
+
+export type UpdateAdminCompetitionsDisplayOrderMutation = { __typename?: 'Mutation', updateCompetitionsDisplayOrder: boolean };
+
 export type GetAdminImagesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminImagesQuery = { __typename?: 'Query', images: Array<{ __typename?: 'Image', id: string, url?: string | null, status: string }> };
+export type GetAdminImagesQuery = { __typename?: 'Query', images: Array<{ __typename?: 'Image', id: string, url?: string | null, status: string, displayOrder: number }> };
 
 export type GetAdminImageQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1629,10 +1704,17 @@ export type DeleteAdminImageMutationVariables = Exact<{
 
 export type DeleteAdminImageMutation = { __typename?: 'Mutation', deleteImage: { __typename?: 'Image', id: string } };
 
+export type UpdateAdminImagesDisplayOrderMutationVariables = Exact<{
+  input: Array<DisplayOrderItem> | DisplayOrderItem;
+}>;
+
+
+export type UpdateAdminImagesDisplayOrderMutation = { __typename?: 'Mutation', updateImagesDisplayOrder: boolean };
+
 export type GetAdminInformationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminInformationsQuery = { __typename?: 'Query', Informations: Array<{ __typename?: 'Information', id: string, title: string, content: string, status: string }> };
+export type GetAdminInformationsQuery = { __typename?: 'Query', Informations: Array<{ __typename?: 'Information', id: string, title: string, content: string, status: string, displayOrder: number }> };
 
 export type GetAdminInformationQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1663,10 +1745,17 @@ export type DeleteAdminInformationMutationVariables = Exact<{
 
 export type DeleteAdminInformationMutation = { __typename?: 'Mutation', deleteInformation: { __typename?: 'Information', id: string } };
 
+export type UpdateAdminInformationsDisplayOrderMutationVariables = Exact<{
+  input: Array<DisplayOrderItem> | DisplayOrderItem;
+}>;
+
+
+export type UpdateAdminInformationsDisplayOrderMutation = { __typename?: 'Mutation', updateInformationsDisplayOrder: boolean };
+
 export type GetAdminLocationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminLocationsQuery = { __typename?: 'Query', locations: Array<{ __typename?: 'Location', id: string, name: string }> };
+export type GetAdminLocationsQuery = { __typename?: 'Query', locations: Array<{ __typename?: 'Location', id: string, name: string, displayOrder: number }> };
 
 export type GetAdminLocationQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1696,6 +1785,13 @@ export type DeleteAdminLocationMutationVariables = Exact<{
 
 
 export type DeleteAdminLocationMutation = { __typename?: 'Mutation', deleteLocation: { __typename?: 'Location', id: string } };
+
+export type UpdateAdminLocationsDisplayOrderMutationVariables = Exact<{
+  input: Array<DisplayOrderItem> | DisplayOrderItem;
+}>;
+
+
+export type UpdateAdminLocationsDisplayOrderMutation = { __typename?: 'Mutation', updateLocationsDisplayOrder: boolean };
 
 export type GetAdminLocationsForMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1814,14 +1910,14 @@ export type SetAdminTiebreakPrioritiesMutation = { __typename?: 'Mutation', setT
 export type GetAdminSportsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminSportsQuery = { __typename?: 'Query', sports: Array<{ __typename?: 'Sport', id: string, name: string, weight: number, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null }> };
+export type GetAdminSportsQuery = { __typename?: 'Query', sports: Array<{ __typename?: 'Sport', id: string, name: string, displayOrder: number, image?: { __typename?: 'Image', id: string, url?: string | null } | null, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null }> };
 
 export type GetAdminSportQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminSportQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, name: string, weight: number, experiencedLimit?: number | null, image?: { __typename?: 'Image', id: string, url?: string | null } | null, rankingRules: Array<{ __typename?: 'RankingRule', conditionKey: RankingConditionKey, priority: number }>, rules: Array<{ __typename?: 'Rule', id?: string | null, rule: string }>, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null } };
+export type GetAdminSportQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, name: string, displayOrder: number, experiencedLimit?: number | null, image?: { __typename?: 'Image', id: string, url?: string | null } | null, rankingRules: Array<{ __typename?: 'RankingRule', conditionKey: RankingConditionKey, priority: number }>, rules: Array<{ __typename?: 'Rule', id?: string | null, rule: string }>, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null } };
 
 export type CreateAdminSportMutationVariables = Exact<{
   input: CreateSportsInput;
@@ -1836,7 +1932,7 @@ export type UpdateAdminSportMutationVariables = Exact<{
 }>;
 
 
-export type UpdateAdminSportMutation = { __typename?: 'Mutation', updateSports: { __typename?: 'Sport', id: string, name: string, weight: number, experiencedLimit?: number | null } };
+export type UpdateAdminSportMutation = { __typename?: 'Mutation', updateSports: { __typename?: 'Sport', id: string, name: string, displayOrder: number, experiencedLimit?: number | null } };
 
 export type DeleteAdminSportMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1895,10 +1991,17 @@ export type DeleteAdminSportSceneMutationVariables = Exact<{
 
 export type DeleteAdminSportSceneMutation = { __typename?: 'Mutation', deleteSportScene: { __typename?: 'SportScene', id: string } };
 
+export type UpdateAdminSportsDisplayOrderMutationVariables = Exact<{
+  input: Array<DisplayOrderItem> | DisplayOrderItem;
+}>;
+
+
+export type UpdateAdminSportsDisplayOrderMutation = { __typename?: 'Mutation', updateSportsDisplayOrder: boolean };
+
 export type GetAdminScenesForTagsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminScenesForTagsQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, isDeleted: boolean }> };
+export type GetAdminScenesForTagsQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, displayOrder: number, isDeleted: boolean }> };
 
 export type GetAdminSceneForTagQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1935,6 +2038,13 @@ export type RestoreAdminSceneForTagMutationVariables = Exact<{
 
 
 export type RestoreAdminSceneForTagMutation = { __typename?: 'Mutation', restoreScene: { __typename?: 'Scene', id: string, name: string, isDeleted: boolean } };
+
+export type UpdateAdminScenesDisplayOrderMutationVariables = Exact<{
+  input: Array<DisplayOrderItem> | DisplayOrderItem;
+}>;
+
+
+export type UpdateAdminScenesDisplayOrderMutation = { __typename?: 'Mutation', updateScenesDisplayOrder: boolean };
 
 export type GetAdminTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2328,6 +2438,7 @@ export const GetAdminCompetitionsDocument = gql`
   competitions {
     id
     name
+    displayOrder
     type
     sport {
       id
@@ -3657,12 +3768,44 @@ export type GetAdminTournamentRankingQueryHookResult = ReturnType<typeof useGetA
 export type GetAdminTournamentRankingLazyQueryHookResult = ReturnType<typeof useGetAdminTournamentRankingLazyQuery>;
 export type GetAdminTournamentRankingSuspenseQueryHookResult = ReturnType<typeof useGetAdminTournamentRankingSuspenseQuery>;
 export type GetAdminTournamentRankingQueryResult = Apollo.QueryResult<GetAdminTournamentRankingQuery, GetAdminTournamentRankingQueryVariables>;
+export const UpdateAdminCompetitionsDisplayOrderDocument = gql`
+    mutation UpdateAdminCompetitionsDisplayOrder($input: [DisplayOrderItem!]!) {
+  updateCompetitionsDisplayOrder(input: $input)
+}
+    `;
+export type UpdateAdminCompetitionsDisplayOrderMutationFn = Apollo.MutationFunction<UpdateAdminCompetitionsDisplayOrderMutation, UpdateAdminCompetitionsDisplayOrderMutationVariables>;
+
+/**
+ * __useUpdateAdminCompetitionsDisplayOrderMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminCompetitionsDisplayOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminCompetitionsDisplayOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminCompetitionsDisplayOrderMutation, { data, loading, error }] = useUpdateAdminCompetitionsDisplayOrderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminCompetitionsDisplayOrderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminCompetitionsDisplayOrderMutation, UpdateAdminCompetitionsDisplayOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminCompetitionsDisplayOrderMutation, UpdateAdminCompetitionsDisplayOrderMutationVariables>(UpdateAdminCompetitionsDisplayOrderDocument, options);
+      }
+export type UpdateAdminCompetitionsDisplayOrderMutationHookResult = ReturnType<typeof useUpdateAdminCompetitionsDisplayOrderMutation>;
+export type UpdateAdminCompetitionsDisplayOrderMutationResult = Apollo.MutationResult<UpdateAdminCompetitionsDisplayOrderMutation>;
+export type UpdateAdminCompetitionsDisplayOrderMutationOptions = Apollo.BaseMutationOptions<UpdateAdminCompetitionsDisplayOrderMutation, UpdateAdminCompetitionsDisplayOrderMutationVariables>;
 export const GetAdminImagesDocument = gql`
     query GetAdminImages {
   images {
     id
     url
     status
+    displayOrder
   }
 }
     `;
@@ -3807,6 +3950,37 @@ export function useDeleteAdminImageMutation(baseOptions?: Apollo.MutationHookOpt
 export type DeleteAdminImageMutationHookResult = ReturnType<typeof useDeleteAdminImageMutation>;
 export type DeleteAdminImageMutationResult = Apollo.MutationResult<DeleteAdminImageMutation>;
 export type DeleteAdminImageMutationOptions = Apollo.BaseMutationOptions<DeleteAdminImageMutation, DeleteAdminImageMutationVariables>;
+export const UpdateAdminImagesDisplayOrderDocument = gql`
+    mutation UpdateAdminImagesDisplayOrder($input: [DisplayOrderItem!]!) {
+  updateImagesDisplayOrder(input: $input)
+}
+    `;
+export type UpdateAdminImagesDisplayOrderMutationFn = Apollo.MutationFunction<UpdateAdminImagesDisplayOrderMutation, UpdateAdminImagesDisplayOrderMutationVariables>;
+
+/**
+ * __useUpdateAdminImagesDisplayOrderMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminImagesDisplayOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminImagesDisplayOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminImagesDisplayOrderMutation, { data, loading, error }] = useUpdateAdminImagesDisplayOrderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminImagesDisplayOrderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminImagesDisplayOrderMutation, UpdateAdminImagesDisplayOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminImagesDisplayOrderMutation, UpdateAdminImagesDisplayOrderMutationVariables>(UpdateAdminImagesDisplayOrderDocument, options);
+      }
+export type UpdateAdminImagesDisplayOrderMutationHookResult = ReturnType<typeof useUpdateAdminImagesDisplayOrderMutation>;
+export type UpdateAdminImagesDisplayOrderMutationResult = Apollo.MutationResult<UpdateAdminImagesDisplayOrderMutation>;
+export type UpdateAdminImagesDisplayOrderMutationOptions = Apollo.BaseMutationOptions<UpdateAdminImagesDisplayOrderMutation, UpdateAdminImagesDisplayOrderMutationVariables>;
 export const GetAdminInformationsDocument = gql`
     query GetAdminInformations {
   Informations {
@@ -3814,6 +3988,7 @@ export const GetAdminInformationsDocument = gql`
     title
     content
     status
+    displayOrder
   }
 }
     `;
@@ -3998,11 +4173,43 @@ export function useDeleteAdminInformationMutation(baseOptions?: Apollo.MutationH
 export type DeleteAdminInformationMutationHookResult = ReturnType<typeof useDeleteAdminInformationMutation>;
 export type DeleteAdminInformationMutationResult = Apollo.MutationResult<DeleteAdminInformationMutation>;
 export type DeleteAdminInformationMutationOptions = Apollo.BaseMutationOptions<DeleteAdminInformationMutation, DeleteAdminInformationMutationVariables>;
+export const UpdateAdminInformationsDisplayOrderDocument = gql`
+    mutation UpdateAdminInformationsDisplayOrder($input: [DisplayOrderItem!]!) {
+  updateInformationsDisplayOrder(input: $input)
+}
+    `;
+export type UpdateAdminInformationsDisplayOrderMutationFn = Apollo.MutationFunction<UpdateAdminInformationsDisplayOrderMutation, UpdateAdminInformationsDisplayOrderMutationVariables>;
+
+/**
+ * __useUpdateAdminInformationsDisplayOrderMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminInformationsDisplayOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminInformationsDisplayOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminInformationsDisplayOrderMutation, { data, loading, error }] = useUpdateAdminInformationsDisplayOrderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminInformationsDisplayOrderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminInformationsDisplayOrderMutation, UpdateAdminInformationsDisplayOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminInformationsDisplayOrderMutation, UpdateAdminInformationsDisplayOrderMutationVariables>(UpdateAdminInformationsDisplayOrderDocument, options);
+      }
+export type UpdateAdminInformationsDisplayOrderMutationHookResult = ReturnType<typeof useUpdateAdminInformationsDisplayOrderMutation>;
+export type UpdateAdminInformationsDisplayOrderMutationResult = Apollo.MutationResult<UpdateAdminInformationsDisplayOrderMutation>;
+export type UpdateAdminInformationsDisplayOrderMutationOptions = Apollo.BaseMutationOptions<UpdateAdminInformationsDisplayOrderMutation, UpdateAdminInformationsDisplayOrderMutationVariables>;
 export const GetAdminLocationsDocument = gql`
     query GetAdminLocations {
   locations {
     id
     name
+    displayOrder
   }
 }
     `;
@@ -4181,6 +4388,37 @@ export function useDeleteAdminLocationMutation(baseOptions?: Apollo.MutationHook
 export type DeleteAdminLocationMutationHookResult = ReturnType<typeof useDeleteAdminLocationMutation>;
 export type DeleteAdminLocationMutationResult = Apollo.MutationResult<DeleteAdminLocationMutation>;
 export type DeleteAdminLocationMutationOptions = Apollo.BaseMutationOptions<DeleteAdminLocationMutation, DeleteAdminLocationMutationVariables>;
+export const UpdateAdminLocationsDisplayOrderDocument = gql`
+    mutation UpdateAdminLocationsDisplayOrder($input: [DisplayOrderItem!]!) {
+  updateLocationsDisplayOrder(input: $input)
+}
+    `;
+export type UpdateAdminLocationsDisplayOrderMutationFn = Apollo.MutationFunction<UpdateAdminLocationsDisplayOrderMutation, UpdateAdminLocationsDisplayOrderMutationVariables>;
+
+/**
+ * __useUpdateAdminLocationsDisplayOrderMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminLocationsDisplayOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminLocationsDisplayOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminLocationsDisplayOrderMutation, { data, loading, error }] = useUpdateAdminLocationsDisplayOrderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminLocationsDisplayOrderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminLocationsDisplayOrderMutation, UpdateAdminLocationsDisplayOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminLocationsDisplayOrderMutation, UpdateAdminLocationsDisplayOrderMutationVariables>(UpdateAdminLocationsDisplayOrderDocument, options);
+      }
+export type UpdateAdminLocationsDisplayOrderMutationHookResult = ReturnType<typeof useUpdateAdminLocationsDisplayOrderMutation>;
+export type UpdateAdminLocationsDisplayOrderMutationResult = Apollo.MutationResult<UpdateAdminLocationsDisplayOrderMutation>;
+export type UpdateAdminLocationsDisplayOrderMutationOptions = Apollo.BaseMutationOptions<UpdateAdminLocationsDisplayOrderMutation, UpdateAdminLocationsDisplayOrderMutationVariables>;
 export const GetAdminLocationsForMatchesDocument = gql`
     query GetAdminLocationsForMatches {
   locations {
@@ -4952,7 +5190,7 @@ export const GetAdminSportsDocument = gql`
   sports {
     id
     name
-    weight
+    displayOrder
     image {
       id
       url
@@ -5004,7 +5242,7 @@ export const GetAdminSportDocument = gql`
   sport(id: $id) {
     id
     name
-    weight
+    displayOrder
     experiencedLimit
     image {
       id
@@ -5100,7 +5338,7 @@ export const UpdateAdminSportDocument = gql`
   updateSports(id: $id, input: $input) {
     id
     name
-    weight
+    displayOrder
     experiencedLimit
   }
 }
@@ -5414,11 +5652,43 @@ export function useDeleteAdminSportSceneMutation(baseOptions?: Apollo.MutationHo
 export type DeleteAdminSportSceneMutationHookResult = ReturnType<typeof useDeleteAdminSportSceneMutation>;
 export type DeleteAdminSportSceneMutationResult = Apollo.MutationResult<DeleteAdminSportSceneMutation>;
 export type DeleteAdminSportSceneMutationOptions = Apollo.BaseMutationOptions<DeleteAdminSportSceneMutation, DeleteAdminSportSceneMutationVariables>;
+export const UpdateAdminSportsDisplayOrderDocument = gql`
+    mutation UpdateAdminSportsDisplayOrder($input: [DisplayOrderItem!]!) {
+  updateSportsDisplayOrder(input: $input)
+}
+    `;
+export type UpdateAdminSportsDisplayOrderMutationFn = Apollo.MutationFunction<UpdateAdminSportsDisplayOrderMutation, UpdateAdminSportsDisplayOrderMutationVariables>;
+
+/**
+ * __useUpdateAdminSportsDisplayOrderMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminSportsDisplayOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminSportsDisplayOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminSportsDisplayOrderMutation, { data, loading, error }] = useUpdateAdminSportsDisplayOrderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminSportsDisplayOrderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminSportsDisplayOrderMutation, UpdateAdminSportsDisplayOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminSportsDisplayOrderMutation, UpdateAdminSportsDisplayOrderMutationVariables>(UpdateAdminSportsDisplayOrderDocument, options);
+      }
+export type UpdateAdminSportsDisplayOrderMutationHookResult = ReturnType<typeof useUpdateAdminSportsDisplayOrderMutation>;
+export type UpdateAdminSportsDisplayOrderMutationResult = Apollo.MutationResult<UpdateAdminSportsDisplayOrderMutation>;
+export type UpdateAdminSportsDisplayOrderMutationOptions = Apollo.BaseMutationOptions<UpdateAdminSportsDisplayOrderMutation, UpdateAdminSportsDisplayOrderMutationVariables>;
 export const GetAdminScenesForTagsDocument = gql`
     query GetAdminScenesForTags {
   scenes {
     id
     name
+    displayOrder
     isDeleted
   }
 }
@@ -5634,6 +5904,37 @@ export function useRestoreAdminSceneForTagMutation(baseOptions?: Apollo.Mutation
 export type RestoreAdminSceneForTagMutationHookResult = ReturnType<typeof useRestoreAdminSceneForTagMutation>;
 export type RestoreAdminSceneForTagMutationResult = Apollo.MutationResult<RestoreAdminSceneForTagMutation>;
 export type RestoreAdminSceneForTagMutationOptions = Apollo.BaseMutationOptions<RestoreAdminSceneForTagMutation, RestoreAdminSceneForTagMutationVariables>;
+export const UpdateAdminScenesDisplayOrderDocument = gql`
+    mutation UpdateAdminScenesDisplayOrder($input: [DisplayOrderItem!]!) {
+  updateScenesDisplayOrder(input: $input)
+}
+    `;
+export type UpdateAdminScenesDisplayOrderMutationFn = Apollo.MutationFunction<UpdateAdminScenesDisplayOrderMutation, UpdateAdminScenesDisplayOrderMutationVariables>;
+
+/**
+ * __useUpdateAdminScenesDisplayOrderMutation__
+ *
+ * To run a mutation, you first call `useUpdateAdminScenesDisplayOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAdminScenesDisplayOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAdminScenesDisplayOrderMutation, { data, loading, error }] = useUpdateAdminScenesDisplayOrderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAdminScenesDisplayOrderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAdminScenesDisplayOrderMutation, UpdateAdminScenesDisplayOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateAdminScenesDisplayOrderMutation, UpdateAdminScenesDisplayOrderMutationVariables>(UpdateAdminScenesDisplayOrderDocument, options);
+      }
+export type UpdateAdminScenesDisplayOrderMutationHookResult = ReturnType<typeof useUpdateAdminScenesDisplayOrderMutation>;
+export type UpdateAdminScenesDisplayOrderMutationResult = Apollo.MutationResult<UpdateAdminScenesDisplayOrderMutation>;
+export type UpdateAdminScenesDisplayOrderMutationOptions = Apollo.BaseMutationOptions<UpdateAdminScenesDisplayOrderMutation, UpdateAdminScenesDisplayOrderMutationVariables>;
 export const GetAdminTeamsDocument = gql`
     query GetAdminTeams {
   teams {
