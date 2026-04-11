@@ -23,17 +23,19 @@ func FormatGroupResponse(group *db_model.Group) *Group {
 
 func FormatInformationResponse(information *db_model.Information) *Information {
 	return &Information{
-		ID:      information.ID,
-		Title:   information.Title,
-		Content: information.Content,
+		ID:           information.ID,
+		Title:        information.Title,
+		Content:      information.Content,
+		DisplayOrder: int32(information.DisplayOrder),
 	}
 }
 
 func FormatSceneResponse(scene *db_model.Scene) *Scene {
 	return &Scene{
-		ID:        scene.ID,
-		Name:      scene.Name,
-		IsDeleted: scene.IsDeleted,
+		ID:           scene.ID,
+		Name:         scene.Name,
+		DisplayOrder: int32(scene.DisplayOrder),
+		IsDeleted:    scene.IsDeleted,
 	}
 }
 
@@ -50,9 +52,10 @@ func FormatImageResponse(image *db_model.Image) *Image {
 		url = &image.URL.String
 	}
 	return &Image{
-		ID:     image.ID,
-		URL:    url,
-		Status: image.Status,
+		ID:           image.ID,
+		URL:          url,
+		Status:       image.Status,
+		DisplayOrder: int32(image.DisplayOrder),
 	}
 }
 
@@ -69,7 +72,7 @@ func FormatSportResponse(sport *db_model.Sport) *Sport {
 	return &Sport{
 		ID:               sport.ID,
 		Name:             sport.Name,
-		Weight:           int32(sport.Weight),
+		DisplayOrder:     int32(sport.DisplayOrder),
 		ExperiencedLimit: experiencedLimit,
 		RankingRules:     []*RankingRule{},
 		Rules:            []*Rule{},
@@ -107,8 +110,9 @@ func FormatTeamResponse(team *db_model.Team) *Team {
 
 func FormatLocationResponse(location *db_model.Location) *Location {
 	return &Location{
-		ID:   location.ID,
-		Name: location.Name,
+		ID:           location.ID,
+		Name:         location.Name,
+		DisplayOrder: int32(location.DisplayOrder),
 	}
 }
 
@@ -146,6 +150,7 @@ func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
 		MatchDuration:     matchDuration,
 		BreakDuration:     breakDuration,
 		DefaultLocationID: defaultLocationID,
+		DisplayOrder:      int32(competition.DisplayOrder),
 	}
 }
 
@@ -161,12 +166,12 @@ func FormatMatchResponse(match *db_model.Match) *Match {
 	}
 
 	return &Match{
-		ID:            match.ID,
-		Time:          match.Time.Format(time.RFC3339),
-		Status:        MatchStatus(match.Status),
-		LocationId:    locationId,
-		CompetitionId: match.CompetitionID,
-		WinnerTeamId:  winnerTeamId,
+		ID:             match.ID,
+		Time:           match.Time.Format(time.RFC3339),
+		Status:         MatchStatus(match.Status),
+		LocationId:     locationId,
+		CompetitionId:  match.CompetitionID,
+		WinnerTeamId:   winnerTeamId,
 		TimeManual:     match.TimeManual,
 		LocationManual: match.LocationManual,
 	}

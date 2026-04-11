@@ -132,6 +132,11 @@ type DeleteSportScenesInput struct {
 	SportIds []string `json:"sportIds"`
 }
 
+type DisplayOrderItem struct {
+	ID           string `json:"id"`
+	DisplayOrder int32  `json:"displayOrder"`
+}
+
 // ブラケット自動生成
 type GenerateBracketInput struct {
 	CompetitionID   string             `json:"competitionId"`
@@ -156,9 +161,10 @@ type GenerateSubBracketInput struct {
 }
 
 type Image struct {
-	ID     string  `json:"id"`
-	URL    *string `json:"url,omitempty"`
-	Status string  `json:"status"`
+	ID           string  `json:"id"`
+	URL          *string `json:"url,omitempty"`
+	Status       string  `json:"status"`
+	DisplayOrder int32   `json:"displayOrder"`
 }
 
 type ImageUploadURL struct {
@@ -167,10 +173,11 @@ type ImageUploadURL struct {
 }
 
 type Information struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Status  string `json:"status"`
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	Content      string `json:"content"`
+	Status       string `json:"status"`
+	DisplayOrder int32  `json:"displayOrder"`
 }
 
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
@@ -345,7 +352,7 @@ type UpdateSlotConnectionInput struct {
 
 type UpdateSportsInput struct {
 	Name             *string `json:"name,omitempty"`
-	Weight           *int32  `json:"weight,omitempty"`
+	DisplayOrder     *int32  `json:"displayOrder,omitempty"`
 	ImageID          *string `json:"imageId,omitempty"`
 	ExperiencedLimit *int32  `json:"experiencedLimit,omitempty"`
 }

@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -851,3 +852,24 @@ type tournamentResolver struct{ *Resolver }
 type tournamentRankingResolver struct{ *Resolver }
 type tournamentSlotResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *competitionResolver) DisplayOrder(ctx context.Context, obj *model.Competition) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+func (r *locationResolver) DisplayOrder(ctx context.Context, obj *model.Location) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+func (r *sceneResolver) DisplayOrder(ctx context.Context, obj *model.Scene) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+func (r *sportResolver) DisplayOrder(ctx context.Context, obj *model.Sport) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+*/

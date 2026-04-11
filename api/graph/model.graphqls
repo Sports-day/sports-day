@@ -58,11 +58,13 @@ type Competition {
   matchDuration: Int
   breakDuration: Int
   defaultLocation: Location
+  displayOrder: Int!
 }
 
 type Location {
   id: ID!
   name: String!
+  displayOrder: Int!
   matches: [Match!]!
 }
 
@@ -129,6 +131,7 @@ type Information {
   title: String!
   content: String!
   status: String!
+  displayOrder: Int!
 }
 
 enum RankingConditionKey {
@@ -152,7 +155,7 @@ type TiebreakPriority {
 type Sport {
   id: ID!
   name: String!
-  weight: Int!
+  displayOrder: Int!
   experiencedLimit: Int
   rankingRules: [RankingRule!]!
   rules: [Rule!]!
@@ -169,11 +172,13 @@ type Image {
   id: ID!
   url: String
   status: String!
+  displayOrder: Int!
 }
 
 type Scene {
   id: ID!
   name: String!
+  displayOrder: Int!
   isDeleted: Boolean!
   sportScenes: [SportScene!]!
 }

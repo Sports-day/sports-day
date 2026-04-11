@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -829,6 +830,60 @@ func (r *mutationResolver) AddSportExperiences(ctx context.Context, sportID stri
 // DeleteSportExperiences is the resolver for the deleteSportExperiences field.
 func (r *mutationResolver) DeleteSportExperiences(ctx context.Context, sportID string, userIds []string) (bool, error) {
 	if err := r.SportService.DeleteExperiences(ctx, sportID, userIds); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateSportsDisplayOrder is the resolver for the updateSportsDisplayOrder field.
+func (r *mutationResolver) UpdateSportsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.SportService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateCompetitionsDisplayOrder is the resolver for the updateCompetitionsDisplayOrder field.
+func (r *mutationResolver) UpdateCompetitionsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.CompetitionService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateLocationsDisplayOrder is the resolver for the updateLocationsDisplayOrder field.
+func (r *mutationResolver) UpdateLocationsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.LocationService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateScenesDisplayOrder is the resolver for the updateScenesDisplayOrder field.
+func (r *mutationResolver) UpdateScenesDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.SceneService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateInformationsDisplayOrder is the resolver for the updateInformationsDisplayOrder field.
+func (r *mutationResolver) UpdateInformationsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.InformationService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateImagesDisplayOrder is the resolver for the updateImagesDisplayOrder field.
+func (r *mutationResolver) UpdateImagesDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.ImageService.UpdateDisplayOrders(ctx, items); err != nil {
 		return false, err
 	}
 	return true, nil

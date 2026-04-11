@@ -5,6 +5,7 @@ import (
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	"sports-day/api/repository"
 )
 
 // roleToString は model.Role を DB 保存用の文字列に変換する。
@@ -41,4 +42,15 @@ func (r *queryResolver) formatPromotionRuleFromQuery(ctx context.Context, rule *
 		return nil, err
 	}
 	return model.FormatPromotionRuleResponse(rule, sourceComp, targetComp), nil
+}
+
+func toDisplayOrderItems(input []*model.DisplayOrderItem) []repository.DisplayOrderItem {
+	items := make([]repository.DisplayOrderItem, len(input))
+	for i, item := range input {
+		items[i] = repository.DisplayOrderItem{
+			ID:           item.ID,
+			DisplayOrder: int(item.DisplayOrder),
+		}
+	}
+	return items
 }

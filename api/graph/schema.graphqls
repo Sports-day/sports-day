@@ -47,7 +47,7 @@ input CreateSportsInput {
 
 input UpdateSportsInput {
   name: String
-  weight: Int
+  displayOrder: Int
   imageId: ID
   experiencedLimit: Int
 }
@@ -418,6 +418,11 @@ type Query {
   allSportExperiences: [SportExperience!]!
 }
 
+input DisplayOrderItem {
+  id: ID!
+  displayOrder: Int!
+}
+
 input CreateImageUploadURLInput {
   filename: String!
 }
@@ -675,4 +680,13 @@ type Mutation {
   スポーツの経験者を削除する
   """
   deleteSportExperiences(sportId: ID!, userIds: [ID!]!): Boolean! @hasPermission(permission: "team:write")
+  """
+  表示順を一括更新する
+  """
+  updateSportsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "sport:write")
+  updateCompetitionsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "competition:write")
+  updateLocationsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "location:write")
+  updateScenesDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "scene:write")
+  updateInformationsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "information:write")
+  updateImagesDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "image:write")
 }
