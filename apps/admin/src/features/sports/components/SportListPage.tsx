@@ -1,16 +1,21 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState } from 'react'
 import {
   Box,
   Button,
   Card,
   CardContent,
   CircularProgress,
+  MenuItem,
+  TextField,
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import SportsIcon from '@mui/icons-material/Sports'
+import DescriptionIcon from '@mui/icons-material/Description'
 import { useSports } from '../hooks/useSports'
+import { useCompetitions } from '@/features/competitions/hooks/useCompetitions'
 import { QueryError } from '@/components/ui/QueryError'
+import { PdfExportDialog } from '@/features/competitions/components/PdfExportDialog'
 import { CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
 import { useFilterParams } from '@/hooks/useFilterParams'
@@ -23,6 +28,31 @@ type Props = {
 export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
   const { data: sports, loading, error } = useSports()
   const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'scene'])
+  const { data: competitions } = useCompetitions()
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false)
+  const [pdfSportId, setPdfSportId] = useState('')
+  const [pdfSceneId, setPdfSceneId] = useState('')
+
+  // sport+scene の組み合わせリスト（PDF出力用、リーグのみ）
+  const sportScenePairs = useMemo(() => {
+    const map = new Map<string, { sportId: string; sceneId: string; sportName: string; sceneName: string }>()
+    for (const c of competitions) {
+      if (c.type !== 'LEAGUE') continue
+      const key = `${c.sportId}__${c.sceneId}`
+      if (!map.has(key)) map.set(key, { sportId: c.sportId, sceneId: c.sceneId, sportName: c.sportName, sceneName: c.sceneName })
+    }
+    return [...map.values()].sort((a, b) => a.sportName.localeCompare(b.sportName) || a.sceneName.localeCompare(b.sceneName))
+  }, [competitions])
+
+  const handleOpenPdf = () => {
+    if (sportScenePairs.length === 1) {
+      setPdfSportId(sportScenePairs[0].sportId)
+      setPdfSceneId(sportScenePairs[0].sceneId)
+      setPdfDialogOpen(true)
+    } else if (pdfSportId && pdfSceneId) {
+      setPdfDialogOpen(true)
+    }
+  }
   const keyword = fp.keyword
   const sceneFilter = fp.scene
 
@@ -78,7 +108,7 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
 
       <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
             <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
               すべての競技
             </Typography>
@@ -91,6 +121,56 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
             >
               競技を新規作成
             </Button>
+            {sportScenePairs.length > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+                {sportScenePairs.length > 1 && (
+                  <TextField
+                    select
+                    size="small"
+                    value={pdfSportId && pdfSceneId ? `${pdfSportId}__${pdfSceneId}` : ''}
+                    onChange={(e) => {
+                      const [sid, scid] = e.target.value.split('__')
+                      setPdfSportId(sid)
+                      setPdfSceneId(scid)
+                    }}
+                    sx={{
+                      minWidth: 180,
+                      '& .MuiOutlinedInput-root': {
+                        fontSize: '13px',
+                        '& fieldset': { borderColor: '#5B6DC6' },
+                      },
+                      '& .MuiInputBase-input': { color: '#2F3C8C', py: '6px' },
+                    }}
+                    SelectProps={{ displayEmpty: true }}
+                  >
+                    <MenuItem value="" disabled sx={{ fontSize: '13px' }}>競技・シーンを選択</MenuItem>
+                    {sportScenePairs.map((p) => (
+                      <MenuItem key={`${p.sportId}__${p.sceneId}`} value={`${p.sportId}__${p.sceneId}`} sx={{ fontSize: '13px' }}>
+                        {p.sportName} / {p.sceneName}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+                <Button
+                  variant="text"
+                  size="small"
+                  startIcon={<DescriptionIcon />}
+                  onClick={handleOpenPdf}
+                  disabled={sportScenePairs.length > 1 && (!pdfSportId || !pdfSceneId)}
+                  sx={{
+                    backgroundColor: '#EFF0F8',
+                    color: '#2F3C8C',
+                    fontSize: '13px',
+                    borderRadius: 1,
+                    px: 1.5,
+                    boxShadow: 'none',
+                    '&:hover': { backgroundColor: '#E5E6F0', boxShadow: 'none' },
+                  }}
+                >
+                  資料を出力
+                </Button>
+              </Box>
+            )}
           </Box>
 
           {filtered.length === 0 ? (
@@ -136,6 +216,13 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
           )}
         </CardContent>
       </Card>
+
+      <PdfExportDialog
+        open={pdfDialogOpen}
+        onClose={() => setPdfDialogOpen(false)}
+        sportId={pdfSportId}
+        sceneId={pdfSceneId}
+      />
     </Box>
   )
 }
