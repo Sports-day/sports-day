@@ -18,7 +18,6 @@ import { MatchEditPage } from './MatchEditPage'
 import { CARD_GRADIENT } from '@/styles/commonSx'
 import { useResetToList } from '@/hooks/useResetToList'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
-import { useFilterParams } from '@/hooks/useFilterParams'
 
 function toActiveMatch(row: MatchRow): ActiveMatch {
   return {
@@ -94,23 +93,25 @@ export function ActiveMatchesPage() {
 
   useResetToList(view.type === 'list', useCallback(() => setView({ type: 'list' }), []))
 
-  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['sport', 'compType', 'bracket', 'status'], { status: 'ONGOING' })
-  const sportFilter = fp.sport
-  const compTypeFilter = fp.compType
-  const bracketFilter = fp.bracket
-  const statusFilter = fp.status
-
   const {
-    matches,
+    matches: filteredMatches,
+    allMatches: matches,
     sports,
+    sportFilter,
+    compTypeFilter,
+    bracketFilter,
+    statusFilter,
+    bracketOptions,
+    handleFilterChange,
+    resetFilters,
     loading,
     error,
     refetch,
-  } = useActiveMatches(sportFilter)
+  } = useActiveMatches()
 
   const matchEdit = useMatchEdit()
 
-  // matchId クエリパラメータによるディープリンク
+  // matchId クエリパラメータによるディープリンク（allMatchesからも検索）
   useEffect(() => {
     if (view.type !== 'pending-deeplink' || loading || matches.length === 0) return
     const row = matches.find(m => m.id === view.matchId)
@@ -123,20 +124,6 @@ export function ActiveMatchesPage() {
     // from/competitionId/competitionName は competitionReturn に保存済みのでまとめてクリア
     setSearchParams({}, { replace: true })
   }, [view, matches, loading]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // トーナメント選択時のみブラケット選択肢を生成
-  const bracketOptions = useMemo(() => {
-    if (compTypeFilter !== 'TOURNAMENT') return []
-    const map = new Map<string, string>()
-    for (const m of matches) {
-      if (m.competitionType === 'TOURNAMENT' && m.bracketType) {
-        if (!map.has(m.bracketType)) {
-          map.set(m.bracketType, m.bracketType === 'MAIN' ? 'メインブラケット' : 'サブブラケット')
-        }
-      }
-    }
-    return Array.from(map, ([value, label]) => ({ value, label }))
-  }, [matches, compTypeFilter])
 
   const filterDefs: FilterDef[] = useMemo(() => {
     const defs: FilterDef[] = [
@@ -172,21 +159,6 @@ export function ActiveMatchesPage() {
     bracket: bracketFilter,
     status: statusFilter,
   }), [sportFilter, compTypeFilter, bracketFilter, statusFilter])
-
-  const handleFilterChange = useCallback((key: string, value: string) => {
-    setFilter(key, value)
-    if (key === 'compType') {
-      setFilter('bracket', '')
-    }
-  }, [setFilter])
-
-  const filteredMatches = useMemo(() => {
-    let result = matches
-    if (compTypeFilter) result = result.filter(m => m.competitionType === compTypeFilter)
-    if (bracketFilter) result = result.filter(m => m.bracketType === bracketFilter)
-    if (statusFilter) result = result.filter(m => m.status === statusFilter)
-    return result
-  }, [matches, compTypeFilter, statusFilter])
 
   const handleCardClick = (row: MatchRow) => {
     matchEdit.openMatch(toActiveMatch(row))
@@ -237,6 +209,7 @@ export function ActiveMatchesPage() {
               })
             : () => { matchEdit.closeMatch(); setView({ type: 'list' }) },
         }}
+        dirty={matchEdit.dirty}
         onReset={matchEdit.resetMatch}
         onSave={async () => {
           await matchEdit.saveMatch()

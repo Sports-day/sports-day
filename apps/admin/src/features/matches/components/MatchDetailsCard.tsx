@@ -58,6 +58,7 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
     judgmentTargetId, setJudgmentTargetId,
     optionsByType,
     currentJudgmentLabel,
+    dirty,
     handleSave, handleReset,
   } = useMatchDetails(match, competitionId)
 
@@ -174,7 +175,15 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
     showToast(targetSlotId === '' && existing ? '進出先を解除しました' : '進出先を設定しました')
   }
 
-  const onSave = async () => { await handleSave(); onClose() }
+  const onSave = async () => {
+    try {
+      await handleSave()
+      showToast('詳細設定を保存しました')
+      onClose()
+    } catch {
+      // handleSave 内でエラートーストを表示済み
+    }
+  }
   const onCancel = () => { handleReset(); onClose() }
 
   // 審判セレクト用のオプション（選択中のタイプに応じて切替）
@@ -431,6 +440,7 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
+                disabled={!dirty}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

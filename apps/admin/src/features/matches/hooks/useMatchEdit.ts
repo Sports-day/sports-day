@@ -42,14 +42,28 @@ export function useMatchEdit() {
     setWinner(computeWinner(scoreA, v))
   }
 
+  // 初期値を保持して dirty 検知に使う
+  const [saved, setSaved] = useState<{ scoreA: string; scoreB: string; winner: WinnerType; matchStatus: MatchStatusType }>({
+    scoreA: '0', scoreB: '0', winner: null, matchStatus: 'standby',
+  })
+
+  const dirty =
+    scoreA !== saved.scoreA ||
+    scoreB !== saved.scoreB ||
+    winner !== saved.winner ||
+    matchStatus !== saved.matchStatus
+
   const openMatch = (match: ActiveMatch) => {
     const a = match.scoreA !== null ? String(match.scoreA) : '0'
     const b = match.scoreB !== null ? String(match.scoreB) : '0'
+    const w = match.winner ?? computeWinner(a, b)
+    const s = match.status ?? 'standby'
     setSelectedMatch(match)
     setScoreA(a)
     setScoreB(b)
-    setWinner(match.winner ?? computeWinner(a, b))
-    setMatchStatus(match.status ?? 'standby')
+    setWinner(w)
+    setMatchStatus(s)
+    setSaved({ scoreA: a, scoreB: b, winner: w, matchStatus: s })
   }
 
   const closeMatch = () => setSelectedMatch(null)
@@ -92,6 +106,7 @@ export function useMatchEdit() {
         refetchQueries: ['GetAdminCompetitionMatches', 'GetAdminMatches'],
       })
       setMutationError(null)
+      setSaved({ scoreA, scoreB, winner, matchStatus })
       closeMatch()
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
@@ -105,6 +120,7 @@ export function useMatchEdit() {
     scoreB,
     winner,
     matchStatus,
+    dirty,
     setScoreA: handleSetScoreA,
     setScoreB: handleSetScoreB,
     setWinner,

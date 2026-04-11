@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useGetAdminMatchesQuery } from '@/gql/__generated__/graphql'
+import { useFilterParams } from '@/hooks/useFilterParams'
 
 export type MatchRow = {
   id: string
@@ -39,8 +40,14 @@ function toStatusLabel(status: string): string {
   }
 }
 
-export function useActiveMatches(sportFilter = '') {
+export function useActiveMatches() {
   const { data, loading, error, refetch } = useGetAdminMatchesQuery({ fetchPolicy: 'cache-and-network' })
+  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['sport', 'compType', 'bracket', 'status'], { status: 'ONGOING' })
+
+  const sportFilter = fp.sport
+  const compTypeFilter = fp.compType
+  const bracketFilter = fp.bracket
+  const statusFilter = fp.status
 
   const matches: MatchRow[] = useMemo(() => {
     // matchId → tournament(bracketType, name) のマッピングを構築
@@ -93,15 +100,47 @@ export function useActiveMatches(sportFilter = '') {
     return Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
   }, [matches])
 
+  const bracketOptions = useMemo(() => {
+    if (compTypeFilter !== 'TOURNAMENT') return []
+    const map = new Map<string, string>()
+    for (const m of matches) {
+      if (m.competitionType === 'TOURNAMENT' && m.bracketType) {
+        if (!map.has(m.bracketType)) {
+          map.set(m.bracketType, m.bracketType === 'MAIN' ? 'メインブラケット' : 'サブブラケット')
+        }
+      }
+    }
+    return Array.from(map, ([value, label]) => ({ value, label }))
+  }, [matches, compTypeFilter])
+
   const filtered = useMemo(() => {
-    if (!sportFilter) return matches
-    return matches.filter(m => m.sportId === sportFilter)
-  }, [matches, sportFilter])
+    let result = matches
+    if (sportFilter) result = result.filter(m => m.sportId === sportFilter)
+    if (compTypeFilter) result = result.filter(m => m.competitionType === compTypeFilter)
+    if (bracketFilter) result = result.filter(m => m.bracketType === bracketFilter)
+    if (statusFilter) result = result.filter(m => m.status === statusFilter)
+    return result
+  }, [matches, sportFilter, compTypeFilter, bracketFilter, statusFilter])
+
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    setFilter(key, value)
+    if (key === 'compType') {
+      setFilter('bracket', '')
+    }
+  }, [setFilter])
 
   return {
     matches: filtered,
     allMatches: matches,
     sports,
+    sportFilter,
+    compTypeFilter,
+    bracketFilter,
+    statusFilter,
+    bracketOptions,
+    setFilter,
+    handleFilterChange,
+    resetFilters,
     loading,
     error: error ?? null,
     refetch,

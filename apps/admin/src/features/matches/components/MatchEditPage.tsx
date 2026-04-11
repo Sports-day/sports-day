@@ -78,11 +78,12 @@ type Props = {
   context: MatchContext
   form: ScoreForm
   nav: NavHandlers
+  dirty: boolean
   onReset: () => void
-  onSave: () => void
+  onSave: () => Promise<void> | void
 }
 
-export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset, onSave }: Props) {
+export function MatchEditPage({ match, teamA, teamB, context, form, nav, dirty, onReset, onSave }: Props) {
   const { leagueName, competitionName } = context
   const { scoreA, scoreB, winner, matchStatus, onScoreAChange, onScoreBChange, onWinnerChange, onMatchStatusChange } = form
   const { onBack, onBackToList, onBackToCompetition } = nav
@@ -106,9 +107,13 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
     return { judgmentLabel, locationLabel, timeLabel }
   }, [matchDetail])
 
-  const handleSave = () => {
-    onSave()
-    showToast('変更が保存されました')
+  const handleSave = async () => {
+    try {
+      await onSave()
+      showToast('試合結果を保存しました')
+    } catch {
+      // onSave 内でエラートーストを表示済み
+    }
   }
 
   const handleReset = () => {
@@ -327,6 +332,7 @@ export function MatchEditPage({ match, teamA, teamB, context, form, nav, onReset
                 variant="contained"
                 startIcon={<CheckIcon />}
                 onClick={handleSave}
+                disabled={!dirty}
                 fullWidth
                 sx={{ ...SAVE_BUTTON_SX, fontSize: '13px' }}
               >
