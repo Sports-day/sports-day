@@ -9,11 +9,12 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import {HiOutlineExclamationTriangle, HiUser} from "react-icons/hi2";
-import type { GetPanelUsersQuery, GetPanelCompetitionsQuery, GetPanelTeamsQuery, GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
+import type { GetPanelCompetitionsQuery, GetPanelTeamsQuery, GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
+import type { ResolvedUser } from "@/src/features/users/hook";
 import {UserMatchList} from "@/components/match/userMatchList";
 import {useFetchSports} from "@/src/features/sports/hook";
 
-type PanelUser = GetPanelUsersQuery["users"][number];
+type PanelUser = ResolvedUser;
 type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
 type PanelTeam = GetPanelTeamsQuery["teams"][number];
 type PanelMatch = GetPanelMatchesQuery["matches"][number];

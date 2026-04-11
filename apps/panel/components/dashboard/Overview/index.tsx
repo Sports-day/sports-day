@@ -25,13 +25,11 @@ import {TournamentRankList} from "@/components/game/RankList/TournamentRankList"
 type PanelSport = GetPanelSportsQuery["sports"][number];
 type PanelTeam = GetPanelTeamsQuery["teams"][number];
 type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
-type TeamUser = PanelTeam["users"][number];
-
 export type OverviewProps = {
     mySport: PanelSport;
     myGame: PanelCompetition;
     myTeam: PanelTeam;
-    myTeamUsers: TeamUser[];
+    myTeamUsers: Array<{ id: string; name: string }>;
     myTeamRank: number;
 }
 

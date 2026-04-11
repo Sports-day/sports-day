@@ -1,14 +1,14 @@
 import {createContext} from "react";
 import type {
-    GetPanelUsersQuery,
     GetPanelTeamsQuery,
     GetPanelCompetitionsQuery,
     GetPanelMatchesQuery,
     GetPanelLocationsQuery,
     GetPanelImagesQuery,
 } from "@/src/gql/__generated__/graphql";
+import type { ResolvedUser } from "@/src/features/users/hook";
 
-type PanelUser = GetPanelUsersQuery["users"][number];
+type PanelUser = ResolvedUser;
 type PanelTeam = GetPanelTeamsQuery["teams"][number];
 type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
 type PanelMatch = GetPanelMatchesQuery["matches"][number];

@@ -4,7 +4,7 @@ import { useFetchTeams } from "@/src/features/teams/hook";
 import { useFetchSports } from "@/src/features/sports/hook";
 import { useFetchGames } from "@/src/features/games/hook";
 import { useFetchMatches } from "@/src/features/matches/hook";
-import { useFetchUsers } from "@/src/features/users/hook";
+import { useFetchUsers, type ResolvedUser } from "@/src/features/users/hook";
 import { useFetchImages } from "@/src/features/images/hook";
 import { useFetchUserinfo } from "@/src/features/userinfo/hook";
 import {
@@ -27,7 +27,7 @@ type GqlTeam = GetPanelTeamsQuery["teams"][0];
 type GqlMatch = GetPanelMatchesQuery["matches"][0];
 type GqlLocation = GetPanelLocationsQuery["locations"][0];
 type GqlImage = GetPanelImagesQuery["images"][0];
-type GqlUser = GetPanelUsersQuery["users"][0];
+type GqlUser = ResolvedUser;
 type GqlCompetition = GetPanelCompetitionsQuery["competitions"][0];
 type GqlMeUser = GetPanelMeQuery["me"];
 
@@ -43,7 +43,7 @@ export type DashboardDataType = {
   mySport: GqlSport | undefined;
   myGame: GqlCompetition | undefined;
   myTeam: GqlTeam | undefined;
-  myTeamUsers: GqlTeam["users"];
+  myTeamUsers: Array<{ id: string; name: string }>;
   myTeamMatches: GqlMatch[];
   myTeamRank: number;
   myJudgeMatches: GqlMatch[];
@@ -66,7 +66,7 @@ export const useFetchDashboard = () => {
   const [myGameState, setMyGame] = useState<GqlCompetition | undefined>(undefined);
   const [myTeamState, setMyTeam] = useState<GqlTeam | undefined>(undefined);
   const [myTeamMatchesState, setMyTeamMatches] = useState<GqlMatch[]>([]);
-  const [myTeamUsersState, setMyTeamUsers] = useState<GqlTeam["users"]>([]);
+  const [myTeamUsersState, setMyTeamUsers] = useState<Array<{ id: string; name: string }>>([]);
   const [myTeamRankState, setMyTeamRank] = useState<number>(0);
   const [myJudgeMatchesState, setMyJudgeMatches] = useState<GqlMatch[]>([]);
 
@@ -109,7 +109,10 @@ export const useFetchDashboard = () => {
 
           if (myTeam) {
             setMyTeam(myTeam);
-            setMyTeamUsers(myTeam.users);
+            setMyTeamUsers(myTeam.users.map(u => {
+              const resolved = users.find(ru => ru.id === u.id);
+              return { id: u.id, name: resolved?.name ?? '' };
+            }));
 
             const mySport = sports.find((s) => s.id === myCompetition.sport?.id);
             if (mySport) setMySport(mySport);

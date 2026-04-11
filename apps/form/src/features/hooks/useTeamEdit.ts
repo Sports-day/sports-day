@@ -19,6 +19,7 @@ import {
   GetSportsceneEntriesDocument,
   GetTeamDocument,
 } from "@/gql/__generated__/graphql";
+import { useMsGraphUsers } from "@/hooks/useMsGraphUsers";
 
 export type StudentInformation = {
   studentId: string;
@@ -55,6 +56,25 @@ export function useTeamEdit() {
     variables: { sportId: sports },
   });
 
+  // Graph API でユーザー名を解決
+  const userMsIds = useMemo(
+    () => [
+      ...(userData?.users ?? []).map((u) => u.identify?.microsoftUserId).filter((id): id is string => !!id),
+      ...(teamData?.team?.users ?? []).map((u) => u.identify?.microsoftUserId).filter((id): id is string => !!id),
+    ],
+    [userData, teamData],
+  );
+  const { msGraphUsers, loading: msGraphLoading } = useMsGraphUsers(userMsIds);
+
+  const resolveName = useCallback(
+    (user: { identify?: { microsoftUserId?: string | null } | null }) => {
+      const msId = user.identify?.microsoftUserId;
+      const msUser = msId ? msGraphUsers.get(msId) : undefined;
+      return msUser?.displayName ?? '';
+    },
+    [msGraphUsers],
+  );
+
   const experiencedLimit = experienceData?.sport?.experiencedLimit ?? null;
 
   // 既存の経験者データで初期化（一度だけ）
@@ -82,6 +102,7 @@ export function useTeamEdit() {
     sportSceneLoading ||
     sportSceneEntriesLoading ||
     experienceLoading ||
+    msGraphLoading ||
     (hasTeamId && teamLoading);
 
   const groupId = meData?.me?.groups?.[0]?.id ?? "";
@@ -90,10 +111,10 @@ export function useTeamEdit() {
     return (
       teamData?.team?.users?.map((u) => ({
         studentId: u.id,
-        studentName: u.name,
+        studentName: resolveName(u),
       })) ?? []
     );
-  }, [teamData?.team?.users]);
+  }, [teamData?.team?.users, resolveName]);
 
   const selectedMember = useMemo(
     () => localSelectedMember ?? teamMembersFromQuery,
@@ -115,9 +136,10 @@ export function useTeamEdit() {
     if (!userData?.users) return [];
     return userData.users.filter((u) => {
       if (searchName === "") return true;
-      return u.name.includes(searchName);
+      const displayName = resolveName(u);
+      return displayName.includes(searchName);
     });
-  }, [userData?.users, searchName]);
+  }, [userData?.users, searchName, resolveName]);
 
   const myTeamUserIds = useMemo(() => {
     return teamMembersFromQuery.map((u) => u.studentId);

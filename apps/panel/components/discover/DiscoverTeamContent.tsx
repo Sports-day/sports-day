@@ -15,10 +15,11 @@ import {HiXMark, HiClock} from "react-icons/hi2";
 import {Fragment} from "react";
 import * as React from "react";
 
-import type { GetPanelImagesQuery, GetPanelLocationsQuery, GetPanelUsersQuery } from "@/src/gql/__generated__/graphql"
+import type { GetPanelImagesQuery, GetPanelLocationsQuery } from "@/src/gql/__generated__/graphql"
+import type { ResolvedUser } from "@/src/features/users/hook"
 import {MatchSet} from "@/src/features/unit/discover";
 
-type PanelUser = GetPanelUsersQuery["users"][number];
+type PanelUser = ResolvedUser;
 type PanelImage = GetPanelImagesQuery["images"][number];
 type PanelLocation = GetPanelLocationsQuery["locations"][number];
 

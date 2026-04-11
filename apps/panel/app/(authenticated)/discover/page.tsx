@@ -74,8 +74,8 @@ export default function DiscoverPage() {
     const [searchText, setSearchText] = React.useState("");
     const filteredUsers = searchText
         ? users.filter(user =>
-            user.name.toLowerCase().includes(searchText.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchText.toLowerCase())
+            (user.name ?? '').toLowerCase().includes(searchText.toLowerCase()) ||
+            (user.email ?? '').toLowerCase().includes(searchText.toLowerCase())
         )
         : [];
 

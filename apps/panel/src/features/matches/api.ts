@@ -116,7 +116,6 @@ export const GET_MATCH = gql`
         isAttending
         user {
           id
-          name
         }
         team {
           id

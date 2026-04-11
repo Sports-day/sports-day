@@ -72,7 +72,7 @@ export const GET_TEAM_DATA = gql`
         entries {
           team {
             users {
-              name
+              identify { microsoftUserId }
             }
           }
         }
@@ -93,7 +93,7 @@ export const GET_SCENE_SPORT = gql`
             name
             users {
               id
-              name
+              identify { microsoftUserId }
             }
           }
         }
@@ -127,7 +127,7 @@ export const GET_ALLTEAMDATA = gql`
             name
             users {
               id
-              name
+              identify { microsoftUserId }
             }
           }
         }

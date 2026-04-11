@@ -1,4 +1,4 @@
-import { useFetchUsers } from "@/src/features/users/hook";
+import { useFetchUsers, type ResolvedUser } from "@/src/features/users/hook";
 import { useFetchTeams } from "@/src/features/teams/hook";
 import { useFetchSports } from "@/src/features/sports/hook";
 import { useFetchMatches } from "@/src/features/matches/hook";
@@ -16,7 +16,7 @@ import {
 // GraphQL 生成型エイリアス
 type GqlMatch = GetPanelMatchesQuery["matches"][0];
 type GqlTeam = GetPanelTeamsQuery["teams"][0];
-type GqlUser = GetPanelUsersQuery["users"][0];
+type GqlUser = ResolvedUser;
 type GqlSport = GetPanelSportsQuery["sports"][0];
 type GqlGroup = GetPanelMeQuery["me"]["groups"][0]; // class = group の同義語
 

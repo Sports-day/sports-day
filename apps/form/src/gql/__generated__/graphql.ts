@@ -38,6 +38,16 @@ export type AssignSeedTeamInput = {
   teamId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** CSVインポート等でユーザーを一括作成するための入力 */
+export type BatchCreateUsersInput = {
+  users: Array<CreateUserInput>;
+};
+
+export type BatchCreateUsersResult = {
+  __typename?: 'BatchCreateUsersResult';
+  users: Array<User>;
+};
+
 export enum BracketState {
   Building = 'BUILDING',
   Completed = 'COMPLETED',
@@ -164,8 +174,8 @@ export type CreateTournamentMatchInput = {
 };
 
 export type CreateUserInput = {
-  email: Scalars['String']['input'];
-  name: Scalars['String']['input'];
+  groupId?: InputMaybe<Scalars['ID']['input']>;
+  microsoftUserId: Scalars['String']['input'];
 };
 
 export type DeleteSportEntriesInput = {
@@ -325,6 +335,8 @@ export type Mutation = {
   applyCompetitionDefaults: Array<Match>;
   /** SEEDスロットへのチーム手動配置（teamId=null でクリア） */
   assignSeedTeam: TournamentSlot;
+  /** ユーザーを一括作成する（CSV インポート用） */
+  batchCreateUsers: BatchCreateUsersResult;
   /** 大会を作成する */
   createCompetition: Competition;
   createGroup: Group;
@@ -445,7 +457,6 @@ export type Mutation = {
   updateTeamUsers: Team;
   /** トーナメント（ブラケット）を更新する */
   updateTournament: Tournament;
-  updateUser: User;
   /** ユーザーのロールを更新する（user:manage パーミッションが必要） */
   updateUserRole: User;
 };
@@ -495,6 +506,11 @@ export type MutationApplyCompetitionDefaultsArgs = {
 
 export type MutationAssignSeedTeamArgs = {
   input: AssignSeedTeamInput;
+};
+
+
+export type MutationBatchCreateUsersArgs = {
+  input: BatchCreateUsersInput;
 };
 
 
@@ -881,12 +897,6 @@ export type MutationUpdateTeamUsersArgs = {
 export type MutationUpdateTournamentArgs = {
   id: Scalars['ID']['input'];
   input: UpdateTournamentInput;
-};
-
-
-export type MutationUpdateUserArgs = {
-  id: Scalars['ID']['input'];
-  input: UpdateUserInput;
 };
 
 
@@ -1363,19 +1373,12 @@ export type UpdateTournamentInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type UpdateUserInput = {
-  email?: InputMaybe<Scalars['String']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type User = {
   __typename?: 'User';
-  email: Scalars['String']['output'];
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   identify: UserIdentify;
   judgments: Array<Judgment>;
-  name: Scalars['String']['output'];
   role: Role;
   teams: Array<Team>;
 };
@@ -1383,7 +1386,7 @@ export type User = {
 export type UserIdentify = {
   __typename?: 'UserIdentify';
   microsoftUserId?: Maybe<Scalars['String']['output']>;
-  sub: Scalars['ID']['output'];
+  sub?: Maybe<Scalars['ID']['output']>;
 };
 
 export type GetSceneIdQueryVariables = Exact<{ [key: string]: never; }>;
@@ -1394,12 +1397,12 @@ export type GetSceneIdQuery = { __typename?: 'Query', scenes: Array<{ __typename
 export type GetSceneUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSceneUsersQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, name: string }> } }> }> }> };
+export type GetSceneUsersQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }> }> }> };
 
 export type GetAllUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string }> };
+export type GetAllUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> };
 
 export type GetTypeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1437,17 +1440,17 @@ export type SportDataGetQuery = { __typename?: 'Query', sport: { __typename?: 'S
 export type GetTeamDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetTeamDataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', name: string }> } }> }> }> };
+export type GetTeamDataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }> }> }> };
 
 export type GetSceneSportQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name: string }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
+export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
 
 export type GetAllTeamdataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name: string }> } }> }> }> };
+export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }> }> }> };
 
 export type GetAllSportExperiencesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1469,7 +1472,7 @@ export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: 
 export type GetUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name: string }> };
+export type GetUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> };
 
 export type GetSportsceneQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1486,7 +1489,7 @@ export type GetTeamQueryVariables = Exact<{
 }>;
 
 
-export type GetTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, name: string }> } };
+export type GetTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type CreateTeamMutationVariables = Exact<{
   input: CreateTeamInput;
@@ -1603,7 +1606,9 @@ export const GetSceneUsersDocument = gql`
         team {
           users {
             id
-            name
+            identify {
+              microsoftUserId
+            }
           }
         }
       }
@@ -1647,7 +1652,9 @@ export const GetAllUsersDocument = gql`
     query GetAllUsers {
   users {
     id
-    name
+    identify {
+      microsoftUserId
+    }
   }
 }
     `;
@@ -1915,7 +1922,9 @@ export const GetTeamDataDocument = gql`
       entries {
         team {
           users {
-            name
+            identify {
+              microsoftUserId
+            }
           }
         }
       }
@@ -1967,7 +1976,9 @@ export const GetSceneSportDocument = gql`
           name
           users {
             id
-            name
+            identify {
+              microsoftUserId
+            }
           }
         }
       }
@@ -2032,7 +2043,9 @@ export const GetAllTeamdataDocument = gql`
           name
           users {
             id
-            name
+            identify {
+              microsoftUserId
+            }
           }
         }
       }
@@ -2191,7 +2204,9 @@ export const GetUsersDocument = gql`
     query GetUsers {
   users {
     id
-    name
+    identify {
+      microsoftUserId
+    }
   }
 }
     `;
@@ -2338,7 +2353,9 @@ export const GetTeamDocument = gql`
   team(id: $teamId) {
     users {
       id
-      name
+      identify {
+        microsoftUserId
+      }
     }
   }
 }
