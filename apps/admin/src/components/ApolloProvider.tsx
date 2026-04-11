@@ -33,7 +33,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
                 return
             }
             console.warn(
-                `[GraphQL error] operation=${operation.operationName}`,
+                `[GraphQL error] operation=${operation.operationName} message=${msg} path=${err.path}`,
             )
         }
     }
