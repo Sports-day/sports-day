@@ -67,10 +67,10 @@ export function useTeamEdit() {
   const { msGraphUsers, loading: msGraphLoading } = useMsGraphUsers(userMsIds);
 
   const resolveName = useCallback(
-    (user: { identify?: { microsoftUserId?: string | null } | null }) => {
+    (user: { name?: string | null; identify?: { microsoftUserId?: string | null } | null }) => {
       const msId = user.identify?.microsoftUserId;
       const msUser = msId ? msGraphUsers.get(msId) : undefined;
-      return msUser?.displayName ?? '';
+      return msUser?.displayName ?? user.name ?? '';
     },
     [msGraphUsers],
   );

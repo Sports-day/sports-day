@@ -15,6 +15,7 @@ export const GET_USERS = gql`
   query GetUsers {
     users {
       id
+      name
       identify { microsoftUserId }
     }
   }
@@ -69,6 +70,7 @@ export const GET_TEAM = gql`
     team(id: $teamId) {
       users {
         id
+        name
         identify { microsoftUserId }
       }
     }

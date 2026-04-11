@@ -158,7 +158,7 @@ export default function MakingTeams({
                         sports={sports}
                         member={item.users.map((u) => ({
                           id: u.id,
-                          name: u.name,
+                          name: u.name ?? '',
                           isExperienced: experiencedUserIds.has(u.id),
                         }))}
                       />

@@ -350,11 +350,11 @@ export default function TeamEdit() {
                           >
                             <MembersCard
                               studentid={item.id}
-                              studentname={item.name}
+                              studentname={item.name ?? ''}
                               addstudent={() =>
                                 addSelectedMember({
                                   studentId: String(item.id),
-                                  studentName: item.name,
+                                  studentName: item.name ?? '',
                                 })
                               }
                               disable={

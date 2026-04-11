@@ -37,7 +37,7 @@ export default function ConfirmPage() {
       teamId: d.entries?.map((s) => s.team?.id),
       memberData: d.entries?.map((s) =>
         s.team?.users?.map((u) => ({
-          name: u.name,
+          name: u.name ?? '',
           isExperienced: experiencedSet.has(`${d.sport?.id}:${u.id}`),
         })),
       ),
