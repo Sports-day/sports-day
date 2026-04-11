@@ -11,10 +11,8 @@ import ImageIcon from '@mui/icons-material/Image'
 import PlayCircleIcon from '@mui/icons-material/PlayCircle'
 import CampaignIcon from '@mui/icons-material/Campaign'
 import LogoutIcon from '@mui/icons-material/Logout'
-import GitHubIcon from '@mui/icons-material/GitHub'
 import HomeIcon from '@mui/icons-material/Home'
 import { COLOR_BG_SIDEBAR, COLOR_PRIMARY_DARK, COLOR_PRIMARY_LIGHT } from '@/styles/colors'
-import { GITHUB_URL } from '@/lib/constants'
 
 export const DRAWER_WIDTH = 250
 
@@ -136,9 +134,6 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
         <Box sx={{ px: 1, pt: 0.5, display: 'flex', gap: 3, justifyContent: 'center' }}>
           <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={onLogout}>
             <LogoutIcon sx={{ fontSize: 24 }} />
-          </IconButton>
-          <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={() => window.open(GITHUB_URL, '_blank')}>
-            <GitHubIcon sx={{ fontSize: 24 }} />
           </IconButton>
           <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={onHome}>
             <HomeIcon sx={{ fontSize: 24 }} />
