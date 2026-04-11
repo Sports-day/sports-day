@@ -10,6 +10,7 @@ import {
   useAddAdminSportExperiencesMutation,
   useDeleteAdminSportExperiencesMutation,
   GetAdminUsersDocument,
+  GetAdminUserSportExperiencesDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUser } from '@/hooks/useMsGraphUsers'
 
@@ -80,8 +81,12 @@ export function useUserDetail(userId: string) {
     refetchQueries: [{ query: GetAdminUsersDocument }],
   })
 
-  const [addSportExperiences] = useAddAdminSportExperiencesMutation()
-  const [deleteSportExperiences] = useDeleteAdminSportExperiencesMutation()
+  const [addSportExperiences] = useAddAdminSportExperiencesMutation({
+    refetchQueries: [{ query: GetAdminUserSportExperiencesDocument, variables: { userId } }],
+  })
+  const [deleteSportExperiences] = useDeleteAdminSportExperiencesMutation({
+    refetchQueries: [{ query: GetAdminUserSportExperiencesDocument, variables: { userId } }],
+  })
 
   const handleSave = async () => {
     if (!userId) return
