@@ -29,6 +29,15 @@ type AssignSeedTeamInput struct {
 	TeamID *string `json:"teamId,omitempty"`
 }
 
+// CSVインポート等でユーザーを一括作成するための入力
+type BatchCreateUsersInput struct {
+	Users []*CreateUserInput `json:"users"`
+}
+
+type BatchCreateUsersResult struct {
+	Users []*User `json:"users"`
+}
+
 type CreateCompetitionInput struct {
 	Name    string          `json:"name"`
 	Type    CompetitionType `json:"type"`
@@ -120,8 +129,8 @@ type CreateTournamentMatchInput struct {
 }
 
 type CreateUserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	MicrosoftUserID string  `json:"microsoftUserId"`
+	GroupID         *string `json:"groupId,omitempty"`
 }
 
 type DeleteSportEntriesInput struct {
@@ -373,13 +382,8 @@ type UpdateTournamentInput struct {
 	DisplayOrder *int32  `json:"displayOrder,omitempty"`
 }
 
-type UpdateUserInput struct {
-	Name  *string `json:"name,omitempty"`
-	Email *string `json:"email,omitempty"`
-}
-
 type UserIdentify struct {
-	Sub             string  `json:"sub"`
+	Sub             *string `json:"sub,omitempty"`
 	MicrosoftUserID *string `json:"microsoftUserId,omitempty"`
 }
 

@@ -48,6 +48,16 @@ func (r user) Save(ctx context.Context, db *gorm.DB, user *db_model.User) (*db_m
 	return user, nil
 }
 
+func (r user) BatchSave(ctx context.Context, db *gorm.DB, users []*db_model.User) ([]*db_model.User, error) {
+	if len(users) == 0 {
+		return users, nil
+	}
+	if err := db.Create(&users).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return users, nil
+}
+
 func (r user) Delete(ctx context.Context, db *gorm.DB, id string) error {
 	if err := db.Delete(&db_model.User{}, "id = ?", id).Error; err != nil {
 		return errors.Wrap(err)
@@ -98,6 +108,16 @@ func (r user) SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.Us
 		return nil, errors.Wrap(err)
 	}
 	return userIdp, nil
+}
+
+func (r user) BatchSaveUserIdp(ctx context.Context, db *gorm.DB, userIdps []*db_model.UsersIdp) ([]*db_model.UsersIdp, error) {
+	if len(userIdps) == 0 {
+		return userIdps, nil
+	}
+	if err := db.Create(&userIdps).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return userIdps, nil
 }
 
 func (r user) GetRoleByUserID(ctx context.Context, db *gorm.DB, userID string) (*db_model.UserRole, error) {

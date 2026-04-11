@@ -115,7 +115,7 @@ func main() {
 	roleCache := authz.NewRoleCache(env.Get().Auth.RoleCacheTTL)
 
 	// service
-	userService := service.NewUser(db, userRepository)
+	userService := service.NewUser(db, userRepository, groupRepository)
 	authService := service.NewAuthService(db, userRepository, roleCache, authorizerInstance)
 	groupService := service.NewGroup(db, groupRepository, userRepository)
 	teamService := service.NewTeam(db, teamRepository, userRepository)
