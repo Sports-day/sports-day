@@ -3,13 +3,11 @@ directive @hasPermission(permission: String!) on FIELD_DEFINITION
 input CreateUserInput {
   name: String!
   email: String!
-  gender: String
 }
 
 input UpdateUserInput {
   name: String
   email: String
-  gender: String
 }
 
 input CreateGroupInput {
@@ -118,6 +116,14 @@ input UpdateMatchResultInput {
   status: MatchStatus
   winnerTeamId: ID
   results: [MatchResultInput!]
+}
+
+"""
+審判がスコアを提出するための入力。statusは自動的にFINISHEDになる。
+"""
+input SubmitScoreInput {
+  results: [MatchResultInput!]!
+  winnerTeamId: ID
 }
 
 input UpdateMatchEntriesInput {
@@ -614,6 +620,14 @@ type Mutation {
   SEEDスロットへのチーム手動配置（teamId=null でクリア）
   """
   assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot! @hasPermission(permission: "competition:write")
+  """
+  審判が出席を記録する（審判本人のみ実行可能）
+  """
+  markJudgmentAttendance(matchId: ID!): Judgment!
+  """
+  審判がスコアを提出する（審判本人のみ実行可能、試合は自動的にFINISHEDになる）
+  """
+  submitMatchScore(matchId: ID!, input: SubmitScoreInput!): Match!
   createRule(input: CreateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   updateRule(id: ID!, input: UpdateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   deleteRule(id: ID!): Rule! @hasPermission(permission: "rule:write")

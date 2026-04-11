@@ -6,10 +6,9 @@ type Group struct {
 }
 
 type User struct {
-	ID     string  `json:"id"`
-	Name   string  `json:"name"`
-	Email  string  `json:"email"`
-	Gender *string `json:"gender"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type Team struct {
@@ -47,11 +46,12 @@ type Location struct {
 }
 
 type Judgment struct {
-	ID      string `json:"matchId"`
-	Name    string `json:"name"`
-	UserId  string `json:"userId"`
-	TeamId  string `json:"teamId"`
-	GroupId string `json:"groupId"`
+	ID          string `json:"matchId"`
+	Name        string `json:"name"`
+	UserId      string `json:"userId"`
+	TeamId      string `json:"teamId"`
+	GroupId     string `json:"groupId"`
+	IsAttending bool   `json:"isAttending"`
 }
 
 type League struct {

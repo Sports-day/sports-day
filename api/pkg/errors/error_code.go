@@ -102,4 +102,11 @@ var (
 	ErrUserSyncFailed     = NewError("USER_SYNC_FAILED", "ユーザー情報の同期に失敗しました")
 	ErrSelfRoleChange     = NewError("SELF_ROLE_CHANGE", "自分自身のロールは変更できません")
 	ErrInsufficientRole   = NewError("INSUFFICIENT_ROLE", "権限が不足しています")
+
+	/*
+		Judgment / Score Submission
+	*/
+	ErrNotAssignedReferee    = NewError("NOT_ASSIGNED_REFEREE", "この試合の審判として割り当てられていません")
+	ErrJudgmentNotAttending  = NewError("JUDGMENT_NOT_ATTENDING", "出席確認がされていません。先に出席を記録してください")
+	ErrMatchAlreadyFinished  = NewError("MATCH_ALREADY_FINISHED", "この試合は既に終了しています")
 )

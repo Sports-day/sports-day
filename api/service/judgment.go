@@ -5,6 +5,7 @@ import (
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/errors"
 	pkggorm "sports-day/api/pkg/gorm"
 	"sports-day/api/repository"
@@ -15,12 +16,16 @@ import (
 type Judgment struct {
 	db                 *gorm.DB
 	judgmentRepository repository.Judgment
+	teamRepository     repository.Team
+	groupRepository    repository.Group
 }
 
-func NewJudgment(db *gorm.DB, judgmentRepository repository.Judgment) Judgment {
+func NewJudgment(db *gorm.DB, judgmentRepository repository.Judgment, teamRepository repository.Team, groupRepository repository.Group) Judgment {
 	return Judgment{
 		db:                 db,
 		judgmentRepository: judgmentRepository,
+		teamRepository:     teamRepository,
+		groupRepository:    groupRepository,
 	}
 }
 
@@ -194,4 +199,79 @@ func (s *Judgment) GetJudgmentsMapByGroupIDs(ctx context.Context, groupIds []str
 	}
 
 	return groupJudgmentsMap, nil
+}
+
+// MarkAttendance は審判の出席を記録する。呼び出しユーザーが審判本人であることを検証する。
+func (s *Judgment) MarkAttendance(ctx context.Context, matchID string) (*db_model.Judgment, error) {
+	user, ok := auth.GetUser(ctx)
+	if !ok {
+		return nil, errors.ErrUnauthorized
+	}
+
+	var result *db_model.Judgment
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		judgment, err := s.judgmentRepository.Get(ctx, tx, matchID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		if err := s.IsAssignedReferee(ctx, tx, judgment, user.ID); err != nil {
+			return err
+		}
+
+		judgment.IsAttending = true
+		judgment, err = s.judgmentRepository.Save(ctx, tx, judgment)
+		if err != nil {
+			return errors.ErrSaveJudgment
+		}
+		result = judgment
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return result, nil
+}
+
+// IsAssignedReferee は呼び出しユーザーがその試合の審判として割り当てられているか検証する。
+// tx を渡すことでトランザクション内でも使用可能。
+func (s *Judgment) IsAssignedReferee(ctx context.Context, tx *gorm.DB, judgment *db_model.Judgment, callerUserID string) error {
+	// ユーザー直接割当
+	if judgment.UserID.Valid {
+		if judgment.UserID.String == callerUserID {
+			return nil
+		}
+		return errors.ErrNotAssignedReferee
+	}
+
+	// チーム割当: callerがそのチームのメンバーか確認
+	if judgment.TeamID.Valid {
+		teamUsers, err := s.teamRepository.BatchGetTeamUsersByTeamIDs(ctx, tx, []string{judgment.TeamID.String})
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		for _, tu := range teamUsers {
+			if tu.UserID == callerUserID {
+				return nil
+			}
+		}
+		return errors.ErrNotAssignedReferee
+	}
+
+	// グループ割当: callerがそのグループのメンバーか確認
+	if judgment.GroupID.Valid {
+		groupUsers, err := s.groupRepository.BatchGetGroupUsersByGroupIDs(ctx, tx, []string{judgment.GroupID.String})
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		for _, gu := range groupUsers {
+			if gu.UserID == callerUserID {
+				return nil
+			}
+		}
+		return errors.ErrNotAssignedReferee
+	}
+
+	// name のみの審判はユーザー認証できない
+	return errors.ErrNotAssignedReferee
 }

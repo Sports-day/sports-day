@@ -120,9 +120,8 @@ type CreateTournamentMatchInput struct {
 }
 
 type CreateUserInput struct {
-	Name   string  `json:"name"`
-	Email  string  `json:"email"`
-	Gender *string `json:"gender,omitempty"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type DeleteSportEntriesInput struct {
@@ -248,6 +247,12 @@ type SubBracketInput struct {
 	SourceRound int32  `json:"sourceRound"`
 }
 
+// 審判がスコアを提出するための入力。statusは自動的にFINISHEDになる。
+type SubmitScoreInput struct {
+	Results      []*MatchResultInput `json:"results"`
+	WinnerTeamID *string             `json:"winnerTeamId,omitempty"`
+}
+
 type TiebreakPriority struct {
 	Team     *Team `json:"team"`
 	Priority int32 `json:"priority"`
@@ -362,9 +367,8 @@ type UpdateTournamentInput struct {
 }
 
 type UpdateUserInput struct {
-	Name   *string `json:"name,omitempty"`
-	Email  *string `json:"email,omitempty"`
-	Gender *string `json:"gender,omitempty"`
+	Name  *string `json:"name,omitempty"`
+	Email *string `json:"email,omitempty"`
 }
 
 type UserIdentify struct {

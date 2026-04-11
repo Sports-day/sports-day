@@ -6,6 +6,7 @@ import (
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
+	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/errors"
 	pkggorm "sports-day/api/pkg/gorm"
 	"sports-day/api/pkg/ulid"
@@ -23,6 +24,7 @@ type Match struct {
 	judgmentRepository    repository.Judgment
 	competitionService    *Competition
 	tournamentService     *Tournament
+	judgmentService       *Judgment
 }
 
 func NewMatch(db *gorm.DB, matchRepository repository.Match, teamRepository repository.Team, locationRepository repository.Location, competitionRepository repository.Competition, judgmentRepository repository.Judgment) Match {
@@ -44,6 +46,11 @@ func (s *Match) SetCompetitionService(cs *Competition) {
 // SetTournamentService は循環依存を避けるためにセッター注入する。
 func (s *Match) SetTournamentService(ts *Tournament) {
 	s.tournamentService = ts
+}
+
+// SetJudgmentService は循環依存を避けるためにセッター注入する。
+func (s *Match) SetJudgmentService(js *Judgment) {
+	s.judgmentService = js
 }
 
 func (s *Match) Create(ctx context.Context, input *model.CreateMatchInput) (*db_model.Match, error) {
@@ -412,4 +419,119 @@ func (s *Match) GetMatchesMapByLocationIDs(ctx context.Context, locationIds []st
 		}
 	}
 	return locationMatchesMap, nil
+}
+
+// SubmitScore は審判がスコアを提出する。認可チェック・出席確認・ステータスチェックを
+// 全てトランザクション内で行い、整合性を保証する。
+func (s *Match) SubmitScore(ctx context.Context, matchID string, input model.SubmitScoreInput) (*db_model.Match, error) {
+	user, ok := auth.GetUser(ctx)
+	if !ok {
+		return nil, errors.ErrUnauthorized
+	}
+
+	var match *db_model.Match
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 審判情報を取得して認可チェック
+		judgment, err := s.judgmentRepository.Get(ctx, tx, matchID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		if err := s.judgmentService.IsAssignedReferee(ctx, tx, judgment, user.ID); err != nil {
+			return err
+		}
+
+		// 出席確認
+		if !judgment.IsAttending {
+			return errors.ErrJudgmentNotAttending
+		}
+
+		// 試合が既にFINISHEDなら拒否
+		m, err := s.matchRepository.Get(ctx, tx, matchID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		if m.Status == string(model.MatchStatusFinished) {
+			return errors.ErrMatchAlreadyFinished
+		}
+
+		// トーナメント判定
+		isTournament := false
+		if s.tournamentService != nil {
+			t, err := s.tournamentService.IsTournamentMatch(ctx, tx, m.CompetitionID)
+			if err != nil {
+				return err
+			}
+			isTournament = t
+		}
+
+		// スコア修正制限チェック
+		if s.competitionService != nil && input.Results != nil {
+			if err := s.competitionService.CheckScoreModificationAllowed(ctx, tx, m.CompetitionID); err != nil {
+				return err
+			}
+		}
+
+		// トーナメント固有: 引き分け禁止バリデーション
+		status := model.MatchStatusFinished
+		if isTournament && s.tournamentService != nil {
+			if err := s.tournamentService.ValidateNoDrawForTournament(ctx, tx, matchID, &status, input.WinnerTeamID, input.Results); err != nil {
+				return err
+			}
+		}
+
+		// ステータスをFINISHEDに設定
+		m.Status = string(model.MatchStatusFinished)
+		if input.WinnerTeamID != nil {
+			m.WinnerTeamID = pkggorm.ToNullString(input.WinnerTeamID)
+		}
+
+		updated, err := s.matchRepository.Save(ctx, tx, m)
+		if err != nil {
+			return errors.ErrSaveMatch
+		}
+
+		// スコア更新
+		for _, result := range input.Results {
+			if _, err := s.matchRepository.UpdateMatchEntryScore(ctx, tx, matchID, result.TeamID, int(result.Score)); err != nil {
+				return errors.ErrUpdateMatchEntryScore
+			}
+		}
+
+		match = updated
+
+		// FINISHED時の副作用: トーナメント自動進行 / リーグ昇格
+		if isTournament && !updated.WinnerTeamID.Valid {
+			return errors.ErrTournamentDrawForbidden
+		}
+		if isTournament && s.tournamentService != nil && updated.WinnerTeamID.Valid {
+			if err := s.tournamentService.ProgressMatch(ctx, tx, matchID, updated.WinnerTeamID.String); err != nil {
+				return err
+			}
+			if s.competitionService != nil {
+				if err := s.competitionService.TryPromote(ctx, tx, updated.CompetitionID); err != nil {
+					return err
+				}
+			}
+		} else if !isTournament && s.competitionService != nil {
+			allComplete, err := s.competitionService.IsAllMatchesComplete(ctx, tx, updated.CompetitionID)
+			if err != nil {
+				return err
+			}
+			if allComplete {
+				if err := s.competitionService.TryPromote(ctx, tx, updated.CompetitionID); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return match, nil
 }

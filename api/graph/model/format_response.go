@@ -7,15 +7,10 @@ import (
 )
 
 func FormatUserResponse(user *db_model.User) *User {
-	var gender *string
-	if user.Gender.Valid {
-		gender = &user.Gender.String
-	}
 	return &User{
-		ID:     user.ID,
-		Name:   user.Name.String,
-		Email:  user.Email.String,
-		Gender: gender,
+		ID:    user.ID,
+		Name:  user.Name.String,
+		Email: user.Email.String,
 	}
 }
 
@@ -201,11 +196,12 @@ func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
 	}
 
 	return &Judgment{
-		ID:      judgment.ID,
-		Name:    name,
-		UserId:  userId,
-		TeamId:  teamId,
-		GroupId: groupId,
+		ID:          judgment.ID,
+		Name:        name,
+		UserId:      userId,
+		TeamId:      teamId,
+		GroupId:     groupId,
+		IsAttending: judgment.IsAttending,
 	}
 }
 

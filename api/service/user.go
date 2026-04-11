@@ -43,10 +43,6 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 	user.Name.Valid = input.Name != ""
 	user.Email.String = input.Email
 	user.Email.Valid = input.Email != ""
-	if input.Gender != nil {
-		user.Gender.String = *input.Gender
-		user.Gender.Valid = *input.Gender != ""
-	}
 	row, err := s.userRepository.Save(ctx, s.db, user)
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -66,10 +62,6 @@ func (s *User) Update(ctx context.Context, id string, input *model.UpdateUserInp
 	if input.Email != nil {
 		user.Email.String = *input.Email
 		user.Email.Valid = *input.Email != ""
-	}
-	if input.Gender != nil {
-		user.Gender.String = *input.Gender
-		user.Gender.Valid = *input.Gender != ""
 	}
 	row, err := s.userRepository.Save(ctx, s.db, user)
 	if err != nil {

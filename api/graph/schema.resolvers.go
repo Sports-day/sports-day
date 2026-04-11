@@ -674,6 +674,24 @@ func (r *mutationResolver) AssignSeedTeam(ctx context.Context, input model.Assig
 	return model.FormatTournamentSlotResponse(slot), nil
 }
 
+// MarkJudgmentAttendance is the resolver for the markJudgmentAttendance field.
+func (r *mutationResolver) MarkJudgmentAttendance(ctx context.Context, matchID string) (*model.Judgment, error) {
+	judgment, err := r.JudgmentService.MarkAttendance(ctx, matchID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatJudgmentResponse(judgment), nil
+}
+
+// SubmitMatchScore is the resolver for the submitMatchScore field.
+func (r *mutationResolver) SubmitMatchScore(ctx context.Context, matchID string, input model.SubmitScoreInput) (*model.Match, error) {
+	match, err := r.MatchService.SubmitScore(ctx, matchID, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
 // CreateRule is the resolver for the createRule field.
 func (r *mutationResolver) CreateRule(ctx context.Context, input model.CreateRuleInput) (*model.Rule, error) {
 	rule, err := r.RuleService.Create(ctx, &input)

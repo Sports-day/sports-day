@@ -71,83 +71,83 @@ VALUES
   ('01KNP89C5ZNMYVJD1354CXZRBS', 'サブアリーナ');
 
 -- ─── Users (75) ─────────────────────────────────────────
-INSERT INTO users (id, name, email, gender)
+INSERT INTO users (id, name, email)
 VALUES
-  ('01KNP89C5ZE4X68RBV92RV6HGM', '山田 太郎', 'user001@dev.sports-day.net', '男'),
-  ('01KNP89C5ZAQ8SKA6BSB87J2SY', '佐藤 美咲', 'user002@dev.sports-day.net', '女'),
-  ('01KNP89C5ZTY8P3VNZN2J3HMQF', '鈴木 健一', 'user003@dev.sports-day.net', '男'),
-  ('01KNP89C5ZFJ622E4CVVS0JB55', '田中 裕子', 'user004@dev.sports-day.net', '女'),
-  ('01KNP89C5ZRVCNSH7DNK53VNDS', '伊藤 翔太', 'user005@dev.sports-day.net', '男'),
-  ('01KNP89C5ZR7B3479MXF68Y134', '渡辺 麻衣', 'user006@dev.sports-day.net', '女'),
-  ('01KNP89C5Z448FJYGK8QFGGDSX', '小林 直人', 'user007@dev.sports-day.net', '男'),
-  ('01KNP89C5ZGQV0VA7G6H4XCGSX', '加藤 結衣', 'user008@dev.sports-day.net', '女'),
-  ('01KNP89C5Z9G05P9ZRMP2AP3G5', '吉田 大輔', 'user009@dev.sports-day.net', '男'),
-  ('01KNP89C5ZCEB0R7R5VYQND2NG', '松本 さくら', 'user010@dev.sports-day.net', '女'),
-  ('01KNP89C5ZY3JP2S7GC37GWMPW', '井上 拓也', 'user011@dev.sports-day.net', '男'),
-  ('01KNP89C5ZHAACJ6BGQ9JRP42W', '木村 愛子', 'user012@dev.sports-day.net', '女'),
-  ('01KNP89C5ZJH11ZVKFFGGDT6BH', '林 正樹', 'user013@dev.sports-day.net', '男'),
-  ('01KNP89C5Z0YMARA2NZXPCX3KE', '斎藤 優花', 'user014@dev.sports-day.net', '女'),
-  ('01KNP89C5Z8H3HK4D13JK28BTC', '清水 隆司', 'user015@dev.sports-day.net', '男'),
-  ('01KNP89C5ZG9Y152MJR6AY3ZYD', '山口 千尋', 'user016@dev.sports-day.net', '女'),
-  ('01KNP89C5Z4ZKDAY6ZWB7NPVDN', '中村 浩二', 'user017@dev.sports-day.net', '男'),
-  ('01KNP89C5Z2R9VX6K9GSTZZF1J', '石井 美穂', 'user018@dev.sports-day.net', '女'),
-  ('01KNP89C5ZACX94X2R74BD9HCY', '前田 一郎', 'user019@dev.sports-day.net', '男'),
-  ('01KNP89C5ZSC9FKEGYKWVE9DAA', '高橋 望', 'user020@dev.sports-day.net', '女'),
-  ('01KNP89C5ZFC3XNSSQHJVD4S36', '村上 陽太', 'user021@dev.sports-day.net', '男'),
-  ('01KNP89C5ZF60SRF4TQCVDCH5E', '近藤 遥', 'user022@dev.sports-day.net', '女'),
-  ('01KNP89C5ZVSGJTK8VTWSNHEVF', '遠藤 健太', 'user023@dev.sports-day.net', '男'),
-  ('01KNP89C5ZYWKA0AG0VSZRZ1W5', '藤田 千咲', 'user024@dev.sports-day.net', '女'),
-  ('01KNP89C5ZET5FQ42A2VQ5K5PP', '野口 大地', 'user025@dev.sports-day.net', '男'),
-  ('01KNP89C5Z1VKPK645AGBJEMSY', '原田 優奈', 'user026@dev.sports-day.net', '女'),
-  ('01KNP89C5Z02QTDZQV9CWSS7BK', '本田 智也', 'user027@dev.sports-day.net', '男'),
-  ('01KNP89C5ZXG8TNGV4Q18GZ3JT', '久保田 結菜', 'user028@dev.sports-day.net', '女'),
-  ('01KNP89C5ZB6F2Y0Z767XGKGCS', '菊地 悠斗', 'user029@dev.sports-day.net', '男'),
-  ('01KNP89C5ZY6SD9M97YZVX31WH', '岡本 莉子', 'user030@dev.sports-day.net', '女'),
-  ('01KNP89C5ZXY9DR19EWJVHNBFB', '中島 拓海', 'user031@dev.sports-day.net', '男'),
-  ('01KNP89C5Z2XP0BHJRG8YJ5GDW', '竹内 美緒', 'user032@dev.sports-day.net', '女'),
-  ('01KNP89C5ZE8AP6SN0YZHW30GC', '上田 蓮', 'user033@dev.sports-day.net', '男'),
-  ('01KNP89C5ZFR123M1C5YX6X5HH', '福田 花子', 'user034@dev.sports-day.net', '女'),
-  ('01KNP89C5ZTCSCK3DH9C393QEZ', '橋本 颯太', 'user035@dev.sports-day.net', '男'),
-  ('01KNP89C5ZY6Y9JQME7JVSCQEX', '星野 真由', 'user036@dev.sports-day.net', '女'),
-  ('01KNP89C5Z6QH3ZSS4ZZWCTPX8', '内田 陸', 'user037@dev.sports-day.net', '男'),
-  ('01KNP89C5Z9MFMHK8SNBF4EPC0', '浜田 瑞希', 'user038@dev.sports-day.net', '女'),
-  ('01KNP89C5ZMP6NHJ6P0VV1BPZZ', '横山 涼介', 'user039@dev.sports-day.net', '男'),
-  ('01KNP89C5ZG90MN5DD6FBEWV10', '宮崎 美優', 'user040@dev.sports-day.net', '女'),
-  ('01KNP89C5ZH5QCKCHSNN96QGRE', '大野 翼', 'user041@dev.sports-day.net', '男'),
-  ('01KNP89C5Z9TPFPE6PZZ6Z2G9F', '西田 彩乃', 'user042@dev.sports-day.net', '女'),
-  ('01KNP89C5ZRPJ8TJGR8RMFXMTB', '小川 遥斗', 'user043@dev.sports-day.net', '男'),
-  ('01KNP89C5Z2JV1EZ7X4T2PNCHE', '長谷川 未来', 'user044@dev.sports-day.net', '女'),
-  ('01KNP89C5ZT1N3G6H478XZJN7H', '藤原 海斗', 'user045@dev.sports-day.net', '男'),
-  ('01KNP89C5ZZ8ZY0JG5S93EAS3G', '岡田 楓', 'user046@dev.sports-day.net', '女'),
-  ('01KNP89C5Z80TDA2JM56XAKXWV', '阿部 蒼', 'user047@dev.sports-day.net', '男'),
-  ('01KNP89C5ZSRYK0GR8KDV3KJ9F', '森 葵', 'user048@dev.sports-day.net', '女'),
-  ('01KNP89C5ZCEZBJCEPJ3K75EWD', '池田 優真', 'user049@dev.sports-day.net', '男'),
-  ('01KNP89C5ZXQMH8Y91N93K956C', '三浦 陽菜', 'user050@dev.sports-day.net', '女'),
-  ('01KNP89C5ZVC538F9PM4N47KY0', '白石 春樹', 'user051@dev.sports-day.net', '男'),
-  ('01KNP89C5ZGE6R0WQM2719KQFR', '黒田 凜', 'user052@dev.sports-day.net', '女'),
-  ('01KNP89C5Z68XBE4P63CPMJNGJ', '須藤 啓太', 'user053@dev.sports-day.net', '男'),
-  ('01KNP89C5ZBQZZY97J0K8NBV60', '大塚 七海', 'user054@dev.sports-day.net', '女'),
-  ('01KNP89C5ZX8ZZJAVM6Z960YXE', '杉山 龍之介', 'user055@dev.sports-day.net', '男'),
-  ('01KNP89C5ZKPQYAD8QAPPFXJCV', '荒木 心春', 'user056@dev.sports-day.net', '女'),
-  ('01KNP89C5Z0BBD94GSNZ9D6SP9', '坂本 真一', 'user057@dev.sports-day.net', '男'),
-  ('01KNP89C5ZDPK2GH6Q6E0TJJ2A', '柴田 詩織', 'user058@dev.sports-day.net', '女'),
-  ('01KNP89C5ZXXRRJM18A9TWT7CA', '河野 和也', 'user059@dev.sports-day.net', '男'),
-  ('01KNP89C5ZDT7ZWCG6Y9SP7KD4', '堀 茜', 'user060@dev.sports-day.net', '女'),
-  ('01KNP89C5Z4Q9ZWQAF8BVRTHWA', '今井 光', 'user061@dev.sports-day.net', '男'),
-  ('01KNP89C5ZBA92J8X469YSXTVR', '松田 里奈', 'user062@dev.sports-day.net', '女'),
-  ('01KNP89C5ZSPQTPA814YJNDBDS', '西村 純', 'user063@dev.sports-day.net', '男'),
-  ('01KNP89C5Z1NANG1CCCENNW0VF', '平野 紗良', 'user064@dev.sports-day.net', '女'),
-  ('01KNP89C5ZT2E9YRTRRG724YX5', '丸山 修平', 'user065@dev.sports-day.net', '男'),
-  ('01KNP89C5ZAQMF7QWGB7XWASJD', '平田 日和', 'user066@dev.sports-day.net', '女'),
-  ('01KNP89C5ZSHBAB1FTM9X9ZM9G', '原 達也', 'user067@dev.sports-day.net', '男'),
-  ('01KNP89C5ZXZ0A9EGMZ054C2Q8', '南 ひなた', 'user068@dev.sports-day.net', '女'),
-  ('01KNP89C5ZCRKHTGPZ67XMMSDY', '武田 祐介', 'user069@dev.sports-day.net', '男'),
-  ('01KNP89C5ZXG6N40P0ZDH5M3PH', '新井 芽衣', 'user070@dev.sports-day.net', '女'),
-  ('01KNP89C5ZPA7RZKNEKJ4VTA0B', '川村 雄大', 'user071@dev.sports-day.net', '男'),
-  ('01KNP89C5ZFEM5XDBKKDDCHRHR', '土屋 美咲', 'user072@dev.sports-day.net', '女'),
-  ('01KNP89C5ZH76G0MDWNVYY3BSP', '北村 凛太朗', 'user073@dev.sports-day.net', '男'),
-  ('01KNP89C5ZHJJN321EYPK2WSHG', '望月 裕子', 'user074@dev.sports-day.net', '女'),
-  ('01KNP89C5Z1S5K37BVSVBE2X82', '金子 要', 'user075@dev.sports-day.net', '男');
+  ('01KNP89C5ZE4X68RBV92RV6HGM', '山田 太郎', 'user001@dev.sports-day.net'),
+  ('01KNP89C5ZAQ8SKA6BSB87J2SY', '佐藤 美咲', 'user002@dev.sports-day.net'),
+  ('01KNP89C5ZTY8P3VNZN2J3HMQF', '鈴木 健一', 'user003@dev.sports-day.net'),
+  ('01KNP89C5ZFJ622E4CVVS0JB55', '田中 裕子', 'user004@dev.sports-day.net'),
+  ('01KNP89C5ZRVCNSH7DNK53VNDS', '伊藤 翔太', 'user005@dev.sports-day.net'),
+  ('01KNP89C5ZR7B3479MXF68Y134', '渡辺 麻衣', 'user006@dev.sports-day.net'),
+  ('01KNP89C5Z448FJYGK8QFGGDSX', '小林 直人', 'user007@dev.sports-day.net'),
+  ('01KNP89C5ZGQV0VA7G6H4XCGSX', '加藤 結衣', 'user008@dev.sports-day.net'),
+  ('01KNP89C5Z9G05P9ZRMP2AP3G5', '吉田 大輔', 'user009@dev.sports-day.net'),
+  ('01KNP89C5ZCEB0R7R5VYQND2NG', '松本 さくら', 'user010@dev.sports-day.net'),
+  ('01KNP89C5ZY3JP2S7GC37GWMPW', '井上 拓也', 'user011@dev.sports-day.net'),
+  ('01KNP89C5ZHAACJ6BGQ9JRP42W', '木村 愛子', 'user012@dev.sports-day.net'),
+  ('01KNP89C5ZJH11ZVKFFGGDT6BH', '林 正樹', 'user013@dev.sports-day.net'),
+  ('01KNP89C5Z0YMARA2NZXPCX3KE', '斎藤 優花', 'user014@dev.sports-day.net'),
+  ('01KNP89C5Z8H3HK4D13JK28BTC', '清水 隆司', 'user015@dev.sports-day.net'),
+  ('01KNP89C5ZG9Y152MJR6AY3ZYD', '山口 千尋', 'user016@dev.sports-day.net'),
+  ('01KNP89C5Z4ZKDAY6ZWB7NPVDN', '中村 浩二', 'user017@dev.sports-day.net'),
+  ('01KNP89C5Z2R9VX6K9GSTZZF1J', '石井 美穂', 'user018@dev.sports-day.net'),
+  ('01KNP89C5ZACX94X2R74BD9HCY', '前田 一郎', 'user019@dev.sports-day.net'),
+  ('01KNP89C5ZSC9FKEGYKWVE9DAA', '高橋 望', 'user020@dev.sports-day.net'),
+  ('01KNP89C5ZFC3XNSSQHJVD4S36', '村上 陽太', 'user021@dev.sports-day.net'),
+  ('01KNP89C5ZF60SRF4TQCVDCH5E', '近藤 遥', 'user022@dev.sports-day.net'),
+  ('01KNP89C5ZVSGJTK8VTWSNHEVF', '遠藤 健太', 'user023@dev.sports-day.net'),
+  ('01KNP89C5ZYWKA0AG0VSZRZ1W5', '藤田 千咲', 'user024@dev.sports-day.net'),
+  ('01KNP89C5ZET5FQ42A2VQ5K5PP', '野口 大地', 'user025@dev.sports-day.net'),
+  ('01KNP89C5Z1VKPK645AGBJEMSY', '原田 優奈', 'user026@dev.sports-day.net'),
+  ('01KNP89C5Z02QTDZQV9CWSS7BK', '本田 智也', 'user027@dev.sports-day.net'),
+  ('01KNP89C5ZXG8TNGV4Q18GZ3JT', '久保田 結菜', 'user028@dev.sports-day.net'),
+  ('01KNP89C5ZB6F2Y0Z767XGKGCS', '菊地 悠斗', 'user029@dev.sports-day.net'),
+  ('01KNP89C5ZY6SD9M97YZVX31WH', '岡本 莉子', 'user030@dev.sports-day.net'),
+  ('01KNP89C5ZXY9DR19EWJVHNBFB', '中島 拓海', 'user031@dev.sports-day.net'),
+  ('01KNP89C5Z2XP0BHJRG8YJ5GDW', '竹内 美緒', 'user032@dev.sports-day.net'),
+  ('01KNP89C5ZE8AP6SN0YZHW30GC', '上田 蓮', 'user033@dev.sports-day.net'),
+  ('01KNP89C5ZFR123M1C5YX6X5HH', '福田 花子', 'user034@dev.sports-day.net'),
+  ('01KNP89C5ZTCSCK3DH9C393QEZ', '橋本 颯太', 'user035@dev.sports-day.net'),
+  ('01KNP89C5ZY6Y9JQME7JVSCQEX', '星野 真由', 'user036@dev.sports-day.net'),
+  ('01KNP89C5Z6QH3ZSS4ZZWCTPX8', '内田 陸', 'user037@dev.sports-day.net'),
+  ('01KNP89C5Z9MFMHK8SNBF4EPC0', '浜田 瑞希', 'user038@dev.sports-day.net'),
+  ('01KNP89C5ZMP6NHJ6P0VV1BPZZ', '横山 涼介', 'user039@dev.sports-day.net'),
+  ('01KNP89C5ZG90MN5DD6FBEWV10', '宮崎 美優', 'user040@dev.sports-day.net'),
+  ('01KNP89C5ZH5QCKCHSNN96QGRE', '大野 翼', 'user041@dev.sports-day.net'),
+  ('01KNP89C5Z9TPFPE6PZZ6Z2G9F', '西田 彩乃', 'user042@dev.sports-day.net'),
+  ('01KNP89C5ZRPJ8TJGR8RMFXMTB', '小川 遥斗', 'user043@dev.sports-day.net'),
+  ('01KNP89C5Z2JV1EZ7X4T2PNCHE', '長谷川 未来', 'user044@dev.sports-day.net'),
+  ('01KNP89C5ZT1N3G6H478XZJN7H', '藤原 海斗', 'user045@dev.sports-day.net'),
+  ('01KNP89C5ZZ8ZY0JG5S93EAS3G', '岡田 楓', 'user046@dev.sports-day.net'),
+  ('01KNP89C5Z80TDA2JM56XAKXWV', '阿部 蒼', 'user047@dev.sports-day.net'),
+  ('01KNP89C5ZSRYK0GR8KDV3KJ9F', '森 葵', 'user048@dev.sports-day.net'),
+  ('01KNP89C5ZCEZBJCEPJ3K75EWD', '池田 優真', 'user049@dev.sports-day.net'),
+  ('01KNP89C5ZXQMH8Y91N93K956C', '三浦 陽菜', 'user050@dev.sports-day.net'),
+  ('01KNP89C5ZVC538F9PM4N47KY0', '白石 春樹', 'user051@dev.sports-day.net'),
+  ('01KNP89C5ZGE6R0WQM2719KQFR', '黒田 凜', 'user052@dev.sports-day.net'),
+  ('01KNP89C5Z68XBE4P63CPMJNGJ', '須藤 啓太', 'user053@dev.sports-day.net'),
+  ('01KNP89C5ZBQZZY97J0K8NBV60', '大塚 七海', 'user054@dev.sports-day.net'),
+  ('01KNP89C5ZX8ZZJAVM6Z960YXE', '杉山 龍之介', 'user055@dev.sports-day.net'),
+  ('01KNP89C5ZKPQYAD8QAPPFXJCV', '荒木 心春', 'user056@dev.sports-day.net'),
+  ('01KNP89C5Z0BBD94GSNZ9D6SP9', '坂本 真一', 'user057@dev.sports-day.net'),
+  ('01KNP89C5ZDPK2GH6Q6E0TJJ2A', '柴田 詩織', 'user058@dev.sports-day.net'),
+  ('01KNP89C5ZXXRRJM18A9TWT7CA', '河野 和也', 'user059@dev.sports-day.net'),
+  ('01KNP89C5ZDT7ZWCG6Y9SP7KD4', '堀 茜', 'user060@dev.sports-day.net'),
+  ('01KNP89C5Z4Q9ZWQAF8BVRTHWA', '今井 光', 'user061@dev.sports-day.net'),
+  ('01KNP89C5ZBA92J8X469YSXTVR', '松田 里奈', 'user062@dev.sports-day.net'),
+  ('01KNP89C5ZSPQTPA814YJNDBDS', '西村 純', 'user063@dev.sports-day.net'),
+  ('01KNP89C5Z1NANG1CCCENNW0VF', '平野 紗良', 'user064@dev.sports-day.net'),
+  ('01KNP89C5ZT2E9YRTRRG724YX5', '丸山 修平', 'user065@dev.sports-day.net'),
+  ('01KNP89C5ZAQMF7QWGB7XWASJD', '平田 日和', 'user066@dev.sports-day.net'),
+  ('01KNP89C5ZSHBAB1FTM9X9ZM9G', '原 達也', 'user067@dev.sports-day.net'),
+  ('01KNP89C5ZXZ0A9EGMZ054C2Q8', '南 ひなた', 'user068@dev.sports-day.net'),
+  ('01KNP89C5ZCRKHTGPZ67XMMSDY', '武田 祐介', 'user069@dev.sports-day.net'),
+  ('01KNP89C5ZXG6N40P0ZDH5M3PH', '新井 芽衣', 'user070@dev.sports-day.net'),
+  ('01KNP89C5ZPA7RZKNEKJ4VTA0B', '川村 雄大', 'user071@dev.sports-day.net'),
+  ('01KNP89C5ZFEM5XDBKKDDCHRHR', '土屋 美咲', 'user072@dev.sports-day.net'),
+  ('01KNP89C5ZH76G0MDWNVYY3BSP', '北村 凛太朗', 'user073@dev.sports-day.net'),
+  ('01KNP89C5ZHJJN321EYPK2WSHG', '望月 裕子', 'user074@dev.sports-day.net'),
+  ('01KNP89C5Z1S5K37BVSVBE2X82', '金子 要', 'user075@dev.sports-day.net');
 
 -- ─── User Roles ─────────────────────────────────────────
 INSERT INTO user_roles (user_id, role)
@@ -851,6 +851,89 @@ VALUES
   ('01KNP89C61Z4JPK8Z1D3A6QDFE', '01KNP89C60G1JDXQXQZXWNVXRN', '01KNP89C60ZRHZHHKDWD3B1A65', '2', NULL),
   ('01KNP89C61Q2GQE9WWB381PDWD', '01KNP89C60G1JDXQXQZXWNVXRN', '01KNP89C60ZRHZHHKDWD3B1A65', '3', NULL);
 
+-- ============================================================
+-- 審判スコア申請機能テストデータ
+-- ============================================================
+--
+-- テストパターン一覧:
+--   1. リーグ / チーム審判(なでしこα)     / 未出席  / STANDBY  → 出席ボタンテスト
+--   2. リーグ / チーム審判(ブルーフェニα) / 出席済  / ONGOING  → スコア提出テスト
+--   3. リーグ / ユーザー審判(大島)        / 出席済  / ONGOING  → ユーザー審判テスト
+--   4. リーグ / グループ審判(サムライSP)  / 未出席  / STANDBY  → グループ審判テスト
+--   5. リーグ / name-only審判             / —       / STANDBY  → 認証不可テスト
+--   6. リーグ / チーム審判(ライジングα)  / 出席済  / FINISHED → 提出済み表示テスト
+--   7. トーナメント / ユーザー審判(佐々木) / 出席済 / ONGOING → 引き分け不可テスト
+--   8. トーナメント / チーム審判(サムライα) / 未出席 / STANDBY → トーナメント出席テスト
+--   9. リーグ / チーム審判(なでしこα)     / 未出席  / STANDBY  → 接近通知テスト(時刻手動調整)
+
+-- ─── 審判テスト用大会 ──────────────────────────────────────
+INSERT INTO competitions (id, name, type, scene_id, sport_id)
+VALUES
+  ('01KNV071F1NQJXCXMS02HHMAVT', '審判テストリーグ', 'LEAGUE', '01KNP89C5ZYX3JDAJDFQ7BBSNG', '01KNP89C5Z5J4KD9RWA1EWJJ22'),
+  ('01KNV071F1NQJXCXMS043BXNM7', '審判テストトーナメント', 'TOURNAMENT', '01KNP89C5ZYX3JDAJDFQ7BBSNG', '01KNP89C5Z5J4KD9RWA1EWJJ22');
+
+INSERT INTO leagues (id, win_pt, draw_pt, lose_pt)
+VALUES
+  ('01KNV071F1NQJXCXMS02HHMAVT', 3, 1, 0);
+
+INSERT INTO competition_entries (competition_id, team_id)
+VALUES
+  ('01KNV071F1NQJXCXMS02HHMAVT', '01KNP89C5ZAM11B2MQJJJM4XZ1'),
+  ('01KNV071F1NQJXCXMS02HHMAVT', '01KNP89C5ZTJND1RS9WJHR49QP'),
+  ('01KNV071F1NQJXCXMS02HHMAVT', '01KNP89C5Z74H6T3KT45JSY3MR'),
+  ('01KNV071F1NQJXCXMS02HHMAVT', '01KNP89C5ZYPP0SXX1VT9QWA1H'),
+  ('01KNV071F1NQJXCXMS043BXNM7', '01KNP89C5ZAM11B2MQJJJM4XZ1'),
+  ('01KNV071F1NQJXCXMS043BXNM7', '01KNP89C5ZTJND1RS9WJHR49QP'),
+  ('01KNV071F1NQJXCXMS043BXNM7', '01KNP89C5Z74H6T3KT45JSY3MR'),
+  ('01KNV071F1NQJXCXMS043BXNM7', '01KNP89C5ZYPP0SXX1VT9QWA1H');
+
+-- ─── 審判テスト用試合 ──────────────────────────────────────
+INSERT INTO matches (id, time, status, location_id, competition_id, winner_team_id)
+VALUES
+  ('01KNV071F1NQJXCXMS04NDPPR9', '2026-04-11 10:00:00', 'STANDBY', '01KNP89C5ZW7AR7K07PTDRSCAA', '01KNV071F1NQJXCXMS02HHMAVT', NULL),
+  ('01KNV071F1NQJXCXMS06HKMXJK', '2026-04-11 11:00:00', 'ONGOING', '01KNP89C5ZXF842HH3167YBEP5', '01KNV071F1NQJXCXMS02HHMAVT', NULL),
+  ('01KNV071F1NQJXCXMS08QY2Z9H', '2026-04-11 12:00:00', 'ONGOING', '01KNP89C5ZW7AR7K07PTDRSCAA', '01KNV071F1NQJXCXMS02HHMAVT', NULL),
+  ('01KNV071F1NQJXCXMS0B8Z63AM', '2026-04-11 13:00:00', 'STANDBY', '01KNP89C5ZXF842HH3167YBEP5', '01KNV071F1NQJXCXMS02HHMAVT', NULL),
+  ('01KNV071F1NQJXCXMS0BB1G7F3', '2026-04-11 14:00:00', 'STANDBY', '01KNP89C5ZW7AR7K07PTDRSCAA', '01KNV071F1NQJXCXMS02HHMAVT', NULL),
+  ('01KNV071F1NQJXCXMS0EFMKF14', '2026-04-10 09:00:00', 'FINISHED', '01KNP89C5ZW7AR7K07PTDRSCAA', '01KNV071F1NQJXCXMS02HHMAVT', '01KNP89C5ZAM11B2MQJJJM4XZ1'),
+  ('01KNV071F1NQJXCXMS0HPJ44SG', '2026-04-11 15:00:00', 'ONGOING', '01KNP89C5ZXF842HH3167YBEP5', '01KNV071F1NQJXCXMS043BXNM7', NULL),
+  ('01KNV071F1NQJXCXMS0M541G7W', '2026-04-11 16:00:00', 'STANDBY', '01KNP89C5ZW7AR7K07PTDRSCAA', '01KNV071F1NQJXCXMS043BXNM7', NULL),
+  ('01KNV071F1NQJXCXMS0R1WMGDD', '2026-04-11 17:00:00', 'STANDBY', '01KNP89C5ZXF842HH3167YBEP5', '01KNV071F1NQJXCXMS02HHMAVT', NULL);
+
+INSERT INTO match_entries (id, match_id, team_id, score)
+VALUES
+  ('01KNV071F1NQJXCXMS0R7SZANG', '01KNV071F1NQJXCXMS04NDPPR9', '01KNP89C5ZAM11B2MQJJJM4XZ1', 0),
+  ('01KNV071F1NQJXCXMS0VG49K4S', '01KNV071F1NQJXCXMS04NDPPR9', '01KNP89C5Z74H6T3KT45JSY3MR', 0),
+  ('01KNV071F1NQJXCXMS0WKBQX20', '01KNV071F1NQJXCXMS06HKMXJK', '01KNP89C5ZAM11B2MQJJJM4XZ1', 0),
+  ('01KNV071F1NQJXCXMS10JSKFYG', '01KNV071F1NQJXCXMS06HKMXJK', '01KNP89C5ZTJND1RS9WJHR49QP', 0),
+  ('01KNV071F1NQJXCXMS14J47B94', '01KNV071F1NQJXCXMS08QY2Z9H', '01KNP89C5ZTJND1RS9WJHR49QP', 0),
+  ('01KNV071F1NQJXCXMS16N9F1AP', '01KNV071F1NQJXCXMS08QY2Z9H', '01KNP89C5ZYPP0SXX1VT9QWA1H', 0),
+  ('01KNV071F1NQJXCXMS195JT88W', '01KNV071F1NQJXCXMS0B8Z63AM', '01KNP89C5Z74H6T3KT45JSY3MR', 0),
+  ('01KNV071F1NQJXCXMS1BFMRG6M', '01KNV071F1NQJXCXMS0B8Z63AM', '01KNP89C5ZYPP0SXX1VT9QWA1H', 0),
+  ('01KNV071F1NQJXCXMS1EMZDKNW', '01KNV071F1NQJXCXMS0BB1G7F3', '01KNP89C5ZAM11B2MQJJJM4XZ1', 0),
+  ('01KNV071F1NQJXCXMS1H5GGZP2', '01KNV071F1NQJXCXMS0BB1G7F3', '01KNP89C5ZYPP0SXX1VT9QWA1H', 0),
+  ('01KNV071F1NQJXCXMS1MNMN6VT', '01KNV071F1NQJXCXMS0EFMKF14', '01KNP89C5ZAM11B2MQJJJM4XZ1', 3),
+  ('01KNV071F1NQJXCXMS1QVTV7F8', '01KNV071F1NQJXCXMS0EFMKF14', '01KNP89C5ZTJND1RS9WJHR49QP', 1),
+  ('01KNV071F1NQJXCXMS1TTJ5S24', '01KNV071F1NQJXCXMS0HPJ44SG', '01KNP89C5ZAM11B2MQJJJM4XZ1', 0),
+  ('01KNV071F1NQJXCXMS1WRA0PFA', '01KNV071F1NQJXCXMS0HPJ44SG', '01KNP89C5Z74H6T3KT45JSY3MR', 0),
+  ('01KNV071F1NQJXCXMS20JYWXV9', '01KNV071F1NQJXCXMS0M541G7W', '01KNP89C5ZTJND1RS9WJHR49QP', 0),
+  ('01KNV071F1NQJXCXMS22Z4Q1EA', '01KNV071F1NQJXCXMS0M541G7W', '01KNP89C5ZYPP0SXX1VT9QWA1H', 0),
+  ('01KNV071F1NQJXCXMS25NNQWPC', '01KNV071F1NQJXCXMS0R1WMGDD', '01KNP89C5Z74H6T3KT45JSY3MR', 0),
+  ('01KNV071F1NQJXCXMS26PQF966', '01KNV071F1NQJXCXMS0R1WMGDD', '01KNP89C5ZYPP0SXX1VT9QWA1H', 0);
+
+-- ─── 審判テスト用審判データ ────────────────────────────────
+--   judgment.id = match.id（1:1関係）
+INSERT INTO judgments (id, name, user_id, team_id, group_id, is_attending)
+VALUES
+  ('01KNV071F1NQJXCXMS04NDPPR9', NULL, NULL, '01KNP89C5ZTJND1RS9WJHR49QP', NULL, 0),
+  ('01KNV071F1NQJXCXMS06HKMXJK', NULL, NULL, '01KNP89C5ZYPP0SXX1VT9QWA1H', NULL, 1),
+  ('01KNV071F1NQJXCXMS08QY2Z9H', NULL, '01KNP89C5ZXY9DR19EWJVHNBFB', NULL, NULL, 1),
+  ('01KNV071F1NQJXCXMS0B8Z63AM', NULL, NULL, NULL, '01KNP89C5Z8MR1BZ7T6C5506FP', 0),
+  ('01KNV071F1NQJXCXMS0BB1G7F3', '外部審判員A', NULL, NULL, NULL, 0),
+  ('01KNV071F1NQJXCXMS0EFMKF14', NULL, NULL, '01KNP89C5Z74H6T3KT45JSY3MR', NULL, 1),
+  ('01KNV071F1NQJXCXMS0HPJ44SG', NULL, '01KNP89C5ZG9Y152MJR6AY3ZYD', NULL, NULL, 1),
+  ('01KNV071F1NQJXCXMS0M541G7W', NULL, NULL, '01KNP89C5ZAM11B2MQJJJM4XZ1', NULL, 0),
+  ('01KNV071F1NQJXCXMS0R1WMGDD', NULL, NULL, '01KNP89C5ZTJND1RS9WJHR49QP', NULL, 0);
 
 -- migrate:down
 DELETE FROM tiebreak_priorities;
