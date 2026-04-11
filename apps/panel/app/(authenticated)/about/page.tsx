@@ -19,7 +19,6 @@ import {
 import {
     HiChevronDown,
 } from "react-icons/hi2";
-import { Link } from "react-router-dom";
 import CircleContainer from "@/components/layouts/circleContainer";
 import Logo from "@/src/assets/logo.svg?react";
 import {TbBrandKotlin, TbBrandNextjs} from "react-icons/tb";
@@ -404,7 +403,7 @@ export default function Page() {
                                                         alignItems={"center"}
                                                         spacing={1}
                                                     >
-                                                        <IconButton component={Link}
+                                                        <IconButton component="a"
                                                                     href={"https://github.com/testusuke"}
                                                                     target={"_blank"}>
                                                             <SvgIcon>
@@ -461,13 +460,13 @@ export default function Page() {
                                                         alignItems={"center"}
                                                         spacing={1}
                                                     >
-                                                        <IconButton component={Link} href={"https://github.com/1nayu"}
+                                                        <IconButton component="a" href={"https://github.com/1nayu"}
                                                                     target={"_blank"}>
                                                             <SvgIcon>
                                                                 <FaGithubAlt color="#99a5d6"/>
                                                             </SvgIcon>
                                                         </IconButton>
-                                                        <IconButton component={Link} href={"https://twitter.com/1nayu"}
+                                                        <IconButton component="a" href={"https://twitter.com/1nayu"}
                                                                     target={"_blank"}>
                                                             <SvgIcon>
                                                                 <FaTwitter color="#99a5d6"/>
@@ -522,7 +521,7 @@ export default function Page() {
                                                         alignItems={"center"}
                                                         spacing={1}
                                                     >
-                                                        <IconButton component={Link}
+                                                        <IconButton component="a"
                                                                     href={"https://github.com/Takkun0310"}
                                                                     target={"_blank"}>
                                                             <SvgIcon>
@@ -579,7 +578,7 @@ export default function Page() {
                                                         alignItems={"center"}
                                                         spacing={1}
                                                     >
-                                                        <IconButton component={Link} href={"https://github.com/suzuki346"}
+                                                        <IconButton component="a" href={"https://github.com/suzuki346"}
                                                                     target={"_blank"}>
                                                             <SvgIcon>
                                                                 <FaGithubAlt color="#99a5d6"/>
@@ -636,7 +635,7 @@ export default function Page() {
                                                         alignItems={"center"}
                                                         spacing={1}
                                                     >
-                                                        <IconButton component={Link} href={"https://github.com/uenoriku1209"}
+                                                        <IconButton component="a" href={"https://github.com/uenoriku1209"}
                                                                     target={"_blank"}>
                                                             <SvgIcon>
                                                                 <FaGithubAlt color="#99a5d6"/>
@@ -693,7 +692,7 @@ export default function Page() {
                                                         alignItems={"center"}
                                                         spacing={1}
                                                     >
-                                                        <IconButton component={Link} href={"https://github.com/hakase61912"}
+                                                        <IconButton component="a" href={"https://github.com/hakase61912"}
                                                                     target={"_blank"}>
                                                             <SvgIcon>
                                                                 <FaGithubAlt color="#99a5d6"/>

@@ -26,8 +26,8 @@ export default function MemberEdit() {
     throw error;
   }
 
-  const weatherName = data?.scene?.name;
-  const sportName = data?.sport?.name;
+  const weatherName = data?.scene?.name ?? "";
+  const sportName = data?.sport?.name ?? "";
   const breadcrumbs: BreadcrumbItem[] = [
     { label: "ホーム", href: `/weather/${type}` },
     { label: "チーム確認", href: `/weather/${type}/sport/${sports}` },

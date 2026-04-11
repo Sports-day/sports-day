@@ -16,7 +16,7 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
       },
       manifest: false,
     }),
