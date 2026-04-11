@@ -852,6 +852,7 @@ export function TournamentDetailPage({
       <AddEntryDialog
         open={addDialogOpen}
         leagueName={data.name}
+        sportId={form.sportId}
         existingTeamNames={entries.map(e => e.teamName)}
         onClose={handleCloseAddDialog}
         onAdd={handleAddEntries}

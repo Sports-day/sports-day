@@ -4,32 +4,36 @@ import {
   Button,
   Checkbox,
   Chip,
+  Collapse,
   Dialog,
   DialogContent,
+  IconButton,
   InputAdornment,
   TextField,
   Typography,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import GroupAddIcon from '@mui/icons-material/GroupAdd'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import { useAddEntryDialog } from '../hooks/useAddEntryDialog'
-import { useTeams } from '@/features/teams'
+import { useAddEntryTeams } from '../hooks/useAddEntryTeams'
+import { TeamMemberPreview } from './TeamMemberPreview'
 
 type Props = {
   open: boolean
   leagueName: string
+  sportId?: string
   existingTeamNames?: string[]
   onClose: () => void
   onAdd: (selectedIds: string[]) => void
 }
 
-export function AddEntryDialog({ open, leagueName, existingTeamNames = [], onClose, onAdd }: Props) {
-  const { data: teams } = useTeams()
+export function AddEntryDialog({ open, leagueName, sportId = '', existingTeamNames = [], onClose, onAdd }: Props) {
+  const { teams } = useAddEntryTeams(sportId)
   const existingSet = new Set(existingTeamNames)
-  const availableTeams = teams
-    .map(t => ({ id: t.id, name: t.name }))
-    .filter(t => !existingSet.has(t.name))
-  const { selected, allSelected, toggle, toggleAll, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
+  const availableTeams = teams.filter(t => !existingSet.has(t.name))
+  const { selected, allSelected, expandedTeamId, toggle, toggleAll, toggleExpand, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
   const [search, setSearch] = useState('')
 
   const filteredTeams = availableTeams.filter(t =>
@@ -129,7 +133,7 @@ export function AddEntryDialog({ open, leagueName, existingTeamNames = [], onClo
         {/* チームリスト */}
         <Box
           sx={{
-            maxHeight: 360,
+            maxHeight: 420,
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
@@ -147,21 +151,15 @@ export function AddEntryDialog({ open, leagueName, existingTeamNames = [], onClo
           ) : (
             filteredTeams.map(team => {
               const isSelected = selected.includes(team.id)
+              const isExpanded = expandedTeamId === team.id
               return (
                 <Box
                   key={team.id}
-                  onClick={() => toggle(team.id)}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: 1.5,
-                    py: 1,
                     borderRadius: 1.5,
-                    cursor: 'pointer',
-                    backgroundColor: isSelected ? '#E8EAF6' : '#fff',
                     border: '1px solid',
                     borderColor: isSelected ? '#5B6DC6' : '#E0E3F5',
+                    backgroundColor: isSelected ? '#E8EAF6' : '#fff',
                     transition: 'all 0.12s',
                     '&:hover': {
                       borderColor: '#5B6DC6',
@@ -169,14 +167,53 @@ export function AddEntryDialog({ open, leagueName, existingTeamNames = [], onClo
                     },
                   }}
                 >
-                  <Checkbox
-                    checked={isSelected}
-                    size="small"
-                    sx={{ p: 0, color: '#AAAAAA', '&.Mui-checked': { color: '#5B6DC6' } }}
-                  />
-                  <Typography sx={{ fontSize: '13px', color: '#2F3C8C', fontWeight: isSelected ? 600 : 400 }}>
-                    {team.name}
-                  </Typography>
+                  <Box
+                    onClick={() => toggle(team.id)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1.5,
+                      py: 1,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      size="small"
+                      sx={{ p: 0, color: '#AAAAAA', '&.Mui-checked': { color: '#5B6DC6' } }}
+                    />
+                    <Typography sx={{ fontSize: '13px', color: '#2F3C8C', fontWeight: isSelected ? 600 : 400, flex: 1 }}>
+                      {team.name}
+                    </Typography>
+                    <Typography sx={{ fontSize: '11px', color: '#2F3C8C', opacity: 0.5, whiteSpace: 'nowrap' }}>
+                      {team.members.length}名
+                      {sportId && team.experiencedCount > 0 && (
+                        <Typography component="span" sx={{ fontSize: '11px', color: '#E65100', fontWeight: 600, ml: 0.5 }}>
+                          ({team.experiencedCount}名経験者)
+                        </Typography>
+                      )}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleExpand(team.id)
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: '#5B6DC6',
+                        '&:hover': { backgroundColor: 'rgba(91, 109, 198, 0.1)' },
+                      }}
+                    >
+                      {isExpanded ? <ExpandLessIcon sx={{ fontSize: 20 }} /> : <ExpandMoreIcon sx={{ fontSize: 20 }} />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={isExpanded} timeout={200}>
+                    <Box sx={{ px: 1.5, pb: 1 }}>
+                      <TeamMemberPreview members={team.members} sportId={sportId} />
+                    </Box>
+                  </Collapse>
                 </Box>
               )
             })
