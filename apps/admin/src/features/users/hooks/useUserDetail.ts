@@ -13,10 +13,6 @@ import {
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUser } from '@/hooks/useMsGraphUsers'
 
-const GENDER_SCENES = [
-  { id: '男', name: '男' },
-  { id: '女', name: '女' },
-]
 const ROLE_SCENES = [
   { id: Role.Admin, name: '管理者' },
   { id: Role.Organizer, name: '運営者' },
@@ -39,22 +35,19 @@ export function useUserDetail(userId: string) {
     user?.identify?.microsoftUserId,
   )
 
-  const [gender, setGender] = useState('')
   const [groupId, setGroupId] = useState('')
   const [role, setRole] = useState('')
   const [experiencedSportIds, setExperiencedSportIds] = useState<string[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const initialState = useRef({ gender: '', groupId: '', role: '', experiencedSportIds: [] as string[] })
+  const initialState = useRef({ groupId: '', role: '', experiencedSportIds: [] as string[] })
   const experienceInitialized = useRef(false)
 
   useEffect(() => {
     if (user) {
-      const g = user.gender ?? ''
       const gid = user.groups[0]?.id ?? ''
-      setGender(g)
       setGroupId(gid)
       setRole(user.role)
-      initialState.current = { gender: g, groupId: gid, role: user.role, experiencedSportIds: initialState.current.experiencedSportIds }
+      initialState.current = { groupId: gid, role: user.role, experiencedSportIds: initialState.current.experiencedSportIds }
     }
   }, [user])
 
@@ -71,7 +64,6 @@ export function useUserDetail(userId: string) {
   const groups = groupsData?.groups ?? []
 
   const dirty =
-    gender !== initialState.current.gender ||
     groupId !== initialState.current.groupId ||
     role !== initialState.current.role ||
     JSON.stringify([...experiencedSportIds].sort()) !== JSON.stringify([...initialState.current.experiencedSportIds].sort())
@@ -99,7 +91,6 @@ export function useUserDetail(userId: string) {
         input: {
           name: user?.name,
           email: user?.email,
-          gender: gender || undefined,
         },
       },
     })
@@ -132,8 +123,6 @@ export function useUserDetail(userId: string) {
   return {
     userName: msGraphUser?.displayName ?? user?.name ?? '',
     userEmail: msGraphUser?.mail ?? user?.email ?? '',
-    gender,
-    setGender,
     groupId,
     setGroupId,
     groups,
@@ -148,7 +137,6 @@ export function useUserDetail(userId: string) {
     experiencedSportIds,
     setExperiencedSportIds,
     allSports,
-    genderScenes: GENDER_SCENES,
     roleScenes: ROLE_SCENES,
     loading: loading || msGraphLoading,
     error: error ?? null,

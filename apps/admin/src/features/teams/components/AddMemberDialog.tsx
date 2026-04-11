@@ -42,7 +42,6 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
     return {
       id: u.id,
       userName: msUser?.displayName ?? u.name,
-      gender: u.gender ?? '',
       email: msUser?.mail ?? u.email,
     }
   })
@@ -86,7 +85,6 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
               <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 40 }} padding="checkbox" />
               <TableCell sx={LIST_TABLE_HEAD_SX}>ID</TableCell>
               <TableCell sx={LIST_TABLE_HEAD_SX}>ユーザー名</TableCell>
-              <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
               <TableCell sx={LIST_TABLE_HEAD_SX}>メール</TableCell>
             </TableRow>
           </TableHead>
@@ -107,7 +105,6 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
                 </TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.id}</TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.userName}</TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.gender}</TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.email}</TableCell>
               </TableRow>
             ))}

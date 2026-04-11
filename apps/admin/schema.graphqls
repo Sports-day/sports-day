@@ -13,7 +13,6 @@ type User {
   id: ID!
   name: String!
   email: String!
-  gender: String
   identify: UserIdentify!
   role: Role!
   groups: [Group!]!
@@ -99,6 +98,7 @@ type Judgment {
   user: User
   team: Team
   group: Group
+  isAttending: Boolean!
 }
 
 type Standing {
@@ -268,13 +268,11 @@ directive @hasPermission(permission: String!) on FIELD_DEFINITION
 input CreateUserInput {
   name: String!
   email: String!
-  gender: String
 }
 
 input UpdateUserInput {
   name: String
   email: String
-  gender: String
 }
 
 input CreateGroupInput {

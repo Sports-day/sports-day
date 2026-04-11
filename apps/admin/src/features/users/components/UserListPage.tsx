@@ -121,7 +121,6 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
                 <TableCell sx={LIST_TABLE_HEAD_SX}>学籍番号</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>メール名</TableCell>
-                <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>クラス</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>チーム名</TableCell>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>経験者</TableCell>
@@ -130,7 +129,7 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
                     {keyword || roleFilter || groupFilter ? '条件に一致するユーザーがありません' : 'データがありません'}
                   </TableCell>
                 </TableRow>
@@ -142,7 +141,6 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
                       <TableCell sx={cellSx}>{user.id}</TableCell>
                       <TableCell sx={cellSx}>{user.name}</TableCell>
                       <TableCell sx={cellSx}>{user.email}</TableCell>
-                      <TableCell sx={{ ...cellSx, color: user.gender === '女' ? '#D71212' : undefined }}>{user.gender}</TableCell>
                       <TableCell sx={cellSx}>{user.groupName}</TableCell>
                       <TableCell sx={cellSx}>{user.teams.map(t => t.name).join(', ')}</TableCell>
                       <TableCell sx={cellSx}>{user.experiencedSports.join(', ')}</TableCell>

@@ -6,12 +6,9 @@ import {
 } from '@/gql/__generated__/graphql'
 import { showErrorToast } from '@/lib/toast'
 
-const VALID_GENDERS = ['男性', '女性']
-
 export type UserCsvRow = {
   userName: string
   email: string
-  gender: string
   class: string
   status: string
 }
@@ -34,17 +31,15 @@ export function useUserCsv() {
     const parsed: UserCsvRow[] = result.data.map((parts) => {
       const userName = (parts[0] ?? '').trim()
       const email = (parts[1] ?? '').trim()
-      const gender = (parts[2] ?? '').trim()
-      const cls = (parts[3] ?? '').trim()
+      const cls = (parts[2] ?? '').trim()
 
-      if (!userName) return { userName, email, gender, class: cls, status: '名前が空です' }
-      if (!email) return { userName, email, gender, class: cls, status: 'メールが空です' }
-      if (!VALID_GENDERS.includes(gender)) return { userName, email, gender, class: cls, status: '性別が不正です（男性/女性）' }
-      if (existingEmails.has(email)) return { userName, email, gender, class: cls, status: 'メールが重複しています（既存）' }
-      if (seenEmails.has(email)) return { userName, email, gender, class: cls, status: 'メールが重複しています（CSV内）' }
+      if (!userName) return { userName, email, class: cls, status: '名前が空です' }
+      if (!email) return { userName, email, class: cls, status: 'メールが空です' }
+      if (existingEmails.has(email)) return { userName, email, class: cls, status: 'メールが重複しています（既存）' }
+      if (seenEmails.has(email)) return { userName, email, class: cls, status: 'メールが重複しています（CSV内）' }
 
       seenEmails.add(email)
-      return { userName, email, gender, class: cls, status: '登録可能' }
+      return { userName, email, class: cls, status: '登録可能' }
     })
 
     setRows(parsed)
@@ -59,7 +54,6 @@ export function useUserCsv() {
             input: {
               name: r.userName,
               email: r.email,
-              gender: r.gender,
             },
           },
           refetchQueries: ['GetAdminUsers'],

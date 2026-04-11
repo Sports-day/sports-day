@@ -25,8 +25,6 @@ type Props = {
 export function UserDetailPage({ userId, onBack }: Props) {
   const {
     userName,
-    gender,
-    setGender,
     groupId,
     setGroupId,
     groups,
@@ -41,7 +39,6 @@ export function UserDetailPage({ userId, onBack }: Props) {
     deleteDialogOpen,
     openDeleteDialog,
     closeDeleteDialog,
-    genderScenes,
     roleScenes,
   } = useUserDetail(userId)
 
@@ -87,14 +84,6 @@ export function UserDetailPage({ userId, onBack }: Props) {
               onChange={(id) => setGroupId(id ?? '')}
               scenes={groups}
               label="所属クラス"
-            />
-
-            {/* 性別 */}
-            <SceneSelect
-              value={gender || null}
-              onChange={(id) => setGender(id ?? '')}
-              scenes={genderScenes}
-              label="性別"
             />
 
             {/* ロール */}

@@ -8,5 +8,4 @@ export type ClassMember = {
   id: string
   name: string
   email: string
-  gender: string
 }

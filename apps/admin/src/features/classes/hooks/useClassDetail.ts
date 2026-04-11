@@ -54,7 +54,6 @@ export function useClassDetail(classId: string) {
       id: u.id,
       name: msUser?.displayName ?? u.name,
       email: msUser?.mail ?? u.email,
-      gender: u.gender ?? '',
     }
   })
 
@@ -110,7 +109,6 @@ export function useClassDetail(classId: string) {
       return {
         id: u.id,
         userName: msUser?.displayName ?? u.name,
-        gender: u.gender ?? '',
         email: msUser?.mail ?? u.email,
       }
     })

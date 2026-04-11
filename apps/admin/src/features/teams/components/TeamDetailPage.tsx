@@ -148,7 +148,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
           <Table>
             <TableHead>
               <TableRow>
-                {['学籍番号', '名前', '性別', ''].map((header, i) => (
+                {['学籍番号', '名前', ''].map((header, i) => (
                   <TableCell key={i} sx={{ ...CARD_TABLE_HEAD_SX, ...(i === 3 ? { width: 48 } : {}) }}>
                     {header}
                   </TableCell>
@@ -160,7 +160,6 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
                 <TableRow key={member.id}>
                   <TableCell sx={CARD_TABLE_CELL_SX}>{member.id}</TableCell>
                   <TableCell sx={CARD_TABLE_CELL_SX}>{member.name}</TableCell>
-                  <TableCell sx={{ ...CARD_TABLE_CELL_SX, color: member.gender === '女' ? '#D71212' : undefined }}>{member.gender}</TableCell>
                   <TableCell sx={{ ...CARD_TABLE_CELL_SX, width: 48, p: 0, textAlign: 'center' }}>
                     <DeleteIcon
                       onClick={() => handleDeleteMember(i)}

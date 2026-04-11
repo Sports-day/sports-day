@@ -6,7 +6,6 @@ export const GET_ADMIN_USERS = gql`
       id
       name
       email
-      gender
       role
       identify { microsoftUserId }
       groups { id name }
@@ -29,7 +28,6 @@ export const GET_ADMIN_USER = gql`
       id
       name
       email
-      gender
       role
       identify { microsoftUserId }
       groups { id name }
@@ -44,7 +42,6 @@ export const CREATE_ADMIN_USER = gql`
       id
       name
       email
-      gender
     }
   }
 `
@@ -55,7 +52,6 @@ export const UPDATE_ADMIN_USER = gql`
       id
       name
       email
-      gender
     }
   }
 `

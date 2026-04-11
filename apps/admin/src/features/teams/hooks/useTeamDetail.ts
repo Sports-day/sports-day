@@ -62,7 +62,6 @@ export function useTeamDetail(teamId: string) {
     return {
       id: u.id,
       name: msUser?.displayName ?? u.name,
-      gender: u.gender ?? '',
     }
   })
 
@@ -154,7 +153,6 @@ export function useTeamDetail(teamId: string) {
       return {
         id: u.id,
         userName: msUser?.displayName ?? u.name,
-        gender: u.gender ?? '',
       }
     })
 

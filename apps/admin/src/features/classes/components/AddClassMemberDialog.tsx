@@ -17,7 +17,6 @@ import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, SAVE_BUTTON_SX } from '@/styles
 type SelectableUser = {
   id: string
   userName: string
-  gender: string
   email: string
 }
 
@@ -70,7 +69,6 @@ export function AddClassMemberDialog({ open, onClose, onAdd, selectableUsers }: 
               <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 40 }} padding="checkbox" />
               <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
               <TableCell sx={LIST_TABLE_HEAD_SX}>メール</TableCell>
-              <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -90,7 +88,6 @@ export function AddClassMemberDialog({ open, onClose, onAdd, selectableUsers }: 
                 </TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.userName}</TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.email}</TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.gender}</TableCell>
               </TableRow>
             ))}
           </TableBody>

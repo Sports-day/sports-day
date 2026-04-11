@@ -106,7 +106,6 @@ export function UserCsvPage({ onBack }: Props) {
             <TableRow>
               <TableCell sx={TABLE_HEAD_SX}>ユーザー名</TableCell>
               <TableCell sx={TABLE_HEAD_SX}>メールアドレス</TableCell>
-              <TableCell sx={TABLE_HEAD_SX}>性別</TableCell>
               <TableCell sx={TABLE_HEAD_SX}>クラス</TableCell>
               <TableCell sx={TABLE_HEAD_SX}>ステータス</TableCell>
             </TableRow>
@@ -115,7 +114,7 @@ export function UserCsvPage({ onBack }: Props) {
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={4}
                   sx={{ textAlign: 'center', color: '#9E9E9E', py: 4, fontSize: '13px', backgroundColor: '#FFFFFF' }}
                 >
                   No Rows To Show
@@ -128,7 +127,6 @@ export function UserCsvPage({ onBack }: Props) {
                   <TableRow key={i} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
                     <TableCell sx={TABLE_CELL_SX}>{row.userName}</TableCell>
                     <TableCell sx={hasError ? ERROR_CELL_SX : TABLE_CELL_SX}>{row.email}</TableCell>
-                    <TableCell sx={hasError ? ERROR_CELL_SX : TABLE_CELL_SX}>{row.gender}</TableCell>
                     <TableCell sx={hasError ? ERROR_CELL_SX : TABLE_CELL_SX}>{row.class}</TableCell>
                     <TableCell sx={hasError ? ERROR_CELL_SX : TABLE_CELL_SX}>{row.status}</TableCell>
                   </TableRow>

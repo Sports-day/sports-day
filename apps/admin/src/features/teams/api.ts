@@ -17,7 +17,7 @@ export const GET_ADMIN_TEAM = gql`
       id
       name
       group { id name }
-      users { id name email gender }
+      users { id name email }
     }
   }
 `
