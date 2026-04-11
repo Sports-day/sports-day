@@ -16,6 +16,13 @@ type AddSportScenesInput struct {
 	SportIds []string `json:"sportIds"`
 }
 
+type ApplyCompetitionDefaultsInput struct {
+	StartTime     string  `json:"startTime"`
+	MatchDuration int32   `json:"matchDuration"`
+	BreakDuration int32   `json:"breakDuration"`
+	LocationID    *string `json:"locationId,omitempty"`
+}
+
 // SEEDスロットへのチーム手動配置
 type AssignSeedTeamInput struct {
 	SlotID string  `json:"slotId"`
@@ -26,6 +33,7 @@ type CreateCompetitionInput struct {
 	Name    string          `json:"name"`
 	Type    CompetitionType `json:"type"`
 	SceneID string          `json:"sceneId"`
+	SportID string          `json:"sportId"`
 }
 
 type CreateGroupInput struct {
@@ -37,8 +45,9 @@ type CreateImageUploadURLInput struct {
 }
 
 type CreateInformationInput struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Title   string  `json:"title"`
+	Content string  `json:"content"`
+	Status  *string `json:"status,omitempty"`
 }
 
 type CreateJudgmentInput struct {
@@ -48,6 +57,8 @@ type CreateJudgmentInput struct {
 
 type CreateLeagueInput struct {
 	Name              string  `json:"name"`
+	SceneID           string  `json:"sceneId"`
+	SportID           string  `json:"sportId"`
 	DefaultLocationID *string `json:"defaultLocationId,omitempty"`
 }
 
@@ -121,6 +132,11 @@ type DeleteSportScenesInput struct {
 	SportIds []string `json:"sportIds"`
 }
 
+type DisplayOrderItem struct {
+	ID           string `json:"id"`
+	DisplayOrder int32  `json:"displayOrder"`
+}
+
 // ブラケット自動生成
 type GenerateBracketInput struct {
 	CompetitionID   string             `json:"competitionId"`
@@ -136,10 +152,19 @@ type GenerateRoundRobinInput struct {
 	LocationID    *string `json:"locationId,omitempty"`
 }
 
+// サブブラケット自動生成
+type GenerateSubBracketInput struct {
+	CompetitionID   string           `json:"competitionId"`
+	Name            string           `json:"name"`
+	TeamCount       int32            `json:"teamCount"`
+	PlacementMethod *PlacementMethod `json:"placementMethod,omitempty"`
+}
+
 type Image struct {
-	ID     string  `json:"id"`
-	URL    *string `json:"url,omitempty"`
-	Status string  `json:"status"`
+	ID           string  `json:"id"`
+	URL          *string `json:"url,omitempty"`
+	Status       string  `json:"status"`
+	DisplayOrder int32   `json:"displayOrder"`
 }
 
 type ImageUploadURL struct {
@@ -148,9 +173,11 @@ type ImageUploadURL struct {
 }
 
 type Information struct {
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	Content      string `json:"content"`
+	Status       string `json:"status"`
+	DisplayOrder int32  `json:"displayOrder"`
 }
 
 // 3 つの ID のうち **ちょうど 1 つだけ** を非 NULL にしてください。
@@ -216,10 +243,21 @@ type SlotInput struct {
 	SeedNumber    *int32         `json:"seedNumber,omitempty"`
 }
 
+type SportExperience struct {
+	UserID  string `json:"userId"`
+	SportID string `json:"sportId"`
+}
+
 // SUBブラケット定義（自動生成用）
 type SubBracketInput struct {
 	Name        string `json:"name"`
 	SourceRound int32  `json:"sourceRound"`
+}
+
+// 審判がスコアを提出するための入力。statusは自動的にFINISHEDになる。
+type SubmitScoreInput struct {
+	Results      []*MatchResultInput `json:"results"`
+	WinnerTeamID *string             `json:"winnerTeamId,omitempty"`
 }
 
 type TiebreakPriority struct {
@@ -238,7 +276,8 @@ type UpdateCompetitionEntriesInput struct {
 
 type UpdateCompetitionInput struct {
 	Name    *string `json:"name,omitempty"`
-	ImageID *string `json:"imageId,omitempty"`
+	SceneID *string `json:"sceneId,omitempty"`
+	SportID *string `json:"sportId,omitempty"`
 }
 
 type UpdateGroupInput struct {
@@ -252,6 +291,7 @@ type UpdateGroupUsersInput struct {
 type UpdateInformationInput struct {
 	Title   *string `json:"title,omitempty"`
 	Content *string `json:"content,omitempty"`
+	Status  *string `json:"status,omitempty"`
 }
 
 type UpdateJudgmentInput struct {
@@ -311,9 +351,10 @@ type UpdateSlotConnectionInput struct {
 }
 
 type UpdateSportsInput struct {
-	Name    *string `json:"name,omitempty"`
-	Weight  *int32  `json:"weight,omitempty"`
-	ImageID *string `json:"imageId,omitempty"`
+	Name             *string `json:"name,omitempty"`
+	DisplayOrder     *int32  `json:"displayOrder,omitempty"`
+	ImageID          *string `json:"imageId,omitempty"`
+	ExperiencedLimit *int32  `json:"experiencedLimit,omitempty"`
 }
 
 type UpdateTeamInput struct {
@@ -330,6 +371,11 @@ type UpdateTeamUsersInput struct {
 type UpdateTournamentInput struct {
 	Name         *string `json:"name,omitempty"`
 	DisplayOrder *int32  `json:"displayOrder,omitempty"`
+}
+
+type UpdateUserInput struct {
+	Name  *string `json:"name,omitempty"`
+	Email *string `json:"email,omitempty"`
 }
 
 type UserIdentify struct {

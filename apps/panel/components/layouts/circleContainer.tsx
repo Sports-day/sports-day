@@ -20,6 +20,7 @@ export default function CircleContainer(props: CircleContainerProps) {
                 initial={{opacity:1, y: "-30px"}}
                 animate={{opacity:1, y: "0px"}}
                 transition={{duration: 1, ease: [0.16, 1, 0.3, 1]}}
+                style={{overflowX: "hidden"}}
             >
             <Container
                 maxWidth={false}
@@ -29,7 +30,7 @@ export default function CircleContainer(props: CircleContainerProps) {
                     marginBottom: "40px",
                     position: "relative",
                     zIndex: 1,
-                    width: "101vw",
+                    width: "100%",
                     height: "fit-content",
                     background:`linear-gradient(${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`
                 }}

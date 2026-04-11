@@ -3,39 +3,19 @@ import {
   Breadcrumbs,
   Button,
   ButtonBase,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
+  Card,
+  CardContent,
   Typography,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
-import { useState } from 'react'
+import { BackButton } from '@/components/ui/BackButton'
 import { useUserDetail } from '../hooks/useUserDetail'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { showToast } from '@/lib/toast'
+import { SceneSelect } from '@/components/ui/SceneSelect'
 import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
-
-const SELECT_SX = {
-  backgroundColor: 'transparent',
-  color: '#2F3C8C',
-  fontSize: '13px',
-  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#5B6DC6', borderWidth: '1px' },
-  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#5B6DC6' },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#5B6DC6', borderWidth: '1px' },
-}
-
-const LABEL_SX = {
-  color: '#2F3C8C',
-  fontSize: '13px',
-  opacity: 0.7,
-  '&.Mui-focused': { color: '#2F3C8C', opacity: 1 },
-}
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Props = {
   userId: string
@@ -45,28 +25,27 @@ type Props = {
 export function UserDetailPage({ userId, onBack }: Props) {
   const {
     userName,
-    gender,
-    setGender,
-    userClass,
-    setUserClass,
+    groupId,
+    setGroupId,
+    groups,
     role,
     setRole,
+    experiencedSportIds,
+    setExperiencedSportIds,
+    allSports,
+    dirty,
     handleSave,
     handleDeleteUser,
     deleteDialogOpen,
     openDeleteDialog,
     closeDeleteDialog,
-    genderOptions,
-    classOptions,
-    roleOptions,
+    roleScenes,
   } = useUserDetail(userId)
 
-  const [dirty, setDirty] = useState(false)
   useUnsavedWarning(dirty)
 
-  const onSave = () => {
-    handleSave()
-    setDirty(false)
+  const onSave = async () => {
+    await handleSave()
     showToast('ユーザーを保存しました')
     onBack()
   }
@@ -81,6 +60,7 @@ export function UserDetailPage({ userId, onBack }: Props) {
   return (
     <Box>
       {/* パンくずリスト */}
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           ユーザー
@@ -91,127 +71,70 @@ export function UserDetailPage({ userId, onBack }: Props) {
       </Breadcrumbs>
 
       {/* カード */}
-      <Box
-        sx={{
-          background: CARD_GRADIENT,
-          borderRadius: 2,
-          p: 2,
-        }}
-        onChangeCapture={() => setDirty(true)}
-      >
-        <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 0.5 }}>
-          {userName}さんの情報
-        </Typography>
-        <Typography sx={{ fontSize: '13px', color: '#2F3C8C', mb: 2 }}>
-          {userName}
-        </Typography>
-
-        {/* 性別 */}
-        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-          <InputLabel sx={LABEL_SX}>性別</InputLabel>
-          <Select
-            value={gender}
-            label="性別"
-            onChange={(e) => setGender(e.target.value)}
-            sx={SELECT_SX}
-          >
-            {genderOptions.map((g) => (
-              <MenuItem key={g} value={g} sx={{ fontSize: '13px', color: '#2F3C8C' }}>{g}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* 所属クラス */}
-        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-          <InputLabel sx={LABEL_SX}>所属クラス</InputLabel>
-          <Select
-            value={userClass}
-            label="所属クラス"
-            onChange={(e) => setUserClass(e.target.value)}
-            sx={SELECT_SX}
-          >
-            {classOptions.map((c) => (
-              <MenuItem key={c} value={c} sx={{ fontSize: '13px', color: '#2F3C8C' }}>{c}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* ロール */}
-        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-          <InputLabel sx={LABEL_SX}>ロール</InputLabel>
-          <Select
-            value={role}
-            label="ロール"
-            onChange={(e) => setRole(e.target.value)}
-            sx={SELECT_SX}
-          >
-            {roleOptions.map((r) => (
-              <MenuItem key={r} value={r} sx={{ fontSize: '13px', color: '#2F3C8C' }}>{r}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* ボタン */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
-            onClick={openDeleteDialog}
-            sx={DELETE_BUTTON_SX}
-          >
-            このユーザーを削除
-          </Button>
-          <Button
-            variant="contained"
-            fullWidth
-            startIcon={<CheckIcon />}
-            onClick={onSave}
-            sx={SAVE_BUTTON_SX}
-          >
-            保存
-          </Button>
-        </Box>
-      </Box>
-
-      {/* 削除確認ダイアログ */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={closeDeleteDialog}
-        maxWidth="xs"
-        fullWidth
-        aria-labelledby="delete-dialog-title"
-        PaperProps={{ sx: { borderRadius: 2, p: 1, backgroundColor: '#EFF0F8' } }}
-      >
-        <DialogTitle id="delete-dialog-title" sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
-          ユーザーを削除しますか？
-        </DialogTitle>
-        <DialogContent sx={{ pb: 1 }}>
-          <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-            この操作は元に戻せません。ユーザーを削除してもよろしいですか？
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
+            {userName}さんの情報
           </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2, pb: 2, gap: 1 }}>
-          <Button
-            onClick={closeDeleteDialog}
-            sx={{ fontSize: '13px', color: '#2F3C8C', '&:hover': { backgroundColor: '#E8EAF6' } }}
-          >
-            キャンセル
-          </Button>
-          <Button
-            onClick={onConfirmDelete}
-            variant="outlined"
-            sx={{
-              fontSize: '13px',
-              color: '#D71212',
-              backgroundColor: 'transparent',
-              borderColor: '#D71212',
-              '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
-            }}
-          >
-            削除
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {/* 所属クラス */}
+            <SceneSelect
+              value={groupId || null}
+              onChange={(id) => setGroupId(id ?? '')}
+              scenes={groups}
+              label="所属クラス"
+            />
+
+            {/* ロール */}
+            <SceneSelect
+              value={role || null}
+              onChange={(id) => setRole(id ?? '')}
+              scenes={roleScenes}
+              label="ロール"
+            />
+
+            {/* 経験者スポーツ */}
+            <SceneSelect
+              multiple
+              value={experiencedSportIds}
+              onChange={setExperiencedSportIds}
+              scenes={allSports}
+              label="経験者（部活動所属）"
+            />
+
+            {/* ボタン */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+              <Button
+                variant="outlined"
+                startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
+                onClick={openDeleteDialog}
+                sx={{ ...DELETE_BUTTON_SX, flexShrink: 0 }}
+              >
+                このユーザーを削除
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<CheckIcon />}
+                onClick={onSave}
+                disabled={!dirty}
+                sx={SAVE_BUTTON_SX}
+              >
+                保存
+              </Button>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="ユーザーを削除しますか？"
+        description="この操作は元に戻せません。ユーザーを削除してもよろしいですか？"
+        onClose={closeDeleteDialog}
+        onConfirm={onConfirmDelete}
+      />
     </Box>
   )
 }

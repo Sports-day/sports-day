@@ -15,4 +15,5 @@ type Image interface {
 	Create(ctx context.Context, db *gorm.DB, image *db_model.Image) (*db_model.Image, error)
 	MarkUploaded(ctx context.Context, db *gorm.DB, id string, url string) error
 	Delete(ctx context.Context, db *gorm.DB, id string) error
+	UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error
 }

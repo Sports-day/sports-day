@@ -101,6 +101,15 @@ func main() {
 		o.UsePathStyle = true
 	})
 
+	publicEndpoint := env.Get().Storage.PublicEndpoint
+	if publicEndpoint == "" {
+		publicEndpoint = env.Get().Storage.Endpoint
+	}
+	s3PublicClient := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(publicEndpoint)
+		o.UsePathStyle = true
+	})
+
 	// authorization
 	authorizerInstance := authz.NewStaticAuthorizer()
 	roleCache := authz.NewRoleCache(env.Get().Auth.RoleCacheTTL)
@@ -112,19 +121,20 @@ func main() {
 	teamService := service.NewTeam(db, teamRepository, userRepository)
 	locationService := service.NewLocation(db, locationRepository)
 	informationService := service.NewInformation(db, informationRepository)
-	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository, matchRepository, sportRepository)
+	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository, tournamentRepository, matchRepository, sportRepository)
 	sceneService := service.NewScene(db, sceneRepository, &competitionService)
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
-	judgmentService := service.NewJudgment(db, judgmentRepository)
+	judgmentService := service.NewJudgment(db, judgmentRepository, teamRepository, groupRepository)
 	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService, sportRepository)
 	tournamentService := service.NewTournament(db, tournamentRepository, matchRepository, competitionRepository, judgmentRepository)
 	leagueService.SetCompetitionService(&competitionService)
 	matchService.SetCompetitionService(&competitionService)
 	matchService.SetTournamentService(&tournamentService)
+	matchService.SetJudgmentService(&judgmentService)
 	tournamentService.SetCompetitionService(&competitionService)
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
-	imageService := service.NewImage(db, imageRepository, s3Client, env.Get().Storage.Bucket, env.Get().Storage.Endpoint)
+	imageService := service.NewImage(db, imageRepository, s3Client, s3PublicClient, env.Get().Storage.Bucket, env.Get().Storage.Endpoint)
 	sportService := service.NewSports(db, sportRepository, &imageService)
 
 	directiveHandler := graph.NewDirective(authorizerInstance)
@@ -153,7 +163,7 @@ func main() {
 		apihandler.HandleUploadWebhook(
 			&imageService,
 			env.Get().Storage.WebhookSecret,
-			env.Get().Storage.Endpoint,
+			publicEndpoint,
 			env.Get().Storage.Bucket,
 		),
 	)
@@ -168,6 +178,10 @@ func main() {
 	// channel to confirm server shutdown
 	shutdownChan := make(chan struct{}, 1)
 
+	// create channel for graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+
 	// start server in another goroutine
 	go func() {
 		api.Logger.Info().Msgf("Starting server on http://%s", address)
@@ -178,10 +192,6 @@ func main() {
 		}
 		shutdownChan <- struct{}{}
 	}()
-
-	// create channel for graceful shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
 	// wait for signal
 	<-quit

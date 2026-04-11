@@ -90,3 +90,7 @@ func (s *Location) GetLocationMapByIDs(ctx context.Context, locationIDs []string
 	}
 	return locationMap, nil
 }
+
+func (s *Location) UpdateDisplayOrders(ctx context.Context, items []repository.DisplayOrderItem) error {
+	return s.locationRepository.UpdateDisplayOrders(ctx, s.db, items)
+}

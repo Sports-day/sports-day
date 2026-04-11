@@ -5,63 +5,45 @@ import Grid from "@mui/material/Grid";
 import ConfirmCard from "@/components/cards/AboutConfirmPage/ConfirmCard";
 import Conflicted from "@/components/cards/AboutConfirmPage/ConflictedCard";
 import NotSelected from "@/components/cards/AboutConfirmPage/NotSelectedCard";
-import { gql, useQuery } from "@apollo/client";
 import CircularUnderLoad from "@/features/Loading";
-
-const GET_ALLTEAMDATA = gql`
-  query GetAllTeamdata {
-    sportScenes {
-      scene {
-        id
-        name
-      }
-      sport {
-        id
-        name
-      }
-      entries {
-        team {
-          id
-          name
-          users {
-            name
-          }
-        }
-      }
-    }
-  }
-`;
+import {
+  useGetAllTeamdataQuery,
+  useGetAllSportExperiencesQuery,
+} from "@/gql/__generated__/graphql";
 
 export default function ConfirmPage() {
   const theme = useTheme();
-  const { data, loading } = useQuery(GET_ALLTEAMDATA, {
-    notifyOnNetworkStatusChange: true,
+  const { data, loading } = useGetAllTeamdataQuery({
+    fetchPolicy: "cache-and-network",
+  });
+  const { data: expData, loading: expLoading } = useGetAllSportExperiencesQuery({
     fetchPolicy: "cache-and-network",
   });
 
-  const allData:
-    | {
-        sceneName: string;
-        sceneId: string;
-        sportName: string;
-        sportId: string;
-        teamName: string[];
-        teamId: string[];
-        memberData: string[][];
-      }[]
-    | undefined = data?.sportScenes?.map((d: any) => ({
-    sceneName: d.scene?.name,
-    sceneId: d.scene?.id,
-    sportName: d.sport?.name,
-    sportId: d.sport?.id,
-    teamName: d.entries?.map((s: any) => s.team?.name),
-    teamId: d.entries?.map((s: any) => s.team?.id),
-    memberData: d.entries?.map((s: any) =>
-      s.team?.users?.map((u: any) => u.name),
-    ),
-  }));
+  // sportId+userId のセットで経験者判定
+  const experiencedSet = new Set(
+    expData?.allSportExperiences?.map((e) => `${e.sportId}:${e.userId}`) ?? [],
+  );
 
-  if (loading) {
+  const allData = data?.scenes
+    ?.filter((s) => !s.isDeleted)
+    ?.flatMap((s) => s.sportScenes)
+    ?.map((d) => ({
+      sceneName: d.scene?.name,
+      sceneId: d.scene?.id,
+      sportName: d.sport?.name,
+      sportId: d.sport?.id,
+      teamName: d.entries?.map((s) => s.team?.name),
+      teamId: d.entries?.map((s) => s.team?.id),
+      memberData: d.entries?.map((s) =>
+        s.team?.users?.map((u) => ({
+          name: u.name,
+          isExperienced: experiencedSet.has(`${d.sport?.id}:${u.id}`),
+        })),
+      ),
+    }));
+
+  if (loading || expLoading) {
     return <CircularUnderLoad />;
   }
 

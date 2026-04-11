@@ -3,13 +3,12 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import {ScheduleContent} from "./judgeScheduleContent";
-import {Match} from "../../../src/models/MatchModel";
+import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
+
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
 
 export type JudgeScheduleProps = {
-    sportId: number
-    gameId: number
-    matches: Match[]
-    myTeamId: number
+    matches: PanelMatch[]
 }
 
 export const JudgeSchedule = (props: JudgeScheduleProps) => {
@@ -20,14 +19,13 @@ export const JudgeSchedule = (props: JudgeScheduleProps) => {
         >
 
             {props.matches
-                .sort((a, b) => a.startAt.localeCompare(b.startAt))
-                .map((match: Match) => {
+                .sort((a, b) => a.time.localeCompare(b.time))
+                .map((match) => {
                     return (
                         <>
                             <ScheduleContent
                                 key={match.id}
                                 match={match}
-                                myTeamId={props.myTeamId}
                             />
 
                         </>

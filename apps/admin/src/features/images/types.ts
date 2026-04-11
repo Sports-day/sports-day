@@ -1,5 +1,6 @@
 export type Image = {
   id: string
-  name: string
   url: string
+  status: string
+  displayOrder: number
 }

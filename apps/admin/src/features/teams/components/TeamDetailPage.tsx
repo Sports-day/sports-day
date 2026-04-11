@@ -3,6 +3,8 @@ import {
   Breadcrumbs,
   Button,
   ButtonBase,
+  Card,
+  CardContent,
   Table,
   TableBody,
   TableCell,
@@ -14,12 +16,13 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
-import { useState } from 'react'
+import { BackButton } from '@/components/ui/BackButton'
 import { useTeamDetail } from '../hooks/useTeamDetail'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { showToast } from '@/lib/toast'
 import { AddMemberDialog } from './AddMemberDialog'
-import { DeleteTeamDialog } from './DeleteTeamDialog'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { SceneSelect } from '@/components/ui/SceneSelect'
 import {
   CARD_TABLE_HEAD_SX,
   CARD_TABLE_CELL_SX,
@@ -40,8 +43,9 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
   const {
     name,
     setName,
-    teamClass,
-    setTeamClass,
+    groupId,
+    setGroupId,
+    groups,
     members,
     dialogOpen,
     handleOpenDialog,
@@ -53,15 +57,14 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
     deleteDialogOpen,
     handleOpenDeleteDialog,
     handleCloseDeleteDialog,
+    dirty,
     teamName,
   } = useTeamDetail(teamId)
 
-  const [dirty, setDirty] = useState(false)
   useUnsavedWarning(dirty)
 
-  const onSave = () => {
-    handleSave()
-    setDirty(false)
+  const onSave = async () => {
+    await handleSave()
     showToast('チームを保存しました')
     onBack()
   }
@@ -74,9 +77,9 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
   }
 
   return (
-    <Box>
-      {/* パンくずリスト */}
-      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <BackButton onClick={onBack} />
+      <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           チーム
         </ButtonBase>
@@ -85,115 +88,101 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
         </Typography>
       </Breadcrumbs>
 
-      {/* カード */}
-      <Box
-        sx={{
-          background: CARD_GRADIENT,
-          borderRadius: 2,
-          p: 2,
-        }}
-        onChangeCapture={() => setDirty(true)}
-      >
-        <Typography sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
-          {teamName}の情報
-        </Typography>
+      {/* 編集カード */}
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
+            チームを編集
+          </Typography>
 
-        {/* チーム名 */}
-        <TextField
-          label="チーム名"
-          fullWidth
-          size="small"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          sx={{ ...CARD_FIELD_SX, mb: 2 }}
-        />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <TextField
+              label="チーム名*"
+              fullWidth
+              size="small"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              error={!name.trim() && dirty}
+              helperText={!name.trim() && dirty ? 'この項目は必須です' : name.length >= 60 ? `${name.length}/64文字` : ''}
+              sx={CARD_FIELD_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
+            />
 
-        {/* 所属クラス */}
-        <TextField
-          label="所属クラス"
-          fullWidth
-          size="small"
-          value={teamClass}
-          onChange={(e) => setTeamClass(e.target.value)}
-          sx={{ ...CARD_FIELD_SX, mb: 2 }}
-        />
+            <SceneSelect
+              value={groupId || null}
+              onChange={(id) => setGroupId(id ?? '')}
+              scenes={groups}
+              label="クラス"
+            />
 
-        {/* チームメンバー */}
-        <Box
-          component="fieldset"
-          sx={{ border: '1px solid #5B6DC6', borderRadius: 1, padding: 0, margin: 0, mb: 1.5 }}
-        >
-          <Box
-            component="legend"
-            sx={{ fontSize: '12px', color: '#2F3C8C', opacity: 0.7, ml: 1, px: 0.5, lineHeight: 1.5 }}
-          >
-            チームメンバー
+            <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+              <Button
+                variant="outlined"
+                startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
+                onClick={handleOpenDeleteDialog}
+                sx={{ ...DELETE_BUTTON_SX, flexShrink: 0 }}
+              >
+                このチームを削除
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<CheckIcon />}
+                onClick={onSave}
+                disabled={!dirty || !name.trim()}
+                sx={SAVE_BUTTON_SX}
+              >
+                保存
+              </Button>
+            </Box>
           </Box>
-        <Table size="small" sx={{ borderRadius: 1, overflow: 'hidden', borderCollapse: 'collapse' }}>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={CARD_TABLE_HEAD_SX}>学籍番号</TableCell>
-              <TableCell sx={CARD_TABLE_HEAD_SX}>名前</TableCell>
-              <TableCell sx={CARD_TABLE_HEAD_SX}>性別</TableCell>
-              <TableCell sx={CARD_TABLE_HEAD_SX}>削除</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {members.map((member, i) => (
-              <TableRow key={member.studentId}>
-                <TableCell sx={CARD_TABLE_CELL_SX}>{member.studentId}</TableCell>
-                <TableCell sx={CARD_TABLE_CELL_SX}>{member.name}</TableCell>
-                <TableCell sx={CARD_TABLE_CELL_SX}>{member.gender}</TableCell>
-                <TableCell sx={CARD_TABLE_CELL_SX}>
-                  <ButtonBase
-                    onClick={() => handleDeleteMember(i)}
-                    sx={{ fontSize: '13px', color: '#2F3C8C', '&:hover': { opacity: 0.7 } }}
-                  >
-                    削除
-                  </ButtonBase>
-                </TableCell>
+        </CardContent>
+      </Card>
+
+      {/* メンバーカード */}
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
+            {teamName}のメンバー
+          </Typography>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {['学籍番号', '名前', ''].map((header, i) => (
+                  <TableCell key={i} sx={{ ...CARD_TABLE_HEAD_SX, ...(i === 3 ? { width: 48 } : {}) }}>
+                    {header}
+                  </TableCell>
+                ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        </Box>
-
-        {/* チームメンバーを追加ボタン */}
-        <Button
-          variant="contained"
-          fullWidth
-          startIcon={<AddIcon />}
-          onClick={handleOpenDialog}
-          sx={{
-            ...SAVE_BUTTON_SX,
-            fontSize: '14px',
-            mb: 2,
-          }}
-        >
-          チームメンバーを追加
-        </Button>
-
-        {/* 削除・保存ボタン */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
-            onClick={handleOpenDeleteDialog}
-            sx={DELETE_BUTTON_SX}
-          >
-            このチームを削除
-          </Button>
-          <Button
-            variant="contained"
-            fullWidth
-            startIcon={<CheckIcon />}
-            onClick={onSave}
-            sx={SAVE_BUTTON_SX}
-          >
-            保存
-          </Button>
-        </Box>
-      </Box>
+            </TableHead>
+            <TableBody>
+              {members.map((member, i) => (
+                <TableRow key={member.id}>
+                  <TableCell sx={CARD_TABLE_CELL_SX}>{member.id}</TableCell>
+                  <TableCell sx={CARD_TABLE_CELL_SX}>{member.name}</TableCell>
+                  <TableCell sx={{ ...CARD_TABLE_CELL_SX, width: 48, p: 0, textAlign: 'center' }}>
+                    <DeleteIcon
+                      onClick={() => handleDeleteMember(i)}
+                      sx={{ fontSize: 20, color: '#D71212', cursor: 'pointer', opacity: 0.7, '&:hover': { opacity: 1 } }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<AddIcon />}
+              onClick={handleOpenDialog}
+              sx={SAVE_BUTTON_SX}
+            >
+              メンバーを追加
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* メンバー追加ダイアログ */}
       <AddMemberDialog
@@ -202,10 +191,10 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
         onAdd={handleAddMembers}
       />
 
-      {/* チーム削除確認ダイアログ */}
-      <DeleteTeamDialog
+      <ConfirmDialog
         open={deleteDialogOpen}
-        teamName={teamName}
+        title="チームを削除しますか？"
+        description="この操作は元に戻せません。チームを削除してもよろしいですか？"
         onClose={handleCloseDeleteDialog}
         onConfirm={onConfirmDelete}
       />

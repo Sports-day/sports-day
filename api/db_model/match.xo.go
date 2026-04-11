@@ -9,10 +9,12 @@ import (
 
 // Match represents a row from 'sportsday.matches'.
 type Match struct {
-	ID            string         `json:"id"`             // ID
-	Time          time.Time      `json:"time"`           // 試合時間
-	Status        string         `json:"status"`         // 状態
-	LocationID    sql.NullString `json:"location_id"`    // 場所ID
-	CompetitionID string         `json:"competition_id"` // 大会ID
-	WinnerTeamID  sql.NullString `json:"winner_team_id"` // 勝利チームID
+	ID             string         `json:"id"`              // ID
+	Time           time.Time      `json:"time"`            // 試合時間
+	Status         string         `json:"status"`          // 状態
+	LocationID     sql.NullString `json:"location_id"`     // 場所ID
+	CompetitionID  string         `json:"competition_id"`  // 大会ID
+	WinnerTeamID   sql.NullString `json:"winner_team_id"`  // 勝利チームID
+	TimeManual     bool           `json:"time_manual"`     // 手動設定フラグ
+	LocationManual bool           `json:"location_manual"` // 場所手動設定フラグ
 }

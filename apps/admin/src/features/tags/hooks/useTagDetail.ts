@@ -1,28 +1,57 @@
 import { useState } from 'react'
-import { MOCK_TAGS, persistTags } from '../mock'
-import { notifyTagListeners } from './useTags'
+import {
+  useGetAdminSceneForTagQuery,
+  useUpdateAdminSceneForTagMutation,
+  useDeleteAdminSceneForTagMutation,
+  useRestoreAdminSceneForTagMutation,
+  GetAdminScenesForTagsDocument,
+} from '@/gql/__generated__/graphql'
 
 export function useTagDetail(tagId: string) {
-  const tag = MOCK_TAGS.find((t) => t.id === tagId)
-  const [name, setName] = useState(tag?.name ?? '')
-  const [enabled, setEnabled] = useState(tag?.enabled ?? true)
+  const { data, loading, error } = useGetAdminSceneForTagQuery({ variables: { id: tagId } })
+  const scene = data?.scene
 
-  const handleSave = () => {
-    const t = MOCK_TAGS.find((t) => t.id === tagId)
-    if (t) {
-      t.name = name
-      t.enabled = enabled
-    }
-    persistTags()
-    notifyTagListeners()
+  // サーバー値 + 編集差分パターン
+  const serverName = scene?.name ?? ''
+  const [editName, setEditName] = useState<string | null>(null)
+  const name = editName ?? serverName
+  const setName = (v: string) => setEditName(v)
+  const dirty = editName !== null
+
+  const [updateScene] = useUpdateAdminSceneForTagMutation({
+    refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
+  })
+  const [deleteScene] = useDeleteAdminSceneForTagMutation({
+    refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
+  })
+  const [restoreScene] = useRestoreAdminSceneForTagMutation({
+    refetchQueries: [{ query: GetAdminScenesForTagsDocument }],
+  })
+
+  const handleSave = async () => {
+    if (!name.trim()) return
+    await updateScene({ variables: { id: tagId, input: { name: name.slice(0, 64) } } })
+    setEditName(null)
   }
 
-  const handleDelete = () => {
-    const index = MOCK_TAGS.findIndex((t) => t.id === tagId)
-    if (index !== -1) MOCK_TAGS.splice(index, 1)
-    persistTags()
-    notifyTagListeners()
+  const handleDelete = async () => {
+    await deleteScene({ variables: { id: tagId } })
   }
 
-  return { name, setName, enabled, setEnabled, handleSave, handleDelete, tagName: tag?.name ?? '', loading: false, error: null }
+  const handleRestore = async () => {
+    await restoreScene({ variables: { id: tagId } })
+  }
+
+  return {
+    name,
+    setName,
+    dirty,
+    isDeleted: scene?.isDeleted ?? false,
+    handleSave,
+    handleDelete,
+    handleRestore,
+    tagName: scene?.name ?? '',
+    loading,
+    error: error ?? null,
+  }
 }

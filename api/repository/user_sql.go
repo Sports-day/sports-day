@@ -48,6 +48,13 @@ func (r user) Save(ctx context.Context, db *gorm.DB, user *db_model.User) (*db_m
 	return user, nil
 }
 
+func (r user) Delete(ctx context.Context, db *gorm.DB, id string) error {
+	if err := db.Delete(&db_model.User{}, "id = ?", id).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
 func (r user) FindByEmail(ctx context.Context, db *gorm.DB, email string) (*db_model.User, error) {
 	var user db_model.User
 	if err := db.First(&user, "email = ?", email).Error; err != nil {
@@ -87,7 +94,7 @@ func (r user) BatchFindUserIdpByUserIDs(ctx context.Context, db *gorm.DB, userID
 }
 
 func (r user) SaveUserIdp(ctx context.Context, db *gorm.DB, userIdp *db_model.UsersIdp) (*db_model.UsersIdp, error) {
-	if err := db.Save(userIdp).Error; err != nil {
+	if err := db.Where("user_id = ?", userIdp.UserID).Save(userIdp).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return userIdp, nil

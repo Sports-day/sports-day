@@ -48,16 +48,23 @@ type Competition {
   id: ID!
   name: String!
   type: CompetitionType!
+  sport: Sport!
   scene: Scene!
   teams: [Team!]!
   matches: [Match!]!
   league: League
   tournaments: [Tournament!]!
+  startTime: String
+  matchDuration: Int
+  breakDuration: Int
+  defaultLocation: Location
+  displayOrder: Int!
 }
 
 type Location {
   id: ID!
   name: String!
+  displayOrder: Int!
   matches: [Match!]!
 }
 
@@ -83,6 +90,8 @@ type Match {
   winnerTeam: Team
   entries: [MatchEntry!]!
   judgment: Judgment
+  timeManual: Boolean!
+  locationManual: Boolean!
 }
 
 type Judgment {
@@ -91,6 +100,7 @@ type Judgment {
   user: User
   team: Team
   group: Group
+  isAttending: Boolean!
 }
 
 type Standing {
@@ -110,6 +120,9 @@ type Standing {
 type League {
   id: ID!
   name: String!
+  winPt: Int!
+  drawPt: Int!
+  losePt: Int!
   teams: [Team!]!
 }
 
@@ -117,6 +130,8 @@ type Information {
   id: ID!
   title: String!
   content: String!
+  status: String!
+  displayOrder: Int!
 }
 
 enum RankingConditionKey {
@@ -140,22 +155,31 @@ type TiebreakPriority {
 type Sport {
   id: ID!
   name: String!
-  weight: Int!
+  displayOrder: Int!
+  experiencedLimit: Int
   rankingRules: [RankingRule!]!
   rules: [Rule!]!
   image: Image
   scene: [SportScene!]
 }
 
+type SportExperience {
+  userId: ID!
+  sportId: ID!
+}
+
 type Image {
   id: ID!
   url: String
   status: String!
+  displayOrder: Int!
 }
 
 type Scene {
   id: ID!
   name: String!
+  displayOrder: Int!
+  isDeleted: Boolean!
   sportScenes: [SportScene!]!
 }
 

@@ -1,5 +1,16 @@
 import { gql } from "@apollo/client";
 
+export const GET_ME = gql`
+  query GetMe {
+    me {
+      id
+      groups {
+        id
+      }
+    }
+  }
+`;
+
 export const GET_USERS = gql`
   query GetUsers {
     users {
@@ -11,19 +22,22 @@ export const GET_USERS = gql`
 
 export const GET_SPORTSCENE = gql`
   query GetSportscene {
-    sportScenes {
-      id
-      sport {
+    scenes {
+      isDeleted
+      sportScenes {
         id
-      }
-      scene {
-        id
-      }
-      entries {
-        team {
+        sport {
           id
-          users {
+        }
+        scene {
+          id
+        }
+        entries {
+          team {
             id
+            users {
+              id
+            }
           }
         }
       }
@@ -32,14 +46,17 @@ export const GET_SPORTSCENE = gql`
 `;
 
 export const GET_SPORTSCENE_ENTRIES = gql`
-  query GetSportsceneEntries($sportSceneId: ID!) {
-    sportScene(id: $sportSceneId) {
-      id
-      entries {
-        team {
-          id
-          users {
+  query GetSportsceneEntries {
+    scenes {
+      isDeleted
+      sportScenes {
+        id
+        entries {
+          team {
             id
+            users {
+              id
+            }
           }
         }
       }
@@ -68,15 +85,15 @@ export const CREATE_TEAM = gql`
 
 export const ADD_TEAM_MEMBER = gql`
   mutation AddTeamMember($userIds: [ID!]!, $teamId: ID!) {
-    addTeamMember(userIds: $userIds, teamId: $teamId) {
+    updateTeamUsers(id: $teamId, input: { addUserIds: $userIds }) {
       id
     }
   }
 `;
 
 export const CREATE_SPORT_ENTRY = gql`
-  mutation CreateSportEntry($input: CreateSportEntryInput!) {
-    createSportEntry(input: $input) {
+  mutation CreateSportEntry($sportSceneId: ID!, $teamId: ID!) {
+    addSportEntries(id: $sportSceneId, input: { teamIds: [$teamId] }) {
       id
     }
   }
@@ -84,7 +101,7 @@ export const CREATE_SPORT_ENTRY = gql`
 
 export const DELETE_MEMBER = gql`
   mutation DeleteMember($teamId: ID!, $userIds: [ID!]!) {
-    removeTeamMember(teamId: $teamId, userIds: $userIds) {
+    updateTeamUsers(id: $teamId, input: { removeUserIds: $userIds }) {
       id
     }
   }
@@ -92,6 +109,34 @@ export const DELETE_MEMBER = gql`
 
 export const DELETE_TEAM = gql`
   mutation DeleteTeam($deleteTeamId: ID!) {
-    deleteTeam(id: $deleteTeamId)
+    deleteTeam(id: $deleteTeamId) {
+      id
+    }
+  }
+`;
+
+export const GET_SPORT_EXPERIENCE = gql`
+  query GetSportExperience($sportId: ID!) {
+    sport(id: $sportId) {
+      experiencedLimit
+    }
+    sportExperiences(sportId: $sportId) {
+      userId
+    }
+  }
+`;
+
+export const ADD_SPORT_EXPERIENCES = gql`
+  mutation AddSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+    addSportExperiences(sportId: $sportId, userIds: $userIds) {
+      userId
+      sportId
+    }
+  }
+`;
+
+export const DELETE_SPORT_EXPERIENCES = gql`
+  mutation DeleteSportExperiences($sportId: ID!, $userIds: [ID!]!) {
+    deleteSportExperiences(sportId: $sportId, userIds: $userIds)
   }
 `;

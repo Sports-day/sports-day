@@ -50,9 +50,11 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 		competitionID := ulid.Make()
 
 		competition := &db_model.Competition{
-			ID:   competitionID,
-			Name: input.Name,
-			Type: string(model.CompetitionTypeLeague),
+			ID:      competitionID,
+			Name:    input.Name,
+			Type:    string(model.CompetitionTypeLeague),
+			SceneID: input.SceneID,
+			SportID: sql.NullString{Valid: true, String: input.SportID},
 		}
 
 		if _, err := s.competitionRepository.Save(ctx, tx, competition); err != nil {
@@ -159,6 +161,11 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 	var createdMatches []*db_model.Match
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// ⓪ 既存試合を削除（再生成のため）
+		if err := s.matchRepository.DeleteByCompetitionID(ctx, tx, competitionID); err != nil {
+			return errors.Wrap(err)
+		}
+
 		// ① 参加チーム取得
 		entries, err := s.competitionRepository.
 			BatchGetCompetitionEntriesByCompetitionIDs(ctx, tx, []string{competitionID})
@@ -166,7 +173,8 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 			return err
 		}
 		if len(entries) < 2 {
-			return errors.ErrMakeLeagueMatches
+			// チームが2未満の場合は既存試合の削除のみで終了（エラーにしない）
+			return nil
 		}
 
 		teamIDs := make([]string, len(entries))
@@ -219,6 +227,19 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 			createdMatches = append(createdMatches, saved)
 		}
 
+		// スケジュールパラメータをcompetitionに保存（再利用可能に）
+		comp, err := s.competitionRepository.Get(ctx, tx, competitionID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		comp.StartTime = sql.NullTime{Valid: true, Time: startTime}
+		comp.MatchDuration = sql.NullInt64{Valid: true, Int64: int64(input.MatchDuration)}
+		comp.BreakDuration = sql.NullInt64{Valid: true, Int64: int64(input.BreakDuration)}
+		comp.DefaultLocationID = locationID
+		if _, err := s.competitionRepository.Save(ctx, tx, comp); err != nil {
+			return errors.ErrSaveCompetition
+		}
+
 		return nil
 	})
 
@@ -226,6 +247,42 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 		return nil, errors.Wrap(err)
 	}
 	return createdMatches, nil
+}
+
+// RegenerateRoundRobin はcompetitionに保存済みのデフォルト値を使って総当たり戦を再生成する。
+// デフォルト値が未設定の場合はフォールバック値（現在時刻、15分、5分）を使用する。
+func (s *League) RegenerateRoundRobin(ctx context.Context, competitionID string) ([]*db_model.Match, error) {
+	comp, err := s.competitionRepository.Get(ctx, s.db, competitionID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	startTime := time.Now()
+	if comp.StartTime.Valid {
+		startTime = comp.StartTime.Time
+	}
+	matchDuration := int32(15)
+	if comp.MatchDuration.Valid {
+		matchDuration = int32(comp.MatchDuration.Int64)
+	}
+	breakDuration := int32(5)
+	if comp.BreakDuration.Valid {
+		breakDuration = int32(comp.BreakDuration.Int64)
+	}
+
+	var locationID *string
+	if comp.DefaultLocationID.Valid {
+		locationID = &comp.DefaultLocationID.String
+	}
+
+	input := &model.GenerateRoundRobinInput{
+		StartTime:     startTime.Format(time.RFC3339),
+		MatchDuration: matchDuration,
+		BreakDuration: breakDuration,
+		LocationID:    locationID,
+	}
+
+	return s.GenerateRoundRobin(ctx, competitionID, input)
 }
 
 // generateOptimizedRoundRobinSchedule は最適化されたラウンドロビンスケジュールを生成します

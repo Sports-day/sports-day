@@ -1,22 +1,24 @@
-import {Sport} from "@/src/models/SportModel";
+import type { GetPanelSportsQuery } from "@/src/gql/__generated__/graphql";
 import {SportCard} from "@/components/sports/sportsCard"
 import {Stack} from "@mui/material";
 
+type PanelSport = GetPanelSportsQuery["sports"][number];
+
 export type SportsListProps = {
-    sports: Sport[]
+    sports: PanelSport[]
 }
 
 export default function SportsList(props: SportsListProps) {
-    props.sports.sort((a, b) => b.weight - a.weight);
+    const sorted = [...props.sports].sort((a, b) => a.displayOrder - b.displayOrder);
     return (
         <>
             <Stack direction="row" spacing={10} padding={2} alignItems="center" justifyContent="center">
 
 
-                {props.sports.map((sport) => (
+                {sorted.map((sport) => (
                     <SportCard
                         key={sport.id}
-                        img={`${import.meta.env.VITE_API_URL}/images/${sport.iconId}/file`}
+                        img={sport.image?.url ?? ""}
                         link={`/information/${sport.id}`}
                     >
                         {sport.name}

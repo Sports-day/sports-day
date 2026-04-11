@@ -3,24 +3,13 @@ import { useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Header from "@/components/header/Header";
 import SubFooter from "@/components/footers/SubFooter";
-import { gql, useQuery } from "@apollo/client";
 import CircularUnderLoad from "@/features/Loading";
-
-const SPORTDATA_GET = gql`
-  query GetSport($sportId: ID!, $sceneId: ID!) {
-    sport(id: $sportId) {
-      name
-    }
-    scene(id: $sceneId) {
-      name
-    }
-  }
-`;
+import { useGetSportDetailQuery } from "@/gql/__generated__/graphql";
 
 export default function TeamEdit() {
   const { type, sports } = useParams() as { type: string; sports: string };
 
-  const { data, loading, error } = useQuery(SPORTDATA_GET, {
+  const { data, loading, error } = useGetSportDetailQuery({
     variables: { sportId: sports, sceneId: type },
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
@@ -31,8 +20,8 @@ export default function TeamEdit() {
   if (error) {
     throw error;
   }
-  const sportname = data?.sport?.name;
-  const weather = data?.scene?.name;
+  const sportname = data?.sport?.name ?? "";
+  const weather = data?.scene?.name ?? "";
 
   return (
     <Box

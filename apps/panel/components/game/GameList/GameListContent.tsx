@@ -1,44 +1,49 @@
-import {Stack} from "@mui/material";
+import {Stack, Typography, useTheme} from "@mui/material";
 import * as React from "react";
 import {GamePointBar} from "./GamePointBar";
-import {Game} from "@/src/models/GameModel";
+import type { GetPanelCompetitionsQuery, GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import {useContext} from "react";
 import {MatchesContext} from "../../context";
 
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
+
+type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
+
 export type GameListContentProps = {
-    game: Game
-    myTeamId?: number
+    game: PanelCompetition
+    myTeamId?: string
 }
 
 export const GameListContent = (props: GameListContentProps) => {
+    const theme = useTheme()
     const { data: matches } = useContext(MatchesContext)
-    const filteredMatches = matches.filter(match => match.gameId == props.game.id)
-    const maxLeftScore = Math.max.apply(Math, filteredMatches.map(match => match.leftScore))
-    const maxRightScore = Math.max.apply(Math, filteredMatches.map(match => match.rightScore))
-    const maxScore = maxLeftScore > maxRightScore ? maxLeftScore : maxRightScore
+    const filteredMatches = (matches as PanelMatch[]).filter(match => match.competition.id === props.game.id)
+    const allScores = filteredMatches.flatMap(match => match.entries.map(e => e.score))
+    const maxScore = allScores.length > 0 ? Math.max(...allScores) : 0
     const barOffset = (maxScore == 0) ? 1 : (95 / maxScore)
+
+    if (filteredMatches.length === 0) {
+        return (
+            <Typography pl={2} py={2} fontSize={"14px"} color={theme.palette.text.secondary}>
+                試合データがありません
+            </Typography>
+        )
+    }
 
     return (
         <Stack spacing={1}>
             {filteredMatches
-                .sort((a, b) => a.startAt.localeCompare(b.startAt))
+                .sort((a, b) => a.time.localeCompare(b.time))
                 .map((match) => {
                 return (
-                    <>
-                            <GamePointBar
-                                key={match.id}
-                                leftScore={match.leftScore}
-                                rightScore={match.rightScore}
-                                leftTeamId={match.leftTeamId}
-                                rightTeamId={match.rightTeamId}
-                                umpireTeam={match.judgeTeamId?.toString() ?? ""}
-                                time={match.startAt}
-                                barOffset={barOffset}
-                                match={match}
-                                myTeamId={props.myTeamId}
-                                otherUser={false}
-                            />
-                    </>
+                    <React.Fragment key={match.id}>
+                        <GamePointBar
+                            match={match}
+                            barOffset={barOffset}
+                            myTeamId={props.myTeamId}
+                            otherUser={false}
+                        />
+                    </React.Fragment>
                 )
             })}
         </Stack>

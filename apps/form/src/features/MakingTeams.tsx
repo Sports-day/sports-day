@@ -8,9 +8,12 @@ import Instruction from "@/components/cards/AboutAnyPage/InstructionCard";
 import AppBreadcrumbs, {
   type BreadcrumbItem,
 } from "@/components/layouts/AppBreadcrumbs";
-import { gql, useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import CircularUnderLoad from "./Loading";
+import {
+  useGetSceneSportQuery,
+  useGetSportExperienceQuery,
+} from "@/gql/__generated__/graphql";
 
 type MakingProps = {
   sports: string;
@@ -19,29 +22,6 @@ type MakingProps = {
   weather: string;
 };
 
-const GET_SCENE_SPORT = gql`
-  query GetSceneSport {
-    sportScenes {
-      id
-      entries {
-        team {
-          id
-          name
-          users {
-            name
-          }
-        }
-      }
-      sport {
-        id
-      }
-      scene {
-        id
-      }
-    }
-  }
-`;
-
 export default function MakingTeams({
   sports,
   type,
@@ -49,11 +29,18 @@ export default function MakingTeams({
   weather,
 }: MakingProps) {
   const theme = useTheme();
-  const { data, loading } = useQuery(GET_SCENE_SPORT);
+  const { data, loading } = useGetSceneSportQuery();
+  const { data: expData } = useGetSportExperienceQuery({
+    variables: { sportId: sports },
+  });
+  const experiencedUserIds = new Set(
+    expData?.sportExperiences?.map((e) => e.userId) ?? [],
+  );
   const teams =
-    data?.sportScenes?.filter(
-      (d: any) => d.sport.id === sports && d.scene.id === type,
-    ) ?? [];
+    data?.scenes
+      ?.filter((s) => !s.isDeleted)
+      ?.flatMap((s) => s.sportScenes)
+      ?.filter((d) => d.sport.id === sports && d.scene.id === type) ?? [];
   const breadcrumbs: BreadcrumbItem[] = [
     { label: "ホーム", href: `/weather/${type}` },
     { label: "チーム確認" },
@@ -63,8 +50,8 @@ export default function MakingTeams({
     return <CircularUnderLoad />;
   }
 
-  const selectedTeams = teams.flatMap((d: any) =>
-    d.entries.map((s: any) => s.team),
+  const selectedTeams = teams.flatMap((d) =>
+    d.entries.map((s) => s.team),
   );
 
   return (
@@ -106,14 +93,36 @@ export default function MakingTeams({
             overflowY: "auto",
           }}
         >
-          <Typography
-            sx={(theme) => ({
-              ...theme.typography.buttonFont2,
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
               mb: "16px",
-            })}
+            }}
           >
-            作成したチーム一覧
-          </Typography>
+            <Typography
+              sx={(theme) => ({
+                ...theme.typography.buttonFont2,
+              })}
+            >
+              作成したチーム一覧
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  bgcolor: "#FF9800",
+                  flexShrink: 0,
+                }}
+              />
+              <Typography sx={{ fontSize: "11px", color: "#999", lineHeight: 1 }}>
+                経験者
+              </Typography>
+            </Box>
+          </Box>
           <Box
             sx={{
               flex: 1,
@@ -137,7 +146,7 @@ export default function MakingTeams({
                 {selectedTeams
                   ?.slice()
                   .reverse()
-                  .map((item: any) => (
+                  .map((item) => (
                     <Grid
                       key={item.id}
                       size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2 }}
@@ -147,7 +156,11 @@ export default function MakingTeams({
                         teamname={item.name}
                         type={type}
                         sports={sports}
-                        member={item.users.map((n: any) => ({ name: n.name }))}
+                        member={item.users.map((u) => ({
+                          id: u.id,
+                          name: u.name,
+                          isExperienced: experiencedUserIds.has(u.id),
+                        }))}
                       />
                     </Grid>
                   ))}

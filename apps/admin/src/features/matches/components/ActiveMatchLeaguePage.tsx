@@ -23,8 +23,10 @@ import { LeagueRegenerateOverlay } from './LeagueRegenerateOverlay'
 import { ActiveMatchBulkEditPage } from './ActiveMatchBulkEditPage'
 import { MatchEditPage } from './MatchEditPage'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
+import { BackButton } from '@/components/ui/BackButton'
 import { showToast } from '@/lib/toast'
-import { executeProgression } from '@/lib/autoSync'
+import { useExecuteProgression } from '../hooks/useExecuteProgression'
+import { TiebreakCard } from './TiebreakCard'
 
 // ─── 定数 ────────────────────────────────────────────────
 const CELL_BORDER = '1px solid #5B6DC6'
@@ -70,20 +72,21 @@ export function ActiveMatchLeaguePage({
   onBackToList,
   onBackToCompetition,
 }: Props) {
-  const { league, grid, allFinished, statsMap, rankLabels } = useActiveMatchLeague(competitionId, leagueId)
+  const { league, grid, allFinished, statsMap, rankLabels, tiedGroups } = useActiveMatchLeague(competitionId, leagueId)
   const regen = useLeagueRegenerate(competitionId, leagueId)
   const bulkEdit = useBulkEdit(competitionId, leagueId)
   const matchEdit = useMatchEdit()
+  const progression = useExecuteProgression()
   if (!league) {
     return (
       <Box>
+        <BackButton onClick={onBackToList} />
         <Breadcrumbs separator="/" sx={{ mb: 2 }}>
           <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>試合</ButtonBase>
-          <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>{competitionName}</ButtonBase>
           <Typography sx={BREADCRUMB_CURRENT_SX}>{leagueName}</Typography>
         </Breadcrumbs>
         <Typography sx={{ fontSize: '13px', color: '#2F3C8C', opacity: 0.6, mt: 2 }}>
-          試合データがまだありません。競技設定からリーグの試合を登録してください。
+          試合データがまだありません。大会設定からリーグの試合を登録してください。
         </Typography>
       </Box>
     )
@@ -169,20 +172,23 @@ export function ActiveMatchLeaguePage({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
-        </ButtonBase>
-        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
-          {competitionName}
         </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>
           {leagueName}
         </Typography>
       </Breadcrumbs>
 
+      {/* ─── タイブレークカード（全試合終了 & 同順位あり） ─── */}
+      {allFinished && tiedGroups.length > 0 && (
+        <TiebreakCard leagueId={leagueId} tiedGroups={tiedGroups} />
+      )}
+
       {/* ─── リーグ表カード ─── */}
-      <Card sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
         <CardContent sx={{ pb: '12px !important', overflow: 'hidden' }}>
           {/* タイトル + 試合を再生成 (インライン) */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
@@ -193,12 +199,18 @@ export function ActiveMatchLeaguePage({
               試合を再生成
             </Button>
             {allFinished && (
-              <Button variant="text" size="small" sx={SMALL_BTN_SX} onClick={() => {
-                const count = executeProgression(competitionId, leagueId)
-                if (count > 0) showToast(`${count}チームをトーナメントに進出させました`)
-                else showToast('進出ルールが未設定、または対象がありません')
-              }}>
-                進出を実行
+              <Button
+                variant="text"
+                size="small"
+                sx={SMALL_BTN_SX}
+                disabled={progression.loading}
+                onClick={async () => {
+                  const count = await progression.execute(competitionId, leagueId)
+                  if (count > 0) showToast(`${count}チームをトーナメントに進出させました`)
+                  else showToast('進出ルールが未設定、または対象がありません')
+                }}
+              >
+                {progression.loading ? '進出処理中...' : '進出を実行'}
               </Button>
             )}
           </Box>
@@ -236,7 +248,7 @@ export function ActiveMatchLeaguePage({
               </TableHead>
               <TableBody>
                 {league.teams.map((team, rowIdx) => {
-                  const stats = statsMap.get(team.id)!
+                  const stats = statsMap.get(team.id) ?? { points: 0, goalsFor: 0, goalsAgainst: 0, matchesPlayed: 0, winRate: 0, totalGoalRate: 0 }
                   const rankLbl = rankLabels.get(team.id) ?? ''
                   return (
                     <TableRow key={team.id}>
@@ -274,7 +286,7 @@ export function ActiveMatchLeaguePage({
       </Card>
 
       {/* ─── 試合一覧カード ─── */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ pb: '12px !important' }}>
           {/* タイトル + 一括編集 (インライン) */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>

@@ -1,172 +1,176 @@
-import {Sport} from "@/src/models/SportModel";
-import {Team} from "@/src/models/TeamModel";
-import {Match} from "@/src/models/MatchModel";
-import {Game, gameFactory} from "@/src/models/GameModel";
-import {Image} from "@/src/models/ImageModel";
-import {Location} from "@/src/models/LocationModel";
-import {useState} from "react";
-import {useFetchImages} from "@/src/features/images/hook";
-import {useFetchLocations} from "@/src/features/locations/hook";
-import {useFetchTeams} from "@/src/features/teams/hook";
+import { useState, useEffect } from "react";
+import { useFetchLocations } from "@/src/features/locations/hook";
+import { useFetchTeams } from "@/src/features/teams/hook";
 import { useFetchSports } from "@/src/features/sports/hook";
-import {useFetchGames} from "@/src/features/games/hook";
-import {useFetchMatches} from "@/src/features/matches/hook";
-import {useFetchUsers} from "@/src/features/users/hook";
-import {User} from "@/src/models/UserModel";
-import {useFetchUserinfo} from "@/src/features/userinfo/hook";
+import { useFetchGames } from "@/src/features/games/hook";
+import { useFetchMatches } from "@/src/features/matches/hook";
+import { useFetchUsers } from "@/src/features/users/hook";
+import { useFetchImages } from "@/src/features/images/hook";
+import { useFetchUserinfo } from "@/src/features/userinfo/hook";
+import {
+  GetPanelSportsQuery,
+  GetPanelTeamsQuery,
+  GetPanelMatchesQuery,
+  GetPanelLocationsQuery,
+  GetPanelImagesQuery,
+  GetPanelUsersQuery,
+  GetPanelCompetitionsQuery,
+  GetPanelMeQuery,
+  CompetitionType,
+  useGetPanelLeagueStandingsQuery,
+  useGetPanelTournamentRankingQuery,
+} from "@/src/gql/__generated__/graphql";
+
+// GraphQL 生成型エイリアス
+type GqlSport = GetPanelSportsQuery["sports"][0];
+type GqlTeam = GetPanelTeamsQuery["teams"][0];
+type GqlMatch = GetPanelMatchesQuery["matches"][0];
+type GqlLocation = GetPanelLocationsQuery["locations"][0];
+type GqlImage = GetPanelImagesQuery["images"][0];
+type GqlUser = GetPanelUsersQuery["users"][0];
+type GqlCompetition = GetPanelCompetitionsQuery["competitions"][0];
+type GqlMeUser = GetPanelMeQuery["me"];
 
 export type DashboardDataType = {
-    isFetching: boolean
-    //  for sports list
-    images: Image[]
-    locations: Location[]
-    teams: Team[]
-    users: User[]
-    sports: Sport[]
-    games: Game[]
-    matches: Match[]
-    //  for individual section
-    mySport: Sport | undefined
-    myGame: Game | undefined
-    myTeam: Team | undefined
-    myTeamUsers: User[]
-    myTeamMatches: Match[]
-    myTeamRank: number
-    myJudgeMatches: Match[]
-}
+  isFetching: boolean;
+  images: GqlImage[];
+  locations: GqlLocation[];
+  teams: GqlTeam[];
+  users: GqlUser[];
+  sports: GqlSport[];
+  games: GqlCompetition[]; // game = competition の同義語
+  matches: GqlMatch[];
+  mySport: GqlSport | undefined;
+  myGame: GqlCompetition | undefined;
+  myTeam: GqlTeam | undefined;
+  myTeamUsers: GqlTeam["users"];
+  myTeamMatches: GqlMatch[];
+  myTeamRank: number;
+  myJudgeMatches: GqlMatch[];
+  refetchMatches: () => Promise<unknown>;
+};
 
 export const useFetchDashboard = () => {
-    //  is fetching
-    const [isFetching, setIsFetching] = useState<boolean>(true)
-    //  hook
-    const {images, isFetching: isFetchingImages} = useFetchImages()
-    const {locations, isFetching: isFetchingLocations} = useFetchLocations()
-    const {teams, isFetching: isFetchingTeams} = useFetchTeams()
-    const {sports, isFetching: isFetchingSports} = useFetchSports(true)
-    const {games, isFetching: isFetchingGames} = useFetchGames(true)
-    const {matches, isFetching: isFetchingMatches} = useFetchMatches()
-    const {users, isFetching: isFetchingUsers} = useFetchUsers()
-    const {user, isFetching: isFetchingUserinfo} = useFetchUserinfo()
-    //  individual state
-    const [mySportState, setMySport] = useState<Sport | undefined>(undefined)
-    const [myGameState, setMyGame] = useState<Game | undefined>(undefined)
-    const [myTeamState, setMyTeam] = useState<Team | undefined>(undefined)
-    const [myTeamMatchesState, setMyTeamMatches] = useState<Match[]>([])
-    const [myTeamUsersState, setMyTeamUsers] = useState<User[]>([])
-    const [myTeamRankState, setMyTeamRank] = useState<number>(0)
-    const [myJudgeMatchesState, setMyJudgeMatches] = useState<Match[]>([])
+  const [isFetching, setIsFetching] = useState<boolean>(true);
 
-    if(!isFetchingImages && !isFetchingLocations && !isFetchingTeams && !isFetchingSports && !isFetchingGames && !isFetchingMatches && !isFetchingUsers && !isFetchingUserinfo && isFetching) {
-        //  fetch data for individual section
-        fetchBlock: {
-            /*
-            my userを取得
-            my userが所属するteamsを取得
-            teamsのgames取得
-            gameの重みでmyGame決定
-            myGame決定でmyTeam決定 OK
-            myGame決定でMySport決定 OK
-            myGame決定でmatches決定 OK
-            myTeam決定でmyTeamUsers決定 OK
-            myGameの順位を決定
-             */
-            if (!user) break fetchBlock
+  const { images, isFetching: isFetchingImages } = useFetchImages();
+  const { locations, isFetching: isFetchingLocations } = useFetchLocations();
+  const { teams, isFetching: isFetchingTeams } = useFetchTeams();
+  const { sports, isFetching: isFetchingSports } = useFetchSports(true);
+  const { games, isFetching: isFetchingGames } = useFetchGames(true);
+  const { matches, isFetching: isFetchingMatches, refresh: refetchMatches } = useFetchMatches();
+  const { users, isFetching: isFetchingUsers } = useFetchUsers();
+  const { user, isFetching: isFetchingUserinfo } = useFetchUserinfo();
 
-            //  my teams
-            const myTeams = teams.filter(team => team.userIds.includes(user.id))
-            if (myTeams.length === 0) break fetchBlock
+  const [mySportState, setMySport] = useState<GqlSport | undefined>(undefined);
+  const [myGameState, setMyGame] = useState<GqlCompetition | undefined>(undefined);
+  const [myTeamState, setMyTeam] = useState<GqlTeam | undefined>(undefined);
+  const [myTeamMatchesState, setMyTeamMatches] = useState<GqlMatch[]>([]);
+  const [myTeamUsersState, setMyTeamUsers] = useState<GqlTeam["users"]>([]);
+  const [myTeamRankState, setMyTeamRank] = useState<number>(0);
+  const [myJudgeMatchesState, setMyJudgeMatches] = useState<GqlMatch[]>([]);
 
-            //  my games
-            const myGames = games.filter(game => myTeams.some(team => team.enteredGameIds.includes(game.id)))
-            if (myGames.length === 0) break fetchBlock
+  // 全サブクエリの完了を検知してデータを処理
+  const allLoaded =
+    !isFetchingImages &&
+    !isFetchingLocations &&
+    !isFetchingTeams &&
+    !isFetchingSports &&
+    !isFetchingGames &&
+    !isFetchingMatches &&
+    !isFetchingUsers &&
+    !isFetchingUserinfo;
 
-            //  my game (sort by weight)
-            myGames.sort((a, b) => b.weight - a.weight)
-            const myGame = myGames[0]
-            //  set state
-            setMyGame(myGame)
+  useEffect(() => {
+    if (!allLoaded) return;
 
-            //  my team
-            const myTeam = myTeams.find(team => team.enteredGameIds.includes(myGame.id))
-            if (!myTeam) break fetchBlock
-            //  set state
-            setMyTeam(myTeam)
+    if (user) {
+      const myTeamIds = (user as GqlMeUser).teams.map((t) => t.id);
 
-            //  my team users
-            const myTeamUsers = users.filter(user => myTeam.userIds.includes(user.id))
-            //  set state
-            setMyTeamUsers(myTeamUsers)
+      if (myTeamIds.length > 0) {
+        const myCompetitions = (games as GqlCompetition[]).filter((c) =>
+          c.teams.some((t) => myTeamIds.includes(t.id))
+        );
 
-            //  my sport
-            const mySport = sports.find(sport => sport.id === myGame.sportId)
-            if (!mySport) break fetchBlock
-            //  set state
-            setMySport(mySport)
+        if (myCompetitions.length > 0) {
+          const competitionsByWeight = [...myCompetitions].sort((a, b) => {
+            const sportA = sports.find((s) => s.id === a.sport?.id);
+            const sportB = sports.find((s) => s.id === b.sport?.id);
+            return (sportA?.displayOrder ?? 0) - (sportB?.displayOrder ?? 0);
+          });
+          const myCompetition = competitionsByWeight[0];
+          setMyGame(myCompetition);
 
-            //  my game matches
-            const myGameMatches = matches.filter(match => match.gameId === myGame.id)
-            const myTeamMatches = myGameMatches.filter(match => {
-                return match.leftTeamId === myTeam.id || match.rightTeamId === myTeam.id
-            })
-            //  set state
-            setMyTeamMatches(myTeamMatches)
+          const myTeam = teams.find(
+            (t) =>
+              myTeamIds.includes(t.id) &&
+              myCompetition.teams.some((ct) => ct.id === t.id)
+          );
 
-            //  fetch rank
-            if (myGame.type === "league") {
-                gameFactory().getLeagueResult(myGame.id, true)
-                    .then(result => {
-                        if (!result) return
-                        const myTeamResult = result.teams.find(teamResult => teamResult.teamId === myTeam.id)
-                        if (!myTeamResult) return
-                        //  set state
-                        setMyTeamRank(myTeamResult.rank)
-                    })
-                    .catch(() => {
-                        console.log("failed to fetch league result")
-                        setMyTeamRank(-1)
-                    })
-            } else {
-                gameFactory().getTournamentResult(myGame.id)
-                    .then(result => {
-                        if (!result) return
-                        const myTeamResult = result.teams.find(teamResult => teamResult.teamId === myTeam.id)
-                        if (!myTeamResult) return
-                        //  set state
-                        setMyTeamRank(myTeamResult.rank)
-                    })
-                    .catch(() => {
-                        console.log("failed to fetch tournament result")
-                        setMyTeamRank(-1)
-                    })
-            }
+          if (myTeam) {
+            setMyTeam(myTeam);
+            setMyTeamUsers(myTeam.users);
 
-            //  my judge matches
-            const myJudgeMatches = matches.filter(match => match.judgeTeamId === myTeam.id)
-            //  set state
-            setMyJudgeMatches(myJudgeMatches)
+            const mySport = sports.find((s) => s.id === myCompetition.sport?.id);
+            if (mySport) setMySport(mySport);
+
+            const myCompetitionMatches = matches.filter(
+              (m) => m.competition.id === myCompetition.id
+            );
+            setMyTeamMatches(
+              myCompetitionMatches.filter((m) =>
+                m.entries.some((e) => e.team?.id === myTeam.id)
+              )
+            );
+
+            setMyJudgeMatches(
+              matches.filter((m) => m.judgment?.team?.id === myTeam.id)
+            );
+          }
         }
-
-        setIsFetching(false)
+      }
     }
 
+    setIsFetching(false);
+  }, [allLoaded, user, games, sports, teams, matches]);
 
-    return {
-        isFetching: isFetching,
-        images: images,
-        locations: locations,
-        teams: teams,
-        users: users,
-        sports: sports,
-        games: games,
-        matches: matches,
-        //  for individual section
-        mySport: mySportState,
-        myGame: myGameState,
-        myTeam: myTeamState,
-        myTeamUsers: myTeamUsersState,
-        myTeamMatches: myTeamMatchesState,
-        myTeamRank: myTeamRankState,
-        myJudgeMatches: myJudgeMatchesState
-    } as DashboardDataType
+  // myGame が確定したら standings / ranking を取得してランクを更新
+  const myGameLeagueId = myGameState?.league?.id ?? '';
+  const isLeagueGame = myGameState?.type === CompetitionType.League;
 
-}
+  const { data: standingsData } = useGetPanelLeagueStandingsQuery({
+    variables: { leagueId: myGameLeagueId },
+    skip: !myGameLeagueId || !isLeagueGame,
+  });
+  const { data: rankingData } = useGetPanelTournamentRankingQuery({
+    variables: { competitionId: myGameState?.id ?? '' },
+    skip: !myGameState?.id || isLeagueGame,
+  });
+
+  useEffect(() => {
+    if (!myTeamState) return;
+    const leagueRank = standingsData?.leagueStandings.find(s => s.team.id === myTeamState.id)?.rank;
+    const tournamentRank = rankingData?.tournamentRanking.find(r => r.team.id === myTeamState.id)?.rank;
+    const rank = leagueRank ?? tournamentRank;
+    if (rank !== undefined) setMyTeamRank(rank);
+  }, [standingsData, rankingData, myTeamState]);
+
+  return {
+    isFetching: isFetching,
+    images: images,
+    locations: locations,
+    teams: teams,
+    users: users,
+    sports: sports,
+    games: games as GqlCompetition[],
+    matches: matches,
+    mySport: mySportState,
+    myGame: myGameState,
+    myTeam: myTeamState,
+    myTeamUsers: myTeamUsersState,
+    myTeamMatches: myTeamMatchesState,
+    myTeamRank: myTeamRankState,
+    myJudgeMatches: myJudgeMatchesState,
+    refetchMatches: refetchMatches,
+  } as DashboardDataType;
+};

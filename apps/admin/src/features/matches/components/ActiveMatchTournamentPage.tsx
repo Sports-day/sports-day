@@ -1,8 +1,9 @@
 import { Box, Breadcrumbs, Card, CardContent, Divider, Typography } from '@mui/material'
 import { ButtonBase } from '@mui/material'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
+import { BackButton } from '@/components/ui/BackButton'
 import { showToast } from '@/lib/toast'
-import { MOCK_TOURNAMENT_DETAILS } from '@/features/competitions/mock'
+import { useTournamentDetail } from '@/features/competitions/hooks/useTournamentDetail'
 import { TournamentBracketView } from '@/features/competitions/components/TournamentBracketView'
 import { TournamentMatchEditDialog } from './TournamentMatchEditDialog'
 import { useTournamentMatchEdit } from '../hooks/useTournamentMatchEdit'
@@ -16,13 +17,13 @@ type Props = {
 }
 
 export function ActiveMatchTournamentPage({
-  competitionName,
+  competitionName: _competitionName,
   tournamentId,
   tournamentName,
   onBackToList,
-  onBackToCompetition,
+  onBackToCompetition: _onBackToCompetition,
 }: Props) {
-  const data = MOCK_TOURNAMENT_DETAILS[tournamentId] ?? { id: tournamentId, name: tournamentName, brackets: [] }
+  const data = useTournamentDetail(tournamentId, tournamentName)
   const sortedBrackets = [...data.brackets].sort((a, b) => a.displayOrder - b.displayOrder)
 
   const { selectedMatch, score1, score2, status, setScore1, setScore2, setStatus, openMatch, closeMatch, saveMatch } =
@@ -30,17 +31,15 @@ export function ActiveMatchTournamentPage({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
         </ButtonBase>
-        <ButtonBase onClick={onBackToCompetition} sx={BREADCRUMB_LINK_SX}>
-          {competitionName}
-        </ButtonBase>
         <Typography sx={BREADCRUMB_CURRENT_SX}>{tournamentName}</Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 1 }}>
             ブラケット構成

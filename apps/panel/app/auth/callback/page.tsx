@@ -17,7 +17,10 @@ export default function AuthCallbackPage() {
 
     userManager.signinRedirectCallback()
       .then(() => navigate('/', { replace: true }))
-      .catch(() => navigate('/login'))
+      .catch((err) => {
+        console.error('OIDC callback error:', err)
+        navigate('/login')
+      })
   }, [navigate])
 
   return (

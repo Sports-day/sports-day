@@ -17,7 +17,7 @@ import {
     SwipeableDrawer,
     Button,
     Typography, DialogTitle, DialogContent, DialogActions, Dialog,
-    BottomNavigation, Card,
+    Card,
 } from '@mui/material';
 import Logo from "@/src/assets/logo.svg?react";
 import { Link, useNavigate } from "react-router-dom";
@@ -299,11 +299,12 @@ export const Navigation = () => {
                     zIndex: "128"
                 }}
             >
-                <BottomNavigation
+                <Box
                     sx={{
                         height: "80px",
                         width: "100%",
                         pb:2,
+                        display: "flex",
                         justifyContent: "center",
                         alignContent: "center",
                         borderRadius: "10px",
@@ -363,7 +364,7 @@ export const Navigation = () => {
                             </React.Fragment>
                         ))}
                     </Box>
-                </BottomNavigation>
+                </Box>
 
             </Box>
         </>

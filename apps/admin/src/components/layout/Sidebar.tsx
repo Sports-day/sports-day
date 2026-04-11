@@ -1,19 +1,18 @@
 import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemText, Typography, useMediaQuery, useTheme } from '@mui/material'
 import { TOP_HEADER_HEIGHT_XS, TOP_HEADER_HEIGHT_MD } from './TopHeader'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import SportsIcon from '@mui/icons-material/Sports'
+import SchoolIcon from '@mui/icons-material/School'
 import GroupsIcon from '@mui/icons-material/Groups'
 import PersonIcon from '@mui/icons-material/Person'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'
 import LabelIcon from '@mui/icons-material/Label'
 import ImageIcon from '@mui/icons-material/Image'
 import PlayCircleIcon from '@mui/icons-material/PlayCircle'
 import CampaignIcon from '@mui/icons-material/Campaign'
 import LogoutIcon from '@mui/icons-material/Logout'
-import GitHubIcon from '@mui/icons-material/GitHub'
 import HomeIcon from '@mui/icons-material/Home'
 import { COLOR_BG_SIDEBAR, COLOR_PRIMARY_DARK, COLOR_PRIMARY_LIGHT } from '@/styles/colors'
-import { GITHUB_URL } from '@/lib/constants'
 
 export const DRAWER_WIDTH = 250
 
@@ -26,11 +25,12 @@ type NavItem = {
 }
 
 const PREPARATION_ITEMS: NavItem[] = [
-  { key: 'competitions', label: '競技', icon: <EmojiEventsIcon fontSize="small" />, permission: 'competitions.view' },
+  { key: 'sports', label: '競技', icon: <SportsIcon fontSize="small" />, permission: 'sports.view' },
+  { key: 'competitions', label: '大会', icon: <EmojiEventsIcon fontSize="small" />, permission: 'competitions.view' },
+  { key: 'classes', label: 'クラス', icon: <SchoolIcon fontSize="small" />, permission: 'classes.view' },
   { key: 'teams', label: 'チーム', icon: <GroupsIcon fontSize="small" />, permission: 'teams.view' },
   { key: 'users', label: 'ユーザー', icon: <PersonIcon fontSize="small" />, permission: 'users.view' },
   { key: 'locations', label: '場所', icon: <LocationOnIcon fontSize="small" />, permission: 'locations.view' },
-  { key: 'permissions', label: '権限', icon: <AdminPanelSettingsIcon fontSize="small" />, permission: 'roles.view' },
   { key: 'tags', label: 'タグ', icon: <LabelIcon fontSize="small" />, permission: 'tags.edit' },
   { key: 'images', label: '画像', icon: <ImageIcon fontSize="small" />, permission: 'images.view' },
 ]
@@ -94,8 +94,6 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
         overflow: 'hidden',
       }}
     >
-      <Divider />
-
       <Typography sx={{ px: 1.875, pt: 1.5, pb: 0.5, fontSize: '16px', fontWeight: 700, color: COLOR_PRIMARY_DARK, opacity: 0.55, letterSpacing: '0.08em' }}>
         準備
       </Typography>
@@ -136,9 +134,6 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
         <Box sx={{ px: 1, pt: 0.5, display: 'flex', gap: 3, justifyContent: 'center' }}>
           <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={onLogout}>
             <LogoutIcon sx={{ fontSize: 24 }} />
-          </IconButton>
-          <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={() => window.open(GITHUB_URL, '_blank')}>
-            <GitHubIcon sx={{ fontSize: 24 }} />
           </IconButton>
           <IconButton sx={{ color: COLOR_PRIMARY_LIGHT, opacity: 0.7 }} onClick={onHome}>
             <HomeIcon sx={{ fontSize: 24 }} />
@@ -185,6 +180,7 @@ export function Sidebar({ selected, onSelect, mobileOpen = false, onMobileClose,
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
           overflow: 'hidden',
+          borderRight: 'none',
         },
       }}
     >

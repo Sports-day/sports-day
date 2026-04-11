@@ -7,51 +7,105 @@ import {
     Typography,
 } from "@mui/material";
 import * as React from "react";
-import {useContext} from "react";
-import {LocationsContext, TeamsContext} from "../../context";
-import {Match} from "@/src/models/MatchModel";
+import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
+import { useMarkPanelJudgmentAttendanceMutation } from "@/src/gql/__generated__/graphql";
 import {
     HiClock,
     HiMapPin,
 } from "react-icons/hi2";
 import {useTheme} from "@mui/material/styles";
 import {MatchDetail} from "@/components/game/GameList/matchDetail";
+import {ScoreSubmitDialog} from "./ScoreSubmitDialog";
+
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
 
 export type ScheduleContentProps = {
-    match: Match;
-    myTeamId: number;
+    match: PanelMatch;
 }
 
 export const ScheduleContent = (props: ScheduleContentProps) => {
     const theme = useTheme();
-    //  context
-    const {data: locations} = useContext(LocationsContext)
-    const {data: teams} = useContext(TeamsContext)
-
     const [open, toggleDrawer] = React.useState(false);
+    const [scoreDialogOpen, setScoreDialogOpen] = React.useState(false);
+    const [markAttendance, { loading: attendanceLoading }] = useMarkPanelJudgmentAttendanceMutation();
+
+    const isAttending = props.match.judgment?.isAttending ?? false;
+    const isFinished = props.match.status === "FINISHED";
+    const isCanceled = props.match.status === "CANCELED";
+    const canMarkAttendance = !isAttending && !isFinished && !isCanceled;
+    const canSubmitScore = isAttending && !isFinished && !isCanceled;
+
+    const handleAttendance = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await markAttendance({
+                variables: { matchId: props.match.id },
+                refetchQueries: ["GetPanelMatches"],
+            });
+        } catch {
+            // エラーは無視（Apollo error linkで処理）
+        }
+    };
+
+    const leftEntry = props.match.entries[0];
+    const rightEntry = props.match.entries[1];
+    const leftTeamName = leftEntry?.team?.name ?? null;
+    const rightTeamName = rightEntry?.team?.name ?? null;
 
     //  team is null
-    if (!props.match.leftTeamId || !props.match.rightTeamId) return null;
-    //  get left team
-    const leftTeamModel = teams.find(team => team.id === props.match.leftTeamId);
-    // get right team
-    const rightTeamModel = teams.find(team => team.id === props.match.rightTeamId);
-    //  get time and location
-    const formattedTime = new Date(props.match.startAt).toLocaleTimeString("ja-JP", {
+    if (!leftTeamName || !rightTeamName) return null;
+
+    //  time and location from match
+    const formattedTime = new Date(props.match.time).toLocaleTimeString("ja-JP", {
         hour: '2-digit',
         minute: '2-digit'
     });
-    const locationModel = locations.find(location => location.id === props.match.locationId)
 
     return (
         <>
+            {isAttending && !isFinished && !isCanceled && (
+                <Stack sx={{ width: "100%", justifyContent: "center", alignItems: "start" }}>
+                    <Box
+                        sx={{
+                            py: 0.25,
+                            px: 2,
+                            borderRadius: "9px",
+                            backgroundColor: `#1565c066`,
+                            position: "relative",
+                            top: "4px",
+                        }}
+                    >
+                        <Typography color={theme.palette.text.primary} fontSize="10px" fontWeight="600">
+                            出席済み
+                        </Typography>
+                    </Box>
+                </Stack>
+            )}
+            {isFinished && (
+                <Stack sx={{ width: "100%", justifyContent: "center", alignItems: "start" }}>
+                    <Box
+                        sx={{
+                            py: 0.25,
+                            px: 2,
+                            borderRadius: "9px",
+                            backgroundColor: `#7b1fa266`,
+                            position: "relative",
+                            top: "4px",
+                        }}
+                    >
+                        <Typography color={theme.palette.text.primary} fontSize="10px" fontWeight="600">
+                            スコア提出済み
+                        </Typography>
+                    </Box>
+                </Stack>
+            )}
             <Button
                 variant={"contained"}
                 color={"secondary"}
                 onClick={() => toggleDrawer(true)}
                 sx={{
                     width: "100%",
-                    border: `1px solid ${theme.palette.secondary.dark}66`,
+                    border: `1px solid ${isFinished ? '#7b1fa266' : isAttending ? '#1565c066' : `${theme.palette.secondary.dark}66`}`,
                 }}
             >
                 <Stack
@@ -75,7 +129,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                             alignItems={"center"}
                         >
                             <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                                {rightTeamModel?.name}
+                                {rightTeamName}
                             </Typography>
                             <Box
                                 sx={{
@@ -93,7 +147,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                             </Box>
                         </Stack>
                         <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                            {leftTeamModel?.name}
+                            {leftTeamName}
                         </Typography>
                     </Stack>
 
@@ -127,7 +181,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                                 <HiMapPin color={theme.palette.text.secondary}/>
                             </SvgIcon>
                             <Typography sx={{color: theme.palette.text.primary, fontSize: "14px"}}>
-                                {locationModel?.name}
+                                {props.match.location?.name ?? "未登録"}
                             </Typography>
                         </Stack>
                     </Stack>
@@ -147,7 +201,56 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
             >
                 <MatchDetail match={props.match} dashboard={true}/>
             </SwipeableDrawer>
+
+            {/* 審判アクションボタン */}
+            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }} alignItems="center">
+                {canMarkAttendance && (
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleAttendance}
+                        disabled={attendanceLoading}
+                        sx={{
+                            fontSize: "12px",
+                            textTransform: "none",
+                            flex: 1,
+                            backgroundColor: theme.palette.background.default,
+                            color: theme.palette.text.primary,
+                            border: "1px solid rgba(255,255,255,0.4)",
+                            "&:hover": { backgroundColor: theme.palette.background.paper },
+                        }}
+                    >
+                        出席する
+                    </Button>
+                )}
+                {canSubmitScore && (
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setScoreDialogOpen(true);
+                        }}
+                        sx={{
+                            fontSize: "12px",
+                            textTransform: "none",
+                            flex: 1,
+                            backgroundColor: theme.palette.background.default,
+                            color: theme.palette.text.secondary,
+                            border: `1px solid ${theme.palette.text.secondary}`,
+                            "&:hover": { backgroundColor: theme.palette.background.paper },
+                        }}
+                    >
+                        スコア入力
+                    </Button>
+                )}
+            </Stack>
+
+            <ScoreSubmitDialog
+                match={props.match}
+                open={scoreDialogOpen}
+                onClose={() => setScoreDialogOpen(false)}
+            />
         </>
     )
 }
-

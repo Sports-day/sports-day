@@ -1,4 +1,5 @@
 import { Box, Breadcrumbs, ButtonBase, Button, TextField, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import { useState } from 'react'
 import { useTagCreate } from '../hooks/useTagCreate'
 import { showToast } from '@/lib/toast'
@@ -35,6 +36,7 @@ export function TagCreatePage({ onBack }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           タグ
@@ -47,7 +49,7 @@ export function TagCreatePage({ onBack }: Props) {
           タグ作成
         </Typography>
 
-        <TextField fullWidth size="small" label="名前*" value={name} onChange={(e) => setName(e.target.value)} error={submitted && !name.trim()} helperText={submitted && !name.trim() ? 'この項目は必須です' : ''} sx={INPUT_SX} />
+        <TextField fullWidth size="small" label="名前*" value={name} onChange={(e) => setName(e.target.value)} error={submitted && !name.trim()} helperText={submitted && !name.trim() ? 'この項目は必須です' : name.length >= 60 ? `${name.length}/64文字` : ''} sx={INPUT_SX} slotProps={{ htmlInput: { maxLength: 64 } }} />
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button

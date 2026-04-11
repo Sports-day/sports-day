@@ -14,13 +14,55 @@ type SportCardProps = {
   sportId: string;
   type: string;
   hasTeam: boolean;
+  imageUrl: string | null;
 };
+
+function SportIcon({ imageUrl }: { imageUrl: string | null }) {
+  const theme = useTheme();
+
+  if (imageUrl) {
+    return (
+      <Box
+        component="img"
+        src={imageUrl}
+        alt=""
+        sx={{
+          width: 48,
+          height: 48,
+          objectFit: "contain",
+          borderRadius: "8px",
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        width: 48,
+        height: 48,
+        borderRadius: "8px",
+        flexShrink: 0,
+        bgcolor: "rgba(255,255,255,0.1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "rgba(255,255,255,0.3)",
+        fontSize: "24px",
+      }}
+    >
+      ?
+    </Box>
+  );
+}
 
 export default function SportCard({
   name,
   sportId,
   type,
   hasTeam,
+  imageUrl,
 }: SportCardProps) {
   const theme = useTheme();
   return (
@@ -44,42 +86,49 @@ export default function SportCard({
         >
           <CardActionArea sx={{ width: "100%", height: "100%" }}>
             <Stack
-              direction="row"
               sx={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                minHeight: { xs: 88, sm: 104, md: 120 },
+                minHeight: { xs: 120, sm: 136, md: 152 },
                 px: "8px",
+                py: "12px",
+                gap: "8px",
               }}
             >
-              {hasTeam && (
-                <Box
-                  sx={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: "50%",
-                    border: "1.5px solid #fff",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "11px",
-                    lineHeight: 1,
-                    mr: "6px",
-                    flexShrink: 0,
-                  }}
-                >
-                  ✓
-                </Box>
-              )}
-              <Typography
-                sx={(theme) => ({
-                  ...theme.typography.secondFont,
-                })}
+              <SportIcon imageUrl={imageUrl} />
+              <Stack
+                direction="row"
+                sx={{ alignItems: "center", justifyContent: "center" }}
               >
-                {name}
-              </Typography>
+                {hasTeam && (
+                  <Box
+                    sx={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      border: "1.5px solid #fff",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "11px",
+                      lineHeight: 1,
+                      mr: "6px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    ✓
+                  </Box>
+                )}
+                <Typography
+                  sx={(theme) => ({
+                    ...theme.typography.secondFont,
+                  })}
+                >
+                  {name}
+                </Typography>
+              </Stack>
             </Stack>
           </CardActionArea>
         </Card>

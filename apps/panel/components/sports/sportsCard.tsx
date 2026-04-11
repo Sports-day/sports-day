@@ -15,8 +15,7 @@ export const SportCard: React.FC<SportCardProps> = ({img, children, link}) => {
                 color={"secondary"}
                 variant={"contained"}
                 sx={{width: "100%"}}
-                to={link}
-                component={NextLink}
+                {...{to: link, component: NextLink} as any}
             >
                 <Stack
                     direction={"column"}

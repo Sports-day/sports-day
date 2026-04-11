@@ -23,16 +23,19 @@ func FormatGroupResponse(group *db_model.Group) *Group {
 
 func FormatInformationResponse(information *db_model.Information) *Information {
 	return &Information{
-		ID:      information.ID,
-		Title:   information.Title,
-		Content: information.Content,
+		ID:           information.ID,
+		Title:        information.Title,
+		Content:      information.Content,
+		DisplayOrder: int32(information.DisplayOrder),
 	}
 }
 
 func FormatSceneResponse(scene *db_model.Scene) *Scene {
 	return &Scene{
-		ID:   scene.ID,
-		Name: scene.Name,
+		ID:           scene.ID,
+		Name:         scene.Name,
+		DisplayOrder: int32(scene.DisplayOrder),
+		IsDeleted:    scene.IsDeleted,
 	}
 }
 
@@ -49,9 +52,10 @@ func FormatImageResponse(image *db_model.Image) *Image {
 		url = &image.URL.String
 	}
 	return &Image{
-		ID:     image.ID,
-		URL:    url,
-		Status: image.Status,
+		ID:           image.ID,
+		URL:          url,
+		Status:       image.Status,
+		DisplayOrder: int32(image.DisplayOrder),
 	}
 }
 
@@ -60,13 +64,26 @@ func FormatSportResponse(sport *db_model.Sport) *Sport {
 	if sport.ImageID.Valid {
 		imageID = &sport.ImageID.String
 	}
+	var experiencedLimit *int32
+	if sport.ExperiencedLimit.Valid {
+		v := int32(sport.ExperiencedLimit.Int64)
+		experiencedLimit = &v
+	}
 	return &Sport{
-		ID:           sport.ID,
-		Name:         sport.Name,
-		Weight:       int32(sport.Weight),
-		RankingRules: []*RankingRule{},
-		Rules:        []*Rule{},
-		ImageID:      imageID,
+		ID:               sport.ID,
+		Name:             sport.Name,
+		DisplayOrder:     int32(sport.DisplayOrder),
+		ExperiencedLimit: experiencedLimit,
+		RankingRules:     []*RankingRule{},
+		Rules:            []*Rule{},
+		ImageID:          imageID,
+	}
+}
+
+func FormatSportExperienceResponse(exp *db_model.SportExperience) *SportExperience {
+	return &SportExperience{
+		UserID:  exp.UserID,
+		SportID: exp.SportID,
 	}
 }
 
@@ -93,17 +110,47 @@ func FormatTeamResponse(team *db_model.Team) *Team {
 
 func FormatLocationResponse(location *db_model.Location) *Location {
 	return &Location{
-		ID:   location.ID,
-		Name: location.Name,
+		ID:           location.ID,
+		Name:         location.Name,
+		DisplayOrder: int32(location.DisplayOrder),
 	}
 }
 
 func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
+	var sportID string
+	if competition.SportID.Valid {
+		sportID = competition.SportID.String
+	}
+	var startTime *string
+	if competition.StartTime.Valid {
+		s := competition.StartTime.Time.Format(time.RFC3339)
+		startTime = &s
+	}
+	var matchDuration *int32
+	if competition.MatchDuration.Valid {
+		d := int32(competition.MatchDuration.Int64)
+		matchDuration = &d
+	}
+	var breakDuration *int32
+	if competition.BreakDuration.Valid {
+		d := int32(competition.BreakDuration.Int64)
+		breakDuration = &d
+	}
+	var defaultLocationID string
+	if competition.DefaultLocationID.Valid {
+		defaultLocationID = competition.DefaultLocationID.String
+	}
 	return &Competition{
-		ID:      competition.ID,
-		Name:    competition.Name,
-		Type:    CompetitionType(competition.Type),
-		SceneID: competition.SceneID,
+		ID:                competition.ID,
+		Name:              competition.Name,
+		Type:              CompetitionType(competition.Type),
+		SportID:           sportID,
+		SceneID:           competition.SceneID,
+		StartTime:         startTime,
+		MatchDuration:     matchDuration,
+		BreakDuration:     breakDuration,
+		DefaultLocationID: defaultLocationID,
+		DisplayOrder:      int32(competition.DisplayOrder),
 	}
 }
 
@@ -119,12 +166,14 @@ func FormatMatchResponse(match *db_model.Match) *Match {
 	}
 
 	return &Match{
-		ID:            match.ID,
-		Time:          match.Time.Format(time.RFC3339),
-		Status:        MatchStatus(match.Status),
-		LocationId:    locationId,
-		CompetitionId: match.CompetitionID,
-		WinnerTeamId:  winnerTeamId,
+		ID:             match.ID,
+		Time:           match.Time.Format(time.RFC3339),
+		Status:         MatchStatus(match.Status),
+		LocationId:     locationId,
+		CompetitionId:  match.CompetitionID,
+		WinnerTeamId:   winnerTeamId,
+		TimeManual:     match.TimeManual,
+		LocationManual: match.LocationManual,
 	}
 }
 
@@ -152,18 +201,22 @@ func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
 	}
 
 	return &Judgment{
-		ID:      judgment.ID,
-		Name:    name,
-		UserId:  userId,
-		TeamId:  teamId,
-		GroupId: groupId,
+		ID:          judgment.ID,
+		Name:        name,
+		UserId:      userId,
+		TeamId:      teamId,
+		GroupId:     groupId,
+		IsAttending: judgment.IsAttending,
 	}
 }
 
 func FormatLeagueResponse(league *db_model.League, competition *db_model.Competition) *League {
 	return &League{
-		ID:   league.ID,
-		Name: competition.Name,
+		ID:     league.ID,
+		Name:   competition.Name,
+		WinPt:  int32(league.WinPt),
+		DrawPt: int32(league.DrawPt),
+		LosePt: int32(league.LosePt),
 	}
 }
 

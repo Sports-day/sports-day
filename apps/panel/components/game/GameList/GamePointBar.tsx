@@ -12,37 +12,37 @@ import {linearProgressClasses} from "@mui/material";
 import {ThemeProvider} from "@mui/material/styles";
 import * as React from "react";
 import {HiClock, HiFlag} from "react-icons/hi2";
-import {useContext} from "react";
-import {TeamsContext} from "../../context";
 import {MatchDetail} from "@/components/game/GameList/matchDetail";
-import {Match} from "@/src/models/MatchModel";
+import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
+
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
 
 export type GamePointBarProps = {
-    leftScore: number,
-    rightScore: number,
-    leftTeamId: number | null,
-    rightTeamId: number | null,
-    umpireTeam: string,
-    time: string,
+    match: PanelMatch,
     barOffset: number,
-    match: Match,
-    myTeamId?: number,
+    myTeamId?: string,
     otherUser?: boolean,
     dashboard?: boolean
 }
 
 export const GamePointBar = (props: GamePointBarProps) => {
     const theme = useTheme();
-    const {data: teams} = useContext(TeamsContext);
 
-    const {leftScore, rightScore, leftTeamId, rightTeamId, umpireTeam, time, barOffset} = props;
-    const leftTeam = teams.find(team => team.id === leftTeamId);
-    const rightTeam = teams.find(team => team.id === rightTeamId);
+    const { match, barOffset } = props;
+    const leftEntry = match.entries[0];
+    const rightEntry = match.entries[1];
+    const leftScore = leftEntry?.score ?? 0;
+    const rightScore = rightEntry?.score ?? 0;
+    const leftTeamId = leftEntry?.team?.id ?? null;
+    const rightTeamId = rightEntry?.team?.id ?? null;
+    const leftTeamName = leftEntry?.team?.name ?? null;
+    const rightTeamName = rightEntry?.team?.name ?? null;
+    const judgeTeamId = match.judgment?.team?.id ?? null;
+    const judgeTeamName = match.judgment?.team?.name ?? null;
+
     const isMyTeamPlay = props.myTeamId === leftTeamId || props.myTeamId === rightTeamId;
-    const isMyTeamUmpire = props.myTeamId === Number(umpireTeam);
-    const judgeTeam = teams.find(team => team.id === Number(umpireTeam));
-    const judgeTeamName = judgeTeam?.name
-    const formattedTime = new Date(time).toLocaleTimeString("ja-JP", {hour: '2-digit', minute:'2-digit'});
+    const isMyTeamUmpire = props.myTeamId != null && props.myTeamId === judgeTeamId;
+    const formattedTime = new Date(match.time).toLocaleTimeString("ja-JP", {hour: '2-digit', minute:'2-digit'});
     const backgroundColor = isMyTeamPlay ? `${theme.palette.warning.main}66` : isMyTeamUmpire ? `${theme.palette.success.main}66` : `${theme.palette.text.disabled}33`;
     const PointBar = styled(LinearProgress)(({}) => ({
         height: 4.5,
@@ -122,7 +122,7 @@ export const GamePointBar = (props: GamePointBarProps) => {
                                 {leftScore}
                             </Typography>
                             <Typography sx={{color: theme.palette.text.primary, fontSize: "14px"}}>
-                                {leftTeam?.name}
+                                {leftTeamName}
                             </Typography>
                         </Stack>
                         <Box>
@@ -170,7 +170,7 @@ export const GamePointBar = (props: GamePointBarProps) => {
                             spacing={1}
                         >
                             <Typography sx={{color: `${theme.palette.text.primary}CC`, fontSize: "14px"}}>
-                                {rightTeam?.name}
+                                {rightTeamName}
                             </Typography>
                             <Typography sx={{color: theme.palette.text.primary, fontSize: "20px", fontWeight: "bold"}}>
                                 {rightScore}

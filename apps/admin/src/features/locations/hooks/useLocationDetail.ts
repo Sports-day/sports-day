@@ -1,21 +1,40 @@
 import { useState } from 'react'
-import { useLocationsStore } from './useLocationsStore'
+import {
+  useGetAdminLocationQuery,
+  useUpdateAdminLocationMutation,
+  useDeleteAdminLocationMutation,
+  GetAdminLocationsDocument,
+} from '@/gql/__generated__/graphql'
 
 export function useLocationDetail(locationId: string, onSave: () => void, onDelete: () => void) {
-  const { locations, updateLocation, deleteLocation } = useLocationsStore()
-  const location = locations.find((l) => l.id === locationId)
-  const [name, setName] = useState(location?.name ?? '')
-  const [note, setNote] = useState(location?.description ?? '')
+  const { data, loading, error } = useGetAdminLocationQuery({ variables: { id: locationId } })
+  const location = data?.location
 
-  const handleSave = () => {
-    updateLocation(locationId, { name, description: note })
+  // サーバー値 + 編集差分パターン
+  const serverName = location?.name ?? ''
+  const [editName, setEditName] = useState<string | null>(null)
+  const name = editName ?? serverName
+  const setName = (v: string) => setEditName(v)
+  const dirty = editName !== null
+
+  const [updateLocation] = useUpdateAdminLocationMutation({
+    refetchQueries: [{ query: GetAdminLocationsDocument }],
+  })
+  const [deleteLocation] = useDeleteAdminLocationMutation({
+    refetchQueries: [{ query: GetAdminLocationsDocument }],
+  })
+
+  const handleSave = async () => {
+    if (!name.trim()) return
+    await updateLocation({ variables: { id: locationId, input: { name: name.slice(0, 64) } } })
+    setEditName(null)
     onSave()
   }
 
-  const handleDelete = () => {
-    deleteLocation(locationId)
+  const handleDelete = async () => {
+    await deleteLocation({ variables: { id: locationId } })
     onDelete()
   }
 
-  return { location, name, note, setName, setNote, handleSave, handleDelete }
+  return { location, name, setName, dirty, handleSave, handleDelete, loading, error: error ?? null }
 }

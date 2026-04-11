@@ -20,6 +20,7 @@ export default function TeamEdit() {
   const theme = useTheme();
   const {
     loading,
+    groupId,
     selectedMember,
     selectedIds,
     searchName,
@@ -31,6 +32,10 @@ export default function TeamEdit() {
     submit,
     isSubmitting,
     submitError,
+    experiencedIds,
+    toggleExperience,
+    experiencedLimit,
+    experienceLimitReached,
   } = useTeamEdit();
 
   if (loading) {
@@ -151,6 +156,11 @@ export default function TeamEdit() {
                           remove={() => {
                             removeStudent(student.studentId);
                           }}
+                          isExperienced={experiencedIds.has(student.studentId)}
+                          onToggleExperience={() => toggleExperience(student.studentId)}
+                          experienceDisabled={
+                            !experiencedIds.has(student.studentId) && experienceLimitReached
+                          }
                         />
                       </Box>
                     ))
@@ -165,6 +175,23 @@ export default function TeamEdit() {
                     width: "100%",
                   }}
                 >
+                  {experiencedLimit !== null && (
+                    <Typography
+                      sx={{
+                        fontSize: "12px",
+                        color: experienceLimitReached ? "#FF9800" : "white",
+                        mt: "8px",
+                        textAlign: "center",
+                      }}
+                    >
+                      経験者: {selectedMember.filter((m) => experiencedIds.has(m.studentId)).length}/{experiencedLimit}
+                    </Typography>
+                  )}
+                  {!groupId && (
+                    <Alert severity="warning" sx={{ width: "90%", mt: "8px" }}>
+                      グループに所属していません。管理者にグループの割り当てを依頼してください。
+                    </Alert>
+                  )}
                   {submitError && (
                     <Alert severity="error" sx={{ width: "90%", mt: "8px" }}>
                       {submitError}
@@ -203,7 +230,7 @@ export default function TeamEdit() {
                           my: "8px",
                         },
                       }}
-                      disabled={selectedMember.length === 0 || isSubmitting}
+                      disabled={selectedMember.length === 0 || isSubmitting || !groupId}
                       variant="contained"
                       onClick={submit}
                     >
@@ -330,7 +357,12 @@ export default function TeamEdit() {
                                   studentName: item.name,
                                 })
                               }
-                              disable={selectedIds.includes(String(item.id))}
+                              disable={
+                                selectedIds.includes(String(item.id)) ||
+                                alreadyInAnyTeam.some(
+                                  (a) => a.id === String(item.id),
+                                )
+                              }
                               isInclude={
                                 alreadyInAnyTeam.some(
                                   (a) => a.id === String(item.id),

@@ -1,50 +1,87 @@
 import { useState } from 'react'
-import { MOCK_ANNOUNCEMENTS, persistAnnouncements } from '../mock'
-import { notifyAnnouncementListeners } from './useAnnouncements'
+import {
+  useGetAdminInformationQuery,
+  useUpdateAdminInformationMutation,
+  useDeleteAdminInformationMutation,
+  GetAdminInformationsDocument,
+} from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 import type { Announcement } from '../types'
 
-export function useAnnouncementDetail(id: string) {
-  const item = MOCK_ANNOUNCEMENTS.find(a => a.id === id)
-  const [name, setName] = useState(item?.name ?? '')
-  const [content, setContent] = useState(item?.content ?? '')
-  const [status, setStatus] = useState<Announcement['status']>(item?.status ?? 'draft')
-  const [scheduledAt, setScheduledAt] = useState(item?.scheduledAt ?? '')
+function parseStatus(s: string | null | undefined): Announcement['status'] {
+  if (s === 'published') return 'published'
+  return 'draft'
+}
 
-  const handleSave = () => {
-    const target = MOCK_ANNOUNCEMENTS.find(a => a.id === id)
-    if (target) {
-      target.name = name
-      target.content = content
-      target.status = status
-      target.scheduledAt = scheduledAt || undefined
-      target.updatedAt = new Date().toISOString()
+export function useAnnouncementDetail(id: string) {
+  const { data, loading, error } = useGetAdminInformationQuery({ variables: { id } })
+  const item = data?.Information
+
+  // サーバー値 + 編集差分パターン
+  const serverTitle = item?.title ?? ''
+  const serverContent = item?.content ?? ''
+  const serverStatus = parseStatus(item?.status)
+
+  const [editTitle, setEditTitle] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState<string | null>(null)
+  const [editStatus, setEditStatus] = useState<Announcement['status'] | null>(null)
+  const [mutationError, setMutationError] = useState<Error | null>(null)
+
+  const title = editTitle ?? serverTitle
+  const content = editContent ?? serverContent
+  const status = editStatus ?? serverStatus
+
+  const setTitle = (v: string) => setEditTitle(v)
+  const setContent = (v: string) => setEditContent(v)
+  const setStatus = (v: Announcement['status']) => setEditStatus(v)
+
+  const dirty = editTitle !== null || editContent !== null || editStatus !== null
+
+  const [updateInformation] = useUpdateAdminInformationMutation({
+    refetchQueries: [{ query: GetAdminInformationsDocument }],
+  })
+  const [deleteInformation] = useDeleteAdminInformationMutation({
+    refetchQueries: [{ query: GetAdminInformationsDocument }],
+  })
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) return
+    try {
+      await updateInformation({
+        variables: { id, input: { title: title.slice(0, 64), content: content.slice(0, 1000), status } },
+      })
+      setEditTitle(null)
+      setEditContent(null)
+      setEditStatus(null)
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
-    persistAnnouncements()
-    notifyAnnouncementListeners()
   }
 
-  const handleDelete = () => {
-    const index = MOCK_ANNOUNCEMENTS.findIndex(a => a.id === id)
-    if (index !== -1) MOCK_ANNOUNCEMENTS.splice(index, 1)
-    persistAnnouncements()
-    notifyAnnouncementListeners()
+  const handleDelete = async () => {
+    try {
+      await deleteInformation({ variables: { id } })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   return {
-    announcementName: item?.name ?? '',
-    name,
-    setName,
+    announcementTitle: item?.title ?? '',
+    title,
+    setTitle,
     content,
     setContent,
     status,
     setStatus,
-    scheduledAt,
-    setScheduledAt,
-    createdAt: item?.createdAt ?? '',
-    updatedAt: item?.updatedAt ?? '',
+    dirty,
     handleSave,
     handleDelete,
-    loading: false,
-    error: null,
+    loading,
+    error: error ?? mutationError,
   }
 }

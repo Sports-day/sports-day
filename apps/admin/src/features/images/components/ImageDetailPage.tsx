@@ -1,10 +1,8 @@
-import { Box, Breadcrumbs, Button, ButtonBase, TextField, Typography } from '@mui/material'
-import CheckIcon from '@mui/icons-material/Check'
-import { useState } from 'react'
-import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
+import { Box, Breadcrumbs, Button, ButtonBase, Chip, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import { useImageDetail } from '../hooks/useImageDetail'
 import { showToast } from '@/lib/toast'
-import { CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
+import { DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 
 type Props = {
   imageId: string
@@ -12,30 +10,22 @@ type Props = {
 }
 
 export function ImageDetailPage({ imageId, onBack }: Props) {
-  const { name, setName, url, setUrl, handleSave, handleDelete, imageName } = useImageDetail(imageId)
-  const [dirty, setDirty] = useState(false)
-  useUnsavedWarning(dirty)
+  const { url, status, handleDelete } = useImageDetail(imageId)
 
-  const onSave = () => {
-    handleSave()
-    setDirty(false)
-    showToast('画像を保存しました')
-    onBack()
-  }
-
-  const onDelete = () => {
-    handleDelete()
+  const onDelete = async () => {
+    await handleDelete()
     showToast('画像を削除しました')
     onBack()
   }
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           画像
         </ButtonBase>
-        <Typography sx={BREADCRUMB_CURRENT_SX}>{imageName}</Typography>
+        <Typography sx={BREADCRUMB_CURRENT_SX}>{imageId}</Typography>
       </Breadcrumbs>
 
       <Box sx={{ background: CARD_GRADIENT, borderRadius: 2, p: 2 }}>
@@ -63,18 +53,10 @@ export function ImageDetailPage({ imageId, onBack }: Props) {
               <Box
                 component="img"
                 src={url}
-                alt={name}
+                alt={imageId}
                 sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  const parent = target.parentElement
-                  if (parent) {
-                    const label = document.createElement('span')
-                    label.textContent = 'プレビューなし'
-                    label.style.cssText = 'font-size:12px;color:#2F3C8C;opacity:0.4;text-align:center;padding:8px'
-                    parent.appendChild(label)
-                  }
+                  (e.target as HTMLImageElement).style.display = 'none'
                 }}
               />
             ) : (
@@ -82,33 +64,38 @@ export function ImageDetailPage({ imageId, onBack }: Props) {
             )}
           </Box>
 
-          {/* フォーム */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }} onChangeCapture={() => setDirty(true)}>
-            <TextField
-              size="small"
-              label="名前"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              fullWidth
-              sx={CARD_FIELD_SX}
-            />
-            <TextField
-              size="small"
-              label="URL"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              fullWidth
-              sx={CARD_FIELD_SX}
-            />
+          {/* 情報 */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, flex: 1 }}>
+            <Box>
+              <Typography sx={{ fontSize: '12px', color: '#5B6DC6', mb: 0.5 }}>ID</Typography>
+              <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{imageId}</Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: '12px', color: '#5B6DC6', mb: 0.5 }}>ステータス</Typography>
+              <Chip
+                label={status}
+                size="small"
+                sx={{
+                  bgcolor: status === 'uploaded' ? '#E8EAF6' : '#F5F5F5',
+                  color: status === 'uploaded' ? '#3949AB' : '#9E9E9E',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  height: 22,
+                }}
+              />
+            </Box>
+            {url && (
+              <Box>
+                <Typography sx={{ fontSize: '12px', color: '#5B6DC6', mb: 0.5 }}>URL</Typography>
+                <Typography sx={{ fontSize: '12px', color: '#2F3C8C', wordBreak: 'break-all' }}>{url}</Typography>
+              </Box>
+            )}
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" onClick={onDelete} sx={DELETE_BUTTON_SX}>
-            この画像を削除
-          </Button>
-          <Button variant="contained" fullWidth startIcon={<CheckIcon />} onClick={onSave} sx={SAVE_BUTTON_SX}>
-            保存
+        <Box sx={{ width: 160 }}>
+          <Button variant="outlined" onClick={onDelete} fullWidth sx={DELETE_BUTTON_SX}>
+            削除
           </Button>
         </Box>
       </Box>

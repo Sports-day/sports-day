@@ -1,10 +1,14 @@
 import { useState } from 'react'
-import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
+import { useGenerateAdminRoundRobinMutation } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
-export function useLeagueRegenerate(competitionId: string, leagueId: string) {
+export function useLeagueRegenerate(_competitionId: string, leagueId: string) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState('')
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [mutationError, setMutationError] = useState<Error | null>(null)
+
+  const [generateRoundRobin] = useGenerateAdminRoundRobinMutation()
 
   const openOverlay = () => setIsOpen(true)
 
@@ -15,26 +19,28 @@ export function useLeagueRegenerate(competitionId: string, leagueId: string) {
   }
 
   const openConfirm = () => setIsConfirmOpen(true)
-
   const closeConfirm = () => setIsConfirmOpen(false)
 
-  const confirmSave = () => {
-    const leagues = MOCK_ACTIVE_LEAGUES[competitionId] ?? []
-    MOCK_ACTIVE_LEAGUES[competitionId] = leagues.map((l) =>
-      l.id === leagueId
-        ? {
-            ...l,
-            matches: l.matches.map((m) => ({
-              ...m,
-              scoreA: 0,
-              scoreB: 0,
-              status: 'standby' as const,
-            })),
-          }
-        : l,
-    )
-    persistActiveLeagues()
-    closeOverlay()
+  const confirmSave = async () => {
+    try {
+      await generateRoundRobin({
+        variables: {
+          id: leagueId,
+          input: {
+            startTime: new Date().toISOString(),
+            matchDuration: 15,
+            breakDuration: 5,
+            locationId: selectedLocation || undefined,
+          },
+        },
+        refetchQueries: ['GetAdminCompetitionMatches'],
+      })
+      setMutationError(null)
+      closeOverlay()
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   return {
@@ -47,5 +53,6 @@ export function useLeagueRegenerate(competitionId: string, leagueId: string) {
     openConfirm,
     closeConfirm,
     confirmSave,
+    error: mutationError,
   }
 }

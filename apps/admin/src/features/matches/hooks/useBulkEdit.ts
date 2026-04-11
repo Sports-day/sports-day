@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '../mock'
+import {
+  useGetAdminCompetitionMatchesQuery,
+  useUpdateAdminMatchResultMutation,
+  MatchStatus,
+} from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export type BulkEditRow = {
   matchId: string
@@ -9,15 +14,21 @@ export type BulkEditRow = {
   scoreB: number
 }
 
-export function useBulkEdit(competitionId: string, leagueId: string) {
+export function useBulkEdit(competitionId: string, _leagueId: string) {
   const [isOpen, setIsOpen] = useState(false)
   const [filterDate, setFilterDate] = useState('')
   const [filterLocation, setFilterLocation] = useState('')
   const [csvData, setCsvDataRaw] = useState('')
   const [parsedRows, setParsedRows] = useState<BulkEditRow[]>([])
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
-  const getLeague = () =>
-    (MOCK_ACTIVE_LEAGUES[competitionId] ?? []).find((l) => l.id === leagueId)
+  const { data: compMatchesData } = useGetAdminCompetitionMatchesQuery({
+    variables: { competitionId },
+    skip: !competitionId,
+  })
+  const [updateMatchResult] = useUpdateAdminMatchResultMutation()
+
+  const compMatches = compMatchesData?.competition?.matches ?? []
 
   const open = () => setIsOpen(true)
   const close = () => {
@@ -30,44 +41,59 @@ export function useBulkEdit(competitionId: string, leagueId: string) {
 
   const setCsvData = (value: string) => {
     setCsvDataRaw(value)
-    const league = getLeague()
-    if (!league) { setParsedRows([]); return }
+    const matchTeamMap = new Map(compMatches.map(m => [
+      m.id,
+      { teamAName: m.entries[0]?.team?.name ?? '', teamBName: m.entries[1]?.team?.name ?? '' },
+    ]))
     const rows = value
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0)
-      .flatMap((line) => {
+      .map((line) => {
         const parts = line.split(',').map((s) => s.trim())
         const matchId = parts[0] ?? ''
-        const scoreA = Number(parts[1] ?? 0)
-        const scoreB = Number(parts[2] ?? 0)
-        const match = league.matches.find((m) => m.id === matchId)
-        if (!match) return []
-        const teamA = league.teams.find((t) => t.id === match.teamAId)
-        const teamB = league.teams.find((t) => t.id === match.teamBId)
-        return [{
+        const rawA = Number(parts[1] ?? 0)
+        const rawB = Number(parts[2] ?? 0)
+        const scoreA = Number.isFinite(rawA) && rawA >= 0 && Number.isInteger(rawA) ? rawA : 0
+        const scoreB = Number.isFinite(rawB) && rawB >= 0 && Number.isInteger(rawB) ? rawB : 0
+        const teams = matchTeamMap.get(matchId)
+        return {
           matchId,
-          teamAName: teamA?.shortName ?? match.teamAId,
-          teamBName: teamB?.shortName ?? match.teamBId,
+          teamAName: teams?.teamAName ?? matchId,
+          teamBName: teams?.teamBName ?? matchId,
           scoreA,
           scoreB,
-        }]
+        }
       })
     setParsedRows(rows)
   }
 
-  const execute = () => {
-    const league = getLeague()
-    if (!league) return
-    parsedRows.forEach((row) => {
-      const match = league.matches.find((m) => m.id === row.matchId)
-      if (match) {
-        match.scoreA = row.scoreA
-        match.scoreB = row.scoreB
-        if (filterLocation) match.location = filterLocation
+  const execute = async () => {
+    if (parsedRows.length === 0) return
+    try {
+      for (const row of parsedRows) {
+        if (!row.matchId) continue
+        const match = compMatches.find(m => m.id === row.matchId)
+        if (!match) continue
+        const results = (match?.entries ?? [])
+          .map((e, i) => ({
+            teamId: e.team?.id ?? '',
+            score: i === 0 ? row.scoreA : row.scoreB,
+          }))
+          .filter(r => r.teamId)
+        await updateMatchResult({
+          variables: {
+            id: row.matchId,
+            input: { status: MatchStatus.Finished, results },
+          },
+          refetchQueries: ['GetAdminCompetitionMatches'],
+        })
       }
-    })
-    persistActiveLeagues()
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
     close()
   }
 
@@ -83,5 +109,6 @@ export function useBulkEdit(competitionId: string, leagueId: string) {
     open,
     close,
     execute,
+    error: mutationError,
   }
 }

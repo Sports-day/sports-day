@@ -1,204 +1,444 @@
 import {
+  Autocomplete,
   Box,
   Button,
   ButtonBase,
   Card,
   CardContent,
+  Chip,
   Collapse,
+  Divider,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Select,
   TextField,
   Typography,
 } from '@mui/material'
-import RefreshIcon from '@mui/icons-material/Refresh'
 import CheckIcon from '@mui/icons-material/Check'
-import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import GroupIcon from '@mui/icons-material/Group'
+import SportsIcon from '@mui/icons-material/Sports'
+import PersonIcon from '@mui/icons-material/Person'
+import GavelIcon from '@mui/icons-material/Gavel'
 import type { ActiveMatch } from '../types'
 import { useMatchDetails } from '../hooks/useMatchDetails'
-import { CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import type { JudgeType, JudgeOption } from '../hooks/useMatchDetails'
+import {
+  useGetAdminTournamentsQuery,
+  useGetAdminTournamentQuery,
+  useUpdateAdminSlotConnectionMutation,
+  useAssignAdminSeedTeamMutation,
+  SlotSourceType,
+} from '@/gql/__generated__/graphql'
+import { CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { DateTimeInput } from '@/components/ui/DateTimeInput'
+import { showToast } from '@/lib/toast'
 
-const DETAIL_FIELD_SX = {
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: 'transparent',
-    '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-    '&:hover fieldset': { borderColor: '#5B6DC6' },
-    '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-  },
-  '& input, & textarea': { fontSize: '13px', color: '#2F3C8C' },
-}
-
-const DETAIL_LABEL_SX = { fontSize: '12px', fontWeight: 600, color: '#2F3C8C', mb: 0.5 }
+// ─── 審判タイプ設定 ───────────────────────────────────────
+const JUDGE_TYPES: { value: JudgeType; label: string; icon: React.ReactNode; color: string }[] = [
+  { value: 'group', label: 'クラス', icon: <GroupIcon sx={{ fontSize: 16 }} />, color: '#7E57C2' },
+  { value: 'team',  label: 'チーム', icon: <SportsIcon sx={{ fontSize: 16 }} />, color: '#1976D2' },
+  { value: 'user',  label: 'ユーザー', icon: <PersonIcon sx={{ fontSize: 16 }} />, color: '#2E7D32' },
+]
 
 type Props = {
   match: ActiveMatch
+  open: boolean
+  onClose: () => void
+  competitionId?: string
+  competitionType?: string
 }
 
-export function MatchDetailsCard({ match }: Props) {
+export function MatchDetailsCard({ match, open, onClose, competitionId, competitionType }: Props) {
   const {
-    open, setOpen,
-    note, setNote,
-    referee, setReferee,
-    location, setLocation,
-    startTime, setStartTime,
+    locationId, setLocationId,
+    locations,
+    time, setTime,
+    judgmentType, setJudgmentType,
+    judgmentTargetId, setJudgmentTargetId,
+    optionsByType,
+    currentJudgmentLabel,
     handleSave, handleReset,
-  } = useMatchDetails(match)
+  } = useMatchDetails(match, competitionId)
+
+  // ─── トーナメント進出先設定 ──────────────────────────
+  const isTournament = competitionType === 'TOURNAMENT'
+  const { data: tournamentsData } = useGetAdminTournamentsQuery({
+    variables: { competitionId: competitionId ?? '' },
+    skip: !isTournament || !competitionId,
+    fetchPolicy: 'cache-and-network',
+  })
+  const subBrackets = (tournamentsData?.tournaments ?? []).filter(t => t.bracketType === 'SUB')
+
+  const fetchOpts = { fetchPolicy: 'cache-and-network' as const }
+  const sub0 = useGetAdminTournamentQuery({ variables: { id: subBrackets[0]?.id ?? '' }, skip: !subBrackets[0], ...fetchOpts })
+  const sub1 = useGetAdminTournamentQuery({ variables: { id: subBrackets[1]?.id ?? '' }, skip: !subBrackets[1], ...fetchOpts })
+  const sub2 = useGetAdminTournamentQuery({ variables: { id: subBrackets[2]?.id ?? '' }, skip: !subBrackets[2], ...fetchOpts })
+  const sub3 = useGetAdminTournamentQuery({ variables: { id: subBrackets[3]?.id ?? '' }, skip: !subBrackets[3], ...fetchOpts })
+  const sub4 = useGetAdminTournamentQuery({ variables: { id: subBrackets[4]?.id ?? '' }, skip: !subBrackets[4], ...fetchOpts })
+  const subQueries = [sub0, sub1, sub2, sub3, sub4]
+  const maxSub = 5
+
+  type SlotConnection = { slotId: string; bracketName: string; bracketId: string; role: 'MATCH_WINNER' | 'MATCH_LOSER' }
+  const currentConnections: SlotConnection[] = []
+  for (let i = 0; i < subBrackets.length && i < maxSub; i++) {
+    const subData = subQueries[i]?.data?.tournament
+    if (!subData) continue
+    for (const slot of subData.slots) {
+      if (slot.sourceMatch?.id === match.id) {
+        currentConnections.push({ slotId: slot.id, bracketName: subData.name, bracketId: subData.id, role: slot.sourceType as 'MATCH_WINNER' | 'MATCH_LOSER' })
+      }
+    }
+  }
+  const winnerConnection = currentConnections.find(c => c.role === 'MATCH_WINNER')
+  const loserConnection  = currentConnections.find(c => c.role === 'MATCH_LOSER')
+
+  type SlotOption = { slotId: string; bracketName: string; bracketId: string; label: string }
+  const allSlots: SlotOption[] = []
+  for (let i = 0; i < subBrackets.length && i < maxSub; i++) {
+    const subData = subQueries[i]?.data?.tournament
+    if (!subData) continue
+    for (const slot of subData.slots) {
+      if (slot.sourceType === 'SEED' || slot.sourceMatch?.id === match.id) {
+        const teamName = slot.matchEntry?.team?.name
+        const seedLabel = slot.seedNumber != null ? `Seed ${slot.seedNumber}` : 'スロット'
+        const label = teamName
+          ? `${subData.name} — ${seedLabel} (${teamName})`
+          : `${subData.name} — ${seedLabel}`
+        allSlots.push({ slotId: slot.id, bracketName: subData.name, bracketId: subData.id, label })
+      }
+    }
+  }
+  // 勝者/敗者で相手方が既に使っているスロットを除外
+  const winnerSlots = allSlots.filter(s => s.slotId !== loserConnection?.slotId)
+  const loserSlots = allSlots.filter(s => s.slotId !== winnerConnection?.slotId)
+
+  const [updateSlotConnection] = useUpdateAdminSlotConnectionMutation({ refetchQueries: [] })
+  const [assignSeedTeam] = useAssignAdminSeedTeamMutation({ refetchQueries: [] })
+
+  // updateSlotConnection はバックエンドで clearSeedTeamsIfReady を呼び、
+  // READY状態（全SEEDにチーム割当済）のブラケットの全SEEDチーム割当をクリアする。
+  // TournamentDetailPage の handleSwapMatches と同様に、変更前に保存→変更後に復元する。
+  const handleSlotSourceChange = async (role: 'MATCH_WINNER' | 'MATCH_LOSER', targetSlotId: string) => {
+    const existing = role === 'MATCH_WINNER' ? winnerConnection : loserConnection
+
+    // 影響を受けるブラケットのSEED割り当てを保存
+    const affectedBracketIds = new Set<string>()
+    if (existing) affectedBracketIds.add(existing.bracketId)
+    if (targetSlotId) {
+      const target = allSlots.find(s => s.slotId === targetSlotId)
+      if (target) affectedBracketIds.add(target.bracketId)
+    }
+    const savedSeeds: { slotId: string; teamId: string }[] = []
+    for (const bracketId of affectedBracketIds) {
+      const subIdx = subBrackets.findIndex(b => b.id === bracketId)
+      if (subIdx === -1 || subIdx >= maxSub) continue
+      const subData = subQueries[subIdx]?.data?.tournament
+      if (!subData) continue
+      for (const slot of subData.slots) {
+        // 変更対象のスロット以外でSEEDかつチーム割当済みのものを保存
+        if (slot.sourceType === 'SEED' && slot.matchEntry?.team?.id
+            && slot.id !== targetSlotId && slot.id !== existing?.slotId) {
+          savedSeeds.push({ slotId: slot.id, teamId: slot.matchEntry.team.id })
+        }
+      }
+    }
+
+    // スロット接続を変更
+    if (existing && existing.slotId !== targetSlotId) {
+      await updateSlotConnection({ variables: { input: { slotId: existing.slotId, sourceType: SlotSourceType.Seed, sourceMatchId: null, seedNumber: null } } })
+    }
+    if (targetSlotId !== '') {
+      await updateSlotConnection({
+        variables: {
+          input: {
+            slotId: targetSlotId,
+            sourceType: role === 'MATCH_WINNER' ? SlotSourceType.MatchWinner : SlotSourceType.MatchLoser,
+            sourceMatchId: match.id,
+            seedNumber: null,
+          },
+        },
+      })
+    }
+
+    // clearSeedTeamsIfReady でクリアされた可能性のあるSEED割り当てを復元
+    for (const { slotId, teamId } of savedSeeds) {
+      try { await assignSeedTeam({ variables: { input: { slotId, teamId } } }) } catch { /* 続行 */ }
+    }
+
+    // 全ての変更完了後にまとめてrefetch
+    await Promise.all(
+      subQueries.filter((_, i) => i < subBrackets.length).map(q => q.refetch()),
+    )
+
+    showToast(targetSlotId === '' && existing ? '進出先を解除しました' : '進出先を設定しました')
+  }
+
+  const onSave = async () => { await handleSave(); onClose() }
+  const onCancel = () => { handleReset(); onClose() }
+
+  // 審判セレクト用のオプション（選択中のタイプに応じて切替）
+  const judgeSelectOptions: JudgeOption[] = judgmentType ? (optionsByType[judgmentType] ?? []) : []
+  const selectedJudgeOption = judgeSelectOptions.find(o => o.id === judgmentTargetId) ?? null
 
   return (
-    <Card sx={{ background: CARD_GRADIENT }}>
-      <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        {/* ヘッダー */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
+    <Collapse in={open} timeout={200}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             試合の詳細設定
           </Typography>
-          {open && (
-            <IconButton size="small" onClick={() => setOpen(false)} sx={{ color: '#5B6DC6', '&:hover': { backgroundColor: '#E8EAF6' } }}>
-              <ExpandLessIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          )}
-        </Box>
 
-        {/* 編集するトグル（未展開時のみボタン表示） */}
-        {!open ? (
-          <ButtonBase
-            onClick={() => setOpen(true)}
-            sx={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              border: '1px solid #5B6DC6', borderRadius: 1, px: 1.5, py: 0.75,
-              width: '100%', backgroundColor: 'transparent',
-              '&:hover': { backgroundColor: '#E8EAF6' },
-            }}
-          >
-            <Typography sx={{ fontSize: '13px', color: '#2F3C8C', fontWeight: 500 }}>
-              編集する
-            </Typography>
-          </ButtonBase>
-        ) : (
-          <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#2F3C8C' }}>
-            編集する
-          </Typography>
-        )}
-
-        {/* 展開コンテンツ */}
-        <Collapse in={open} timeout={300}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {/* 補足 */}
-            <Box>
-              <Typography sx={DETAIL_LABEL_SX}>補足</Typography>
-              <TextField
-                size="small"
-                fullWidth
-                placeholder="補足情報を入力してください(任意)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                sx={{
-                  ...DETAIL_FIELD_SX,
-                  '& .MuiInputBase-input::placeholder': { color: '#2F3C8C', opacity: 0.6 },
-                }}
-              />
-            </Box>
-
-            {/* 審判 */}
-            <Box>
-              <Typography sx={DETAIL_LABEL_SX}>審判</Typography>
+            {/* 場所 */}
+            <FormControl size="small" fullWidth>
+              <InputLabel shrink sx={{ fontSize: '13px', color: '#2F3C8C' }}>場所</InputLabel>
               <Select
-                value={referee}
-                displayEmpty
+                value={locationId}
+                label="場所"
+                notched
                 size="small"
                 fullWidth
-                onChange={(e) => setReferee(e.target.value)}
-                renderValue={(val) => (
-                  <Typography sx={{ fontSize: '13px', color: val ? '#2F3C8C' : '#9e9e9e' }}>
-                    {val || '審判'}
-                  </Typography>
-                )}
-                sx={{
-                  backgroundColor: 'transparent',
-                  '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                  '&:hover fieldset': { borderColor: '#5B6DC6' },
-                  '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                }}
+                onChange={(e) => setLocationId(e.target.value)}
+                sx={{ ...CARD_FIELD_SX['& .MuiOutlinedInput-root'] }}
               >
-                <MenuItem value=""><Typography sx={{ fontSize: '13px', color: '#9e9e9e' }}>審判</Typography></MenuItem>
-                <MenuItem value="r1"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>審判員 A</Typography></MenuItem>
-                <MenuItem value="r2"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>審判員 B</Typography></MenuItem>
+                {locations.map((loc) => (
+                  <MenuItem key={loc.id} value={loc.id}>
+                    <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{loc.name}</Typography>
+                  </MenuItem>
+                ))}
               </Select>
-            </Box>
-
-            {/* 試合の場所 */}
-            <Box>
-              <Typography sx={{ ...DETAIL_LABEL_SX, mb: 1.5 }}>試合の場所</Typography>
-              <FormControl size="small" fullWidth>
-                <InputLabel shrink sx={{ fontSize: '13px', color: '#2F3C8C' }}>場所</InputLabel>
-                <Select
-                  value={location}
-                  label="場所"
-                  notched
-                  size="small"
-                  fullWidth
-                  onChange={(e) => setLocation(e.target.value)}
-                  sx={{
-                    backgroundColor: 'transparent',
-                    '& fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                    '&:hover fieldset': { borderColor: '#5B6DC6' },
-                    '&.Mui-focused fieldset': { borderColor: '#5B6DC6', borderWidth: 1 },
-                  }}
-                >
-                  <MenuItem value="1"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>1 - Soccer Field 1</Typography></MenuItem>
-                  <MenuItem value="2"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>2 - Soccer Field 2</Typography></MenuItem>
-                  <MenuItem value="3"><Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>3 - 体育館</Typography></MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+            </FormControl>
 
             {/* 開始時刻 */}
-            <TextField
+            <DateTimeInput
               label="開始時刻"
-              type="datetime-local"
-              size="small"
-              fullWidth
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              sx={{
-                ...DETAIL_FIELD_SX,
-                '& .MuiInputLabel-root': { color: '#2F3C8C', fontSize: '13px' },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#2F3C8C' },
-              }}
-              InputLabelProps={{ shrink: true }}
+              value={time}
+              onChange={setTime}
             />
 
-            {/* すべて元に戻す / 実行 */}
-            <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+            {/* ─── 審判セクション ─── */}
+            <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <GavelIcon sx={{ fontSize: 16, color: '#5B6DC6' }} />
+              <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
+                審判
+              </Typography>
+              {currentJudgmentLabel && (
+                <Chip
+                  label={currentJudgmentLabel}
+                  size="small"
+                  sx={{
+                    ml: 'auto',
+                    height: 22,
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: '#E8EAF6',
+                    color: '#3949AB',
+                    border: '1px solid #C5CAE9',
+                    '& .MuiChip-label': { px: 1 },
+                  }}
+                />
+              )}
+            </Box>
+
+            {/* タイプ選択トグルボタン */}
+            <Box
+              sx={{
+                display: 'flex',
+                border: '1px solid #5B6DC6',
+                borderRadius: 1.5,
+                overflow: 'hidden',
+                backgroundColor: '#E8EAF6',
+              }}
+            >
+              {JUDGE_TYPES.map((type, i) => {
+                const isActive = judgmentType === type.value
+                return (
+                  <ButtonBase
+                    key={type.value}
+                    onClick={() => {
+                      if (judgmentType === type.value) {
+                        setJudgmentType(null)
+                        setJudgmentTargetId('')
+                      } else {
+                        setJudgmentType(type.value)
+                        setJudgmentTargetId('')
+                      }
+                    }}
+                    sx={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 0.5,
+                      py: 0.9,
+                      fontSize: '12px',
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive ? type.color : '#5B6DC6',
+                      backgroundColor: isActive ? '#fff' : 'transparent',
+                      borderRight: i < JUDGE_TYPES.length - 1 ? '1px solid #C5CAE9' : 'none',
+                      boxShadow: isActive ? '0 1px 4px rgba(57,73,171,0.15)' : 'none',
+                      transition: 'all 0.15s',
+                      '&:hover': {
+                        backgroundColor: isActive ? '#fff' : '#DCE0F5',
+                      },
+                    }}
+                  >
+                    {type.icon}
+                    {type.label}
+                  </ButtonBase>
+                )
+              })}
+            </Box>
+
+            {/* 審判候補セレクト */}
+            {judgmentType && (
+              <Autocomplete
+                size="small"
+                options={judgeSelectOptions}
+                getOptionLabel={(o) => o.name}
+                value={selectedJudgeOption}
+                onChange={(_, newVal) => setJudgmentTargetId(newVal?.id ?? '')}
+                isOptionEqualToValue={(o, v) => o.id === v.id}
+                noOptionsText={
+                  judgeSelectOptions.length === 0
+                    ? 'エントリーがありません'
+                    : '一致する候補がありません'
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={
+                      judgmentType === 'group' ? 'クラスを選択'
+                      : judgmentType === 'team' ? 'チームを選択'
+                      : 'ユーザーを選択'
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    sx={CARD_FIELD_SX}
+                  />
+                )}
+                renderOption={(props, option) => {
+                  const { key, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key?: string }
+                  return (
+                    <li key={key} {...rest}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.3 }}>
+                        <Box
+                          sx={{
+                            width: 6, height: 6, borderRadius: '50%',
+                            backgroundColor:
+                              judgmentType === 'group' ? '#7E57C2'
+                              : judgmentType === 'team' ? '#1976D2'
+                              : '#2E7D32',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{option.name}</Typography>
+                      </Box>
+                    </li>
+                  )
+                }}
+                sx={{
+                  '& .MuiAutocomplete-endAdornment': { color: '#5B6DC6' },
+                }}
+                ListboxProps={{ sx: { maxHeight: 220 } }}
+              />
+            )}
+
+            {!judgmentType && !currentJudgmentLabel && (
+              <Typography sx={{ fontSize: '12px', color: '#9E9E9E', fontStyle: 'italic', textAlign: 'center', py: 0.5 }}>
+                上のボタンから審判の種類を選択してください
+              </Typography>
+            )}
+
+            {/* トーナメント進出先設定 */}
+            {isTournament && subBrackets.length > 0 && (
+              <>
+                <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
+                <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
+                  進出先設定
+                </Typography>
+                <Typography sx={{ fontSize: '11px', color: '#5B6DC6', mb: 0.5 }}>
+                  この試合の勝者・敗者をサブブラケットのスロットに送ります
+                </Typography>
+                {allSlots.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <FormControl size="small" fullWidth>
+                      <InputLabel shrink sx={{ fontSize: '13px', color: '#2F3C8C' }}>勝者の進出先</InputLabel>
+                      <Select
+                        value={winnerConnection?.slotId ?? ''}
+                        label="勝者の進出先"
+                        notched
+                        size="small"
+                        onChange={(e) => handleSlotSourceChange('MATCH_WINNER', e.target.value)}
+                        sx={{ ...CARD_FIELD_SX['& .MuiOutlinedInput-root'] }}
+                      >
+                        <MenuItem value=""><Typography sx={{ fontSize: '13px', color: '#9E9E9E' }}>なし</Typography></MenuItem>
+                        {winnerSlots.map(s => (
+                          <MenuItem key={`w-${s.slotId}`} value={s.slotId}>
+                            <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{s.label}</Typography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" fullWidth>
+                      <InputLabel shrink sx={{ fontSize: '13px', color: '#2F3C8C' }}>敗者の進出先</InputLabel>
+                      <Select
+                        value={loserConnection?.slotId ?? ''}
+                        label="敗者の進出先"
+                        notched
+                        size="small"
+                        onChange={(e) => handleSlotSourceChange('MATCH_LOSER', e.target.value)}
+                        sx={{ ...CARD_FIELD_SX['& .MuiOutlinedInput-root'] }}
+                      >
+                        <MenuItem value=""><Typography sx={{ fontSize: '13px', color: '#9E9E9E' }}>なし</Typography></MenuItem>
+                        {loserSlots.map(s => (
+                          <MenuItem key={`l-${s.slotId}`} value={s.slotId}>
+                            <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{s.label}</Typography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                ) : (
+                  <Typography sx={{ fontSize: '12px', color: '#5B6DC6', opacity: 0.7 }}>
+                    サブブラケットにスロットがありません。サブブラケットを削除して再作成してください。
+                  </Typography>
+                )}
+              </>
+            )}
+
+            {/* 保存 / キャンセル */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
               <Button
                 variant="outlined"
-                startIcon={<RefreshIcon sx={{ color: '#D71212' }} />}
-                onClick={handleReset}
+                onClick={onCancel}
                 sx={{
-                  flex: 3,
+                  flexShrink: 0,
                   fontSize: '13px',
                   color: '#D71212',
                   borderColor: '#D71212',
                   backgroundColor: 'transparent',
+                  height: '40px',
                   '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
                 }}
               >
-                すべて元に戻す
+                キャンセル
               </Button>
               <Button
                 variant="contained"
+                fullWidth
                 startIcon={<CheckIcon />}
-                onClick={handleSave}
-                sx={{ ...SAVE_BUTTON_SX, flex: 7, fontSize: '13px' }}
+                onClick={onSave}
+                sx={SAVE_BUTTON_SX}
               >
-                実行
+                保存
               </Button>
             </Box>
           </Box>
-        </Collapse>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Collapse>
   )
 }

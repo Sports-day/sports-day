@@ -2,7 +2,7 @@ import {Box, Stack, Typography}from "@mui/material";
 import {GameProgressChart} from "./GameProgressChart";
 import {useFetchSportProgress} from "../../../src/features/sports/hook";
 
-export const GameProgress = (props: { sportsId: number }) => {
+export const GameProgress = (props: { sportsId: string }) => {
     const { progress } = useFetchSportProgress(props.sportsId)
 
     const formattedProgress = Math.trunc(progress * 100)

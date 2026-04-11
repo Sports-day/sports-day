@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useImages } from '../hooks/useImages'
+import { QueryError } from '@/components/ui/QueryError'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 
 const CLICKABLE_CELL_SX = {
@@ -29,7 +30,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
   const { data: images, loading, error } = useImages()
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
-  if (error) return <Typography sx={{ color: '#D71212', mt: 2 }}>データの取得に失敗しました</Typography>
+  if (error) return <QueryError />
 
   return (
     <Box>
@@ -37,7 +38,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
         画像
       </Typography>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
             <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
@@ -94,7 +95,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
                             <Box
                               component="img"
                               src={image.url}
-                              alt={image.name}
+                              alt={image.id}
                               sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                             />
@@ -102,7 +103,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
                         </Box>
                       </TableCell>
                       <TableCell sx={CLICKABLE_CELL_SX}>{image.id}</TableCell>
-                      <TableCell sx={CLICKABLE_CELL_SX}>{image.name}</TableCell>
+                      <TableCell sx={CLICKABLE_CELL_SX}>{image.status}</TableCell>
                       <TableCell sx={CLICKABLE_CELL_SX}>{image.url}</TableCell>
                     </TableRow>
                   ))

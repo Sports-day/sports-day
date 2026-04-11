@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
@@ -47,12 +48,18 @@ func (s *Sport) List(ctx context.Context) ([]*db_model.Sport, error) {
 }
 
 func (s *Sport) Create(ctx context.Context, input *model.CreateSportsInput) (*db_model.Sport, error) {
-	sport := &db_model.Sport{
-		ID:   ulid.Make(),
-		Name: input.Name,
+	maxOrder, err := s.sportsRepository.MaxDisplayOrder(ctx, s.db)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
 
-	sport, err := s.sportsRepository.Save(ctx, s.db, sport)
+	sport := &db_model.Sport{
+		ID:           ulid.Make(),
+		Name:         input.Name,
+		DisplayOrder: maxOrder + 1,
+	}
+
+	sport, err = s.sportsRepository.Save(ctx, s.db, sport)
 	if err != nil {
 		return nil, errors.ErrSaveSport
 	}
@@ -78,8 +85,14 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 		if input.Name != nil {
 			sport.Name = *input.Name
 		}
-		if input.Weight != nil {
-			sport.Weight = int(*input.Weight)
+		if input.DisplayOrder != nil {
+			sport.DisplayOrder = int(*input.DisplayOrder)
+		}
+		if input.ExperiencedLimit != nil {
+			sport.ExperiencedLimit = sql.NullInt64{
+				Int64: int64(*input.ExperiencedLimit),
+				Valid: true,
+			}
 		}
 
 		sport, err = s.sportsRepository.Save(ctx, tx, sport)
@@ -135,10 +148,6 @@ func (s *Sport) GetRankingRules(ctx context.Context, sportID string) ([]*db_mode
 }
 
 func (s *Sport) SetRankingRules(ctx context.Context, sportID string, rules []model.RankingRuleInput) ([]*db_model.RankingRule, error) {
-	if len(rules) == 0 {
-		return nil, errors.ErrRankingRuleInvalid
-	}
-
 	// priority 重複チェック
 	seen := make(map[int32]bool)
 	for _, r := range rules {
@@ -186,4 +195,75 @@ func (s *Sport) SetImage(ctx context.Context, sportID string, imageID string) er
 		sportID,
 		imageID,
 	)
+}
+
+func (s *Sport) ListAllExperiences(ctx context.Context) ([]*db_model.SportExperience, error) {
+	exps, err := s.sportsRepository.ListAllExperiences(ctx, s.db)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return exps, nil
+}
+
+func (s *Sport) ListExperiencesBySportID(ctx context.Context, sportID string) ([]*db_model.SportExperience, error) {
+	exps, err := s.sportsRepository.ListExperiencesBySportID(ctx, s.db, sportID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return exps, nil
+}
+
+func (s *Sport) ListExperiencesByUserID(ctx context.Context, userID string) ([]*db_model.SportExperience, error) {
+	exps, err := s.sportsRepository.ListExperiencesByUserID(ctx, s.db, userID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return exps, nil
+}
+
+func (s *Sport) AddExperiences(ctx context.Context, sportID string, userIDs []string) ([]*db_model.SportExperience, error) {
+	sport, err := s.sportsRepository.Get(ctx, s.db, sportID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	var result []*db_model.SportExperience
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		exps, err := s.sportsRepository.AddExperiences(ctx, tx, sportID, userIDs)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		result = exps
+
+		// 上限が設定されている場合、追加後にチームごとの経験者数を検証
+		if sport.ExperiencedLimit.Valid {
+			limit := int(sport.ExperiencedLimit.Int64)
+			maxCount, err := s.sportsRepository.MaxExperiencedCountPerTeam(ctx, tx, sportID)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			if maxCount > limit {
+				return errors.ErrExperiencedLimitExceeded
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (s *Sport) DeleteExperiences(ctx context.Context, sportID string, userIDs []string) error {
+	if _, err := s.sportsRepository.Get(ctx, s.db, sportID); err != nil {
+		return errors.Wrap(err)
+	}
+	if err := s.sportsRepository.DeleteExperiences(ctx, s.db, sportID, userIDs); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (s *Sport) UpdateDisplayOrders(ctx context.Context, items []repository.DisplayOrderItem) error {
+	return s.sportsRepository.UpdateDisplayOrders(ctx, s.db, items)
 }

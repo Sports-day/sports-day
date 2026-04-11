@@ -19,8 +19,10 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckIcon from '@mui/icons-material/Check'
-import { MOCK_LOCATIONS } from '@/features/locations/mock'
+import { useLocations } from '@/features/locations/hooks/useLocations'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
+import { DateTimeInput } from '@/components/ui/DateTimeInput'
+import { BackButton } from '@/components/ui/BackButton'
 import type { BulkEditRow } from '../hooks/useBulkEdit'
 
 const FIELD_SX = {
@@ -86,12 +88,14 @@ export function ActiveMatchBulkEditPage({
   onBackToCompetition,
   onExecute,
 }: Props) {
+  const { data: locations } = useLocations()
   const locationName = filterLocation
-    ? (MOCK_LOCATIONS.find((l) => l.id === filterLocation)?.name ?? filterLocation)
+    ? (locations.find((l) => l.id === filterLocation)?.name ?? filterLocation)
     : '-'
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* パンくず */}
+      <BackButton onClick={onBackToList} />
       <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBackToList} sx={BREADCRUMB_LINK_SX}>
           試合
@@ -108,7 +112,7 @@ export function ActiveMatchBulkEditPage({
       </Breadcrumbs>
 
       {/* 1枚のカード（フォーム＋テーブル） */}
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 
           {/* タイトル */}
@@ -117,14 +121,10 @@ export function ActiveMatchBulkEditPage({
           </Typography>
 
           {/* 1試合目開始時刻 */}
-          <TextField
+          <DateTimeInput
             label="1試合目開始時刻"
-            type="datetime-local"
-            size="small"
             value={filterDate}
-            onChange={(e) => onFilterDateChange(e.target.value)}
-            sx={FIELD_SX}
-            InputLabelProps={{ shrink: true }}
+            onChange={onFilterDateChange}
           />
 
           {/* 開催場所 */}
@@ -146,7 +146,7 @@ export function ActiveMatchBulkEditPage({
               renderValue={(val) =>
                 val ? (
                   <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-                    {MOCK_LOCATIONS.find((l) => l.id === val)?.name ?? val}
+                    {locations.find((l) => l.id === val)?.name ?? val}
                   </Typography>
                 ) : (
                   <Typography sx={{ fontSize: '13px', color: 'rgba(47, 60, 140, 0.7)' }}>未選択</Typography>
@@ -156,7 +156,7 @@ export function ActiveMatchBulkEditPage({
               <MenuItem value="">
                 <Typography sx={{ fontSize: '13px', color: 'rgba(47, 60, 140, 0.7)' }}>未選択</Typography>
               </MenuItem>
-              {MOCK_LOCATIONS.map((loc) => (
+              {locations.map((loc) => (
                 <MenuItem key={loc.id} value={loc.id}>
                   <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>{loc.name}</Typography>
                 </MenuItem>

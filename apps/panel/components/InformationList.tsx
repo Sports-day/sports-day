@@ -15,7 +15,7 @@ export const InformationList = () => {
             // />
             <OtherInfo
                 infoName={""}
-                infoContent={information.name}
+                infoContent={information.title}
                 infoSubContent={information.content}
                 key={information.id}
             />

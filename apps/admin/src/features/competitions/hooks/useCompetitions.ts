@@ -1,5 +1,17 @@
-import { MOCK_COMPETITIONS } from '../mock'
+import { useGetAdminCompetitionsQuery } from '@/gql/__generated__/graphql'
+import type { Competition } from '../types'
 
 export function useCompetitions() {
-  return { data: MOCK_COMPETITIONS, loading: false, error: null }
+  const { data, loading, error } = useGetAdminCompetitionsQuery({ fetchPolicy: 'cache-and-network' })
+  const competitions: Competition[] = (data?.competitions ?? []).map(c => ({
+    id: c.id,
+    name: c.name,
+    displayOrder: c.displayOrder,
+    type: c.type,
+    sceneId: c.scene.id,
+    sceneName: c.scene.name,
+    sportId: c.sport.id,
+    sportName: c.sport.name,
+  }))
+  return { data: competitions, loading, error: error ?? null }
 }

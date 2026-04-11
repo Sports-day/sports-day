@@ -27,6 +27,7 @@ type Match interface {
 	ClearMatchEntryTeamID(ctx context.Context, db *gorm.DB, matchEntryID string) error
 	UpdateMatchEntryTeamID(ctx context.Context, db *gorm.DB, matchEntryID string, teamID string) error
 	SaveMatchEntry(ctx context.Context, db *gorm.DB, entry *db_model.MatchEntry) (*db_model.MatchEntry, error)
+	DeleteByCompetitionID(ctx context.Context, db *gorm.DB, competitionID string) error
 	SaveBatch(ctx context.Context, db *gorm.DB, matches []*db_model.Match) error
 	SaveMatchEntriesBatch(ctx context.Context, db *gorm.DB, entries []*db_model.MatchEntry) error
 }

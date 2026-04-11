@@ -1,65 +1,28 @@
-import { useMemo, useState } from "react";
-import { useApolloClient, useMutation, useQuery } from "@apollo/client";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useApolloClient } from "@apollo/client";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ADD_TEAM_MEMBER,
-  CREATE_SPORT_ENTRY,
-  CREATE_TEAM,
-  DELETE_MEMBER,
-  DELETE_TEAM,
-  GET_SPORTSCENE,
-  GET_SPORTSCENE_ENTRIES,
-  GET_TEAM,
-  GET_USERS,
-} from "@/features/teamEdit.gql";
+  useGetMeQuery,
+  useGetUsersQuery,
+  useGetSportsceneQuery,
+  useGetSportsceneEntriesQuery,
+  useGetTeamQuery,
+  useGetSportExperienceQuery,
+  useCreateTeamMutation,
+  useAddTeamMemberMutation,
+  useCreateSportEntryMutation,
+  useDeleteMemberMutation,
+  useDeleteTeamMutation,
+  useAddSportExperiencesMutation,
+  useDeleteSportExperiencesMutation,
+  GetSportsceneDocument,
+  GetSportsceneEntriesDocument,
+  GetTeamDocument,
+} from "@/gql/__generated__/graphql";
 
 export type StudentInformation = {
   studentId: string;
   studentName: string;
-};
-
-type UserNode = {
-  id: string;
-  name: string;
-};
-
-type TeamNode = {
-  id: string;
-  users: UserNode[];
-};
-
-type SportSceneNode = {
-  id: string;
-  sport: { id: string };
-  scene: { id: string };
-  entries: { team: TeamNode }[];
-};
-
-type SportSceneEntriesData = {
-  sportScene: {
-    id: string;
-    entries: { team: TeamNode }[];
-  } | null;
-};
-
-type SportSceneEntriesVars = {
-  sportSceneId: string;
-};
-
-type GetUsersData = {
-  users: UserNode[];
-};
-
-type GetSportSceneData = {
-  sportScenes: SportSceneNode[];
-};
-
-type GetTeamData = {
-  team: { users: UserNode[] } | null;
-};
-
-type GetTeamVars = {
-  teamId: string;
 };
 
 export function useTeamEdit() {
@@ -73,37 +36,55 @@ export function useTeamEdit() {
   const [searchName, setSearchName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [experiencedIds, setExperiencedIds] = useState<Set<string>>(new Set());
+  const [experienceInitialized, setExperienceInitialized] = useState(false);
+  const initialExperiencedIds = useRef<Set<string>>(new Set());
 
   const teamId = searchParams?.get("teamid")?.trim() ?? "";
   const hasTeamId = teamId.length > 0;
 
-  const { data: userData, loading: usersLoading } = useQuery<GetUsersData>(GET_USERS);
-  const { data: sportSceneData, loading: sportSceneLoading } =
-    useQuery<GetSportSceneData>(GET_SPORTSCENE);
-  const teamQueryOptions = hasTeamId
-    ? { variables: { teamId } }
-    : { skip: true };
-  const { data: teamData, loading: teamLoading } = useQuery<GetTeamData, GetTeamVars>(
-    GET_TEAM,
-    teamQueryOptions,
+  const { data: meData, loading: meLoading } = useGetMeQuery();
+  const { data: userData, loading: usersLoading } = useGetUsersQuery();
+  const { data: sportSceneData, loading: sportSceneLoading } = useGetSportsceneQuery();
+  const { data: teamData, loading: teamLoading } = useGetTeamQuery(
+    hasTeamId
+      ? { variables: { teamId } }
+      : { skip: true, variables: { teamId: "" } },
   );
+  const { data: experienceData, loading: experienceLoading } = useGetSportExperienceQuery({
+    variables: { sportId: sports },
+  });
+
+  const experiencedLimit = experienceData?.sport?.experiencedLimit ?? null;
+
+  // 既存の経験者データで初期化（一度だけ）
+  useEffect(() => {
+    if (experienceInitialized || !experienceData?.sportExperiences) return;
+    const ids = new Set(experienceData.sportExperiences.map((e) => e.userId));
+    setExperiencedIds(ids);
+    initialExperiencedIds.current = new Set(ids);
+    setExperienceInitialized(true);
+  }, [experienceData, experienceInitialized]);
 
   const sportScene = useMemo(() => {
-    return sportSceneData?.sportScenes?.find(
-      (d) => d.sport.id === sports && d.scene.id === type,
-    );
+    return sportSceneData?.scenes
+      ?.filter((s) => !s.isDeleted)
+      ?.flatMap((s) => s.sportScenes)
+      ?.find((d) => d.sport.id === sports && d.scene.id === type);
   }, [sportSceneData, sports, type]);
 
   const sportSceneId = sportScene?.id ?? "";
-  const { data: sportSceneEntriesData, loading: sportSceneEntriesLoading } = useQuery<
-    SportSceneEntriesData,
-    SportSceneEntriesVars
-  >(GET_SPORTSCENE_ENTRIES, sportSceneId ? { variables: { sportSceneId } } : { skip: true });
+  const { data: sportSceneEntriesData, loading: sportSceneEntriesLoading } =
+    useGetSportsceneEntriesQuery();
   const loading =
+    meLoading ||
     usersLoading ||
     sportSceneLoading ||
     sportSceneEntriesLoading ||
+    experienceLoading ||
     (hasTeamId && teamLoading);
+
+  const groupId = meData?.me?.groups?.[0]?.id ?? "";
 
   const teamMembersFromQuery = useMemo(() => {
     return (
@@ -122,10 +103,13 @@ export function useTeamEdit() {
     () => selectedMember.map((s) => s.studentId),
     [selectedMember],
   );
-  const teamCount = useMemo(
-    () => sportSceneEntriesData?.sportScene?.entries?.length ?? 0,
-    [sportSceneEntriesData?.sportScene?.entries],
-  );
+  const teamCount = useMemo(() => {
+    const sc = sportSceneEntriesData?.scenes
+      ?.filter((s) => !s.isDeleted)
+      ?.flatMap((s) => s.sportScenes)
+      ?.find((ss) => ss.id === sportSceneId);
+    return sc?.entries?.length ?? 0;
+  }, [sportSceneEntriesData, sportSceneId]);
 
   const filteredUsers = useMemo(() => {
     if (!userData?.users) return [];
@@ -141,19 +125,42 @@ export function useTeamEdit() {
 
   const alreadyInAnyTeam = useMemo(() => {
     const myTeamUserIdSet = new Set(myTeamUserIds);
-    const all = sportSceneData?.sportScenes
+    const all = sportSceneData?.scenes
+      ?.filter((s) => !s.isDeleted)
+      ?.flatMap((s) => s.sportScenes)
       ?.filter((sportScene) => sportScene.scene.id === type)
       .flatMap((sportScene) =>
         sportScene.entries?.flatMap((entry) => entry.team?.users ?? []) ?? [],
       ) ?? [];
     return all.filter((user) => !myTeamUserIdSet.has(user.id));
-  }, [myTeamUserIds, sportSceneData?.sportScenes, type]);
+  }, [myTeamUserIds, sportSceneData?.scenes, type]);
 
-  const [addTeamMemberMutation] = useMutation(ADD_TEAM_MEMBER);
-  const [createSportEntryMutation] = useMutation(CREATE_SPORT_ENTRY);
-  const [createTeamMutation] = useMutation(CREATE_TEAM);
-  const [deleteMemberMutation] = useMutation(DELETE_MEMBER);
-  const [deleteTeamMutation] = useMutation(DELETE_TEAM);
+  // 選択中メンバーのうち経験者の数
+  const experiencedCount = useMemo(() => {
+    return selectedIds.filter((id) => experiencedIds.has(id)).length;
+  }, [selectedIds, experiencedIds]);
+
+  const experienceLimitReached = experiencedLimit !== null && experiencedCount >= experiencedLimit;
+
+  const toggleExperience = useCallback((userId: string) => {
+    setExperiencedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  }, []);
+
+  const [addTeamMemberMutation] = useAddTeamMemberMutation();
+  const [createSportEntryMutation] = useCreateSportEntryMutation();
+  const [createTeamMutation] = useCreateTeamMutation();
+  const [deleteMemberMutation] = useDeleteMemberMutation();
+  const [deleteTeamMutation] = useDeleteTeamMutation();
+  const [addSportExperiencesMutation] = useAddSportExperiencesMutation();
+  const [deleteSportExperiencesMutation] = useDeleteSportExperiencesMutation();
 
   const addSelectedMember = (student: StudentInformation) => {
     setLocalSelectedMember((prev) => {
@@ -165,33 +172,34 @@ export function useTeamEdit() {
     });
   };
 
-  const createTeam = async () => {
+  const createTeam = async (memberIds: string[]) => {
+    if (!groupId) throw new Error("グループに所属していません。管理者にグループの割り当てを依頼してください。");
     const { data } = await createTeamMutation({
       variables: {
         input: {
           name: `チーム${teamCount + 1}`,
+          groupId,
+          userIds: memberIds,
         },
       },
     });
     return data?.createTeam?.id as string | undefined;
   };
 
-  const addTeamMember = async (teamId: string, members: string[]) => {
+  const addTeamMember = async (targetTeamId: string, members: string[]) => {
     await addTeamMemberMutation({
       variables: {
-        teamId,
+        teamId: targetTeamId,
         userIds: members,
       },
     });
   };
 
-  const entryTeam = async (teamId: string, sportSceneIdValue: string) => {
+  const entryTeam = async (targetTeamId: string, sportSceneIdValue: string) => {
     await createSportEntryMutation({
       variables: {
-        input: {
-          teamId,
-          sportSceneId: sportSceneIdValue,
-        },
+        sportSceneId: sportSceneIdValue,
+        teamId: targetTeamId,
       },
     });
   };
@@ -203,6 +211,12 @@ export function useTeamEdit() {
     setLocalSelectedMember((prev) => {
       const base = prev ?? teamMembersFromQuery;
       return base.filter((s) => s.studentId !== studentId);
+    });
+    // 経験者リストからも除外
+    setExperiencedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(studentId);
+      return next;
     });
   };
 
@@ -230,17 +244,36 @@ export function useTeamEdit() {
         }
       } else {
         if (!sportSceneId) return;
-        const newTeamId = await createTeam();
+        const newTeamId = await createTeam(selectedIds);
         if (!newTeamId) return;
         createdTeamId = newTeamId;
-        await addTeamMember(newTeamId, selectedIds);
         await entryTeam(newTeamId, sportSceneId);
       }
+
+      // 経験者データを差分保存（自チームのメンバーのみ対象）
+      const selectedSet = new Set(selectedIds);
+      const currentExperienced = new Set(selectedIds.filter((id) => experiencedIds.has(id)));
+      const toAdd = [...currentExperienced].filter((id) => !initialExperiencedIds.current.has(id));
+      const toRemove = [...initialExperiencedIds.current].filter(
+        (id) => selectedSet.has(id) && !currentExperienced.has(id),
+      );
+
+      if (toAdd.length > 0) {
+        await addSportExperiencesMutation({
+          variables: { sportId: sports, userIds: toAdd },
+        });
+      }
+      if (toRemove.length > 0) {
+        await deleteSportExperiencesMutation({
+          variables: { sportId: sports, userIds: toRemove },
+        });
+      }
+
       await apolloClient.refetchQueries({
         include: [
-          GET_SPORTSCENE,
-          GET_SPORTSCENE_ENTRIES,
-          GET_TEAM,
+          GetSportsceneDocument,
+          GetSportsceneEntriesDocument,
+          GetTeamDocument,
           "GetSceneSport",
           "GetAllTeamdata",
         ],
@@ -258,7 +291,9 @@ export function useTeamEdit() {
           // Rollback failed; keep original error path.
         }
       }
-      setSubmitError("送信に失敗しました。もう一度お試しください。");
+      const message =
+        error instanceof Error ? error.message : "送信に失敗しました。";
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -266,6 +301,7 @@ export function useTeamEdit() {
 
   return {
     loading,
+    groupId,
     selectedMember,
     selectedIds,
     searchName,
@@ -277,5 +313,9 @@ export function useTeamEdit() {
     submit,
     isSubmitting,
     submitError,
+    experiencedIds,
+    toggleExperience,
+    experiencedLimit,
+    experienceLimitReached,
   };
 }

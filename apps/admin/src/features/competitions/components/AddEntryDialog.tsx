@@ -1,35 +1,44 @@
+import { useState } from 'react'
 import {
   Box,
   Button,
   Checkbox,
+  Chip,
+  Collapse,
   Dialog,
   DialogContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
+  IconButton,
+  InputAdornment,
+  TextField,
   Typography,
 } from '@mui/material'
+import SearchIcon from '@mui/icons-material/Search'
+import GroupAddIcon from '@mui/icons-material/GroupAdd'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import { useAddEntryDialog } from '../hooks/useAddEntryDialog'
-import { useTeams } from '@/features/teams'
+import { useAddEntryTeams } from '../hooks/useAddEntryTeams'
+import { TeamMemberPreview } from './TeamMemberPreview'
 
 type Props = {
   open: boolean
   leagueName: string
-  competitionName: string
+  sportId?: string
   existingTeamNames?: string[]
   onClose: () => void
   onAdd: (selectedIds: string[]) => void
 }
 
-export function AddEntryDialog({ open, leagueName, competitionName, existingTeamNames = [], onClose, onAdd }: Props) {
-  const { data: teams } = useTeams()
+export function AddEntryDialog({ open, leagueName, sportId = '', existingTeamNames = [], onClose, onAdd }: Props) {
+  const { teams } = useAddEntryTeams(sportId)
   const existingSet = new Set(existingTeamNames)
-  const availableTeams = teams
-    .map(t => ({ id: t.id, name: t.name }))
-    .filter(t => !existingSet.has(t.name))
-  const { selected, allSelected, toggle, toggleAll, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
+  const availableTeams = teams.filter(t => !existingSet.has(t.name))
+  const { selected, allSelected, expandedTeamId, toggle, toggleAll, toggleExpand, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
+  const [search, setSearch] = useState('')
+
+  const filteredTeams = availableTeams.filter(t =>
+    t.name.toLowerCase().includes(search.toLowerCase()),
+  )
 
   return (
     <Dialog
@@ -49,106 +58,200 @@ export function AddEntryDialog({ open, leagueName, competitionName, existingTeam
       }}
     >
       <DialogContent sx={{ p: 3 }}>
-        {/* タイトル */}
-        <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 0.5 }}>
-          エントリーの追加
-        </Typography>
+        {/* ヘッダー */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+          <GroupAddIcon sx={{ fontSize: 20, color: '#2F3C8C' }} />
+          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
+            エントリーの追加
+          </Typography>
+          {selected.length > 0 && (
+            <Chip
+              label={`${selected.length}件選択中`}
+              size="small"
+              sx={{ bgcolor: '#3949AB', color: '#fff', fontWeight: 600, fontSize: '11px', height: 22 }}
+            />
+          )}
+        </Box>
         <Typography sx={{ fontSize: '13px', color: '#2F3C8C', opacity: 0.7, mb: 2 }}>
-          {competitionName} / {leagueName}
+          {leagueName}
         </Typography>
 
-        {/* テーブルエリア */}
-        <Box
+        {/* 検索 */}
+        <TextField
+          placeholder="チーム名で検索"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          fullWidth
+          size="small"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 18, color: '#5B6DC6' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
           sx={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #D0D3E8',
-            borderRadius: 1,
-            overflow: 'hidden',
-            minHeight: 480,
+            mb: 1.5,
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: '#fff',
+              borderRadius: 1.5,
+              '& fieldset': { borderColor: '#D0D3E8' },
+              '&:hover fieldset': { borderColor: '#5B6DC6' },
+              '&.Mui-focused fieldset': { borderColor: '#5B6DC6' },
+            },
+            '& input::placeholder': { color: '#2F3C8C', opacity: 0.4 },
+          }}
+        />
+
+        {/* 全選択 */}
+        <Box
+          onClick={toggleAll}
+          sx={{
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1,
+            px: 1.5,
+            py: 0.5,
+            cursor: 'pointer',
+            borderRadius: 1,
+            '&:hover': { backgroundColor: '#E0E3F5' },
           }}
         >
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  padding="checkbox"
+          <Checkbox
+            checked={allSelected}
+            indeterminate={selected.length > 0 && !allSelected}
+            size="small"
+            sx={{ p: 0, color: '#AAAAAA', '&.Mui-checked': { color: '#5B6DC6' }, '&.MuiCheckbox-indeterminate': { color: '#5B6DC6' } }}
+          />
+          <Typography sx={{ fontSize: '12px', color: '#2F3C8C', opacity: 0.6, fontWeight: 500 }}>
+            すべて選択
+          </Typography>
+        </Box>
+
+        {/* チームリスト */}
+        <Box
+          sx={{
+            maxHeight: 420,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+            mt: 0.5,
+            pr: 0.5,
+          }}
+        >
+          {filteredTeams.length === 0 ? (
+            <Box sx={{ py: 6, textAlign: 'center' }}>
+              <Typography sx={{ fontSize: '14px', color: '#666' }}>
+                {search ? '該当するチームがありません' : '追加できるチームがありません'}
+              </Typography>
+            </Box>
+          ) : (
+            filteredTeams.map(team => {
+              const isSelected = selected.includes(team.id)
+              const isExpanded = expandedTeamId === team.id
+              return (
+                <Box
+                  key={team.id}
                   sx={{
-                    backgroundColor: '#FFFFFF',
-                    borderBottom: '1px solid #D0D3E8',
-                    width: 48,
+                    borderRadius: 1.5,
+                    border: '1px solid',
+                    borderColor: isSelected ? '#5B6DC6' : '#E0E3F5',
+                    backgroundColor: isSelected ? '#E8EAF6' : '#fff',
+                    transition: 'all 0.12s',
+                    '&:hover': {
+                      borderColor: '#5B6DC6',
+                      backgroundColor: isSelected ? '#DCE0F5' : '#F5F6FC',
+                    },
                   }}
                 >
-                  <Checkbox
-                    checked={allSelected}
-                    indeterminate={selected.length > 0 && !allSelected}
-                    onChange={toggleAll}
-                    size="small"
-                    sx={{ color: '#AAAAAA', '&.Mui-checked': { color: '#5B6DC6' }, '&.MuiCheckbox-indeterminate': { color: '#5B6DC6' } }}
-                  />
-                </TableCell>
-                <TableCell sx={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #D0D3E8', color: '#333', fontSize: '13px', fontWeight: 500, width: 100 }}>
-                  ID
-                </TableCell>
-                <TableCell sx={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #D0D3E8', color: '#333', fontSize: '13px', fontWeight: 500 }}>
-                  チーム名
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {availableTeams.length === 0 ? null : availableTeams.map(team => (
-                <TableRow
-                  key={team.id}
-                  hover
-                  onClick={() => toggle(team.id)}
-                  sx={{ cursor: 'pointer', backgroundColor: selected.includes(team.id) ? '#F0F2FF' : 'transparent' }}
-                >
-                  <TableCell padding="checkbox">
+                  <Box
+                    onClick={() => toggle(team.id)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1.5,
+                      py: 1,
+                      cursor: 'pointer',
+                    }}
+                  >
                     <Checkbox
-                      checked={selected.includes(team.id)}
+                      checked={isSelected}
                       size="small"
-                      sx={{ color: '#AAAAAA', '&.Mui-checked': { color: '#5B6DC6' } }}
+                      sx={{ p: 0, color: '#AAAAAA', '&.Mui-checked': { color: '#5B6DC6' } }}
                     />
-                  </TableCell>
-                  <TableCell sx={{ fontSize: '13px', color: '#333' }}>{team.id}</TableCell>
-                  <TableCell sx={{ fontSize: '13px', color: '#333' }}>{team.name}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {availableTeams.length === 0 && (
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography sx={{ fontSize: '14px', color: '#666' }}>チームがありません</Typography>
-            </Box>
+                    <Typography sx={{ fontSize: '13px', color: '#2F3C8C', fontWeight: isSelected ? 600 : 400, flex: 1 }}>
+                      {team.name}
+                    </Typography>
+                    <Typography sx={{ fontSize: '11px', color: '#2F3C8C', opacity: 0.5, whiteSpace: 'nowrap' }}>
+                      {team.members.length}名
+                      {sportId && team.experiencedCount > 0 && (
+                        <Typography component="span" sx={{ fontSize: '11px', color: '#E65100', fontWeight: 600, ml: 0.5 }}>
+                          ({team.experiencedCount}名経験者)
+                        </Typography>
+                      )}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleExpand(team.id)
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: '#5B6DC6',
+                        '&:hover': { backgroundColor: 'rgba(91, 109, 198, 0.1)' },
+                      }}
+                    >
+                      {isExpanded ? <ExpandLessIcon sx={{ fontSize: 20 }} /> : <ExpandMoreIcon sx={{ fontSize: 20 }} />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={isExpanded} timeout={200}>
+                    <Box sx={{ px: 1.5, pb: 1 }}>
+                      <TeamMemberPreview members={team.members} sportId={sportId} />
+                    </Box>
+                  </Collapse>
+                </Box>
+              )
+            })
           )}
         </Box>
 
         {/* ボタン */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
           <Button
             variant="outlined"
             onClick={onClose}
             sx={{
-              borderColor: '#E53935',
-              color: '#E53935',
-              fontSize: '14px',
-              px: 3,
-              '&:hover': { borderColor: '#C62828', backgroundColor: '#FFF0F0' },
+              backgroundColor: 'transparent',
+              color: '#2F3C8C',
+              borderColor: '#5B6DC6',
+              boxShadow: 'none',
+              whiteSpace: 'nowrap',
+              height: '40px',
+              fontSize: '13px',
+              fontWeight: 600,
+              '&:hover': { backgroundColor: '#E0E3F5', borderColor: '#5B6DC6' },
             }}
           >
             キャンセル
           </Button>
           <Button
             variant="contained"
+            fullWidth
+            disabled={selected.length === 0}
             onClick={() => handleAdd(onClose)}
             sx={{
-              backgroundColor: '#5B6DC6',
+              height: '40px',
+              fontSize: '13px',
+              fontWeight: 600,
+              backgroundColor: '#3949AB',
               color: '#FFFFFF',
-              fontSize: '14px',
-              px: 3,
-              '&:hover': { backgroundColor: '#4A5BB5' },
+              boxShadow: 'none',
+              '&:hover': { backgroundColor: '#2F3C8C', boxShadow: 'none' },
             }}
           >
             追加

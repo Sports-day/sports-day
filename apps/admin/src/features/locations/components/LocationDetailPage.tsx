@@ -7,18 +7,16 @@ import {
   ButtonBase,
   Card,
   CardContent,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   TextField,
   Typography,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import CheckIcon from '@mui/icons-material/Check'
+import { BackButton } from '@/components/ui/BackButton'
 import { useLocationDetail } from '../hooks/useLocationDetail'
 import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, CARD_FIELD_SX } from '@/styles/commonSx'
 import { showToast } from '@/lib/toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Props = {
   locationId: string
@@ -28,9 +26,8 @@ type Props = {
 }
 
 export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Props) {
-  const { location, name, note, setName, setNote, handleSave, handleDelete } = useLocationDetail(locationId, onSave, onDelete)
+  const { location, name, setName, dirty, handleSave, handleDelete } = useLocationDetail(locationId, onSave, onDelete)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [dirty, setDirty] = useState(false)
   useUnsavedWarning(dirty)
 
   if (!location) {
@@ -41,9 +38,8 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
     )
   }
 
-  const handleSaveWithToast = () => {
-    handleSave()
-    setDirty(false)
+  const handleSaveWithToast = async () => {
+    await handleSave()
     showToast('場所を保存しました')
   }
 
@@ -55,6 +51,7 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           場所
@@ -64,29 +61,23 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
         </Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             場所の編集
           </Typography>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }} onChangeCapture={() => setDirty(true)}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               label="名称*"
               value={name}
               onChange={(e) => setName(e.target.value)}
               fullWidth
               size="small"
+              error={!name.trim() && dirty}
+              helperText={!name.trim() && dirty ? 'この項目は必須です' : name.length >= 60 ? `${name.length}/64文字` : ''}
               sx={CARD_FIELD_SX}
-            />
-
-            <TextField
-              label="備考"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              fullWidth
-              size="small"
-              sx={CARD_FIELD_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
             />
 
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -103,7 +94,7 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={handleSaveWithToast}
-                disabled={!name.trim()}
+                disabled={!dirty || !name.trim()}
                 sx={SAVE_BUTTON_SX}
               >
                 保存
@@ -113,43 +104,13 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
         </CardContent>
       </Card>
 
-      <Dialog
+      <ConfirmDialog
         open={deleteDialogOpen}
+        title="場所を削除しますか？"
+        description={`「${location.name}」を削除します。この操作は元に戻せません。`}
         onClose={() => setDeleteDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        aria-labelledby="delete-dialog-title"
-        slotProps={{ paper: { sx: { borderRadius: 2, p: 1, backgroundColor: '#EFF0F8' } } }}
-      >
-        <DialogTitle id="delete-dialog-title" sx={{ fontSize: '15px', fontWeight: 600, color: '#2F3C8C', pb: 0.5 }}>
-          場所を削除しますか？
-        </DialogTitle>
-        <DialogContent sx={{ pb: 1 }}>
-          <Typography sx={{ fontSize: '13px', color: '#2F3C8C' }}>
-            「{location.name}」を削除します。この操作は元に戻せません。
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 2, pb: 2, gap: 1 }}>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            sx={{ fontSize: '13px', color: '#2F3C8C', '&:hover': { backgroundColor: '#E8EAF6' } }}
-          >
-            キャンセル
-          </Button>
-          <Button
-            onClick={onConfirmDelete}
-            variant="outlined"
-            sx={{
-              fontSize: '13px',
-              color: '#D71212',
-              borderColor: '#D71212',
-              '&:hover': { backgroundColor: '#FDECEA', borderColor: '#D71212' },
-            }}
-          >
-            削除
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={onConfirmDelete}
+      />
     </Box>
   )
 }

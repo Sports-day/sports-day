@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   Box,
   Button,
@@ -13,7 +14,10 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useLocations } from '../hooks/useLocations'
+import { QueryError } from '@/components/ui/QueryError'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
+import { SearchFilterBar } from '@/components/ui/SearchFilterBar'
+import { useFilterParams } from '@/hooks/useFilterParams'
 
 type Props = {
   onNavigateToCreate: () => void
@@ -22,9 +26,17 @@ type Props = {
 
 export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props) {
   const { data: locations, loading, error } = useLocations()
+  const { values: fp, set: setFilter } = useFilterParams(['keyword'])
+  const keyword = fp.keyword
+
+  const filtered = useMemo(() => {
+    if (!keyword) return locations
+    const kw = keyword.toLowerCase()
+    return locations.filter(l => l.name.toLowerCase().includes(kw))
+  }, [locations, keyword])
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
-  if (error) return <Typography sx={{ color: '#D71212', mt: 2 }}>データの取得に失敗しました</Typography>
+  if (error) return <QueryError />
 
   return (
     <Box>
@@ -32,7 +44,16 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
         場所
       </Typography>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Box sx={{ mb: 2 }}>
+        <SearchFilterBar
+          keyword={keyword}
+          onKeywordChange={(v) => setFilter('keyword', v)}
+          placeholder="場所名で検索…"
+          resultCount={filtered.length}
+        />
+      </Box>
+
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
             <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C' }}>
@@ -53,29 +74,25 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
             <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={LIST_TABLE_HEAD_SX}>場所ID</TableCell>
                   <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>
-                  <TableCell sx={LIST_TABLE_HEAD_SX}>説明</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {locations.length === 0 ? (
+                {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
-                      データがありません
+                    <TableCell colSpan={1} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                      {keyword ? '条件に一致する場所がありません' : 'データがありません'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  locations.map((location) => (
+                  filtered.map((location) => (
                     <TableRow
                       key={location.id}
                       hover
                       onClick={() => onSelectLocation(location.id)}
                       sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
                     >
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{location.id}</TableCell>
                       <TableCell sx={LIST_TABLE_CELL_SX}>{location.name}</TableCell>
-                      <TableCell sx={LIST_TABLE_CELL_SX}>{location.description}</TableCell>
                     </TableRow>
                   ))
                 )}

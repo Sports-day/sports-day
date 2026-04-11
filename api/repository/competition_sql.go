@@ -57,10 +57,31 @@ func (r competition) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([
 
 func (r competition) List(ctx context.Context, db *gorm.DB) ([]*db_model.Competition, error) {
 	var competitions []*db_model.Competition
-	if err := db.Find(&competitions).Error; err != nil {
+	if err := db.Order("display_order ASC, created_at ASC").Find(&competitions).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return competitions, nil
+}
+
+func (r competition) MaxDisplayOrder(ctx context.Context, db *gorm.DB) (int, error) {
+	var max int
+	err := db.Model(&db_model.Competition{}).Select("COALESCE(MAX(display_order), 0)").Scan(&max).Error
+	if err != nil {
+		return 0, errors.Wrap(err)
+	}
+	return max, nil
+}
+
+func (r competition) UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			if err := tx.Model(&db_model.Competition{}).Where("id = ?", item.ID).
+				Update("display_order", item.DisplayOrder).Error; err != nil {
+				return errors.Wrap(err)
+			}
+		}
+		return nil
+	})
 }
 
 func (r competition) AddCompetitionEntries(ctx context.Context, db *gorm.DB, competitionId string, teamIds []string) ([]*db_model.CompetitionEntry, error) {

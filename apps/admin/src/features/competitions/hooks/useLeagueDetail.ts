@@ -1,197 +1,327 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { ChangeEvent } from 'react'
-import { MOCK_TEAMS } from '../../teams/mock'
-import { MOCK_LEAGUE_DETAILS, MOCK_LEAGUES_BY_COMPETITION, MOCK_TOURNAMENTS_BY_COMPETITION, persistCompetitionsData } from '../mock'
-import { syncLeagueName } from '@/lib/autoSync'
-import { MOCK_ACTIVE_LEAGUES, persistActiveLeagues } from '@/features/matches/mock'
-import type { ActiveMatch, ActiveTeam } from '@/features/matches/types'
+import {
+  useGetAdminLeagueQuery,
+  useGetAdminCompetitionsQuery,
+  useGetAdminCompetitionQuery,
+  useGetAdminPromotionRulesQuery,
+  useGetAdminSportsWithScenesQuery,
+  useUpdateAdminCompetitionMutation,
+  useDeleteAdminLeagueMutation,
+  useUpdateAdminLeagueRuleMutation,
+  useCreateAdminPromotionRuleMutation,
+  useDeleteAdminPromotionRuleMutation,
+  useAddAdminCompetitionEntriesMutation,
+  useDeleteAdminCompetitionEntriesMutation,
+  useRegenerateAdminRoundRobinMutation,
+  GetAdminLeagueDocument,
+  GetAdminLeagueStandingsDocument,
+  GetAdminPromotionRulesDocument,
+  GetAdminCompetitionDocument,
+  GetAdminCompetitionMatchesDocument,
+  GetAdminCompetitionsDocument,
+  GetAdminMatchesDocument,
+  CompetitionType,
+} from '@/gql/__generated__/graphql'
+
+import { showErrorToast } from '@/lib/toast'
+import type { ProgressionRule, ProgressionTarget } from '../types'
 
 type LeagueForm = {
   name: string
-  description: string
-  weight: string
-  matchFormat: string
-  resultJudgments: string[]
-  tag: string
+  sportId: string
+  sceneId: string
+  winPt: number
+  drawPt: number
+  losePt: number
 }
 
 type LeagueEntry = {
   id: number
   teamName: string
   teamClass: string
-  teamId?: string
-}
-
-export type ProgressionRule = {
-  rank: number
-  targetId: string
-}
-
-export type ProgressionTarget = {
-  id: string
-  name: string
-  type: 'league' | 'tournament'
-}
-
-const INITIAL_ENTRIES: LeagueEntry[] = [
-  { id: 1, teamName: 'Team A-1', teamClass: 'Class A' },
-  { id: 2, teamName: 'Team A-2', teamClass: 'Class A' },
-  { id: 3, teamName: 'Team B-1', teamClass: 'Class B' },
-]
-
-/**
- * エントリーからラウンドロビンの試合リストを生成し MOCK_ACTIVE_LEAGUES に反映する。
- * 既存の試合結果は、同じ対戦カードが残っていれば保持する。
- */
-function syncActiveLeagueMatches(
-  competitionId: string,
-  leagueId: string,
-  leagueName: string,
-  entries: LeagueEntry[],
-) {
-  if (!MOCK_ACTIVE_LEAGUES[competitionId]) {
-    MOCK_ACTIVE_LEAGUES[competitionId] = []
-  }
-  const leagues = MOCK_ACTIVE_LEAGUES[competitionId]
-  const league = leagues.find((l) => l.id === leagueId)
-
-  // チーム情報を構築
-  const teams: ActiveTeam[] = entries.map((e) => ({
-    id: e.teamId ?? `entry_${e.id}`,
-    name: e.teamName,
-    shortName: e.teamName,
-  }))
-
-  // 既存の試合マップ（対戦カードのキーで検索可能にする）
-  const existingMatchMap = new Map<string, ActiveMatch>()
-  if (league) {
-    for (const m of league.matches) {
-      const key = [m.teamAId, m.teamBId].sort().join(':')
-      existingMatchMap.set(key, m)
-    }
-  }
-
-  // ラウンドロビン試合を生成
-  const matches: ActiveMatch[] = []
-  let counter = 0
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      const key = [teams[i].id, teams[j].id].sort().join(':')
-      const existing = existingMatchMap.get(key)
-      if (existing) {
-        matches.push(existing)
-      } else {
-        counter++
-        matches.push({
-          id: `${leagueId}_m${counter}`,
-          teamAId: teams[i].id,
-          teamBId: teams[j].id,
-          scoreA: 0,
-          scoreB: 0,
-          status: 'standby',
-        })
-      }
-    }
-  }
-
-  if (league) {
-    league.name = leagueName
-    league.teams = teams
-    league.matches = matches
-  } else {
-    leagues.push({ id: leagueId, name: leagueName, teams, matches })
-  }
-
-  persistActiveLeagues()
-}
-
-/**
- * targetId から進出先を再帰的に辿り、sourceId に戻るかチェックする。
- */
-function wouldCreateCycle(sourceId: string, targetId: string): boolean {
-  const visited = new Set<string>()
-  let current = targetId
-  while (current) {
-    if (current === sourceId) return true
-    if (visited.has(current)) return false
-    visited.add(current)
-    const detail = MOCK_LEAGUE_DETAILS[current]
-    const targets = detail?.progressionRules?.map((r: ProgressionRule) => r.targetId).filter(Boolean) ?? []
-    if (targets.length === 0) return false
-    // 複数の進出先がある場合、いずれかが循環していれば循環とみなす
-    if (targets.length === 1) {
-      current = targets[0]
-    } else {
-      return targets.some((t: string) => t === sourceId || wouldCreateCycle(sourceId, t))
-    }
-  }
-  return false
+  teamId: string
 }
 
 export function useLeagueDetail(leagueId: string, leagueName: string, competitionId: string) {
-  const saved = MOCK_LEAGUE_DETAILS[leagueId]
-  const [form, setForm] = useState<LeagueForm>({
-    name: saved?.name ?? leagueName,
-    description: saved?.description ?? '',
-    weight: saved?.weight ?? '0',
-    matchFormat: saved?.matchFormat ?? 'sunny',
-    resultJudgments: saved?.resultJudgments ?? ['score'],
-    tag: saved?.tag ?? '',
+  // ─── データ取得 ──────────────────────────────────────
+  const { data: leagueData, loading, error } = useGetAdminLeagueQuery({
+    variables: { id: leagueId },
+    skip: !leagueId,
   })
-  const [entries, setEntries] = useState<LeagueEntry[]>(saved?.entries ?? INITIAL_ENTRIES)
+  const { data: compData } = useGetAdminCompetitionQuery({
+    variables: { id: competitionId },
+    skip: !competitionId,
+  })
+  const { data: competitionsData } = useGetAdminCompetitionsQuery()
+  const { data: promotionRulesData } = useGetAdminPromotionRulesQuery({
+    variables: { sourceCompetitionId: competitionId },
+    skip: !competitionId,
+  })
+  const { data: sportsData } = useGetAdminSportsWithScenesQuery()
+
+  // ─── API から取得した「保存済み」の値（常に最新を反映） ──────
+  const league = leagueData?.league
+  const competition = compData?.competition
+
+  const serverName = league?.name ?? leagueName
+  const serverSportId = competition?.sport?.id ?? ''
+  const serverSceneId = competition?.scene?.id ?? ''
+  const serverWinPt = league?.winPt ?? 3
+  const serverDrawPt = league?.drawPt ?? 1
+  const serverLosePt = league?.losePt ?? 0
+
+  const allSports = sportsData?.sports ?? []
+  const sports = useMemo(() => allSports.map(s => ({ id: s.id, name: s.name })), [allSports])
+  const competitionTeams = competition?.teams ?? []
+
+  const entries: LeagueEntry[] = useMemo(
+    () => competitionTeams.map((t, i) => ({
+      id: i + 1,
+      teamName: t.name,
+      teamClass: t.group.name,
+      teamId: t.id,
+    })),
+    [competitionTeams],
+  )
+
+  // ─── ユーザー編集差分（null = 未編集 → サーバー値を使う） ───
+  const [editName, setEditName] = useState<string | null>(null)
+  const [editSportId, setEditSportId] = useState<string | null>(null)
+  const [editSceneId, setEditSceneId] = useState<string | null>(null)
+  const [editWinPt, setEditWinPt] = useState<number | null>(null)
+  const [editDrawPt, setEditDrawPt] = useState<number | null>(null)
+  const [editLosePt, setEditLosePt] = useState<number | null>(null)
+
+  // 実効値: ユーザー編集があればそれ、なければサーバー値
+  const form: LeagueForm = {
+    name: editName ?? serverName,
+    sportId: editSportId ?? serverSportId,
+    sceneId: editSceneId ?? serverSceneId,
+    winPt: editWinPt ?? serverWinPt,
+    drawPt: editDrawPt ?? serverDrawPt,
+    losePt: editLosePt ?? serverLosePt,
+  }
+
+  // ─── 自動進出 ──────────────────────────────────────
   const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [progressionEnabled, setProgressionEnabled] = useState(saved?.progressionEnabled ?? false)
-  const [progressionMaxRank, setProgressionMaxRank] = useState(saved?.progressionMaxRank ?? 3)
-  const [progressionRules, setProgressionRules] = useState<ProgressionRule[]>(saved?.progressionRules ?? [])
+  const [progressionEnabled, setProgressionEnabled] = useState(false)
+  const [progressionRankRange, _setProgressionRankRange] = useState<[number, number]>([1, 3])
+  const maxAllowed = Math.max(1, entries.length)
+  const clampedRankRange: [number, number] = [
+    Math.min(progressionRankRange[0], maxAllowed),
+    Math.min(progressionRankRange[1], maxAllowed),
+  ]
+  const setProgressionRankRange = (range: [number, number]) => {
+    _setProgressionRankRange([Math.min(range[0], maxAllowed), Math.min(range[1], maxAllowed)])
+  }
+  const [progressionRules, setProgressionRules] = useState<ProgressionRule[]>([])
+  const [savedProgressionRules, setSavedProgressionRules] = useState<ProgressionRule[]>([])
+  const [ruleIdByRank, setRuleIdByRank] = useState<Record<number, string>>({})
+  const [promotionInitialized, setPromotionInitialized] = useState(false)
 
-  // 変更のたびに自動保存（前回値と比較して実際に変更があった場合のみ）
-  const prevDetailRef = useRef<string>('')
-  useEffect(() => {
-    const snapshot = JSON.stringify({ ...form, entries, progressionEnabled, progressionMaxRank, progressionRules })
-    if (snapshot === prevDetailRef.current) return
-    prevDetailRef.current = snapshot
-    MOCK_LEAGUE_DETAILS[leagueId] = { ...form, entries, progressionEnabled, progressionMaxRank, progressionRules }
-    persistCompetitionsData()
-    syncLeagueName(leagueId, form.name)
-  }, [form, entries, leagueId, progressionEnabled, progressionMaxRank, progressionRules])
+  const [mutationError, setMutationError] = useState<Error | null>(null)
 
-  // エントリー変更時にアクティブリーグの試合データも同期
-  const prevEntriesRef = useRef<string>('')
+  // ─── mutations ─────────────────────────────────────
+  const [updateCompetition] = useUpdateAdminCompetitionMutation()
+  const [deleteLeague] = useDeleteAdminLeagueMutation({
+    refetchQueries: [{ query: GetAdminCompetitionsDocument }],
+  })
+  const [updateLeagueRule] = useUpdateAdminLeagueRuleMutation()
+  const [createPromotionRule] = useCreateAdminPromotionRuleMutation({
+    refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
+  })
+  const [deletePromotionRule] = useDeleteAdminPromotionRuleMutation({
+    refetchQueries: [{ query: GetAdminPromotionRulesDocument, variables: { sourceCompetitionId: competitionId } }],
+  })
+  const [addCompetitionEntries] = useAddAdminCompetitionEntriesMutation({
+    refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+  })
+  const [deleteCompetitionEntries] = useDeleteAdminCompetitionEntriesMutation({
+    refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+  })
+  const [regenerateRoundRobin] = useRegenerateAdminRoundRobinMutation({
+    refetchQueries: [
+      { query: GetAdminMatchesDocument },
+      { query: GetAdminCompetitionMatchesDocument, variables: { competitionId } },
+      { query: GetAdminLeagueDocument, variables: { id: leagueId } },
+      { query: GetAdminLeagueStandingsDocument, variables: { leagueId } },
+    ],
+  })
+
+  // ─── プログレッションルール初期化 ─────────────────────
   useEffect(() => {
-    const snapshot = JSON.stringify({ entries, competitionId, leagueId, name: form.name })
-    if (snapshot === prevEntriesRef.current) return
-    prevEntriesRef.current = snapshot
-    if (entries.length >= 2) {
-      syncActiveLeagueMatches(competitionId, leagueId, form.name, entries)
+    if (!promotionRulesData?.promotionRules) return
+    const rules = promotionRulesData.promotionRules
+    setProgressionRules(rules.map(r => ({
+      rank: parseInt(r.rankSpec),
+      targetId: r.targetCompetition.id,
+    })))
+    if (!promotionInitialized) {
+      setPromotionInitialized(true)
+      setProgressionEnabled(rules.length > 0)
+      setSavedProgressionRules(rules.map(r => ({
+        rank: parseInt(r.rankSpec),
+        targetId: r.targetCompetition.id,
+      })))
+      if (rules.length > 0) {
+        const ranks = rules.map(r => parseInt(r.rankSpec))
+        _setProgressionRankRange([Math.min(...ranks), Math.max(...ranks)])
+      }
     }
-  }, [entries, competitionId, leagueId, form.name])
+    const idMap: Record<number, string> = {}
+    for (const r of rules) {
+      idMap[parseInt(r.rankSpec)] = r.id
+    }
+    setRuleIdByRank(idMap)
+  }, [promotionRulesData?.promotionRules]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = (field: keyof Omit<LeagueForm, 'resultJudgments'>) => (e: ChangeEvent<HTMLInputElement>) => {
-    setForm(prev => ({ ...prev, [field]: e.target.value }))
+  // ─── dirty 検出 ─────────────────────────────────────
+  const effectiveProgressionRules = progressionEnabled
+    ? progressionRules.filter(r => r.rank >= clampedRankRange[0] && r.rank <= clampedRankRange[1] && r.targetId)
+    : []
+  const progressionDirty = effectiveProgressionRules.length !== savedProgressionRules.length
+    || effectiveProgressionRules.some(e => {
+      const s = savedProgressionRules.find(sr => sr.rank === e.rank)
+      return !s || s.targetId !== e.targetId
+    })
+
+  const dirty = editName !== null || editSportId !== null || editSceneId !== null
+    || editWinPt !== null || editDrawPt !== null || editLosePt !== null
+    || progressionDirty
+
+  // ─── ハンドラー ─────────────────────────────────────
+  const handleChange = (field: keyof LeagueForm) => (e: ChangeEvent<HTMLInputElement>) => {
+    const value = field === 'winPt' || field === 'drawPt' || field === 'losePt' ? Number(e.target.value) : e.target.value
+    switch (field) {
+      case 'name': setEditName(value as string); break
+      case 'winPt': setEditWinPt(value as number); break
+      case 'drawPt': setEditDrawPt(value as number); break
+      case 'losePt': setEditLosePt(value as number); break
+    }
   }
 
-  const handleScoringChange = (resultJudgments: string[]) => {
-    setForm(prev => ({ ...prev, resultJudgments }))
+  const handleSave = async () => {
+    const n = form.name.trim().slice(0, 64)
+    if (!n) return
+    if ([form.winPt, form.drawPt, form.losePt].some(v => v < 0 || !Number.isInteger(v))) return
+    try {
+      await updateCompetition({
+        variables: { id: competitionId, input: { name: n, sportId: form.sportId || undefined, sceneId: form.sceneId || undefined } },
+        refetchQueries: [
+          { query: GetAdminCompetitionsDocument },
+          { query: GetAdminCompetitionDocument, variables: { id: competitionId } },
+        ],
+      })
+      if (editWinPt !== null || editDrawPt !== null || editLosePt !== null) {
+        await updateLeagueRule({
+          variables: { id: leagueId, input: { winPt: form.winPt, drawPt: form.drawPt, losePt: form.losePt } },
+          refetchQueries: [
+            { query: GetAdminLeagueDocument, variables: { id: leagueId } },
+          ],
+        })
+      }
+
+      // プログレッションルールの差分保存
+      if (progressionDirty) {
+        const desiredRules = effectiveProgressionRules
+        for (const sr of savedProgressionRules) {
+          const desired = desiredRules.find(r => r.rank === sr.rank)
+          const ruleId = ruleIdByRank[sr.rank]
+          if (ruleId && (!desired || desired.targetId !== sr.targetId)) {
+            await deletePromotionRule({ variables: { id: ruleId } })
+          }
+        }
+        for (const rule of desiredRules) {
+          const sr = savedProgressionRules.find(r => r.rank === rule.rank)
+          if (!sr || sr.targetId !== rule.targetId) {
+            await createPromotionRule({
+              variables: {
+                input: {
+                  sourceCompetitionId: competitionId,
+                  targetCompetitionId: rule.targetId,
+                  rankSpec: String(rule.rank),
+                },
+              },
+            })
+          }
+        }
+        setSavedProgressionRules(desiredRules)
+      }
+
+      // 保存完了 → 編集差分をクリア（サーバー値に戻る）
+      setEditName(null)
+      setEditSportId(null)
+      setEditSceneId(null)
+      setEditWinPt(null)
+      setEditDrawPt(null)
+      setEditLosePt(null)
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
-  const handleDeleteEntry = (id: number) => {
-    setEntries(prev => prev.filter(e => e.id !== id))
+  const handleDelete = async () => {
+    await deleteLeague({ variables: { id: leagueId } })
+  }
+
+  const handleUpdateLeagueRule = async (winPt: number, drawPt: number, losePt: number) => {
+    try {
+      await updateLeagueRule({
+        variables: { id: leagueId, input: { winPt, drawPt, losePt } },
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
+  }
+
+  const handleDeleteEntry = async (id: number) => {
+    const entry = entries.find(e => e.id === id)
+    if (!entry?.teamId) return
+    try {
+      await deleteCompetitionEntries({
+        variables: { id: competitionId, input: { teamIds: [entry.teamId] } },
+      })
+      // エントリー変更後にラウンドロビンを自動再生成
+      try {
+        await regenerateRoundRobin({ variables: { id: competitionId } })
+      } catch (regenErr) {
+        console.error('regenerateRoundRobin failed:', regenErr)
+      }
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleOpenAddDialog = () => setAddDialogOpen(true)
   const handleCloseAddDialog = () => setAddDialogOpen(false)
 
-  const handleAddEntries = (selectedIds: string[]) => {
-    const newEntries = selectedIds.flatMap((id, i) => {
-      const team = MOCK_TEAMS.find(t => t.id === id)
-      if (!team) return []
-      return [{ id: entries.length + i + 1, teamName: team.name, teamClass: team.class, teamId: id }]
-    })
-    setEntries(prev => [...prev, ...newEntries])
+  const handleAddEntries = async (selectedIds: string[]) => {
+    if (selectedIds.length === 0) return
+    try {
+      await addCompetitionEntries({
+        variables: { id: competitionId, input: { teamIds: selectedIds } },
+      })
+      // エントリー変更後にラウンドロビンを自動再生成
+      try {
+        await regenerateRoundRobin({ variables: { id: competitionId } })
+      } catch (regenErr) {
+        console.error('regenerateRoundRobin failed:', regenErr)
+      }
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleProgressionRuleChange = (rank: number, targetId: string) => {
-    if (targetId && wouldCreateCycle(leagueId, targetId)) return
     setProgressionRules(prev => {
       const existing = prev.find(r => r.rank === rank)
       if (existing) return prev.map(r => r.rank === rank ? { ...r, targetId } : r)
@@ -199,33 +329,61 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     })
   }
 
-  // 同じcompetitionの他のリーグ・トーナメントを進出先候補として返す
-  const availableProgressionTargets: ProgressionTarget[] = [
-    ...(MOCK_LEAGUES_BY_COMPETITION[competitionId] ?? [])
-      .filter(l => l.id !== leagueId)
-      .map(l => ({ id: l.id, name: l.name, type: 'league' as const })),
-    ...(MOCK_TOURNAMENTS_BY_COMPETITION[competitionId] ?? [])
-      .map(t => ({ id: t.id, name: t.name, type: 'tournament' as const })),
-  ]
+  // ─── 進出先候補 ─────────────────────────────────────
+  const currentSportId = form.sportId
+  const allTargets: ProgressionTarget[] = (competitionsData?.competitions ?? [])
+    .filter(c => c.id !== competitionId && c.sport?.id === currentSportId)
+    .map(c => ({
+      id: c.id,
+      name: c.name,
+      type: c.type === CompetitionType.League ? 'league' : 'tournament',
+    }))
+  const availableProgressionTargets = {
+    leagues: allTargets.filter(t => t.type === 'league'),
+    tournaments: allTargets.filter(t => t.type === 'tournament'),
+  }
+
+  // ─── シーン候補（選択中の競技に紐づくもの） ──────────────
+  const selectedSport = allSports.find(s => s.id === form.sportId)
+  const scenes = useMemo(
+    () => (selectedSport?.scene ?? []).map(ss => ({ id: ss.scene.id, name: ss.scene.name })),
+    [selectedSport],
+  )
+
+  const setSportId = (id: string) => {
+    setEditSportId(id)
+    setEditSceneId('')
+  }
+  const setSceneId = (id: string) => {
+    setEditSceneId(id)
+  }
 
   return {
     form,
+    dirty,
     entries,
+    sports,
+    scenes,
+    setSportId,
+    setSceneId,
     addDialogOpen,
     progressionEnabled,
-    progressionMaxRank,
+    progressionRankRange: clampedRankRange,
     progressionRules,
     availableProgressionTargets,
     handleChange,
-    handleScoringChange,
+    handleSave,
+    handleDelete,
+    handleUpdateLeagueRule,
     handleDeleteEntry,
     handleOpenAddDialog,
     handleCloseAddDialog,
     handleAddEntries,
     setProgressionEnabled,
-    setProgressionMaxRank,
+    setProgressionRankRange,
     handleProgressionRuleChange,
-    loading: false,
-    error: null,
+    loading,
+    error: error ?? null,
+    mutationError,
   }
 }

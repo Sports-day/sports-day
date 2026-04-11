@@ -53,6 +53,9 @@ var (
 	ErrSceneCannotDeleteByCompetition = NewError("SCENE_CANNOT_DELETE_BY_COMPETITION", "このシーンは大会に紐づいているため削除できません")
 	ErrSportSceneAlreadyExists        = NewError("SPORT_SCENE_ALREADY_EXISTS", "このスポーツとシーンの組み合わせは既に存在します")
 	ErrSportEntryAlreadyExists        = NewError("SPORT_ENTRY_ALREADY_EXISTS", "このスポーツシーンとチームの組み合わせは既に存在します")
+	ErrExperiencedLimitExceeded       = NewError("EXPERIENCED_LIMIT_EXCEEDED", "チームの経験者数が上限を超えています")
+
+	ErrMatchesInProgress = NewError("MATCHES_IN_PROGRESS", "進行中または終了した試合があるためエントリーを変更できません")
 
 	ErrPromotionRuleNotFound   = NewError("PROMOTION_RULE_NOT_FOUND", "進出ルールが見つかりません")
 	ErrSavePromotionRule       = NewError("PROMOTION_RULE_SAVE_FAILED", "進出ルールの保存に失敗しました")
@@ -99,4 +102,11 @@ var (
 	ErrUserSyncFailed     = NewError("USER_SYNC_FAILED", "ユーザー情報の同期に失敗しました")
 	ErrSelfRoleChange     = NewError("SELF_ROLE_CHANGE", "自分自身のロールは変更できません")
 	ErrInsufficientRole   = NewError("INSUFFICIENT_ROLE", "権限が不足しています")
+
+	/*
+		Judgment / Score Submission
+	*/
+	ErrNotAssignedReferee   = NewError("NOT_ASSIGNED_REFEREE", "この試合の審判として割り当てられていません")
+	ErrJudgmentNotAttending = NewError("JUDGMENT_NOT_ATTENDING", "出席確認がされていません。先に出席を記録してください")
+	ErrMatchAlreadyFinished = NewError("MATCH_ALREADY_FINISHED", "この試合は既に終了しています")
 )

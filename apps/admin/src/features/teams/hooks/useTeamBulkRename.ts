@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_TEAMS, persistTeams } from '../mock'
+import { useGetAdminTeamsQuery, useUpdateAdminTeamMutation } from '@/gql/__generated__/graphql'
 
 export type BulkRenameRow = {
   id: string
@@ -14,20 +14,23 @@ export function useTeamBulkRename() {
   const [rows, setRows] = useState<BulkRenameRow[]>([])
   const [executed, setExecuted] = useState(false)
 
+  const { data: teamsData } = useGetAdminTeamsQuery()
+  const [updateTeam] = useUpdateAdminTeamMutation()
+
   const handleCsvChange = (value: string) => {
     setCsvText(value)
     setExecuted(false)
 
+    const teams = teamsData?.teams ?? []
     const parsed: BulkRenameRow[] = value
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0)
       .map((line) => {
-        // 最初のカンマのみで分割（チーム名にカンマが含まれる場合を考慮）
         const commaIndex = line.indexOf(',')
         const id = commaIndex !== -1 ? line.slice(0, commaIndex).trim() : line.trim()
         const afterName = commaIndex !== -1 ? line.slice(commaIndex + 1).trim() : ''
-        const team = MOCK_TEAMS.find((t) => t.id === id)
+        const team = teams.find((t) => t.id === id)
         return {
           id: id ?? '',
           beforeName: team?.name ?? '(不明)',
@@ -39,17 +42,37 @@ export function useTeamBulkRename() {
     setRows(parsed)
   }
 
-  const handleExecute = () => {
-    const updated = rows.map((row) => {
-      const team = MOCK_TEAMS.find((t) => t.id === row.id)
-      if (!team) return { ...row, status: 'エラー' as const, errorReason: 'IDが見つかりません' }
-      if (!row.afterName) return { ...row, status: 'エラー' as const, errorReason: '新しい名前が空です' }
-      team.name = row.afterName
-      return { ...row, status: '成功' as const }
-    })
+  const handleExecute = async () => {
+    const teams = teamsData?.teams ?? []
+    const updated: BulkRenameRow[] = []
+
+    for (const row of rows) {
+      const team = teams.find((t) => t.id === row.id)
+      if (!team) {
+        updated.push({ ...row, status: 'エラー', errorReason: 'IDが見つかりません' })
+        continue
+      }
+      if (!row.afterName) {
+        updated.push({ ...row, status: 'エラー', errorReason: '新しい名前が空です' })
+        continue
+      }
+      if (row.afterName.length > 64) {
+        updated.push({ ...row, status: 'エラー', errorReason: '名前は64文字以内にしてください' })
+        continue
+      }
+      try {
+        await updateTeam({
+          variables: { id: row.id, input: { name: row.afterName } },
+          refetchQueries: ['GetAdminTeams'],
+        })
+        updated.push({ ...row, status: '成功' })
+      } catch {
+        updated.push({ ...row, status: 'エラー', errorReason: 'APIエラー' })
+      }
+    }
+
     setRows(updated)
     setExecuted(true)
-    persistTeams()
   }
 
   const handleReset = () => {

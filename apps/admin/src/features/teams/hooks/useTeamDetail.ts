@@ -1,66 +1,167 @@
-import { useState } from 'react'
-import { MOCK_TEAMS, MOCK_TEAM_MEMBERS, MOCK_SELECTABLE_USERS, persistTeams } from '../mock'
-import { propagateTeamNameChange } from '@/lib/autoSync'
-import { notifyTeamListeners } from './useTeams'
-import type { TeamMember } from '../types'
+import { useState, useMemo } from 'react'
+import {
+  useGetAdminTeamQuery,
+  useGetAdminUsersQuery,
+  useUpdateAdminTeamMutation,
+  useDeleteAdminTeamMutation,
+  useUpdateAdminTeamUsersMutation,
+  useGetAdminGroupsQuery,
+} from '@/gql/__generated__/graphql'
+import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
+import { showErrorToast } from '@/lib/toast'
+import type { TeamMember, SelectableUser } from '../types'
 
 export function useTeamDetail(teamId: string) {
-  const team = MOCK_TEAMS.find((t) => t.id === teamId)
-  const [name, setName] = useState(team?.name ?? '')
-  const [teamClass, setTeamClass] = useState(team?.class ?? '')
-  const [members, setMembers] = useState<TeamMember[]>(
-    MOCK_TEAM_MEMBERS[teamId] ?? []
+  const { data, loading, error } = useGetAdminTeamQuery({
+    variables: { id: teamId },
+    skip: !teamId,
+  })
+  const { data: usersData } = useGetAdminUsersQuery()
+  const { data: groupsData } = useGetAdminGroupsQuery()
+
+  const team = data?.team
+
+  // ユーザーID → microsoftUserId のマップを作成
+  const msIdMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const u of usersData?.users ?? []) {
+      if (u.identify?.microsoftUserId) {
+        map.set(u.id, u.identify.microsoftUserId)
+      }
+    }
+    return map
+  }, [usersData])
+
+  const allMsIds = useMemo(
+    () => [...msIdMap.values()],
+    [msIdMap],
   )
+  const { msGraphUsers } = useMsGraphUsers(allMsIds)
+
+  // サーバー値 + 編集差分パターン
+  const serverName = team?.name ?? ''
+  const serverGroupId = team?.group?.id ?? ''
+
+  const [editName, setEditName] = useState<string | null>(null)
+  const [editGroupId, setEditGroupId] = useState<string | null>(null)
+
+  const name = editName ?? serverName
+  const groupId = editGroupId ?? serverGroupId
+  const setName = (v: string) => setEditName(v)
+  const setGroupId = (v: string) => setEditGroupId(v)
+
+  const dirty = editName !== null || editGroupId !== null
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  const groups = groupsData?.groups ?? []
+
+  const members: TeamMember[] = (team?.users ?? []).map(u => {
+    const msId = msIdMap.get(u.id)
+    const msUser = msId ? msGraphUsers.get(msId) : undefined
+    return {
+      id: u.id,
+      name: msUser?.displayName ?? u.name,
+    }
+  })
+
+  const [mutationError, setMutationError] = useState<Error | null>(null)
+
+  const [updateTeam] = useUpdateAdminTeamMutation()
+  const [deleteTeam] = useDeleteAdminTeamMutation()
+  const [updateTeamUsers] = useUpdateAdminTeamUsersMutation()
 
   const handleOpenDialog = () => setDialogOpen(true)
   const handleCloseDialog = () => setDialogOpen(false)
   const handleOpenDeleteDialog = () => setDeleteDialogOpen(true)
   const handleCloseDeleteDialog = () => setDeleteDialogOpen(false)
 
-  const handleAddMembers = (selectedIds: string[]) => {
-    const newMembers: TeamMember[] = selectedIds.flatMap((id) => {
-      const user = MOCK_SELECTABLE_USERS.find((u) => u.id === id)
-      if (!user) return []
-      return [{
-        studentId: user.studentId,
-        name: user.userName,
-        gender: user.gender,
-      }]
-    })
-    setMembers((prev) => [...prev, ...newMembers])
+  const handleAddMembers = async (selectedIds: string[]) => {
+    try {
+      await updateTeamUsers({
+        variables: {
+          id: teamId,
+          input: { addUserIds: selectedIds },
+        },
+        refetchQueries: ['GetAdminTeam'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
     setDialogOpen(false)
   }
 
-  const handleDeleteMember = (index: number) => {
-    setMembers((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const handleSave = () => {
-    const t = MOCK_TEAMS.find((t) => t.id === teamId)
-    if (t) {
-      t.name = name
-      t.class = teamClass
+  const handleDeleteMember = async (_index: number) => {
+    const userId = team?.users[_index]?.id
+    if (!userId) return
+    try {
+      await updateTeamUsers({
+        variables: {
+          id: teamId,
+          input: { removeUserIds: [userId] },
+        },
+        refetchQueries: ['GetAdminTeam'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
     }
-    MOCK_TEAM_MEMBERS[teamId] = members
-    persistTeams()
-    notifyTeamListeners()
-    propagateTeamNameChange(teamId, name)
   }
 
-  const handleDeleteTeam = () => {
-    const index = MOCK_TEAMS.findIndex((t) => t.id === teamId)
-    if (index !== -1) MOCK_TEAMS.splice(index, 1)
-    persistTeams()
-    notifyTeamListeners()
+  const handleSave = async () => {
+    if (!name.trim()) return
+    try {
+      await updateTeam({
+        variables: {
+          id: teamId,
+          input: { name: name.slice(0, 64), groupId },
+        },
+        refetchQueries: ['GetAdminTeams', 'GetAdminTeam'],
+      })
+      setEditName(null)
+      setEditGroupId(null)
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
+
+  const handleDeleteTeam = async () => {
+    try {
+      await deleteTeam({
+        variables: { id: teamId },
+        refetchQueries: ['GetAdminTeams'],
+      })
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
+  }
+
+  // 追加可能なユーザー（現チームメンバー以外）
+  const currentMemberIds = new Set((team?.users ?? []).map(u => u.id))
+  const selectableUsers: SelectableUser[] = (usersData?.users ?? [])
+    .filter(u => !currentMemberIds.has(u.id))
+    .map(u => {
+      const msId = u.identify?.microsoftUserId
+      const msUser = msId ? msGraphUsers.get(msId) : undefined
+      return {
+        id: u.id,
+        userName: msUser?.displayName ?? u.name,
+      }
+    })
 
   return {
     name,
     setName,
-    teamClass,
-    setTeamClass,
+    groupId,
+    setGroupId,
+    groups,
     members,
     dialogOpen,
     handleOpenDialog,
@@ -72,8 +173,11 @@ export function useTeamDetail(teamId: string) {
     deleteDialogOpen,
     handleOpenDeleteDialog,
     handleCloseDeleteDialog,
+    dirty,
     teamName: team?.name ?? '',
-    loading: false,
-    error: null,
+    selectableUsers,
+    loading,
+    error: error ?? null,
+    mutationError,
   }
 }

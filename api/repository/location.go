@@ -14,4 +14,5 @@ type Location interface {
 	Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Location, error)
 	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Location, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Location, error)
+	UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error
 }

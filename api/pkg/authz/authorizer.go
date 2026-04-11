@@ -24,6 +24,7 @@ const (
 	PermSportWrite       = "sport:write"
 	PermLocationWrite    = "location:write"
 	PermSceneWrite       = "scene:write"
+	PermEntryWrite       = "entry:write"
 	PermInformationWrite = "information:write"
 	PermRuleWrite        = "rule:write"
 	PermImageWrite       = "image:write"
@@ -94,4 +95,3 @@ func (a *StaticAuthorizer) HasPermission(role string, permission string) bool {
 	}
 	return rolePerms[permission]
 }
-

@@ -1,21 +1,13 @@
-import { useState, useEffect } from 'react'
-import { MOCK_IMAGES } from '../mock'
-
-// モジュールレベルのリスナーセット（locations と同じパターン）
-const _listeners = new Set<() => void>()
-
-export function notifyImageListeners() {
-  _listeners.forEach(fn => fn())
-}
+import { useGetAdminImagesQuery } from '@/gql/__generated__/graphql'
+import type { Image } from '../types'
 
 export function useImages() {
-  const [, rerender] = useState(0)
-
-  useEffect(() => {
-    const trigger = () => rerender(n => n + 1)
-    _listeners.add(trigger)
-    return () => { _listeners.delete(trigger) }
-  }, [])
-
-  return { data: MOCK_IMAGES, loading: false, error: null }
+  const { data, loading, error } = useGetAdminImagesQuery()
+  const images: Image[] = (data?.images ?? []).map(i => ({
+    id: i.id,
+    url: i.url ?? '',
+    status: i.status,
+    displayOrder: i.displayOrder,
+  }))
+  return { data: images, loading, error: error ?? null }
 }

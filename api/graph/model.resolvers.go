@@ -6,12 +6,27 @@ package graph
 
 import (
 	"context"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
-	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/slices"
 )
+
+// Sport is the resolver for the sport field.
+func (r *competitionResolver) Sport(ctx context.Context, obj *model.Competition) (*model.Sport, error) {
+	if obj.SportID == "" {
+		return nil, nil
+	}
+	sports, err := loader.LoadSports(ctx, []string{obj.SportID})
+	if err != nil {
+		return nil, err
+	}
+	if len(sports) == 0 || sports[0] == nil {
+		return nil, nil
+	}
+	return model.FormatSportResponse(sports[0]), nil
+}
 
 // Scene is the resolver for the scene field.
 func (r *competitionResolver) Scene(ctx context.Context, obj *model.Competition) (*model.Scene, error) {
@@ -82,6 +97,21 @@ func (r *competitionResolver) Tournaments(ctx context.Context, obj *model.Compet
 		return nil, err
 	}
 	return r.computeBracketStateForTournaments(ctx, tournaments)
+}
+
+// DefaultLocation is the resolver for the defaultLocation field.
+func (r *competitionResolver) DefaultLocation(ctx context.Context, obj *model.Competition) (*model.Location, error) {
+	if obj.DefaultLocationID == "" {
+		return nil, nil
+	}
+	locations, err := loader.LoadLocations(ctx, []string{obj.DefaultLocationID})
+	if err != nil {
+		return nil, err
+	}
+	if len(locations) == 0 || locations[0] == nil {
+		return nil, nil
+	}
+	return model.FormatLocationResponse(locations[0]), nil
 }
 
 // Teams is the resolver for the teams field.
@@ -235,7 +265,7 @@ func (r *matchResolver) Competition(ctx context.Context, obj *model.Match) (*mod
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -432,7 +462,7 @@ func (r *standingResolver) Team(ctx context.Context, obj *model.Standing) (*mode
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -444,7 +474,7 @@ func (r *teamResolver) Group(ctx context.Context, obj *model.Team) (*model.Group
 		return nil, err
 	}
 	if len(groups) == 0 || groups[0] == nil {
-		return nil, errors.ErrGroupNotFound
+		return nil, nil
 	}
 	return model.FormatGroupResponse(groups[0]), nil
 }
@@ -578,7 +608,7 @@ func (r *tournamentResolver) Competition(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(competitions) == 0 || competitions[0] == nil {
-		return nil, errors.ErrCompetitionNotFound
+		return nil, nil
 	}
 	return model.FormatCompetitionResponse(competitions[0]), nil
 }
@@ -612,7 +642,7 @@ func (r *tournamentRankingResolver) Team(ctx context.Context, obj *model.Tournam
 		return nil, err
 	}
 	if len(teams) == 0 || teams[0] == nil {
-		return nil, errors.ErrTeamNotFound
+		return nil, nil
 	}
 	return model.FormatTeamResponse(teams[0]), nil
 }
@@ -624,7 +654,7 @@ func (r *tournamentSlotResolver) Tournament(ctx context.Context, obj *model.Tour
 		return nil, err
 	}
 	if len(tournaments) == 0 || tournaments[0] == nil {
-		return nil, errors.ErrTournamentNotFound
+		return nil, nil
 	}
 	return r.computeBracketStateForTournament(ctx, tournaments[0])
 }
@@ -638,7 +668,19 @@ func (r *tournamentSlotResolver) MatchEntry(ctx context.Context, obj *model.Tour
 	if entry == nil {
 		return nil, nil
 	}
-	return model.FormatMatchEntryResponse(entry), nil
+	matchEntry := model.FormatMatchEntryResponse(entry)
+
+	// TeamIDが有効な場合はチーム情報を設定
+	if entry.TeamID.Valid {
+		teams, err := loader.LoadTeams(ctx, []string{entry.TeamID.String})
+		if err != nil {
+			return nil, err
+		}
+		if len(teams) > 0 {
+			matchEntry.Team = model.FormatTeamResponse(teams[0])
+		}
+	}
+	return matchEntry, nil
 }
 
 // SourceMatch is the resolver for the sourceMatch field.
@@ -810,3 +852,24 @@ type tournamentResolver struct{ *Resolver }
 type tournamentRankingResolver struct{ *Resolver }
 type tournamentSlotResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *competitionResolver) DisplayOrder(ctx context.Context, obj *model.Competition) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+func (r *locationResolver) DisplayOrder(ctx context.Context, obj *model.Location) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+func (r *sceneResolver) DisplayOrder(ctx context.Context, obj *model.Scene) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+func (r *sportResolver) DisplayOrder(ctx context.Context, obj *model.Sport) (int32, error) {
+	return obj.DisplayOrder, nil
+}
+*/

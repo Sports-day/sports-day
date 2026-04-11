@@ -20,8 +20,6 @@ export type ActiveMatch = {
   status: 'standby' | 'ongoing' | 'finished' | 'cancelled'
   winner?: 'teamA' | 'teamB' | 'draw'
   time?: string
-  note?: string
-  referee?: string
-  location?: string
-  startTime?: string
+  locationId?: string
+  judgmentName?: string
 }

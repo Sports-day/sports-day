@@ -16,12 +16,12 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
       },
       manifest: false,
     }),
   ],
-  server: { port: 3001, host: true },
+  server: { port: 3000, host: true },
   base: process.env.VITE_BASE_PATH || "/",
   resolve: {
     alias: {

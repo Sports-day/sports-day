@@ -1,4 +1,5 @@
 import { Box, Breadcrumbs, ButtonBase, Button, Card, CardContent, TextField, Typography } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import { useState } from 'react'
 import { useLocationCreate } from '../hooks/useLocationCreate'
 import { showToast } from '@/lib/toast'
@@ -22,6 +23,7 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           場所
@@ -31,7 +33,7 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
         </Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             場所の作成
@@ -45,17 +47,9 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
               fullWidth
               size="small"
               error={submitted && !form.name.trim()}
-              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : ''}
+              helperText={submitted && !form.name.trim() ? 'この項目は必須です' : form.name.length >= 60 ? `${form.name.length}/64文字` : ''}
               sx={CARD_FIELD_CREATE_SX}
-            />
-
-            <TextField
-              placeholder="備考*"
-              value={form.note}
-              onChange={handleChange('note')}
-              fullWidth
-              size="small"
-              sx={CARD_FIELD_CREATE_SX}
+              slotProps={{ htmlInput: { maxLength: 64 } }}
             />
 
             <Box sx={{ display: 'flex', gap: 1 }}>

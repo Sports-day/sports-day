@@ -11,6 +11,7 @@ import (
 type Scene interface {
 	Save(ctx context.Context, db *gorm.DB, scene *db_model.Scene) (*db_model.Scene, error)
 	Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error)
+	Restore(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error)
 	Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Scene, error)
 
@@ -33,4 +34,5 @@ type Scene interface {
 	BatchGetSportScenesBySceneIDs(ctx context.Context, db *gorm.DB, sceneIDs []string) ([]*db_model.SportScene, error)
 	BatchGetSportEntriesBySportSceneIDs(ctx context.Context, db *gorm.DB, sportSceneIDs []string) ([]*db_model.SportEntry, error)
 	BatchGetSportEntriesByTeamIDs(ctx context.Context, db *gorm.DB, teamIDs []string) ([]*db_model.SportEntry, error)
+	UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error
 }

@@ -4,7 +4,9 @@ package db_model
 
 // Information represents a row from 'sportsday.information'.
 type Information struct {
-	ID      string `json:"id"`      // ID
-	Title   string `json:"title"`   // タイトル
-	Content string `json:"content"` // コメント
+	ID           string `json:"id"`            // ID
+	Title        string `json:"title"`         // タイトル
+	Content      string `json:"content"`       // コメント
+	Status       string `json:"status"`        // ステータス
+	DisplayOrder int    `json:"display_order"` // 表示順
 }

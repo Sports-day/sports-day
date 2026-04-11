@@ -1,20 +1,20 @@
 import {useTheme, Typography, Stack, Box, Button, SwipeableDrawer, Container, Card, Avatar} from "@mui/material";
 import * as React from "react";
-import {Fragment} from "react";
+import {Fragment, useContext} from "react";
 import {useState} from "react";
 import {HiUser} from "react-icons/hi2";
-import {useFetchUsers} from "@/src/features/users/hook";
+import {UsersContext} from "../../context";
 
 export type LeagueRankListCardProps = {
     teamName: string
-    teamId: number
+    teamId: string
     rank: number
     winRate: number
 }
 
 export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
     const theme = useTheme();
-    const {users, isFetching: isFetchingUsers} = useFetchUsers()
+    const {data: users} = useContext(UsersContext)
     //teamDrawer
     const [teamDrawerOpen, setTeamDrawerOpen] = useState(false);
     const toggleTeamDrawer = (newOpen: boolean) => () => {
@@ -56,52 +56,31 @@ export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
                         >
                             {props.teamName}
                         </Typography>
-                        <Stack
-                            direction={"row"}
-                            spacing={1}
-                            alignItems={"center"}
-                        >
-                            <Box
-                                sx={{
-                                    px: 0.8,
-                                    height:"16px",
-                                    borderRadius: "5px",
-                                    backgroundColor: theme.palette.text.secondary,
-                                    justifyContent: "center",
-                                    alignItems: "center"
-                                }}
+                        {props.winRate >= 0 && (
+                            <Stack
+                                direction={"row"}
+                                spacing={1}
+                                alignItems={"center"}
                             >
-                                <Typography color={theme.palette.background.default} fontSize={"10px"} fontWeight={"600"}>
-                                    勝ち点率
+                                <Box
+                                    sx={{
+                                        px: 0.8,
+                                        height:"16px",
+                                        borderRadius: "5px",
+                                        backgroundColor: theme.palette.text.secondary,
+                                        justifyContent: "center",
+                                        alignItems: "center"
+                                    }}
+                                >
+                                    <Typography color={theme.palette.background.default} fontSize={"10px"} fontWeight={"600"}>
+                                        勝ち点率
+                                    </Typography>
+                                </Box>
+                                <Typography fontSize={"14px"} color={theme.palette.text.primary}>
+                                    {props.winRate.toFixed(3)}
                                 </Typography>
-                            </Box>
-                            <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                                {props.winRate.toFixed(3)}
-                            </Typography>
-                        </Stack>
-                        {/*<Stack*/}
-                        {/*    direction={"row"}*/}
-                        {/*    spacing={1}*/}
-                        {/*    alignItems={"center"}*/}
-                        {/*>*/}
-                        {/*    <Box*/}
-                        {/*        sx={{*/}
-                        {/*            px: 0.8,*/}
-                        {/*            height:"16px",*/}
-                        {/*            borderRadius: "5px",*/}
-                        {/*            backgroundColor: theme.palette.text.secondary,*/}
-                        {/*            justifyContent: "center",*/}
-                        {/*            alignItems: "center"*/}
-                        {/*        }}*/}
-                        {/*    >*/}
-                        {/*        <Typography color={theme.palette.background.default} fontSize={"10px"} fontWeight={"600"}>*/}
-                        {/*            総得点率*/}
-                        {/*        </Typography>*/}
-                        {/*    </Box>*/}
-                        {/*    <Typography fontSize={"14px"} color={theme.palette.text.primary}>*/}
-                        {/*        {props.totalRate.toFixed(3)}*/}
-                        {/*    </Typography>*/}
-                        {/*</Stack>*/}
+                            </Stack>
+                        )}
                     </Stack>
 
                 </Button>
@@ -155,9 +134,8 @@ export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
                             </Stack>
 
                             {users
-                                .filter(user => user.teamIds.includes(Number(props.teamId)))
+                                .filter(user => user.teams.some(t => t.id === props.teamId))
                                 .map(user => {
-                                    // const image = `${process.env.NEXT_PUBLIC_API_URL}/images/${user?.pictureId}/file`
                                     return (
                                         <Fragment key={user.id}>
                                             <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>

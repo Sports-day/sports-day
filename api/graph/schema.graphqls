@@ -5,6 +5,11 @@ input CreateUserInput {
   email: String!
 }
 
+input UpdateUserInput {
+  name: String
+  email: String
+}
+
 input CreateGroupInput {
   name: String!
 }
@@ -20,11 +25,13 @@ input UpdateGroupUsersInput {
 input CreateInformationInput {
   title: String!
   content: String!
+  status: String
 }
 
 input UpdateInformationInput {
   title: String
   content: String
+  status: String
 }
 
 input CreateSceneInput {
@@ -40,8 +47,9 @@ input CreateSportsInput {
 
 input UpdateSportsInput {
   name: String
-  weight: Int
+  displayOrder: Int
   imageId: ID
+  experiencedLimit: Int
 }
 
 input CreateTeamInput {
@@ -72,11 +80,13 @@ input CreateCompetitionInput {
   name: String!
   type: CompetitionType!
   sceneId: ID!
+  sportId: ID!
 }
 
 input UpdateCompetitionInput {
   name: String
-  imageId: ID
+  sceneId: ID
+  sportId: ID
 }
 
 input UpdateCompetitionEntriesInput {
@@ -106,6 +116,14 @@ input UpdateMatchResultInput {
   status: MatchStatus
   winnerTeamId: ID
   results: [MatchResultInput!]
+}
+
+"""
+審判がスコアを提出するための入力。statusは自動的にFINISHEDになる。
+"""
+input SubmitScoreInput {
+  results: [MatchResultInput!]!
+  winnerTeamId: ID
 }
 
 input UpdateMatchEntriesInput {
@@ -139,6 +157,8 @@ input UpdateJudgmentInput {
 
 input CreateLeagueInput {
   name: String!
+  sceneId: ID!
+  sportId: ID!
   defaultLocationId: ID
 }
 
@@ -176,6 +196,16 @@ input RankingRuleInput {
 input TiebreakPriorityInput {
   teamId: ID!
   priority: Int!
+}
+
+"""
+サブブラケット自動生成
+"""
+input GenerateSubBracketInput {
+  competitionId: ID!
+  name: String!
+  teamCount: Int!
+  placementMethod: PlacementMethod
 }
 
 """
@@ -261,6 +291,13 @@ input CreatePromotionRuleInput {
 input UpdatePromotionRuleInput {
   rankSpec: String
   slot: Int
+}
+
+input ApplyCompetitionDefaultsInput {
+  startTime: String!
+  matchDuration: Int!
+  breakDuration: Int!
+  locationId: ID
 }
 
 input CreateRuleInput {
@@ -367,6 +404,23 @@ type Query {
   画像一覧を取得する
   """
   images: [Image!]!
+  """
+  指定スポーツの経験者一覧を取得する
+  """
+  sportExperiences(sportId: ID!): [SportExperience!]!
+  """
+  指定ユーザーの経験者スポーツ一覧を取得する
+  """
+  userSportExperiences(userId: ID!): [SportExperience!]!
+  """
+  全ての経験者データを取得する
+  """
+  allSportExperiences: [SportExperience!]!
+}
+
+input DisplayOrderItem {
+  id: ID!
+  displayOrder: Int!
 }
 
 input CreateImageUploadURLInput {
@@ -380,6 +434,8 @@ type ImageUploadURL {
 
 type Mutation {
   createUser(input: CreateUserInput!): User! @hasPermission(permission: "user:write")
+  updateUser(id: ID!, input: UpdateUserInput!): User! @hasPermission(permission: "user:write")
+  deleteUser(id: ID!): User! @hasPermission(permission: "user:write")
   createGroup(input: CreateGroupInput!): Group! @hasPermission(permission: "group:write")
   deleteGroup(id: ID!): Group! @hasPermission(permission: "group:write")
   updateGroup(id: ID!, input: UpdateGroupInput!): Group! @hasPermission(permission: "group:write")
@@ -419,6 +475,7 @@ type Mutation {
   createScene(input: CreateSceneInput!): Scene! @hasPermission(permission: "scene:write")
   updateScene(id: ID!, input: UpdateSceneInput!): Scene! @hasPermission(permission: "scene:write")
   deleteScene(id: ID!): Scene! @hasPermission(permission: "scene:write")
+  restoreScene(id: ID!): Scene! @hasPermission(permission: "scene:write")
   createInformation(input: CreateInformationInput!): Information! @hasPermission(permission: "information:write")
   deleteInformation(id: ID!): Information! @hasPermission(permission: "information:write")
   updateInformation(id: ID!, input: UpdateInformationInput!): Information! @hasPermission(permission: "information:write")
@@ -473,6 +530,10 @@ type Mutation {
   """
   deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match! @hasPermission(permission: "match:write")
   """
+  審判を作成する
+  """
+  createJudgment(input: CreateJudgmentInput!): Judgment!
+  """
   審判の情報を更新する
   """
   updateJudgment(id: ID!, input: UpdateJudgmentInput!): Judgment! @hasPermission(permission: "match:write")
@@ -492,6 +553,14 @@ type Mutation {
   リーグの総当たり戦を自動生成する
   """
   generateRoundRobin(id: ID!, input: GenerateRoundRobinInput!): [Match!]! @hasPermission(permission: "competition:write")
+  """
+  リーグの総当たり戦をデフォルト設定で再生成する（既存試合を削除して再作成）
+  """
+  regenerateRoundRobin(id: ID!): [Match!]! @hasPermission(permission: "competition:write")
+  """
+  大会のデフォルト設定を適用する（手動設定された試合時間・場所はスキップ）
+  """
+  applyCompetitionDefaults(id: ID!, input: ApplyCompetitionDefaultsInput!): [Match!]! @hasPermission(permission: "competition:write")
   """
   スポーツのランキングルールを設定する（全削除→再挿入）
   """
@@ -516,6 +585,10 @@ type Mutation {
   ブラケット自動生成（MAIN + オプショナルSUB）
   """
   generateBracket(input: GenerateBracketInput!): [Tournament!]! @hasPermission(permission: "competition:write")
+  """
+  サブブラケット自動生成（試合構造含む）
+  """
+  generateSubBracket(input: GenerateSubBracketInput!): Tournament! @hasPermission(permission: "competition:write")
   """
   SUBブラケット手動追加
   """
@@ -552,6 +625,14 @@ type Mutation {
   SEEDスロットへのチーム手動配置（teamId=null でクリア）
   """
   assignSeedTeam(input: AssignSeedTeamInput!): TournamentSlot! @hasPermission(permission: "competition:write")
+  """
+  審判が出席を記録する（審判本人のみ実行可能）
+  """
+  markJudgmentAttendance(matchId: ID!): Judgment!
+  """
+  審判がスコアを提出する（審判本人のみ実行可能、試合は自動的にFINISHEDになる）
+  """
+  submitMatchScore(matchId: ID!, input: SubmitScoreInput!): Match!
   createRule(input: CreateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   updateRule(id: ID!, input: UpdateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   deleteRule(id: ID!): Rule! @hasPermission(permission: "rule:write")
@@ -591,4 +672,21 @@ type Mutation {
   ユーザーのロールを更新する（user:manage パーミッションが必要）
   """
   updateUserRole(userId: ID!, role: Role!): User! @hasPermission(permission: "user:manage")
+  """
+  スポーツの経験者を追加する
+  """
+  addSportExperiences(sportId: ID!, userIds: [ID!]!): [SportExperience!]! @hasPermission(permission: "team:write")
+  """
+  スポーツの経験者を削除する
+  """
+  deleteSportExperiences(sportId: ID!, userIds: [ID!]!): Boolean! @hasPermission(permission: "team:write")
+  """
+  表示順を一括更新する
+  """
+  updateSportsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "sport:write")
+  updateCompetitionsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "competition:write")
+  updateLocationsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "location:write")
+  updateScenesDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "scene:write")
+  updateInformationsDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "information:write")
+  updateImagesDisplayOrder(input: [DisplayOrderItem!]!): Boolean! @hasPermission(permission: "image:write")
 }

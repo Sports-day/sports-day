@@ -1,28 +1,15 @@
-import { useState, useEffect } from 'react'
-import { MOCK_TAGS, persistTags } from '../mock'
+import { useGetAdminScenesForTagsQuery } from '@/gql/__generated__/graphql'
 import type { Tag } from '../types'
 
-const _listeners = new Set<() => void>()
-
-export function notifyTagListeners() {
-  _listeners.forEach(fn => fn())
-}
-
 export function useTags() {
-  const [tags, setTags] = useState<Tag[]>(MOCK_TAGS)
+  const { data, loading, error } = useGetAdminScenesForTagsQuery()
 
-  useEffect(() => {
-    const trigger = () => setTags([...MOCK_TAGS])
-    _listeners.add(trigger)
-    return () => { _listeners.delete(trigger) }
-  }, [])
+  const tags: Tag[] = (data?.scenes ?? []).map(s => ({
+    id: s.id,
+    name: s.name,
+    displayOrder: s.displayOrder,
+    isDeleted: s.isDeleted,
+  }))
 
-  const toggleTag = (id: string) => {
-    const tag = MOCK_TAGS.find((t) => t.id === id)
-    if (tag) tag.enabled = !tag.enabled
-    persistTags()
-    setTags([...MOCK_TAGS])
-  }
-
-  return { data: tags, loading: false, error: null, toggleTag }
+  return { data: tags, loading, error: error ?? null }
 }

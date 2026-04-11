@@ -95,34 +95,48 @@ resolve: {
 
 ## データ取得の方針
 
-データ取得は必ずモックで実装すること。モックデータは各feature内の `mock.ts` に定義し、フックから参照する。
+データ取得は **GraphQL API + Apollo Client + graphql-codegen** で実装すること。
+各 feature の `api.ts` に gql クエリ/ミューテーションを定義し、codegen で生成したフックをカスタムフック内から呼び出す。
+`mock.ts` は使用しない。
 
 ```
 features/users/
 ├── components/
 ├── hooks/
 │   └── useUserList.ts
-├── mock.ts
+├── api.ts          # GraphQL クエリ・ミューテーション定義
 └── types.ts
 ```
 
 ```ts
-// features/users/mock.ts
-import type { User } from '../types'
+// features/users/api.ts
+import { gql } from '@apollo/client'
 
-export const MOCK_USERS: User[] = [
-  { id: '1', name: '山田太郎', teamId: 'team-1' },
-  { id: '2', name: '鈴木花子', teamId: 'team-2' },
-]
+export const GET_USERS = gql`
+  query GetUsers {
+    users { id name email }
+  }
+`
 ```
 
 ```ts
 // features/users/hooks/useUserList.ts
-import { MOCK_USERS } from '../mock'
+import { useGetUsersQuery } from '@/gql/__generated__/graphql'
 
 export function useUserList() {
-  return { data: MOCK_USERS, loading: false, error: null }
+  const { data, loading, error } = useGetUsersQuery()
+  const users = (data?.users ?? []).map(u => ({ id: u.id, name: u.name }))
+  return { data: users, loading, error: error ?? null }
 }
+```
+
+codegen の実行:
+
+```bash
+cd apps/admin
+yarn graphql-codegen
+```
+
 
 ## index.ts（Barrel export）のルール
 

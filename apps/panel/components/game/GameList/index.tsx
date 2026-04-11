@@ -3,14 +3,17 @@ import * as React from "react";
 import {GameListContent} from "./GameListContent";
 import {useEffect} from "react";
 import {motion} from "framer-motion";
-import {Game} from "@/src/models/GameModel";
+import { type GetPanelCompetitionsQuery, CompetitionType } from "@/src/gql/__generated__/graphql";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
+import {TournamentRankList} from "@/components/game/RankList/TournamentRankList";
+
+type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
 
 export type GameListProps = {
-    games: Game[]
-    gameId: number | null
-    setGameId: (gameId: number) => void
-    myTeamId?: number
+    games: PanelCompetition[]
+    gameId: string | null
+    setGameId: (gameId: string) => void
+    myTeamId?: string
 }
 
 export type TabPanelProps = {
@@ -54,7 +57,9 @@ export const GameList = (props: GameListProps) => {
     const theme = useTheme();
     const [value, setValue] = React.useState(0);
 
-    const sortedGame = props.games.sort((a, b) => b.weight - a.weight)
+
+
+    const sortedGame = [...props.games]
 
     useEffect(() => {
         //  set tab value if game id not undefined
@@ -82,7 +87,7 @@ export const GameList = (props: GameListProps) => {
             pb={2}
         >
             <Typography pl={2} pb={1}>
-                この競技のリーグ
+                リーグ・トーナメント
             </Typography>
             <Box sx={{
                 position: "relative",
@@ -126,13 +131,15 @@ export const GameList = (props: GameListProps) => {
                             transition={{duration: 1, ease: [0.16, 1, 0.3, 1]}}
                         >
                             <Typography pl={2} pb={1}>
-                                このリーグ内のランキング
+                                {game.type === CompetitionType.League ? "このリーグ内のランキング" : "このトーナメントのランキング"}
                             </Typography>
-                            <LeagueRankList
-                                gameId={game.id}
-                            />
+                            {game.type === CompetitionType.League ? (
+                                <LeagueRankList leagueId={game.league?.id} />
+                            ) : (
+                                <TournamentRankList competitionId={game.id} />
+                            )}
                             <Typography pl={2} pb={1} pt={3}>
-                                このリーグの試合
+                                {game.type === CompetitionType.League ? "このリーグの試合" : "このトーナメントの試合"}
                             </Typography>
                             <GameListContent game={game} myTeamId={props.myTeamId}/>
                         </motion.div>

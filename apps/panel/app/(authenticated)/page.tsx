@@ -14,6 +14,10 @@ import {motion} from "framer-motion";
 import {OtherInfo} from "@/components/dashboard/Overview/OtherInfo";
 import CircleContainer from "@/components/layouts/circleContainer";
 import JudgeSchedule from "@/components/dashboard/schedule/judgeSchedule";
+import {MatchApproachingAlert} from "@/components/dashboard/MatchApproachingAlert";
+import {MatchResultPopup} from "@/components/dashboard/MatchResultPopup";
+import {JudgeScoreReminder} from "@/components/dashboard/JudgeScoreReminder";
+import {useMatchPolling} from "@/src/hooks/useMatchPolling";
 
 export default function Page() {
     //  Unit Hook
@@ -31,8 +35,10 @@ export default function Page() {
         myTeamUsers,
         myTeamMatches,
         myTeamRank,
-        myJudgeMatches
+        myJudgeMatches,
+        refetchMatches,
     } = useFetchDashboard()
+    useMatchPolling(myJudgeMatches, refetchMatches)
     const gridValue = myJudgeMatches.length > 0 ? 6 : 12;
 
     return (
@@ -94,6 +100,11 @@ export default function Page() {
                                             pb: 9
                                         }}
                                     >
+                                            <Container maxWidth="xl" sx={{ px: 1, pt: 1 }}>
+                                                <MatchApproachingAlert />
+                                            </Container>
+                                            <MatchResultPopup myTeamMatches={myTeamMatches} />
+                                            <JudgeScoreReminder judgeMatches={myJudgeMatches} />
                                             <CircleContainer>
                                                 {mySport && myTeam && myGame &&
                                                     <Box>
@@ -136,8 +147,6 @@ export default function Page() {
                                                             {mySport && myGame && myTeam &&　
                                                                 <>
                                                                     <Schedule
-                                                                        sportId={mySport.id}
-                                                                        gameId={myGame.id}
                                                                         matches={myTeamMatches}
                                                                         myTeamId={myTeam.id}
                                                                     />
@@ -156,10 +165,7 @@ export default function Page() {
                                                             </Typography>
                                                             {mySport && myGame && myTeam && myJudgeMatches.length > 0 &&
                                                                 <JudgeSchedule
-                                                                    sportId={mySport.id}
-                                                                    gameId={myGame.id}
                                                                     matches={myJudgeMatches}
-                                                                    myTeamId={myTeam.id}
                                                                 />
                                                             }
                                                             {myJudgeMatches.length === 0 &&
@@ -169,8 +175,8 @@ export default function Page() {
                                                         <Typography pl={2} pt={2}>
                                                             すべての競技
                                                         </Typography>
-                                                        {sports
-                                                            .sort((a, b) => b.weight - a.weight)
+                                                        {[...sports]
+                                                            .sort((a, b) => a.displayOrder - b.displayOrder)
                                                             .map((sport) => {
                                                                 return (
                                                                     <Grid size={12} key={sport.id}>

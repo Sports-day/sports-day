@@ -3,28 +3,17 @@ import SubFooter from "@/components/footers/SubFooter";
 import Header from "@/components/header/Header";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import { gql, useQuery } from "@apollo/client";
 import { useParams } from "react-router-dom";
 import Instruction from "@/components/cards/AboutAnyPage/InstructionCard";
 import AppBreadcrumbs, {
   type BreadcrumbItem,
 } from "@/components/layouts/AppBreadcrumbs";
 import CircularUnderLoad from "@/features/Loading";
-
-const SPORTDATA_GET = gql`
-  query SportDataGet($sport_Id: ID!, $scene_Id: ID!) {
-    sport(id: $sport_Id) {
-      name
-    }
-    scene(id: $scene_Id) {
-      name
-    }
-  }
-`;
+import { useSportDataGetQuery } from "@/gql/__generated__/graphql";
 
 export default function MemberEdit() {
   const { type, sports } = useParams() as { type: string; sports: string };
-  const { data, loading, error } = useQuery(SPORTDATA_GET, {
+  const { data, loading, error } = useSportDataGetQuery({
     variables: { sport_Id: sports, scene_Id: type },
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
@@ -37,8 +26,8 @@ export default function MemberEdit() {
     throw error;
   }
 
-  const weatherName = data?.scene?.name;
-  const sportName = data?.sport?.name;
+  const weatherName = data?.scene?.name ?? "";
+  const sportName = data?.sport?.name ?? "";
   const breadcrumbs: BreadcrumbItem[] = [
     { label: "ホーム", href: `/weather/${type}` },
     { label: "チーム確認", href: `/weather/${type}/sport/${sports}` },

@@ -1,7 +1,5 @@
 import {Box, LinearProgress, linearProgressClasses, Stack, styled, Typography, useTheme} from "@mui/material";
 import * as React from "react";
-import {useContext} from "react";
-import {TeamsContext} from "../context";
 
 type Props = {
     chartSeries: number[]
@@ -9,7 +7,6 @@ type Props = {
 
 export const InfoGameProgressChart = (props: Props) => {
     const theme = useTheme();
-    const {data: teams} = useContext(TeamsContext);
     const PointBar = styled(LinearProgress)(({}) => ({
         height: 7,
         borderRadius: 3,

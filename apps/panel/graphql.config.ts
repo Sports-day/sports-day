@@ -7,7 +7,8 @@ const dirname = path.dirname(filename);
 
 const config: CodegenConfig = {
     overwrite: true,
-    schema: path.join(dirname, "*.graphqls"),
+    ignoreNoDocuments: true,
+    schema: path.resolve(dirname, "../../api/graph/*.graphqls"),
     documents: path.join(dirname, "./src/**/*.{ts,tsx}"),
     generates: {
         "./src/gql/__generated__/graphql.ts": {

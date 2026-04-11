@@ -38,9 +38,24 @@ func (r scene) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Sc
 	return &scene, nil
 }
 
+func (r scene) Restore(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error) {
+	var scene db_model.Scene
+	if err := db.First(&scene, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrSceneNotFound
+		}
+		return nil, errors.Wrap(err)
+	}
+	scene.IsDeleted = false
+	if err := db.Save(&scene).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return &scene, nil
+}
+
 func (r scene) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error) {
 	var scene db_model.Scene
-	if err := db.First(&scene, "id = ? AND is_deleted = ?", id, false).Error; err != nil {
+	if err := db.First(&scene, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrSceneNotFound
 		}
@@ -51,10 +66,22 @@ func (r scene) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene
 
 func (r scene) List(ctx context.Context, db *gorm.DB) ([]*db_model.Scene, error) {
 	var scenes []*db_model.Scene
-	if err := db.Where("is_deleted = ?", false).Find(&scenes).Error; err != nil {
+	if err := db.Order("display_order ASC, created_at ASC").Find(&scenes).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return scenes, nil
+}
+
+func (r scene) UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			if err := tx.Model(&db_model.Scene{}).Where("id = ?", item.ID).
+				Update("display_order", item.DisplayOrder).Error; err != nil {
+				return errors.Wrap(err)
+			}
+		}
+		return nil
+	})
 }
 
 func (r scene) GetSportSceneByID(ctx context.Context, db *gorm.DB, id string) (*db_model.SportScene, error) {

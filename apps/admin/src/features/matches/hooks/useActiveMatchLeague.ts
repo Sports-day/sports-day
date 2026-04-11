@@ -1,4 +1,8 @@
-import { MOCK_ACTIVE_LEAGUES } from '../mock'
+import {
+  useGetAdminLeagueQuery,
+  useGetAdminLeagueStandingsQuery,
+  useGetAdminCompetitionMatchesQuery,
+} from '@/gql/__generated__/graphql'
 import type { ActiveLeague, ActiveMatch, ActiveTeam } from '../types'
 
 export type GridCell =
@@ -21,97 +25,149 @@ export type TeamStats = {
   totalGoalRate: number
 }
 
-function calcStats(team: ActiveTeam, matches: ActiveMatch[]): TeamStats {
-  let wins = 0, draws = 0, goalsFor = 0, goalsAgainst = 0, matchesPlayed = 0
-  matches.forEach((m) => {
-    const isHome = m.teamAId === team.id
-    const isAway = m.teamBId === team.id
-    if (!isHome && !isAway) return
-    if (m.status !== 'finished') return
-    matchesPlayed++
-    const myScore = isHome ? (m.scoreA ?? 0) : (m.scoreB ?? 0)
-    const oppScore = isHome ? (m.scoreB ?? 0) : (m.scoreA ?? 0)
-    goalsFor += myScore
-    goalsAgainst += oppScore
-    if (myScore > oppScore) wins++
-    else if (myScore === oppScore) draws++
-  })
-  const points = wins * 3 + draws
-  return {
-    points,
-    goalsFor,
-    goalsAgainst,
-    matchesPlayed,
-    winRate: matchesPlayed > 0 ? points / (matchesPlayed * 3) : 0,
-    totalGoalRate: matchesPlayed > 0 ? goalsFor / matchesPlayed : 0,
-  }
-}
-
-function calcRankLabel(team: ActiveTeam, allTeams: ActiveTeam[], statsMap: Map<string, TeamStats>): string {
-  const my = statsMap.get(team.id)
-  if (!my) return '-'
-  const myDiff = my.goalsFor - my.goalsAgainst
-  let better = 0, tied = 0
-  allTeams.forEach((t) => {
-    if (t.id === team.id) return
-    const s = statsMap.get(t.id)
-    if (!s) return
-    const sDiff = s.goalsFor - s.goalsAgainst
-    if (s.points > my.points || (s.points === my.points && sDiff > myDiff) || (s.points === my.points && sDiff === myDiff && s.goalsFor > my.goalsFor)) {
-      better++
-    } else if (s.points === my.points && sDiff === myDiff && s.goalsFor === my.goalsFor) {
-      tied++
-    }
-  })
-  const rank = better + 1
-  return tied > 0 ? `同率${rank}位` : `${rank}位`
-}
-
 export function statusLabel(status: ActiveMatch['status']): string {
   if (status === 'finished') return '終了'
   if (status === 'ongoing') return '進行中'
   return '未登録'
 }
 
-export function useActiveMatchLeague(competitionId: string, leagueId: string) {
-  const leagues = MOCK_ACTIVE_LEAGUES[competitionId] ?? []
-  const league: ActiveLeague | undefined = leagues.find((l) => l.id === leagueId)
+function toActiveStatus(s: string): ActiveMatch['status'] {
+  if (s === 'ONGOING') return 'ongoing'
+  if (s === 'FINISHED') return 'finished'
+  if (s === 'CANCELED') return 'cancelled'
+  return 'standby'
+}
 
-  if (!league) return {
-    league: null,
-    grid: [] as GridCell[][],
-    allFinished: false,
-    statsMap: new Map<string, TeamStats>(),
-    rankLabels: new Map<string, string>(),
-    loading: false,
-    error: null,
+export function useActiveMatchLeague(competitionId: string, leagueId: string) {
+  const { data: leagueData, loading, error } = useGetAdminLeagueQuery({
+    variables: { id: leagueId },
+    skip: !leagueId,
+  })
+  const { data: standingsData } = useGetAdminLeagueStandingsQuery({
+    variables: { leagueId },
+    skip: !leagueId,
+  })
+  const { data: compMatchesData } = useGetAdminCompetitionMatchesQuery({
+    variables: { competitionId },
+    skip: !competitionId,
+  })
+
+  if (!leagueData?.league) {
+    return {
+      league: null,
+      grid: [] as GridCell[][],
+      allFinished: false,
+      statsMap: new Map<string, TeamStats>(),
+      rankLabels: new Map<string, string>(),
+      loading,
+      error: error ?? null,
+    }
   }
 
-  const allFinished =
-    league.matches.length > 0 && league.matches.every((m) => m.status === 'finished')
+  const gqlLeague = leagueData.league
+  const standings = standingsData?.leagueStandings ?? []
+  const competitionMatches = compMatchesData?.competition?.matches ?? []
 
-  const grid: GridCell[][] = league.teams.map((rowTeam) =>
-    league.teams.map((colTeam) => {
+  // GraphQL League.teams → ActiveTeam
+  const activeTeams: ActiveTeam[] = gqlLeague.teams.map(t => ({
+    id: t.id,
+    name: t.name,
+    shortName: t.name,
+  }))
+
+  // competition.matches を ActiveMatch にマッピング
+  const activeMatches: ActiveMatch[] = competitionMatches.map(m => {
+    const entry0 = m.entries[0]
+    const entry1 = m.entries[1]
+    const winnerTeamId = m.winnerTeam?.id ?? null
+    let winner: ActiveMatch['winner']
+    if (winnerTeamId && entry0?.team?.id === winnerTeamId) winner = 'teamA'
+    else if (winnerTeamId && entry1?.team?.id === winnerTeamId) winner = 'teamB'
+    return {
+      id: m.id,
+      teamAId: entry0?.team?.id ?? '',
+      teamBId: entry1?.team?.id ?? '',
+      scoreA: entry0?.score ?? null,
+      scoreB: entry1?.score ?? null,
+      status: toActiveStatus(m.status),
+      winner,
+      time: m.time,
+      locationId: m.location?.id,
+    }
+  })
+
+  const league: ActiveLeague = {
+    id: gqlLeague.id,
+    name: gqlLeague.name,
+    teams: activeTeams,
+    matches: activeMatches,
+  }
+
+  // leagueStandings から statsMap を構築
+  const statsMap = new Map<string, TeamStats>()
+  for (const standing of standings) {
+    statsMap.set(standing.team.id, {
+      points: standing.points,
+      goalsFor: standing.goalsFor,
+      goalsAgainst: standing.goalsAgainst,
+      matchesPlayed: standing.matchesPlayed,
+      winRate: standing.matchesPlayed > 0
+        ? standing.points / (standing.matchesPlayed * 3)
+        : 0,
+      totalGoalRate: standing.matchesPlayed > 0
+        ? standing.goalsFor / standing.matchesPlayed
+        : 0,
+    })
+  }
+
+  // rankLabels は standings の rank から生成
+  const rankLabels = new Map<string, string>()
+  for (const standing of standings) {
+    rankLabels.set(standing.team.id, `${standing.rank}位`)
+  }
+
+  const grid: GridCell[][] = activeTeams.map(rowTeam =>
+    activeTeams.map(colTeam => {
       if (rowTeam.id === colTeam.id) return { type: 'diagonal' }
-      const match = league.matches.find(
-        (m) =>
-          (m.teamAId === rowTeam.id && m.teamBId === colTeam.id) ||
-          (m.teamAId === colTeam.id && m.teamBId === rowTeam.id)
+      const match = activeMatches.find(m =>
+        (m.teamAId === rowTeam.id && m.teamBId === colTeam.id) ||
+        (m.teamAId === colTeam.id && m.teamBId === rowTeam.id)
       )
-      const isHome = match?.teamAId === rowTeam.id
+      const homeScore = match?.teamAId === rowTeam.id ? (match?.scoreA ?? 0) : (match?.scoreB ?? 0)
+      const awayScore = match?.teamBId === colTeam.id ? (match?.scoreB ?? 0) : (match?.scoreA ?? 0)
       return {
         type: 'match',
         match,
         rowTeam,
         colTeam,
-        homeScore: match ? (isHome ? (match.scoreA ?? 0) : (match.scoreB ?? 0)) : 0,
-        awayScore: match ? (isHome ? (match.scoreB ?? 0) : (match.scoreA ?? 0)) : 0,
+        homeScore: homeScore ?? 0,
+        awayScore: awayScore ?? 0,
       }
     })
   )
 
-  const statsMap = new Map(league.teams.map((t) => [t.id, calcStats(t, league.matches)]))
-  const rankLabels = new Map(league.teams.map((t) => [t.id, calcRankLabel(t, league.teams, statsMap)]))
+  // 試合順番マップ（time昇順 → 1-indexed）
+  const matchOrderMap = new Map<string, number>()
+  const sorted = [...activeMatches].sort((a, b) => {
+    const ta = a.time ? new Date(a.time).getTime() : 0
+    const tb = b.time ? new Date(b.time).getTime() : 0
+    return ta - tb || a.id.localeCompare(b.id)
+  })
+  sorted.forEach((m, i) => matchOrderMap.set(m.id, i + 1))
 
-  return { league, grid, allFinished, statsMap, rankLabels, loading: false, error: null }
+  const allFinished = activeMatches.length > 0 && activeMatches.every(m => m.status === 'finished')
+
+  // 同順位チームのグループを検出
+  const rankGroups = new Map<number, { id: string; name: string }[]>()
+  for (const standing of standings) {
+    const rank = standing.rank
+    if (!rankGroups.has(rank)) rankGroups.set(rank, [])
+    rankGroups.get(rank)!.push({ id: standing.team.id, name: standing.team.name ?? '' })
+  }
+  const tiedGroups = Array.from(rankGroups.entries())
+    .filter(([, teams]) => teams.length > 1)
+    .map(([rank, teams]) => ({ rank, teams }))
+    .sort((a, b) => a.rank - b.rank)
+
+  return { league, grid, allFinished, statsMap, rankLabels, matchOrderMap, tiedGroups, loading, error: error ?? null }
 }

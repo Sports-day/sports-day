@@ -9,12 +9,29 @@ import (
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
-	"sports-day/api/pkg/errors"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
 	user, err := r.UserService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatUserResponse(user), nil
+}
+
+// UpdateUser is the resolver for the updateUser field.
+func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
+	user, err := r.UserService.Update(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatUserResponse(user), nil
+}
+
+// DeleteUser is the resolver for the deleteUser field.
+func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (*model.User, error) {
+	user, err := r.UserService.Delete(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -206,6 +223,15 @@ func (r *mutationResolver) DeleteScene(ctx context.Context, id string) (*model.S
 	return model.FormatSceneResponse(scene), nil
 }
 
+// RestoreScene is the resolver for the restoreScene field.
+func (r *mutationResolver) RestoreScene(ctx context.Context, id string) (*model.Scene, error) {
+	scene, err := r.SceneService.Restore(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatSceneResponse(scene), nil
+}
+
 // CreateInformation is the resolver for the createInformation field.
 func (r *mutationResolver) CreateInformation(ctx context.Context, input model.CreateInformationInput) (*model.Information, error) {
 	information, err := r.InformationService.Create(ctx, &input)
@@ -239,6 +265,17 @@ func (r *mutationResolver) CreateCompetition(ctx context.Context, input model.Cr
 	if err != nil {
 		return nil, err
 	}
+
+	// トーナメント型の場合、デフォルトブラケットを自動生成
+	if input.Type == model.CompetitionTypeTournament {
+		pm := model.PlacementMethodSeedOptimized
+		_, _ = r.TournamentService.GenerateBracket(ctx, &model.GenerateBracketInput{
+			CompetitionID:   competition.ID,
+			TeamCount:       4,
+			PlacementMethod: &pm,
+		})
+	}
+
 	return model.FormatCompetitionResponse(competition), nil
 }
 
@@ -253,6 +290,10 @@ func (r *mutationResolver) UpdateCompetition(ctx context.Context, id string, inp
 
 // DeleteCompetition is the resolver for the deleteCompetition field.
 func (r *mutationResolver) DeleteCompetition(ctx context.Context, id string) (*model.Competition, error) {
+	// トーナメントのブラケット・試合を先に削除（FK順序問題の回避）
+	if _, err := r.TournamentService.ResetTournamentBrackets(ctx, id); err != nil {
+		return nil, err
+	}
 	competition, err := r.CompetitionService.Delete(ctx, id)
 	if err != nil {
 		return nil, err
@@ -336,6 +377,15 @@ func (r *mutationResolver) DeleteMatchEntries(ctx context.Context, id string, in
 	return model.FormatMatchResponse(match), nil
 }
 
+// CreateJudgment is the resolver for the createJudgment field.
+func (r *mutationResolver) CreateJudgment(ctx context.Context, input model.CreateJudgmentInput) (*model.Judgment, error) {
+	judgment, err := r.JudgmentService.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatJudgmentResponse(judgment), nil
+}
+
 // UpdateJudgment is the resolver for the updateJudgment field.
 func (r *mutationResolver) UpdateJudgment(ctx context.Context, id string, input model.UpdateJudgmentInput) (*model.Judgment, error) {
 	judgment, err := r.JudgmentService.Update(ctx, id, input)
@@ -402,6 +452,35 @@ func (r *mutationResolver) GenerateRoundRobin(ctx context.Context, id string, in
 		res = append(res, model.FormatMatchResponse(match))
 	}
 	return res, nil
+}
+
+// RegenerateRoundRobin is the resolver for the regenerateRoundRobin field.
+func (r *mutationResolver) RegenerateRoundRobin(ctx context.Context, id string) ([]*model.Match, error) {
+	matches, err := r.LeagueService.RegenerateRoundRobin(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if matches == nil {
+		return []*model.Match{}, nil
+	}
+	result := make([]*model.Match, len(matches))
+	for i, m := range matches {
+		result[i] = model.FormatMatchResponse(m)
+	}
+	return result, nil
+}
+
+// ApplyCompetitionDefaults is the resolver for the applyCompetitionDefaults field.
+func (r *mutationResolver) ApplyCompetitionDefaults(ctx context.Context, id string, input model.ApplyCompetitionDefaultsInput) ([]*model.Match, error) {
+	matches, err := r.CompetitionService.ApplyDefaults(ctx, id, &input)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.Match, len(matches))
+	for i, m := range matches {
+		result[i] = model.FormatMatchResponse(m)
+	}
+	return result, nil
 }
 
 // SetRankingRules is the resolver for the setRankingRules field.
@@ -496,6 +575,21 @@ func (r *mutationResolver) GenerateBracket(ctx context.Context, input model.Gene
 	return r.computeBracketStateForTournaments(ctx, tournaments)
 }
 
+// GenerateSubBracket is the resolver for the generateSubBracket field.
+func (r *mutationResolver) GenerateSubBracket(ctx context.Context, input model.GenerateSubBracketInput) (*model.Tournament, error) {
+	tournament, err := r.TournamentService.GenerateSubBracket(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, tournament.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return model.FormatTournamentResponse(tournament, state, progress), nil
+}
+
 // CreateTournament is the resolver for the createTournament field.
 func (r *mutationResolver) CreateTournament(ctx context.Context, input model.CreateTournamentInput) (*model.Tournament, error) {
 	tournament, err := r.TournamentService.CreateTournament(ctx, &input)
@@ -579,6 +673,24 @@ func (r *mutationResolver) AssignSeedTeam(ctx context.Context, input model.Assig
 		return nil, err
 	}
 	return model.FormatTournamentSlotResponse(slot), nil
+}
+
+// MarkJudgmentAttendance is the resolver for the markJudgmentAttendance field.
+func (r *mutationResolver) MarkJudgmentAttendance(ctx context.Context, matchID string) (*model.Judgment, error) {
+	judgment, err := r.JudgmentService.MarkAttendance(ctx, matchID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatJudgmentResponse(judgment), nil
+}
+
+// SubmitMatchScore is the resolver for the submitMatchScore field.
+func (r *mutationResolver) SubmitMatchScore(ctx context.Context, matchID string, input model.SubmitScoreInput) (*model.Match, error) {
+	match, err := r.MatchService.SubmitScore(ctx, matchID, input)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
 }
 
 // CreateRule is the resolver for the createRule field.
@@ -700,6 +812,81 @@ func (r *mutationResolver) UpdateUserRole(ctx context.Context, userID string, ro
 		return nil, err
 	}
 	return model.FormatUserResponse(user), nil
+}
+
+// AddSportExperiences is the resolver for the addSportExperiences field.
+func (r *mutationResolver) AddSportExperiences(ctx context.Context, sportID string, userIds []string) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.AddExperiences(ctx, sportID, userIds)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
+}
+
+// DeleteSportExperiences is the resolver for the deleteSportExperiences field.
+func (r *mutationResolver) DeleteSportExperiences(ctx context.Context, sportID string, userIds []string) (bool, error) {
+	if err := r.SportService.DeleteExperiences(ctx, sportID, userIds); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateSportsDisplayOrder is the resolver for the updateSportsDisplayOrder field.
+func (r *mutationResolver) UpdateSportsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.SportService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateCompetitionsDisplayOrder is the resolver for the updateCompetitionsDisplayOrder field.
+func (r *mutationResolver) UpdateCompetitionsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.CompetitionService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateLocationsDisplayOrder is the resolver for the updateLocationsDisplayOrder field.
+func (r *mutationResolver) UpdateLocationsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.LocationService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateScenesDisplayOrder is the resolver for the updateScenesDisplayOrder field.
+func (r *mutationResolver) UpdateScenesDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.SceneService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateInformationsDisplayOrder is the resolver for the updateInformationsDisplayOrder field.
+func (r *mutationResolver) UpdateInformationsDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.InformationService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UpdateImagesDisplayOrder is the resolver for the updateImagesDisplayOrder field.
+func (r *mutationResolver) UpdateImagesDisplayOrder(ctx context.Context, input []*model.DisplayOrderItem) (bool, error) {
+	items := toDisplayOrderItems(input)
+	if err := r.ImageService.UpdateDisplayOrders(ctx, items); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Users is the resolver for the users field.
@@ -989,7 +1176,7 @@ func (r *queryResolver) Leagues(ctx context.Context) ([]*model.League, error) {
 	for _, league := range leagues {
 		comp, ok := compMap[league.ID]
 		if !ok {
-			return nil, errors.ErrCompetitionNotFound
+			return nil, nil
 		}
 		res = append(res, model.FormatLeagueResponse(league, comp))
 	}
@@ -1103,6 +1290,45 @@ func (r *queryResolver) Images(ctx context.Context) ([]*model.Image, error) {
 		res = append(res, model.FormatImageResponse(img))
 	}
 	return res, nil
+}
+
+// SportExperiences is the resolver for the sportExperiences field.
+func (r *queryResolver) SportExperiences(ctx context.Context, sportID string) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.ListExperiencesBySportID(ctx, sportID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
+}
+
+// UserSportExperiences is the resolver for the userSportExperiences field.
+func (r *queryResolver) UserSportExperiences(ctx context.Context, userID string) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.ListExperiencesByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
+}
+
+// AllSportExperiences is the resolver for the allSportExperiences field.
+func (r *queryResolver) AllSportExperiences(ctx context.Context) ([]*model.SportExperience, error) {
+	exps, err := r.SportService.ListAllExperiences(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.SportExperience, len(exps))
+	for i, e := range exps {
+		result[i] = model.FormatSportExperienceResponse(e)
+	}
+	return result, nil
 }
 
 // Mutation returns MutationResolver implementation.

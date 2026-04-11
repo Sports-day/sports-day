@@ -4,7 +4,9 @@ import CheckPopup from "../../popups/CheckPopup";
 import { Link } from "react-router-dom";
 
 type teamMember = {
+  id: string;
   name: string;
+  isExperienced: boolean;
 };
 
 type teamInformationProps = {
@@ -57,9 +59,9 @@ export default function TeamCard({
         }}
       >
         <Stack spacing={"8px"}>
-          {member.map((item, index) => (
+          {member.map((item) => (
             <Card
-              key={index}
+              key={item.id}
               sx={{
                 background: theme.palette.card.main,
                 display: "flex",
@@ -67,8 +69,22 @@ export default function TeamCard({
                 justifyContent: "center",
                 p: "8px",
                 borderRadius: "10px",
+                position: "relative",
               }}
             >
+              {item.isExperienced && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    left: 8,
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    bgcolor: "#FF9800",
+                  }}
+                />
+              )}
               <Typography sx={{ color: "white" }}>{item.name}</Typography>
             </Card>
           ))}

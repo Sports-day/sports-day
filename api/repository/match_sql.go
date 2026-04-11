@@ -24,6 +24,13 @@ func (r *matchRepository) Save(ctx context.Context, db *gorm.DB, match *db_model
 	return match, nil
 }
 
+func (r *matchRepository) DeleteByCompetitionID(ctx context.Context, db *gorm.DB, competitionID string) error {
+	if err := db.WithContext(ctx).Where("competition_id = ?", competitionID).Delete(&db_model.Match{}).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
 func (r *matchRepository) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Match, error) {
 	var match db_model.Match
 	if err := db.WithContext(ctx).First(&match, "id = ?", id).Error; err != nil {

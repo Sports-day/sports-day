@@ -1,14 +1,15 @@
+import { useState, useMemo } from 'react'
 import { Box, Chip, LinearProgress, Typography } from '@mui/material'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import AccountTreeIcon from '@mui/icons-material/AccountTree'
-import type { MockBracket, MockTMatch, MockTSlot } from '../mock'
+import type { BracketView, TournamentMatchView, TournamentSlotView } from '../types'
 
 // ─── Layout constants ────────────────────────────────────
-const MATCH_W = 224
-const MATCH_H = 108    // card height (header ~36 + row1 36 + row2 36)
+const MATCH_W = 260
+const MATCH_H = 128    // card height (header ~36 + row1 46 + row2 46)
 const H_GAP = 48       // horizontal gap between round columns
 const V_GAP = 8        // vertical gap between matches in the same round
-const SLOT_H = MATCH_H + V_GAP  // 116px — height of one original "seed pair" slot
+const SLOT_H = MATCH_H + V_GAP  // height of one original "seed pair" slot
 const ROUND_LABEL_H = 20
 
 const C = {
@@ -24,6 +25,9 @@ const C = {
   mainAccent: '#3949AB',
   subAccent: '#7B1FA2',
   emptySeed: '#90A4AE',
+  statusFinished: '#4CAF50',
+  statusOngoing: '#FF9800',
+  statusStandby: '#E0E0E0',
 }
 
 // ─── Bracket layout math ─────────────────────────────────
@@ -63,19 +67,107 @@ function colX(r: number) { return r * (MATCH_W + H_GAP) }
 const Y_PAD = V_GAP
 
 /**
- * After computing raw centre-Y values, shift them so the topmost card
- * starts at Y_PAD from the top and recalculate totalHeight to fit.
+ * ブラケットのツリー構造から各試合のY座標を計算する。
+ *
+ * アルゴリズム:
+ *   1. 試合データからツリーを構築（各試合の2スロットが子ノード）
+ *   2. ルートを特定（他の試合から参照されない試合 = 決勝）
+ *   3. DFS で葉ノードに順番にスロット位置を割り当て
+ *   4. 内部ノード（上位ラウンド試合）は2つの子の中央に配置
+ *
+ * これにより標準ブラケット / all-play fold / play-in 等の
+ * あらゆるブラケット構造で正しいレイアウトが得られる。
  */
-function normalizePositions(
-  matchCenterY: Map<string, number>,
+function computeLayout(
+  matches: TournamentMatchView[],
+  _bracketType: BracketView['bracketType'],
 ): { matchCenterY: Map<string, number>; totalHeight: number } {
-  if (matchCenterY.size === 0) return { matchCenterY, totalHeight: SLOT_H }
+  if (matches.length === 0) return { matchCenterY: new Map(), totalHeight: SLOT_H }
 
+  // ── Step 1: lookup テーブル構築 ──
+  const matchMap = new Map<string, TournamentMatchView>()
+  for (const m of matches) matchMap.set(m.id, m)
+
+  // ── Step 2: ルート特定（他の試合から参照されない試合） ──
+  const referenced = new Set<string>()
+  for (const m of matches) {
+    if (m.slot1.sourceMatchId && matchMap.has(m.slot1.sourceMatchId)) {
+      referenced.add(m.slot1.sourceMatchId)
+    }
+    if (m.slot2.sourceMatchId && matchMap.has(m.slot2.sourceMatchId)) {
+      referenced.add(m.slot2.sourceMatchId)
+    }
+  }
+  const roots = matches
+    .filter((m) => !referenced.has(m.id))
+    .sort((a, b) => b.round - a.round)
+
+  // ── Step 3-4: DFS で Y 座標割り当て ──
+  const matchCenterY = new Map<string, number>()
+  let leafIdx = 0
+
+  function visit(matchId: string): number {
+    if (matchCenterY.has(matchId)) return matchCenterY.get(matchId)!
+
+    const match = matchMap.get(matchId)
+    if (!match) {
+      // 別ブラケットの試合 → 仮想リーフ
+      const y = leafIdx * SLOT_H + SLOT_H / 2
+      leafIdx++
+      return y
+    }
+
+    const s1Id = match.slot1.sourceMatchId
+    const s2Id = match.slot2.sourceMatchId
+    const s1InBracket = !!(s1Id && matchMap.has(s1Id))
+    const s2InBracket = !!(s2Id && matchMap.has(s2Id))
+
+    // 葉ノード: 両スロットにフィーダー試合なし（R0のSEED試合等）
+    if (!s1InBracket && !s2InBracket) {
+      const y = leafIdx * SLOT_H + SLOT_H / 2
+      leafIdx++
+      matchCenterY.set(matchId, y)
+      return y
+    }
+
+    // 片方だけフィーダー試合あり（もう片方はBYE/SEED）→ フィーダーと同じYに配置
+    // BYEに仮想リーフを割り当てないことで、線が水平になりコンパクトに収まる
+    if (s1InBracket && !s2InBracket) {
+      const y = visit(s1Id!)
+      matchCenterY.set(matchId, y)
+      return y
+    }
+    if (!s1InBracket && s2InBracket) {
+      const y = visit(s2Id!)
+      matchCenterY.set(matchId, y)
+      return y
+    }
+
+    // 両方フィーダー試合あり → 2つの子の中央に配置
+    const topY = visit(s1Id!)
+    const botY = visit(s2Id!)
+    const y = (topY + botY) / 2
+    matchCenterY.set(matchId, y)
+    return y
+  }
+
+  for (const root of roots) {
+    visit(root.id)
+  }
+
+  // 孤立試合の安全策
+  for (const m of matches) {
+    if (!matchCenterY.has(m.id)) {
+      matchCenterY.set(m.id, leafIdx * SLOT_H + SLOT_H / 2)
+      leafIdx++
+    }
+  }
+
+  // ── 正規化: 上端をパディングに揃え、高さを算出 ──
+  if (matchCenterY.size === 0) return { matchCenterY, totalHeight: SLOT_H }
   const allY = Array.from(matchCenterY.values())
   const minCenter = Math.min(...allY)
   const maxCenter = Math.max(...allY)
-
-  // Shift so the topmost card's top edge sits at Y_PAD
   const offset = minCenter - MATCH_H / 2 - Y_PAD
   for (const [k, v] of matchCenterY) {
     matchCenterY.set(k, v - offset)
@@ -84,103 +176,9 @@ function normalizePositions(
   return { matchCenterY, totalHeight }
 }
 
-function computeLayout(
-  matches: MockTMatch[],
-  bracketType: MockBracket['bracketType'],
-): { matchCenterY: Map<string, number>; totalHeight: number } {
-  if (matches.length === 0) return { matchCenterY: new Map(), totalHeight: SLOT_H }
-
-  const maxRound = Math.max(...matches.map((m) => m.round))
-  const rounds: MockTMatch[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
-    matches.filter((m) => m.round === r),
-  )
-
-  // ── MAIN bracket: seed-order-based positions ──────────
-  if (bracketType === 'MAIN') {
-    let maxSeed = 0
-    for (const m of matches) {
-      for (const slot of [m.slot1, m.slot2]) {
-        if (slot.sourceType === 'SEED' && slot.seedNumber != null) {
-          maxSeed = Math.max(maxSeed, slot.seedNumber)
-        }
-      }
-    }
-
-    if (maxSeed > 0) {
-      const bracketSize = nextPow2(maxSeed)
-      const order = getSeedOrder(bracketSize)
-      const seedPos = new Map<number, number>()
-      order.forEach((s, i) => seedPos.set(s, i))
-
-      // Seed at position pos is in pair floor(pos/2) → center Y = (pair + 0.5) * SLOT_H
-      const seedCenterY = (seedNumber: number) => {
-        const pos = seedPos.get(seedNumber) ?? 0
-        return (Math.floor(pos / 2) + 0.5) * SLOT_H
-      }
-
-      const matchCenterY = new Map<string, number>()
-      for (let r = 0; r <= maxRound; r++) {
-        for (const m of rounds[r]) {
-          const y = (slot: MockTSlot): number => {
-            if (slot.sourceType === 'SEED' && slot.seedNumber != null) return seedCenterY(slot.seedNumber)
-            if (slot.sourceMatchId) return matchCenterY.get(slot.sourceMatchId) ?? 0
-            return 0
-          }
-          const y1 = y(m.slot1)
-          const y2 = y(m.slot2)
-          // BYEがある場合（片方がSEED直進、もう片方が試合）→ 試合側のYに揃える
-          const isByeSlot1 = m.slot1.sourceType === 'SEED' && !m.slot1.sourceMatchId && r > 0
-          const isByeSlot2 = m.slot2.sourceType === 'SEED' && !m.slot2.sourceMatchId && r > 0
-          const isMatchSlot1 = !!m.slot1.sourceMatchId
-          const isMatchSlot2 = !!m.slot2.sourceMatchId
-          if (isByeSlot1 && isMatchSlot2) {
-            matchCenterY.set(m.id, y2)
-          } else if (isByeSlot2 && isMatchSlot1) {
-            matchCenterY.set(m.id, y1)
-          } else {
-            matchCenterY.set(m.id, (y1 + y2) / 2)
-          }
-        }
-      }
-
-      return normalizePositions(matchCenterY)
-    }
-  }
-
-  // ── SUB bracket (or fallback): feeder-based positioning ──
-  // Round 0 matches are stacked vertically.
-  // Later rounds center on their feeder matches within this bracket.
-  const matchCenterY = new Map<string, number>()
-
-  // Place round 0
-  rounds[0].forEach((m, i) => matchCenterY.set(m.id, i * SLOT_H + SLOT_H / 2))
-
-  // Place subsequent rounds based on feeder positions
-  for (let r = 1; r <= maxRound; r++) {
-    for (const m of rounds[r]) {
-      const feederYs: number[] = []
-      for (const slot of [m.slot1, m.slot2]) {
-        if (slot.sourceMatchId && matchCenterY.has(slot.sourceMatchId)) {
-          feederYs.push(matchCenterY.get(slot.sourceMatchId)!)
-        }
-      }
-      if (feederYs.length > 0) {
-        // Center between feeder matches in this bracket
-        matchCenterY.set(m.id, feederYs.reduce((a, b) => a + b, 0) / feederYs.length)
-      } else {
-        // No feeders in this bracket (e.g., MATCH_LOSER from main bracket) — stack
-        const sh = SLOT_H * Math.pow(2, r)
-        const idx = rounds[r].indexOf(m)
-        matchCenterY.set(m.id, idx * sh + sh / 2)
-      }
-    }
-  }
-  return normalizePositions(matchCenterY)
-}
-
 // ─── Helpers ────────────────────────────────────────────
 
-function getSlotLabel(slot: MockTSlot): string {
+function getSlotLabel(slot: TournamentSlotView): string {
   if (slot.teamName) return slot.teamName
   if (slot.sourceType === 'SEED' && slot.seedNumber != null) return `Seed ${slot.seedNumber}`
   if (slot.sourceType === 'MATCH_WINNER') return '勝者待ち'
@@ -188,7 +186,7 @@ function getSlotLabel(slot: MockTSlot): string {
   return '未定'
 }
 
-function isEmptySeed(slot: MockTSlot): boolean {
+function isEmptySeed(slot: TournamentSlotView): boolean {
   return slot.sourceType === 'SEED' && !slot.teamName
 }
 
@@ -200,7 +198,7 @@ function getRoundLabel(round: number, maxRound: number, matchCountInRound: numbe
   return `${fromFinal + 1}回戦`
 }
 
-function getProgress(matches: MockTMatch[]): { finished: number; total: number } {
+function getProgress(matches: TournamentMatchView[]): { finished: number; total: number } {
   return {
     total: matches.length,
     finished: matches.filter((m) => m.status === 'FINISHED').length,
@@ -209,7 +207,7 @@ function getProgress(matches: MockTMatch[]): { finished: number; total: number }
 
 // ─── StatusBadge ─────────────────────────────────────────
 
-function StatusBadge({ status }: { status: MockTMatch['status'] }) {
+function StatusBadge({ status }: { status: TournamentMatchView['status'] }) {
   if (status === 'FINISHED')
     return <Chip label="終了" size="small" sx={{ bgcolor: '#E8F5E9', color: '#2E7D32', fontSize: '10px', height: 18, fontWeight: 600 }} />
   if (status === 'ONGOING')
@@ -219,17 +217,37 @@ function StatusBadge({ status }: { status: MockTMatch['status'] }) {
 
 // ─── TeamRow ─────────────────────────────────────────────
 
-function TeamRow({ label, score, isWinner, isBottom, empty }: {
+function TeamRow({ label, score, isWinner, isLoser, isBottom, empty, seedNumber, onSeedClick }: {
   label: string; score: number | null | undefined
-  isWinner: boolean; isBottom: boolean; empty: boolean
+  isWinner: boolean; isLoser: boolean; isBottom: boolean; empty: boolean
+  seedNumber?: number
+  onSeedClick?: (e: React.MouseEvent) => void
 }) {
+  const isSeedSlot = seedNumber != null
   return (
-    <Box sx={{
-      display: 'flex', alignItems: 'center', px: 1.5, minHeight: 36,
-      borderTop: isBottom ? `1px solid rgba(63,81,181,0.12)` : 'none',
-      backgroundColor: isWinner ? C.winnerBg : 'transparent',
-      borderLeft: isWinner ? `3px solid ${C.winnerAccent}` : '3px solid transparent',
-    }}>
+    <Box
+      onClick={isSeedSlot && onSeedClick ? (e) => { e.stopPropagation(); onSeedClick(e) } : undefined}
+      sx={{
+        display: 'flex', alignItems: 'center', px: 1.5, minHeight: 46,
+        borderTop: isBottom ? `1px solid rgba(63,81,181,0.12)` : 'none',
+        backgroundColor: isWinner ? C.winnerBg : (empty ? 'rgba(236,239,241,0.4)' : 'transparent'),
+        opacity: isLoser ? 0.4 : 1,
+        cursor: isSeedSlot && onSeedClick ? 'pointer' : 'inherit',
+        transition: 'background-color 0.15s, opacity 0.15s',
+        '&:hover': isSeedSlot && onSeedClick ? { backgroundColor: '#E3F2FD', opacity: 1 } : {},
+      }}
+    >
+      {isSeedSlot && (
+        <Chip
+          label={`S${seedNumber}`}
+          size="small"
+          sx={{
+            height: 18, fontSize: '10px', fontWeight: 700, mr: 0.75, flexShrink: 0,
+            bgcolor: empty ? '#ECEFF1' : '#E8EAF6', color: empty ? C.emptySeed : C.headerText,
+            minWidth: 0,
+          }}
+        />
+      )}
       <Typography noWrap sx={{
         fontSize: '13px', flex: 1,
         color: empty ? C.emptySeed : (isWinner ? C.headerText : C.bodyText),
@@ -239,12 +257,21 @@ function TeamRow({ label, score, isWinner, isBottom, empty }: {
         {label}
       </Typography>
       {empty ? (
-        <Chip label="未割当" size="small" sx={{ height: 16, fontSize: '10px', bgcolor: '#ECEFF1', color: C.emptySeed, ml: 0.5 }} />
+        <Chip
+          label="未割当"
+          size="small"
+          variant="outlined"
+          sx={{
+            height: 18, fontSize: '10px', ml: 0.5,
+            borderColor: C.emptySeed, color: C.emptySeed, borderStyle: 'dashed',
+          }}
+        />
       ) : (
         <Typography sx={{
-          fontSize: '14px', fontWeight: 700,
+          fontSize: '20px', fontWeight: 700,
           color: isWinner ? C.winnerAccent : (score != null ? C.bodyText : C.dimText),
-          minWidth: 28, textAlign: 'right', fontVariantNumeric: 'tabular-nums',
+          minWidth: 40, textAlign: 'right', fontVariantNumeric: 'tabular-nums',
+          lineHeight: 1.2,
         }}>
           {score != null ? score : '−'}
         </Typography>
@@ -255,20 +282,53 @@ function TeamRow({ label, score, isWinner, isBottom, empty }: {
 
 // ─── MatchCard ───────────────────────────────────────────
 
-function MatchCard({ match, onClick }: { match: MockTMatch; onClick?: (match: MockTMatch) => void }) {
+type MatchCardProps = {
+  match: TournamentMatchView
+  orderNumber?: number
+  onClick?: (match: TournamentMatchView) => void
+  onSeedClick?: (seedNumber: number, currentTeamId: string | null | undefined, anchorEl: HTMLElement, slotId: string | undefined) => void
+  draggable?: boolean
+  onDragStart?: (e: React.DragEvent) => void
+  onDragOver?: (e: React.DragEvent) => void
+  onDragEnd?: () => void
+  onDrop?: (e: React.DragEvent) => void
+  isDragOver?: boolean
+}
+
+function MatchCard({ match, orderNumber, onClick, onSeedClick, draggable, onDragStart, onDragOver, onDragEnd, onDrop, isDragOver }: MatchCardProps) {
   const { slot1, slot2, score1, score2, winnerTeamId, status } = match
   const win1 = !!(winnerTeamId && winnerTeamId === slot1.teamId)
   const win2 = !!(winnerTeamId && winnerTeamId === slot2.teamId)
 
+  const handleSeedClick = (slot: TournamentSlotView) => (e: React.MouseEvent) => {
+    if (onSeedClick && slot.sourceType === 'SEED' && slot.seedNumber != null) {
+      onSeedClick(slot.seedNumber, slot.teamId, e.currentTarget as HTMLElement, slot.slotId)
+    }
+  }
+
   return (
     <Box
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDrop={onDrop}
       onClick={onClick ? () => onClick(match) : undefined}
       sx={{
-        width: MATCH_W, border: `1px solid ${C.border}`, borderRadius: 2,
+        width: MATCH_W,
+        border: `1px solid ${isDragOver ? C.winnerAccent : C.border}`,
+        borderRadius: 2,
         overflow: 'hidden', backgroundColor: '#FFFFFF',
-        boxShadow: '0 2px 8px rgba(63,81,181,0.10), 0 1px 2px rgba(0,0,0,0.04)',
-        cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow 0.15s',
-        '&:hover': onClick ? { boxShadow: '0 4px 16px rgba(63,81,181,0.22)' } : {},
+        boxShadow: isDragOver
+          ? `0 0 0 2px ${C.winnerAccent}40, 0 4px 16px rgba(63,81,181,0.22)`
+          : '0 2px 8px rgba(63,81,181,0.10), 0 1px 2px rgba(0,0,0,0.04)',
+        cursor: draggable ? 'grab' : (onClick ? 'pointer' : 'default'),
+        transition: 'box-shadow 0.2s, transform 0.2s, border-color 0.2s',
+        '&:hover': onClick || draggable ? {
+          boxShadow: '0 6px 20px rgba(63,81,181,0.22)',
+          transform: 'translateY(-2px)',
+        } : {},
+        '&:active': draggable ? { cursor: 'grabbing' } : {},
       }}
     >
       <Box sx={{
@@ -276,20 +336,37 @@ function MatchCard({ match, onClick }: { match: MockTMatch; onClick?: (match: Mo
         px: 1.5, py: 0.5, backgroundColor: C.header,
         borderBottom: `1px solid rgba(63,81,181,0.12)`, minHeight: 28,
       }}>
-        <Typography sx={{ fontSize: '11px', color: C.headerText, fontWeight: 700, letterSpacing: 0.3 }}>
-          {match.label ?? '試合'}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+          {orderNumber != null && (
+            <Typography sx={{ fontSize: '11px', color: '#8890C4', fontWeight: 700, lineHeight: 1 }}>
+              #{orderNumber}
+            </Typography>
+          )}
+          <Typography sx={{ fontSize: '11px', color: C.headerText, fontWeight: 700, letterSpacing: 0.3 }}>
+            {match.label ?? '試合'}
+          </Typography>
+        </Box>
         <StatusBadge status={status} />
       </Box>
-      <TeamRow label={getSlotLabel(slot1)} score={score1} isWinner={win1} isBottom={false} empty={isEmptySeed(slot1)} />
-      <TeamRow label={getSlotLabel(slot2)} score={score2} isWinner={win2} isBottom empty={isEmptySeed(slot2)} />
+      <TeamRow
+        label={getSlotLabel(slot1)} score={score1} isWinner={win1} isLoser={win2} isBottom={false}
+        empty={isEmptySeed(slot1)}
+        seedNumber={slot1.sourceType === 'SEED' ? slot1.seedNumber : undefined}
+        onSeedClick={onSeedClick && slot1.sourceType === 'SEED' ? handleSeedClick(slot1) : undefined}
+      />
+      <TeamRow
+        label={getSlotLabel(slot2)} score={score2} isWinner={win2} isLoser={win1} isBottom
+        empty={isEmptySeed(slot2)}
+        seedNumber={slot2.sourceType === 'SEED' ? slot2.seedNumber : undefined}
+        onSeedClick={onSeedClick && slot2.sourceType === 'SEED' ? handleSeedClick(slot2) : undefined}
+      />
     </Box>
   )
 }
 
 // ─── Bracket status ──────────────────────────────────────
 
-function getBracketStatus(bracket: MockBracket): { label: string; color: string; bg: string } {
+function getBracketStatus(bracket: BracketView): { label: string; color: string; bg: string } {
   const { matches } = bracket
   if (matches.length === 0) return { label: '構築中', color: '#9E9E9E', bg: '#F5F5F5' }
   if (matches.every((m) => m.status === 'FINISHED')) return { label: '完了', color: '#2E7D32', bg: '#E8F5E9' }
@@ -306,28 +383,55 @@ function getBracketStatus(bracket: MockBracket): { label: string; color: string;
 
 // ─── BracketTree (horizontal layout) ─────────────────────
 
-function BracketTree({ matches, bracketType, onMatchClick }: {
-  matches: MockTMatch[]
-  bracketType: MockBracket['bracketType']
-  onMatchClick?: (match: MockTMatch) => void
+function BracketTree({ matches, bracketType, onMatchClick, onSeedClick, onSwapMatches }: {
+  matches: TournamentMatchView[]
+  bracketType: BracketView['bracketType']
+  onMatchClick?: (match: TournamentMatchView) => void
+  onSeedClick?: (seedNumber: number, currentTeamId: string | null | undefined, anchorEl: HTMLElement, slotId: string | undefined) => void
+  onSwapMatches?: (matchA: TournamentMatchView, matchB: TournamentMatchView) => void
 }) {
+  const [dragOverMatchId, setDragOverMatchId] = useState<string | null>(null)
+
+  // 試合順番マップ（time昇順 → 1-indexed）
+  const matchOrderMap = useMemo(() => {
+    const map = new Map<string, number>()
+    const sorted = [...matches].sort((a, b) => {
+      const ta = a.time ? new Date(a.time).getTime() : 0
+      const tb = b.time ? new Date(b.time).getTime() : 0
+      return ta - tb || a.id.localeCompare(b.id)
+    })
+    sorted.forEach((m, i) => map.set(m.id, i + 1))
+    return map
+  }, [matches])
+
   if (matches.length === 0) return null
 
   const maxRound = Math.max(...matches.map((m) => m.round))
-  const rounds: MockTMatch[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
+  const rounds: TournamentMatchView[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
     matches.filter((m) => m.round === r),
   )
+
+  // トーナメント全体で1つでも試合が始まっていたらドラッグ不可
+  const anyMatchStarted = matches.some((m) => m.status === 'ONGOING' || m.status === 'FINISHED')
 
   const { matchCenterY, totalHeight } = computeLayout(matches, bracketType)
   const totalWidth = (maxRound + 1) * (MATCH_W + H_GAP) - H_GAP
 
   // ── SVG connector paths ───────────────────────────────
-  // For each match at round r > 0, draw connectors from its feeder match(es).
-  // SEED-fed slots (bye-advanced seeds) have no card in round r-1, so we
-  // draw a one-sided "L" connector only from the actual match feeder.
-  const paths: string[] = []
+  // 通常パスと勝者ハイライトパスを分ける。
+  // 勝者が決まった試合→次の試合への線は太く色を濃くして「進出」を表現する。
+  type PathEntry = { d: string; highlighted: boolean }
+  const pathEntries: PathEntry[] = []
+
+  // matchId → そのmatchの勝者teamId / ラウンド
+  const matchWinnerMap = new Map<string, string | null>()
+  const matchRoundMap = new Map<string, number>()
+  for (const m of matches) {
+    matchWinnerMap.set(m.id, m.winnerTeamId ?? null)
+    matchRoundMap.set(m.id, m.round)
+  }
+
   for (let r = 1; r <= maxRound; r++) {
-    const rightX = colX(r - 1) + MATCH_W
     const leftX = colX(r)
 
     for (const match of rounds[r]) {
@@ -335,21 +439,67 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
       const f1Y = match.slot1.sourceMatchId ? (matchCenterY.get(match.slot1.sourceMatchId) ?? null) : null
       const f2Y = match.slot2.sourceMatchId ? (matchCenterY.get(match.slot2.sourceMatchId) ?? null) : null
 
+      // フィーダーのX座標を計算。
+      // 非隣接ラウンド（all-play fold等でラウンドを飛び越えるフィーダー）は
+      // 直前ラウンド列の右端を起点にして、長い水平線が中間列を横断するのを防ぐ。
+      const prevColRightX = colX(r - 1) + MATCH_W
+      const f1Round = match.slot1.sourceMatchId ? matchRoundMap.get(match.slot1.sourceMatchId) : undefined
+      const f2Round = match.slot2.sourceMatchId ? matchRoundMap.get(match.slot2.sourceMatchId) : undefined
+      const f1RightX = f1Round != null ? Math.max(colX(f1Round) + MATCH_W, prevColRightX) : prevColRightX
+      const f2RightX = f2Round != null ? Math.max(colX(f2Round) + MATCH_W, prevColRightX) : prevColRightX
+
+      // フィーダー試合の勝者が決まっている場合、その線をハイライト
+      const f1Winner = match.slot1.sourceMatchId ? matchWinnerMap.get(match.slot1.sourceMatchId) : null
+      const f2Winner = match.slot2.sourceMatchId ? matchWinnerMap.get(match.slot2.sourceMatchId) : null
+      const f1Highlighted = !!(f1Winner && match.slot1.teamId && f1Winner === match.slot1.teamId)
+      const f2Highlighted = !!(f2Winner && match.slot2.teamId && f2Winner === match.slot2.teamId)
+
+      // 非隣接ラウンドのフィーダー→直前列右端までウォークオーバー線を描画
+      const f1ActualRightX = f1Round != null ? colX(f1Round) + MATCH_W : prevColRightX
+      const f2ActualRightX = f2Round != null ? colX(f2Round) + MATCH_W : prevColRightX
+      if (f1Y != null && f1ActualRightX < prevColRightX) {
+        pathEntries.push({ d: `M ${f1ActualRightX} ${f1Y} L ${prevColRightX} ${f1Y}`, highlighted: f1Highlighted })
+      }
+      if (f2Y != null && f2ActualRightX < prevColRightX) {
+        pathEntries.push({ d: `M ${f2ActualRightX} ${f2Y} L ${prevColRightX} ${f2Y}`, highlighted: f2Highlighted })
+      }
+
       if (f1Y != null && f2Y != null) {
-        // 両フィーダーとも試合（偶数チームの通常ブラケット）→ 角型 H-V-H
-        const midX = rightX + H_GAP / 2
+        const midX = leftX - H_GAP / 2
         const topY = Math.min(f1Y, f2Y)
         const botY = Math.max(f1Y, f2Y)
-        paths.push(`M ${rightX} ${f1Y} L ${midX} ${f1Y}`)
-        paths.push(`M ${rightX} ${f2Y} L ${midX} ${f2Y}`)
-        paths.push(`M ${midX} ${topY} L ${midX} ${botY}`)
-        paths.push(`M ${midX} ${parentY} L ${leftX} ${parentY}`)
+        // フィーダー1→中間
+        pathEntries.push({ d: `M ${f1RightX} ${f1Y} L ${midX} ${f1Y}`, highlighted: f1Highlighted })
+        // フィーダー2→中間
+        pathEntries.push({ d: `M ${f2RightX} ${f2Y} L ${midX} ${f2Y}`, highlighted: f2Highlighted })
+        // 縦線（どちらかハイライトなら部分ハイライト：勝者側→中央だけ）
+        if (f1Highlighted && !f2Highlighted) {
+          pathEntries.push({ d: `M ${midX} ${f1Y} L ${midX} ${parentY}`, highlighted: true })
+          pathEntries.push({ d: `M ${midX} ${parentY} L ${midX} ${f2Y}`, highlighted: false })
+        } else if (f2Highlighted && !f1Highlighted) {
+          pathEntries.push({ d: `M ${midX} ${f2Y} L ${midX} ${parentY}`, highlighted: true })
+          pathEntries.push({ d: `M ${midX} ${parentY} L ${midX} ${f1Y}`, highlighted: false })
+        } else {
+          pathEntries.push({ d: `M ${midX} ${topY} L ${midX} ${botY}`, highlighted: f1Highlighted && f2Highlighted })
+        }
+        // 中間→次の試合
+        pathEntries.push({ d: `M ${midX} ${parentY} L ${leftX} ${parentY}`, highlighted: f1Highlighted || f2Highlighted })
       } else if (f1Y != null || f2Y != null) {
-        // 片方のみ試合（奇数チームのBYE直進） → 直線
-        // parentY は layout 側で fY に揃えてあるので水平線になる
-        paths.push(`M ${rightX} ${parentY} L ${leftX} ${parentY}`)
+        // 片方のフィーダーのみ存在する場合: L字コネクタで正しく接続
+        const feederY = f1Y ?? f2Y!
+        const feederRightX = f1Y != null ? f1RightX : f2RightX
+        const isHighlighted = (f1Y != null && f1Highlighted) || (f2Y != null && f2Highlighted)
+        const midX = leftX - H_GAP / 2
+        // フィーダーから中間点へ水平線
+        pathEntries.push({ d: `M ${feederRightX} ${feederY} L ${midX} ${feederY}`, highlighted: isHighlighted })
+        // フィーダーY と parentY が異なる場合は垂直線で接続
+        if (Math.abs(feederY - parentY) > 1) {
+          pathEntries.push({ d: `M ${midX} ${feederY} L ${midX} ${parentY}`, highlighted: isHighlighted })
+        }
+        // 中間点から次の試合へ水平線
+        pathEntries.push({ d: `M ${midX} ${parentY} L ${leftX} ${parentY}`, highlighted: isHighlighted })
       }
-      // 両フィーダーがシード直進 → コネクターなし
+      // 両スロットがSEED（フィーダー試合なし）の場合は左側の線を描画しない
     }
   }
 
@@ -387,8 +537,13 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
             height={totalHeight}
             style={{ position: 'absolute', top: 0, left: 0, zIndex: 0 }}
           >
-            {paths.map((d, i) => (
-              <path key={i} d={d} stroke={C.connector} strokeWidth={2} fill="none" strokeLinecap="round" />
+            {/* 通常パス（下層） */}
+            {pathEntries.filter(p => !p.highlighted).map((p, i) => (
+              <path key={`n${i}`} d={p.d} stroke={C.connector} strokeWidth={2} fill="none" strokeLinecap="round" opacity={0.4} />
+            ))}
+            {/* 勝者ハイライトパス（上層） */}
+            {pathEntries.filter(p => p.highlighted).map((p, i) => (
+              <path key={`h${i}`} d={p.d} stroke={C.winnerAccent} strokeWidth={3} fill="none" strokeLinecap="round" />
             ))}
           </svg>
         )}
@@ -397,6 +552,7 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
         {rounds.map((roundMatches, r) =>
           roundMatches.map((match) => {
             const centerY = matchCenterY.get(match.id) ?? 0
+            const canDrag = !!onSwapMatches && !anyMatchStarted
             return (
               <Box
                 key={match.id}
@@ -408,7 +564,37 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
                   zIndex: 1,
                 }}
               >
-                <MatchCard match={match} onClick={onMatchClick} />
+                <MatchCard
+                  match={match}
+                  orderNumber={matchOrderMap.get(match.id)}
+                  onClick={onMatchClick}
+                  onSeedClick={onSeedClick}
+                  draggable={canDrag}
+                  isDragOver={dragOverMatchId === match.id}
+                  onDragStart={canDrag ? (e) => {
+                    e.dataTransfer.setData('application/json', JSON.stringify({ matchId: match.id, round: match.round }))
+                    e.dataTransfer.effectAllowed = 'move'
+                  } : undefined}
+                  onDragOver={canDrag ? (e) => {
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                    setDragOverMatchId(match.id)
+                  } : undefined}
+                  onDragEnd={() => setDragOverMatchId(null)}
+                  onDrop={canDrag ? (e) => {
+                    e.preventDefault()
+                    setDragOverMatchId(null)
+                    try {
+                      const d = JSON.parse(e.dataTransfer.getData('application/json'))
+                      if (d.matchId !== match.id && d.round === match.round) {
+                        const sourceMatch = matches.find(m => m.id === d.matchId)
+                        if (sourceMatch && sourceMatch.status === 'STANDBY') {
+                          onSwapMatches?.(sourceMatch, match)
+                        }
+                      }
+                    } catch { /* ignore */ }
+                  } : undefined}
+                />
               </Box>
             )
           })
@@ -421,11 +607,23 @@ function BracketTree({ matches, bracketType, onMatchClick }: {
 // ─── Public component ────────────────────────────────────
 
 type Props = {
-  bracket: MockBracket
-  onMatchClick?: (match: MockTMatch) => void
+  bracket: BracketView
+  onMatchClick?: (match: TournamentMatchView) => void
+  onSeedClick?: (seedNumber: number, currentTeamId: string | null | undefined, anchorEl: HTMLElement, bracketId: string, slotId: string | undefined) => void
+  onSwapMatches?: (matchA: TournamentMatchView, matchB: TournamentMatchView, bracketId: string) => void
 }
 
-export function TournamentBracketView({ bracket, onMatchClick }: Props) {
+export function TournamentBracketView({ bracket, onMatchClick, onSeedClick, onSwapMatches }: Props) {
+  // bracketId を各コールバックに付与するラッパー
+  const handleSeedClick = onSeedClick
+    ? (seedNumber: number, currentTeamId: string | null | undefined, anchorEl: HTMLElement, slotId: string | undefined) =>
+        onSeedClick(seedNumber, currentTeamId, anchorEl, bracket.id, slotId)
+    : undefined
+
+  const handleSwapMatches = onSwapMatches
+    ? (matchA: TournamentMatchView, matchB: TournamentMatchView) =>
+        onSwapMatches(matchA, matchB, bracket.id)
+    : undefined
   const isMain = bracket.bracketType === 'MAIN'
   const accentColor = isMain ? C.mainAccent : C.subAccent
   const status = getBracketStatus(bracket)
@@ -443,8 +641,6 @@ export function TournamentBracketView({ bracket, onMatchClick }: Props) {
         <Typography sx={{ fontSize: '15px', fontWeight: 700, color: '#2F3C8C' }}>
           {bracket.name}
         </Typography>
-        <Chip label={isMain ? '本戦' : '順位決定戦'} size="small"
-          sx={{ bgcolor: accentColor, color: '#fff', fontSize: '10px', height: 20, fontWeight: 700 }} />
         <Chip label={status.label} size="small"
           sx={{ bgcolor: status.bg, color: status.color, fontSize: '11px', height: 20, fontWeight: 600 }} />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
@@ -469,7 +665,7 @@ export function TournamentBracketView({ bracket, onMatchClick }: Props) {
       </Box>
 
       {/* ブラケット本体 */}
-      <BracketTree matches={bracket.matches} bracketType={bracket.bracketType} onMatchClick={onMatchClick} />
+      <BracketTree matches={bracket.matches} bracketType={bracket.bracketType} onMatchClick={onMatchClick} onSeedClick={handleSeedClick} onSwapMatches={handleSwapMatches} />
     </Box>
   )
 }

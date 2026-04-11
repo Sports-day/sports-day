@@ -4,27 +4,14 @@ import SportCards from "@/features/SportCards";
 import WeatherCards from "@/features/WeatherCards";
 import MainFooter from "@/components/footers/MainFooter";
 import Header from "@/components/header/Header";
-import { gql, useQuery } from "@apollo/client";
 import { useParams } from "react-router-dom";
 import CircularUnderLoad from "@/features/Loading";
 import { motion } from "framer-motion";
-
-
-const GET_SPORTS = gql`
-  query GetSport($sceneId: ID!) {
-    scene(id: $sceneId) {
-      name
-      sports {
-        id
-        name
-      }
-    }
-  }
-`;
+import { useGetSportQuery } from "@/gql/__generated__/graphql";
 
 export default function SportChoice() {
   const { type } = useParams() as { type: string };
-  const { data, loading, error } = useQuery(GET_SPORTS, {
+  const { data, loading, error } = useGetSportQuery({
     variables: { sceneId: type },
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "cache-and-network",
@@ -37,7 +24,12 @@ export default function SportChoice() {
     throw error;
   }
   const weatherType = data?.scene?.name ?? "不明な種別";
-  const sportData = data?.scene?.sports ?? [];
+  const sportData =
+    data?.scene?.sportScenes?.map((ss) => ({
+      id: ss.sport.id,
+      name: ss.sport.name,
+      imageUrl: ss.sport.image?.url ?? null,
+    })) ?? [];
 
   return (
     <Box

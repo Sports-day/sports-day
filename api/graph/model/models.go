@@ -18,37 +18,50 @@ type Team struct {
 }
 
 type Competition struct {
-	ID      string          `json:"id"`
-	Name    string          `json:"name"`
-	Type    CompetitionType `json:"type"`
-	SceneID string          `json:"sceneId"`
+	ID                string          `json:"id"`
+	Name              string          `json:"name"`
+	Type              CompetitionType `json:"type"`
+	SportID           string          `json:"sportId"`
+	SceneID           string          `json:"sceneId"`
+	StartTime         *string         `json:"startTime,omitempty"`
+	MatchDuration     *int32          `json:"matchDuration,omitempty"`
+	BreakDuration     *int32          `json:"breakDuration,omitempty"`
+	DefaultLocationID string          `json:"defaultLocationId"`
+	DisplayOrder      int32           `json:"displayOrder"`
 }
 
 type Match struct {
-	ID            string      `json:"id"`
-	Time          string      `json:"time"`
-	Status        MatchStatus `json:"status"`
-	LocationId    string      `json:"locationId"`
-	CompetitionId string      `json:"competitionId"`
-	WinnerTeamId  string      `json:"winnerTeamId"`
+	ID             string      `json:"id"`
+	Time           string      `json:"time"`
+	Status         MatchStatus `json:"status"`
+	LocationId     string      `json:"locationId"`
+	CompetitionId  string      `json:"competitionId"`
+	WinnerTeamId   string      `json:"winnerTeamId"`
+	TimeManual     bool        `json:"timeManual"`
+	LocationManual bool        `json:"locationManual"`
 }
 
 type Location struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	DisplayOrder int32  `json:"displayOrder"`
 }
 
 type Judgment struct {
-	ID      string `json:"matchId"`
-	Name    string `json:"name"`
-	UserId  string `json:"userId"`
-	TeamId  string `json:"teamId"`
-	GroupId string `json:"groupId"`
+	ID          string `json:"matchId"`
+	Name        string `json:"name"`
+	UserId      string `json:"userId"`
+	TeamId      string `json:"teamId"`
+	GroupId     string `json:"groupId"`
+	IsAttending bool   `json:"isAttending"`
 }
 
 type League struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	WinPt  int32  `json:"winPt"`
+	DrawPt int32  `json:"drawPt"`
+	LosePt int32  `json:"losePt"`
 }
 
 type Tournament struct {
@@ -106,17 +119,20 @@ type Rule struct {
 }
 
 type Scene struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	DisplayOrder int32  `json:"displayOrder"`
+	IsDeleted    bool   `json:"isDeleted"`
 }
 
 type Sport struct {
-	ID           string         `json:"id"`
-	Name         string         `json:"name"`
-	Weight       int32          `json:"weight"`
-	RankingRules []*RankingRule `json:"rankingRules"`
-	Rules        []*Rule        `json:"rules"`
-	ImageID      *string        `json:"imageId"`
+	ID               string         `json:"id"`
+	Name             string         `json:"name"`
+	DisplayOrder     int32          `json:"displayOrder"`
+	ExperiencedLimit *int32         `json:"experiencedLimit,omitempty"`
+	RankingRules     []*RankingRule `json:"rankingRules"`
+	Rules            []*Rule        `json:"rules"`
+	ImageID          *string        `json:"imageId"`
 }
 
 type SportScene struct {

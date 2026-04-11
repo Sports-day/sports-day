@@ -3,49 +3,30 @@
 import { Box, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import SportCard from "@/components/cards/AboutSportPage/SportCard";
-import { gql, useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
+import { useGetTeamDataQuery } from "@/gql/__generated__/graphql";
 
-type WeatherData = { name: string; id: string };
+type WeatherData = { name: string; id: string; imageUrl: string | null };
 
 type Props = {
   weather: WeatherData[];
   type: string;
 };
 
-const GET_TEAMDATA = gql`
-  query GetTeamData {
-    sportScenes {
-      sport {
-        id
-      }
-      scene {
-        id
-      }
-      entries {
-        team {
-          users {
-            name
-          }
-        }
-      }
-    }
-  }
-`;
-
 export default function SportCards({ weather, type }: Props) {
   const theme = useTheme();
 
-  const { data } = useQuery(GET_TEAMDATA);
+  const { data } = useGetTeamDataQuery();
 
   const hasTeamMap = new Map<string, boolean>();
 
   weather.forEach((item) => {
-    const entry = data?.sportScenes?.find(
-      (d: any) => d.sport?.id === item.id && d.scene?.id === type,
-    );
+    const entry = data?.scenes
+      ?.filter((s) => !s.isDeleted)
+      ?.flatMap((d) => d.sportScenes)
+      ?.find((d) => d.sport?.id === item.id && d.scene?.id === type);
     const users =
-      entry?.entries?.flatMap((s: any) => s.team?.users ?? []) ?? [];
+      entry?.entries?.flatMap((s) => s.team?.users ?? []) ?? [];
     hasTeamMap.set(item.id, users.length > 0);
   });
 
@@ -81,6 +62,7 @@ export default function SportCards({ weather, type }: Props) {
                 sportId={item.id}
                 type={type}
                 hasTeam={hasTeamMap.get(item.id) ?? false}
+                imageUrl={item.imageUrl}
               />
             </motion.div>
           </Grid>

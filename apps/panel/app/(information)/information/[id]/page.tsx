@@ -7,47 +7,38 @@ import LeagueCardList from "@/components/information/league/leagueCardList";
 import Top3LeagueCards from "@/components/information/league/top3LeagueCards";
 import AutoRefresh from "@/components/AutoRefresh";
 import {useFetchSport, useFetchSportProgress} from "@/src/features/sports/hook";
-import {useFetchGames, useFetchGameMatches} from "@/src/features/games/hook";
+import {useFetchGames} from "@/src/features/games/hook";
+import {useFetchMatches} from "@/src/features/matches/hook";
 import {useParams} from "react-router-dom";
-import {useEffect, useState} from "react";
-import {Match} from "@/src/models/MatchModel";
-
-function MatchListLoader({ gameIds }: { gameIds: number[] }) {
-    const [matchList, setMatchList] = useState<Match[]>([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        if (gameIds.length === 0) {
-            setLoading(false)
-            return
-        }
-
-        Promise.all(
-            gameIds.map(async (gameId) => {
-                const { useFetchGameMatches: _ } = await import("@/src/features/games/hook")
-                return gameId
-            })
-        ).then(() => {
-            setLoading(false)
-        })
-    }, [gameIds])
-
-    return <MatchList matches={matchList} />
-}
+import {useMemo} from "react";
+import { MatchStatus } from "@/src/gql/__generated__/graphql";
 
 export default function Page() {
     const {id} = useParams<{id: string}>()
-    const sportId = parseInt(id ?? '0', 10)
+    const sportId = id ?? '0'
 
     const {sport, isFetching: isSportFetching} = useFetchSport(sportId)
     const {games, isFetching: isGamesFetching} = useFetchGames()
+    const {matches, isFetching: isMatchesFetching} = useFetchMatches()
     const {progress, isFetching: isProgressFetching} = useFetchSportProgress(sportId)
 
-    const filteredGames = games.filter((game) => game.sportId == sport?.id)
+    // sportIdに一致するgamesをフィルタ
+    const filteredGames = useMemo(() => {
+        return games.filter((game) => game.sport?.id === sportId)
+    }, [games, sportId])
+
     const formattedProgress = Math.trunc((progress ?? 0) * 100)
     const chartSeries = [formattedProgress, 100 - formattedProgress]
 
-    const isFetching = isSportFetching || isGamesFetching || isProgressFetching
+    // filteredGames に属する試合で進行中のものを取得
+    const inProgressMatches = useMemo(() => {
+        const gameIds = new Set(filteredGames.map(g => g.id))
+        return matches
+            .filter(m => gameIds.has(m.competition.id) && (m.status === MatchStatus.Standby || m.status === MatchStatus.Ongoing))
+            .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+    }, [matches, filteredGames])
+
+    const isFetching = isSportFetching || isGamesFetching || isProgressFetching || isMatchesFetching
 
     if (isFetching) {
         return <LinearProgress />
@@ -144,7 +135,7 @@ export default function Page() {
 
 
                                     <Box>
-                                        <InProgressMatches filteredGames={filteredGames}/>
+                                        <MatchList matches={inProgressMatches}/>
                                     </Box>
 
 
@@ -156,37 +147,4 @@ export default function Page() {
             </Box>
         </div>
     );
-}
-
-function InProgressMatches({filteredGames}: {filteredGames: {id: number}[]}) {
-    const [matchList, setMatchList] = useState<Match[]>([])
-
-    useEffect(() => {
-        if (filteredGames.length === 0) return
-
-        Promise.all(
-            filteredGames.map(game =>
-                import("@/src/models/GameModel").then(({gameFactory}) =>
-                    gameFactory().getGameMatches(game.id)
-                )
-            )
-        ).then(allMatches => {
-            const inProgress = allMatches.flat()
-                .filter(m => m.status === "standby" || m.status === "in_progress")
-                .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
-
-            // 各ゲームから1試合ずつ抽出
-            const seen = new Set<number>()
-            const result: Match[] = []
-            for (const match of inProgress) {
-                if (!seen.has(match.gameId)) {
-                    seen.add(match.gameId)
-                    result.push(match)
-                }
-            }
-            setMatchList(result)
-        })
-    }, [filteredGames])
-
-    return <MatchList matches={matchList}/>
 }

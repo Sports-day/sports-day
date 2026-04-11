@@ -1,36 +1,44 @@
 import {LeagueRankListCard} from "@/components/game/RankList/LeagueRankListCard";
 import {useTheme, Box, Card, Stack, Typography} from "@mui/material";
-import {Team} from "@/src/models/TeamModel";
+import type { GetPanelTeamsQuery } from "@/src/gql/__generated__/graphql";
 import * as React from "react";
-import {useState} from "react";
-import {useAsync} from "react-use";
-import {gameFactory, LeagueResult} from "@/src/models/GameModel";
+import {useContext} from "react";
+import {TeamsContext} from "../../context";
+import {
+    useGetPanelLeagueStandingsQuery,
+} from "@/src/gql/__generated__/graphql";
+
+type PanelTeam = GetPanelTeamsQuery["teams"][number];
 
 export type LeagueRankListProps = {
     dashboard?: boolean,
     myTeamRank?: number,
-    myTeam?: Team,
-    gameId?: number,
+    myTeam?: PanelTeam,
+    leagueId?: string,
 }
 
 export const LeagueRankList = (props: LeagueRankListProps) => {
     const theme = useTheme();
 
-    const [teams, setTeams] = useState<Team[]>([]);
-    const [leagueResult, setLeagueResult] = useState<LeagueResult>({teams: [], createdAt: "", finished: false, gameId: 0});
-    useAsync(async () => {
-        if (!props.gameId) {
-            return;
-        }
+    const {data: teams} = useContext(TeamsContext);
 
-        try {
-            setTeams(await gameFactory().getGameEntries(props.gameId))
-            setLeagueResult(await gameFactory().getLeagueResult(props.gameId))
-        } catch (e) {
-            setLeagueResult({teams: [], createdAt: "", finished: false, gameId: 0});
-            setTeams([])
-        }
-    })
+    const { data: standingsData } = useGetPanelLeagueStandingsQuery({
+        variables: { leagueId: props.leagueId ?? "" },
+        skip: !props.leagueId,
+    });
+
+    const standings = (standingsData?.leagueStandings ?? []).filter(
+        (s, i, arr) => arr.findIndex(x => x.team.id === s.team.id) === i
+    );
+
+    // 勝ち点率の計算: points / (試合数 * 3)
+    const computeWinRate = (s: typeof standings[number]) => {
+        const totalMatches = s.win + s.draw + s.lose;
+        if (totalMatches === 0) return 0;
+        return s.points / (totalMatches * 3);
+    };
+
+    const myStanding = standings.find(s => s.team.id === props.myTeam?.id);
 
     return (
         <>
@@ -86,7 +94,7 @@ export const LeagueRankList = (props: LeagueRankListProps) => {
                                         </Typography>
                                     </Box>
                                     <Typography fontSize={"14px"} color={theme.palette.text.primary}>
-                                        {leagueResult.teams.find(team => team.teamId === props.myTeam?.id)?.score.toFixed(3) ?? "---.---"}
+                                        {myStanding ? computeWinRate(myStanding).toFixed(3) : "---.---"}
                                     </Typography>
                                 </Stack>
                             </Stack>
@@ -95,35 +103,38 @@ export const LeagueRankList = (props: LeagueRankListProps) => {
                 </Stack>
             }
 
-            <Box
-                width={"100%"}
-                sx={{
-                    overflow: "auto",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                    "&::-webkit-scrollbar": {
-                        display: "none"
-                    }
-                }}
-            >
-                <Stack sx={{width: "100%"}} direction={"row"} spacing={0.5}>
-                    {/*Ranking List*/}
-                    {
-                        leagueResult.teams.map((teamResult) => {
-                            const team = teams.find(value => value.id === teamResult.teamId)
+            {standings.length === 0 ? (
+                <Typography pl={2} py={2} fontSize={"14px"} color={theme.palette.text.secondary}>
+                    ランキングデータがありません
+                </Typography>
+            ) : (
+                <Box
+                    width={"100%"}
+                    sx={{
+                        overflow: "auto",
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                        "&::-webkit-scrollbar": {
+                            display: "none"
+                        }
+                    }}
+                >
+                    <Stack sx={{width: "100%"}} direction={"row"} spacing={0.5}>
+                        {standings.map((standing, index) => {
+                            const team = teams.find(value => value.id === standing.team.id)
                             return (
                                 <LeagueRankListCard
-                                    key={teamResult.teamId}
-                                    rank={teamResult.rank}
+                                    key={`${standing.id}-${index}`}
+                                    rank={standing.rank}
                                     teamName={team?.name ?? "不明"}
-                                    teamId={teamResult.teamId}
-                                    winRate={teamResult.score}
+                                    teamId={standing.team.id}
+                                    winRate={computeWinRate(standing)}
                                 />
                             )
-                        })
-                    }
-                </Stack>
-            </Box>
+                        })}
+                    </Stack>
+                </Box>
+            )}
         </>
 
     )

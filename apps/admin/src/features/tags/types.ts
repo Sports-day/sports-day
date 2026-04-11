@@ -1,5 +1,6 @@
 export type Tag = {
   id: string
   name: string
-  enabled: boolean
+  displayOrder: number
+  isDeleted: boolean
 }

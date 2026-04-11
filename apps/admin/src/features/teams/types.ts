@@ -1,19 +1,15 @@
 export type Team = {
   id: string
   name: string
-  class: string
-  tags: string[]
+  groupName: string
 }
 
 export type TeamMember = {
-  studentId: string
+  id: string
   name: string
-  gender: '男性' | '女性'
 }
 
 export type SelectableUser = {
   id: string
   userName: string
-  gender: '男性' | '女性'
-  studentId: string
 }

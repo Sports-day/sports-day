@@ -13,23 +13,25 @@ import {
     HiChartBar,
     HiOutlineExclamationTriangle, HiUser
 } from "react-icons/hi2";
-import {Sport} from "@/src/models/SportModel";
-import {Team} from "@/src/models/TeamModel";
-import {User} from "@/src/models/UserModel";
+import { type GetPanelSportsQuery, type GetPanelTeamsQuery, type GetPanelUsersQuery, type GetPanelCompetitionsQuery, CompetitionType } from "@/src/gql/__generated__/graphql";
 import {Fragment, useState} from "react";
 import * as React from "react";
 import { Link } from "react-router-dom";
 import Rank from "./Rank"
 import {useTheme} from "@mui/material/styles";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
-import {Game} from "@/src/models/GameModel";
+import {TournamentRankList} from "@/components/game/RankList/TournamentRankList";
 
+type PanelSport = GetPanelSportsQuery["sports"][number];
+type PanelTeam = GetPanelTeamsQuery["teams"][number];
+type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
+type TeamUser = PanelTeam["users"][number];
 
 export type OverviewProps = {
-    mySport: Sport;
-    myGame: Game;
-    myTeam: Team;
-    myTeamUsers: User[];
+    mySport: PanelSport;
+    myGame: PanelCompetition;
+    myTeam: PanelTeam;
+    myTeamUsers: TeamUser[];
     myTeamRank: number;
 }
 
@@ -78,9 +80,9 @@ export const Overview = (props: OverviewProps) => {
                                     height: "2.5em", width: "2.5em",
                                     backgroundColor: `${theme.palette.text.secondary}`,
                                 }}
-                                src={`${import.meta.env.VITE_API_URL}/images/${props.mySport.iconId}/file`}
+                                src={props.mySport.image?.url ?? undefined}
                             >
-                                {!props.mySport.iconId && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
+                                {!props.mySport.image && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                             </Avatar>
                             <Stack
                                 direction={"column"}
@@ -124,7 +126,7 @@ export const Overview = (props: OverviewProps) => {
                                 alignItems={"flex-start"}
                             >
                                 <Typography sx={{fontSize: "14px", color: theme.palette.text.primary}}>
-                                    リーグ内順位
+                                    {props.myGame.type === CompetitionType.League ? "リーグ内順位" : "順位"}
                                 </Typography>
                                 <Rank rank={props.myTeamRank}/>
                             </Stack>
@@ -215,7 +217,6 @@ export const Overview = (props: OverviewProps) => {
                             </Stack>
 
                             {props.myTeamUsers.map(user => {
-                                const image = `${import.meta.env.VITE_API_URL}/images/${user?.pictureId}/file`
                                 return (
                                     <Fragment key={user.id}>
                                         <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>
@@ -228,9 +229,8 @@ export const Overview = (props: OverviewProps) => {
                                                         width: "1.5em",
                                                         backgroundColor: theme.palette.text.secondary,
                                                     }}
-                                                    src={image}
                                                 >
-                                                    {user?.pictureId === null && <HiUser/>}
+                                                    <HiUser/>
                                                 </Avatar>
                                                 <Typography color={theme.palette.text.primary}>
                                                     {user.name}
@@ -288,14 +288,23 @@ export const Overview = (props: OverviewProps) => {
                                     color={theme.palette.text.primary}
                                     textAlign={"center"}
                                 >
-                                    あなたのリーグ内順位
+                                    {props.myGame.type === CompetitionType.League ? "あなたのリーグ内順位" : "あなたの順位"}
                                 </Typography>
-                                <LeagueRankList
-                                    dashboard={true}
-                                    myTeamRank={props.myTeamRank}
-                                    myTeam={props.myTeam}
-                                    gameId={props.myGame.id}
-                                />
+                                {props.myGame.type === CompetitionType.League ? (
+                                    <LeagueRankList
+                                        dashboard={true}
+                                        myTeamRank={props.myTeamRank}
+                                        myTeam={props.myTeam}
+                                        leagueId={props.myGame.league?.id}
+                                    />
+                                ) : (
+                                    <TournamentRankList
+                                        dashboard={true}
+                                        myTeamRank={props.myTeamRank}
+                                        myTeam={props.myTeam}
+                                        competitionId={props.myGame.id}
+                                    />
+                                )}
                             </Stack>
 
 

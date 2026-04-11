@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { useLocationsStore } from './useLocationsStore'
+import { useCreateAdminLocationMutation, GetAdminLocationsDocument } from '@/gql/__generated__/graphql'
 
 type LocationCreateForm = {
   name: string
-  note: string
 }
 
 export function useLocationCreate(onSave: () => void) {
-  const { addLocation } = useLocationsStore()
-  const [form, setForm] = useState<LocationCreateForm>({ name: '', note: '' })
+  const [form, setForm] = useState<LocationCreateForm>({ name: '' })
+  const [createLocation] = useCreateAdminLocationMutation({
+    refetchQueries: [{ query: GetAdminLocationsDocument }],
+  })
 
   const handleChange = (field: keyof LocationCreateForm) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -16,13 +17,9 @@ export function useLocationCreate(onSave: () => void) {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name.trim()) return
-    addLocation({
-      id: String(Date.now()),
-      name: form.name,
-      description: form.note,
-    })
+    await createLocation({ variables: { input: { name: form.name.slice(0, 64) } } })
     onSave()
   }
 

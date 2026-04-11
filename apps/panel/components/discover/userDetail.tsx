@@ -9,7 +9,8 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import {Fragment} from "react";
-import {Match} from "@/src/models/MatchModel";
+import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
+import { MatchStatus } from "@/src/gql/__generated__/graphql";
 import {
     HiClock,
     HiFlag,
@@ -17,58 +18,61 @@ import {
     HiUser,
 } from "react-icons/hi2";
 import {ThemeProvider, useTheme} from "@mui/material/styles";
-import {useFetchUsers} from "@/src/features/users/hook";
-import {useFetchTeams} from "@/src/features/teams/hook";
-import {useFetchLocations} from "@/src/features/locations/hook";
+import {UsersContext} from "@/components/context";
+import {useContext} from "react";
+
+type PanelMatch = GetPanelMatchesQuery["matches"][number];
 
 export type UserDetailProps = {
-    match: Match;
+    match: PanelMatch;
 }
 
 export const UserDetail = (props: UserDetailProps) => {
     const theme = useTheme();
-    //  context
-    const {locations, isFetching: isFetchingLocations} = useFetchLocations()
-    const {teams, isFetching: isFetchingTeams} = useFetchTeams()
-    const {users, isFetching: isFetchingUsers} = useFetchUsers()
+    const {data: users} = useContext(UsersContext);
+
+    const leftEntry = props.match.entries[0];
+    const rightEntry = props.match.entries[1];
+    const leftTeamId = leftEntry?.team?.id ?? null;
+    const rightTeamId = rightEntry?.team?.id ?? null;
+    const leftTeamName = leftEntry?.team?.name ?? null;
+    const rightTeamName = rightEntry?.team?.name ?? null;
+    const leftScore = leftEntry?.score ?? 0;
+    const rightScore = rightEntry?.score ?? 0;
 
     //  team is null
-    if (!props.match.leftTeamId || !props.match.rightTeamId) return null;
-    //  get left team
-    const leftTeamModel = teams.find(team => team.id === props.match.leftTeamId);
-    // get right team
-    const rightTeamModel = teams.find(team => team.id === props.match.rightTeamId);
-    // Get judge team
-    const judgeTeam = teams.find(team => team.id === props.match.judgeTeamId);
-    //  get time and location
-    const formattedTime = new Date(props.match.startAt).toLocaleTimeString("ja-JP", {
+    if (!leftTeamId || !rightTeamId) return null;
+
+    // judge
+    const judgeTeamName = props.match.judgment?.team?.name ?? "ルール参照";
+
+    //  time and location (match に既にネストされている)
+    const formattedTime = new Date(props.match.time).toLocaleTimeString("ja-JP", {
         hour: '2-digit',
         minute: '2-digit'
     });
-    const locationModel = locations.find(location => location.id === props.match.locationId)
+    const locationName = props.match.location?.name;
     const PointBar = styled(LinearProgress)(({}) => ({
         height: 4.5,
         borderRadius: 2,
         [`&.${linearProgressClasses.colorPrimary}`]: {backgroundColor: `${theme.palette.text.disabled}33`,},
         [`& .${linearProgressClasses.bar}`]: {borderRadius: 2, backgroundColor: theme.palette.text.primary,},
     }));
-    const maxLeftScore = props.match.leftScore
-    const maxRightScore = props.match.rightScore
-    const maxScore = maxLeftScore > maxRightScore ? maxLeftScore : maxRightScore
+    const maxScore = leftScore > rightScore ? leftScore : rightScore;
     const barOffset = (maxScore == 0) ? 1 : (95 / maxScore)
 
     let matchStatus;
     switch (props.match.status) {
-        case "standby":
+        case MatchStatus.Standby:
             matchStatus = "開始前";
             break;
-        case "in_progress":
+        case MatchStatus.Ongoing:
             matchStatus = "進行中";
             break;
-        case "finished":
+        case MatchStatus.Finished:
             matchStatus = "完了";
             break;
-        case "cancelled":
+        case MatchStatus.Canceled:
             matchStatus = "中止";
             break;
         default:
@@ -77,16 +81,16 @@ export const UserDetail = (props: UserDetailProps) => {
 
     let statusColor;
     switch (props.match.status) {
-        case "standby":
+        case MatchStatus.Standby:
             statusColor = `${theme.palette.text.primary}1A`;
             break;
-        case "in_progress":
+        case MatchStatus.Ongoing:
             statusColor = `${theme.palette.warning.main}33`;
             break;
-        case "finished":
+        case MatchStatus.Finished:
             statusColor = `${theme.palette.success.main}33`;
             break;
-        case "cancelled":
+        case MatchStatus.Canceled:
             statusColor = `${theme.palette.error.main}33`;
             break;
         default:
@@ -166,10 +170,10 @@ export const UserDetail = (props: UserDetailProps) => {
                                         spacing={2}
                                     >
                                         <Typography sx={{color: theme.palette.text.primary, fontSize: "20px", fontWeight: "bold"}}>
-                                            {props.match.leftScore}
+                                            {leftScore}
                                         </Typography>
                                         <Typography fontSize={"20px"} color={theme.palette.text.primary}>
-                                            {leftTeamModel?.name}
+                                            {leftTeamName}
                                         </Typography>
                                     </Stack>
                                     <Box
@@ -195,10 +199,10 @@ export const UserDetail = (props: UserDetailProps) => {
                                         spacing={2}
                                     >
                                         <Typography fontSize={"20px"} color={theme.palette.text.primary}>
-                                            {rightTeamModel?.name}
+                                            {rightTeamName}
                                         </Typography>
                                         <Typography sx={{color: theme.palette.text.primary, fontSize: "20px", fontWeight: "bold"}}>
-                                            {props.match.rightScore}
+                                            {rightScore}
                                         </Typography>
                                     </Stack>
                                 </Stack>
@@ -224,7 +228,7 @@ export const UserDetail = (props: UserDetailProps) => {
                                             <ThemeProvider theme={{direction:"rtl"}}>
                                                 <PointBar
                                                     variant={"determinate"}
-                                                    value={props.match.leftScore * barOffset}
+                                                    value={leftScore * barOffset}
                                                 />
                                             </ThemeProvider>
                                         </Box>
@@ -241,7 +245,7 @@ export const UserDetail = (props: UserDetailProps) => {
                                         <Box>
                                             <PointBar
                                                 variant={"determinate"}
-                                                value={props.match.rightScore * barOffset}
+                                                value={rightScore * barOffset}
                                             />
                                         </Box>
                                     </Stack>
@@ -250,7 +254,7 @@ export const UserDetail = (props: UserDetailProps) => {
                             <Box sx={{overflow: "auto", pt: 1}}>
                                 <Stack sx={{width: "100%"}} direction={"row"} spacing={0.2} pl={2}>
                                     <Chip
-                                        label={`審判：${judgeTeam?.name}`}
+                                        label={`審判：${judgeTeamName}`}
                                         avatar={<Avatar><HiFlag/></Avatar>}
                                         color={"secondary"}
                                     />
@@ -260,7 +264,7 @@ export const UserDetail = (props: UserDetailProps) => {
                                         color={"secondary"}
                                     />
                                     <Chip
-                                        label={`場所：${locationModel?.name}`}
+                                        label={`場所：${locationName}`}
                                         avatar={<Avatar><HiMapPin/></Avatar>}
                                         color={"secondary"}
                                     />
@@ -273,12 +277,11 @@ export const UserDetail = (props: UserDetailProps) => {
                             textAlign={"center"}
                             pt={2}
                         >
-                            {leftTeamModel?.name}のメンバー
+                            {leftTeamName}のメンバー
                         </Typography>
                         {users
-                            .filter(user => user.teamIds.includes(Number(leftTeamModel?.id)))
+                            .filter(user => user.teams.some(t => t.id === leftTeamId))
                             .map(user => {
-                                const image = `${import.meta.env.VITE_API_URL}/images/${user?.pictureId}/file`
                                 return (
                                     <Fragment key={user.id}>
                                         <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>
@@ -291,9 +294,8 @@ export const UserDetail = (props: UserDetailProps) => {
                                                         width: "1.5em",
                                                         backgroundColor: theme.palette.text.secondary,
                                                     }}
-                                                    src={image}
                                                 >
-                                                    {user?.pictureId === null && <HiUser/>}
+                                                    <HiUser/>
                                                 </Avatar>
                                                 <Typography color={theme.palette.text.primary}>
                                                     {user.name}
@@ -308,12 +310,11 @@ export const UserDetail = (props: UserDetailProps) => {
                             textAlign={"center"}
                             pt={2}
                         >
-                            {rightTeamModel?.name}のメンバー
+                            {rightTeamName}のメンバー
                         </Typography>
                         {users
-                            .filter(user => user.teamIds.includes(Number(rightTeamModel?.id)))
+                            .filter(user => user.teams.some(t => t.id === rightTeamId))
                             .map(user => {
-                                const image = `${import.meta.env.VITE_API_URL}/images/${user?.pictureId}/file`
                                 return (
                                     <Fragment key={user.id}>
                                         <Card sx={{backgroundColor: `${theme.palette.secondary.dark}80`,}}>
@@ -326,9 +327,8 @@ export const UserDetail = (props: UserDetailProps) => {
                                                         width: "1.5em",
                                                         backgroundColor: theme.palette.text.secondary,
                                                     }}
-                                                    src={image}
                                                 >
-                                                    {user?.pictureId === null && <HiUser/>}
+                                                    <HiUser/>
                                                 </Avatar>
                                                 <Typography color={theme.palette.text.primary}>
                                                     {user.name}
@@ -344,4 +344,3 @@ export const UserDetail = (props: UserDetailProps) => {
         </>
     )
 }
-

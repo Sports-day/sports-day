@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"math"
 	"sort"
 	"time"
 
@@ -297,13 +296,15 @@ func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateB
 			return errors.ErrNotTournamentCompetition
 		}
 
-		// 二重生成防止
+		// 既存ブラケットがあればリセット
 		existing, err := s.tournamentRepository.ListByCompetitionID(ctx, tx, input.CompetitionID)
 		if err != nil {
 			return err
 		}
 		if len(existing) > 0 {
-			return errors.ErrBracketAlreadyExists
+			if err := s.resetBracketsInTx(ctx, tx, existing); err != nil {
+				return err
+			}
 		}
 
 		// placement_method
@@ -363,52 +364,289 @@ type matchInfo struct {
 	matchID  string
 	round    int
 	position int // ラウンド内の位置 (0-indexed)
+	depth    int // Finalからの距離 (0=Final, 1=準決勝, ...)
 }
 
-// generateMainBracketMatches はMAINブラケットの試合を生成する（バルクINSERT）
-func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB, tournament *db_model.Tournament, teamCount int32, competitionID string) ([]matchInfo, error) {
-	rounds := int(math.Ceil(math.Log2(float64(teamCount))))
-	bracketSize := 1 << rounds // 2^rounds
-	byeCount := bracketSize - int(teamCount)
+// --- コンパクトブラケット ツリー構造 ---
 
-	seedPositions := generateSeedPositions(bracketSize)
+// bracketNode はブラケットツリーのノード。seedNumber > 0 ならリーフ（SEED）。
+type bracketNode struct {
+	seedNumber int
+	child1     *bracketNode
+	child2     *bracketNode
+	matchID    string
+	round      int
+	position   int
+	depth      int
+}
 
-	byeSeeds := make(map[int]bool)
-	for i := 0; i < byeCount; i++ {
-		byeSeeds[i+1] = true
+// isPowerOf2 は n が2の冪かどうかを判定する
+func isPowerOf2(n int) bool {
+	return n > 0 && (n&(n-1)) == 0
+}
+
+// nextLowerPow2 は n 以下の最大の2の冪を返す
+func nextLowerPow2(n int) int {
+	p := 1
+	for p*2 <= n {
+		p *= 2
+	}
+	return p
+}
+
+// nextPow2 は n 以上の最小の2の冪を返す
+func nextPow2(n int) int {
+	p := 1
+	for p < n {
+		p *= 2
+	}
+	return p
+}
+
+// buildCompactBracket はチーム数に応じてコンパクトブラケットツリーを構築する
+func buildCompactBracket(n int) *bracketNode {
+	if n <= 1 {
+		return &bracketNode{seedNumber: 1}
+	}
+	if n == 2 {
+		return &bracketNode{
+			child1: &bracketNode{seedNumber: 1},
+			child2: &bracketNode{seedNumber: 2},
+		}
 	}
 
-	matchMap := make(map[int]map[int]string)
+	if isPowerOf2(n) {
+		seeds := generateSeedPositions(n)
+		return buildTreeFromSeeds(seeds)
+	}
 
+	p := nextLowerPow2(n)
+	prelim := n - p
+
+	if prelim*2 == p {
+		// all-play fold方式 (N = 3*2^k: 3, 6, 12, 24, ...)
+		return buildAllPlayFoldTree(n)
+	}
+	// p-bracket + play-in方式
+	return buildPlayInTree(n, p, prelim)
+}
+
+// buildTreeFromSeeds は標準シード配列からバランスの取れたツリーを構築する
+func buildTreeFromSeeds(seeds []int) *bracketNode {
+	if len(seeds) == 2 {
+		return &bracketNode{
+			child1: &bracketNode{seedNumber: seeds[0]},
+			child2: &bracketNode{seedNumber: seeds[1]},
+		}
+	}
+	mid := len(seeds) / 2
+	return &bracketNode{
+		child1: buildTreeFromSeeds(seeds[:mid]),
+		child2: buildTreeFromSeeds(seeds[mid:]),
+	}
+}
+
+// buildPlayInTree は p-bracket + play-in方式のツリーを構築する
+func buildPlayInTree(n, p, prelim int) *bracketNode {
+	seeds := generateSeedPositions(p)
+
+	// play-inマップ: メインブラケットのシード → play-inノード
+	playIns := make(map[int]*bracketNode)
+	for i := 0; i < prelim; i++ {
+		mainSeed := p - i
+		extraSeed := p + 1 + i
+		playIns[mainSeed] = &bracketNode{
+			child1: &bracketNode{seedNumber: mainSeed},
+			child2: &bracketNode{seedNumber: extraSeed},
+		}
+	}
+
+	return buildTreeFromSeedsWithPlayIns(seeds, playIns)
+}
+
+// buildTreeFromSeedsWithPlayIns はplay-inを含むツリーを構築する
+func buildTreeFromSeedsWithPlayIns(seeds []int, playIns map[int]*bracketNode) *bracketNode {
+	if len(seeds) == 2 {
+		return &bracketNode{
+			child1: getLeafOrPlayIn(seeds[0], playIns),
+			child2: getLeafOrPlayIn(seeds[1], playIns),
+		}
+	}
+	mid := len(seeds) / 2
+	return &bracketNode{
+		child1: buildTreeFromSeedsWithPlayIns(seeds[:mid], playIns),
+		child2: buildTreeFromSeedsWithPlayIns(seeds[mid:], playIns),
+	}
+}
+
+func getLeafOrPlayIn(seed int, playIns map[int]*bracketNode) *bracketNode {
+	if pi, ok := playIns[seed]; ok {
+		return pi
+	}
+	return &bracketNode{seedNumber: seed}
+}
+
+// buildAllPlayFoldTree は all-play fold方式のツリーを構築する
+func buildAllPlayFoldTree(n int) *bracketNode {
+	halfN := n / 2
+	var entries []*bracketNode
+
+	if n%2 == 1 {
+		// 奇数: seed 1がbye、残りをfoldペア
+		entries = append(entries, &bracketNode{seedNumber: 1})
+		for i := 0; i < halfN; i++ {
+			topSeed := i + 2
+			botSeed := n - i
+			entries = append(entries, &bracketNode{
+				child1: &bracketNode{seedNumber: topSeed},
+				child2: &bracketNode{seedNumber: botSeed},
+			})
+		}
+	} else {
+		// 偶数: 全チームfoldペア
+		for i := 0; i < halfN; i++ {
+			topSeed := i + 1
+			botSeed := n - i
+			entries = append(entries, &bracketNode{
+				child1: &bracketNode{seedNumber: topSeed},
+				child2: &bracketNode{seedNumber: botSeed},
+			})
+		}
+	}
+
+	return buildBracketFromEntries(entries)
+}
+
+// buildBracketFromEntries はエントリ列（seedまたはmatchノード）からブラケットを再帰的に構築する
+func buildBracketFromEntries(entries []*bracketNode) *bracketNode {
+	count := len(entries)
+	if count == 1 {
+		return entries[0]
+	}
+	if count == 2 {
+		return &bracketNode{child1: entries[0], child2: entries[1]}
+	}
+
+	if isPowerOf2(count) {
+		order := generateSeedPositions(count)
+		reordered := make([]*bracketNode, count)
+		for i, pos := range order {
+			reordered[i] = entries[pos-1]
+		}
+		return buildTreeFromEntries(reordered)
+	}
+
+	// 非2の冪: 標準シード順でtop/bottomに分割
+	p := nextPow2(count)
+	order := generateSeedPositions(p)
+	halfP := p / 2
+
+	var topEntries, botEntries []*bracketNode
+	for idx, seedPos := range order {
+		if seedPos > count {
+			continue
+		}
+		item := entries[seedPos-1]
+		if idx < halfP {
+			topEntries = append(topEntries, item)
+		} else {
+			botEntries = append(botEntries, item)
+		}
+	}
+
+	return &bracketNode{
+		child1: buildBracketFromEntries(topEntries),
+		child2: buildBracketFromEntries(botEntries),
+	}
+}
+
+// buildTreeFromEntries は偶数個のエントリからバランスツリーを構築する
+func buildTreeFromEntries(entries []*bracketNode) *bracketNode {
+	if len(entries) == 2 {
+		return &bracketNode{child1: entries[0], child2: entries[1]}
+	}
+	mid := len(entries) / 2
+	return &bracketNode{
+		child1: buildTreeFromEntries(entries[:mid]),
+		child2: buildTreeFromEntries(entries[mid:]),
+	}
+}
+
+// computeNodeRound はツリーのroundを再帰的に計算する（リーフ→0、matchノード→max(child)+1）
+func computeNodeRound(node *bracketNode) int {
+	if node.seedNumber > 0 {
+		return -1 // リーフはマッチではない
+	}
+	r1 := computeNodeRound(node.child1)
+	r2 := computeNodeRound(node.child2)
+	node.round = max(r1, r2) + 1
+	return node.round
+}
+
+// computeNodeDepth はツリーのdepthを再帰的に設定する（root=0、子=親+1）
+func computeNodeDepth(node *bracketNode, d int) {
+	node.depth = d
+	if node.child1 != nil {
+		computeNodeDepth(node.child1, d+1)
+	}
+	if node.child2 != nil {
+		computeNodeDepth(node.child2, d+1)
+	}
+}
+
+// assignNodePositions はラウンドごとの位置をDFS順で割り当てる
+func assignNodePositions(node *bracketNode, counter map[int]int) {
+	if node.seedNumber > 0 {
+		return
+	}
+	if node.child1 != nil {
+		assignNodePositions(node.child1, counter)
+	}
+	node.position = counter[node.round]
+	counter[node.round]++
+	if node.child2 != nil {
+		assignNodePositions(node.child2, counter)
+	}
+}
+
+// generateMainBracketMatches はMAINブラケットの試合を生成する（ツリーベース・バルクINSERT）
+func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB, tournament *db_model.Tournament, teamCount int32, competitionID string) ([]matchInfo, error) {
+	// ツリー構築
+	root := buildCompactBracket(int(teamCount))
+
+	// ラウンド・深さ・ポジション計算
+	computeNodeRound(root)
+	computeNodeDepth(root, 0)
+	posCounter := make(map[int]int)
+	assignNodePositions(root, posCounter)
+
+	// ツリーからDBレコードを生成
 	var allMatchInfos []matchInfo
 	var allMatches []*db_model.Match
 	var allEntries []*db_model.MatchEntry
 	var allSlots []*db_model.TournamentSlot
 	var allJudgments []*db_model.Judgment
 
-	round1Matches := bracketSize / 2
-	matchMap[1] = make(map[int]string)
-
-	round1Pairs := make([]slotPair, round1Matches)
-	for i := 0; i < round1Matches; i++ {
-		round1Pairs[i] = slotPair{
-			seed1: seedPositions[i*2],
-			seed2: seedPositions[i*2+1],
+	var createRecords func(node *bracketNode)
+	createRecords = func(node *bracketNode) {
+		if node.seedNumber > 0 {
+			return // リーフ（SEED）はマッチを作らない
 		}
-	}
+		// 子を先に処理（DFS）
+		createRecords(node.child1)
+		createRecords(node.child2)
 
-	// newMatchRecordSet はインメモリで6レコードセットを構築する
-	newMatchRecordSet := func(tournamentID, competitionID string) (*db_model.Match, *db_model.TournamentSlot, *db_model.TournamentSlot) {
+		// マッチレコードセット作成
 		match := &db_model.Match{
 			ID:            ulid.Make(),
-			Time:          time.Time{},
+			Time:          time.Now(),
 			Status:        string(model.MatchStatusStandby),
 			CompetitionID: competitionID,
 		}
 		entry1 := &db_model.MatchEntry{ID: ulid.Make(), MatchID: match.ID, Score: 0}
 		entry2 := &db_model.MatchEntry{ID: ulid.Make(), MatchID: match.ID, Score: 0}
-		slot1 := &db_model.TournamentSlot{ID: ulid.Make(), TournamentID: tournamentID, MatchEntryID: entry1.ID, SourceType: string(model.SlotSourceTypeSeed)}
-		slot2 := &db_model.TournamentSlot{ID: ulid.Make(), TournamentID: tournamentID, MatchEntryID: entry2.ID, SourceType: string(model.SlotSourceTypeSeed)}
+		slot1 := &db_model.TournamentSlot{ID: ulid.Make(), TournamentID: tournament.ID, MatchEntryID: entry1.ID}
+		slot2 := &db_model.TournamentSlot{ID: ulid.Make(), TournamentID: tournament.ID, MatchEntryID: entry2.ID}
 		judgment := &db_model.Judgment{
 			ID:      match.ID,
 			Name:    pkggorm.ToNullString(nil),
@@ -416,50 +654,26 @@ func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB
 			TeamID:  pkggorm.ToNullString(nil),
 			GroupID: pkggorm.ToNullString(nil),
 		}
+
+		// child1 → slot1
+		setSlotFromChild(slot1, node.child1)
+		// child2 → slot2
+		setSlotFromChild(slot2, node.child2)
+
+		node.matchID = match.ID
+
 		allMatches = append(allMatches, match)
 		allEntries = append(allEntries, entry1, entry2)
 		allSlots = append(allSlots, slot1, slot2)
 		allJudgments = append(allJudgments, judgment)
-		return match, slot1, slot2
+		allMatchInfos = append(allMatchInfos, matchInfo{
+			matchID:  match.ID,
+			round:    node.round,
+			position: node.position,
+			depth:    node.depth,
+		})
 	}
-
-	// 1回戦: BYEでない試合だけ作成
-	for i := 0; i < round1Matches; i++ {
-		pair := round1Pairs[i]
-		if byeSeeds[pair.seed1] || byeSeeds[pair.seed2] {
-			continue
-		}
-
-		match, slot1, slot2 := newMatchRecordSet(tournament.ID, competitionID)
-		matchMap[1][i] = match.ID
-
-		slot1.SeedNumber = sql.NullInt64{Valid: true, Int64: int64(pair.seed1)}
-		slot2.SeedNumber = sql.NullInt64{Valid: true, Int64: int64(pair.seed2)}
-
-		allMatchInfos = append(allMatchInfos, matchInfo{matchID: match.ID, round: 1, position: i})
-	}
-
-	// ラウンド2以降
-	for r := 2; r <= rounds; r++ {
-		matchesInRound := bracketSize / (1 << r)
-		matchMap[r] = make(map[int]string)
-
-		for pos := 0; pos < matchesInRound; pos++ {
-			match, slot1, slot2 := newMatchRecordSet(tournament.ID, competitionID)
-			matchMap[r][pos] = match.ID
-			allMatchInfos = append(allMatchInfos, matchInfo{matchID: match.ID, round: r, position: pos})
-
-			prevPos1 := pos * 2
-			prevPos2 := pos*2 + 1
-
-			if err := setSlotSourceInMemory(slot1, r, prevPos1, matchMap, round1Pairs, byeSeeds); err != nil {
-				return nil, err
-			}
-			if err := setSlotSourceInMemory(slot2, r, prevPos2, matchMap, round1Pairs, byeSeeds); err != nil {
-				return nil, err
-			}
-		}
-	}
+	createRecords(root)
 
 	// バルクINSERT
 	if err := s.matchRepository.SaveBatch(ctx, tx, allMatches); err != nil {
@@ -478,33 +692,17 @@ func (s *Tournament) generateMainBracketMatches(ctx context.Context, tx *gorm.DB
 	return allMatchInfos, nil
 }
 
-// setSlotSourceInMemory はスロットのソースをインメモリで設定する（DB呼び出しなし）
-func setSlotSourceInMemory(slot *db_model.TournamentSlot, currentRound int, prevPos int, matchMap map[int]map[int]string, round1Pairs []slotPair, byeSeeds map[int]bool) error {
-	prevRound := currentRound - 1
-
-	if prevRound == 1 {
-		pair := round1Pairs[prevPos]
-		if byeSeeds[pair.seed1] || byeSeeds[pair.seed2] {
-			nonByeSeed := pair.seed1
-			if byeSeeds[pair.seed1] {
-				nonByeSeed = pair.seed2
-			}
-			slot.SourceType = string(model.SlotSourceTypeSeed)
-			slot.SourceMatchID = sql.NullString{Valid: false}
-			slot.SeedNumber = sql.NullInt64{Valid: true, Int64: int64(nonByeSeed)}
-			return nil
-		}
+// setSlotFromChild はブラケットノードの子に応じてスロットのソースを設定する
+func setSlotFromChild(slot *db_model.TournamentSlot, child *bracketNode) {
+	if child.seedNumber > 0 {
+		slot.SourceType = string(model.SlotSourceTypeSeed)
+		slot.SeedNumber = sql.NullInt64{Valid: true, Int64: int64(child.seedNumber)}
+		slot.SourceMatchID = sql.NullString{Valid: false}
+	} else {
+		slot.SourceType = string(model.SlotSourceTypeMatchWinner)
+		slot.SourceMatchID = sql.NullString{Valid: true, String: child.matchID}
+		slot.SeedNumber = sql.NullInt64{Valid: false}
 	}
-
-	prevMatchID, prevMatchExists := matchMap[prevRound][prevPos]
-	if !prevMatchExists {
-		return errors.ErrUnreachableSlotSource
-	}
-
-	slot.SourceType = string(model.SlotSourceTypeMatchWinner)
-	slot.SourceMatchID = sql.NullString{Valid: true, String: prevMatchID}
-	slot.SeedNumber = sql.NullInt64{Valid: false}
-	return nil
 }
 
 type slotPair struct {
@@ -516,7 +714,7 @@ type slotPair struct {
 func (s *Tournament) createTournamentMatchRecord(ctx context.Context, tx *gorm.DB, tournamentID string, competitionID string) (*db_model.Match, *db_model.TournamentSlot, *db_model.TournamentSlot, error) {
 	match := &db_model.Match{
 		ID:            ulid.Make(),
-		Time:          time.Time{},
+		Time:          time.Now(),
 		Status:        string(model.MatchStatusStandby),
 		CompetitionID: competitionID,
 	}
@@ -610,22 +808,11 @@ func generateSeedPositions(bracketSize int) []int {
 
 // --- SUBブラケット汎用生成 ---
 
-// generateSubBracketFromSource は sourceRound のラウンドの敗者を集めてSUBブラケットを生成する。
-// sourceRound は「決勝から何ラウンド前か」を表す（1 = 準決勝、2 = 準々決勝）。
+// generateSubBracketFromSource は sourceRound（= depth: Finalからの距離）の敗者を集めてSUBブラケットを生成する。
+// sourceRound は「決勝から何ラウンド前か」を表す（1 = 準決勝、2 = 準々決勝）→ depth に対応。
 func (s *Tournament) generateSubBracketFromSource(ctx context.Context, tx *gorm.DB, competitionID string, mainTournamentID string, mainMatchInfos []matchInfo, sub *model.SubBracketInput, displayOrder int) (*db_model.Tournament, error) {
-	maxRound := 0
-	for _, mi := range mainMatchInfos {
-		if mi.round > maxRound {
-			maxRound = mi.round
-		}
-	}
-
-	targetRound := maxRound - int(sub.SourceRound)
-	if targetRound < 1 {
-		return nil, nil
-	}
-
-	sourceMatches := findMatchesByRound(mainMatchInfos, targetRound)
+	targetDepth := int(sub.SourceRound)
+	sourceMatches := findMatchesByDepth(mainMatchInfos, targetDepth)
 	if len(sourceMatches) < 2 {
 		return nil, nil
 	}
@@ -682,6 +869,20 @@ func findMatchesByRound(matchInfos []matchInfo, round int) []matchInfo {
 	var result []matchInfo
 	for _, mi := range matchInfos {
 		if mi.round == round {
+			result = append(result, mi)
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].position < result[j].position
+	})
+	return result
+}
+
+// findMatchesByDepth は指定 depth（Finalからの距離）の試合を position 昇順で返す
+func findMatchesByDepth(matchInfos []matchInfo, depth int) []matchInfo {
+	var result []matchInfo
+	for _, mi := range matchInfos {
+		if mi.depth == depth {
 			result = append(result, mi)
 		}
 	}
@@ -818,54 +1019,89 @@ func (s *Tournament) generateFifthToEighthPlayoff(ctx context.Context, tx *gorm.
 	return subTournament, nil
 }
 
-// findSemiFinals はメインブラケットの準決勝試合を特定する
+// findSemiFinals はメインブラケットの準決勝試合を特定する（depth=1: Finalの直接フィーダー）
 func findSemiFinals(matchInfos []matchInfo) []matchInfo {
-	if len(matchInfos) == 0 {
-		return nil
-	}
-	maxRound := 0
-	for _, mi := range matchInfos {
-		if mi.round > maxRound {
-			maxRound = mi.round
-		}
-	}
-	// 準決勝 = 決勝の1つ前のラウンド
-	sfRound := maxRound - 1
-	if sfRound < 1 {
-		return nil
-	}
 	var semis []matchInfo
 	for _, mi := range matchInfos {
-		if mi.round == sfRound {
+		if mi.depth == 1 {
 			semis = append(semis, mi)
 		}
 	}
+	sort.Slice(semis, func(i, j int) bool { return semis[i].position < semis[j].position })
 	return semis
 }
 
-// findQuarterFinals はメインブラケットの準々決勝試合を特定する
+// findQuarterFinals はメインブラケットの準々決勝試合を特定する（depth=2: 準決勝のフィーダー）
 func findQuarterFinals(matchInfos []matchInfo) []matchInfo {
-	if len(matchInfos) == 0 {
-		return nil
-	}
-	maxRound := 0
-	for _, mi := range matchInfos {
-		if mi.round > maxRound {
-			maxRound = mi.round
-		}
-	}
-	// 準々決勝 = 決勝の2つ前のラウンド
-	qfRound := maxRound - 2
-	if qfRound < 1 {
-		return nil
-	}
 	var quarters []matchInfo
 	for _, mi := range matchInfos {
-		if mi.round == qfRound {
+		if mi.depth == 2 {
 			quarters = append(quarters, mi)
 		}
 	}
+	sort.Slice(quarters, func(i, j int) bool { return quarters[i].position < quarters[j].position })
 	return quarters
+}
+
+// GenerateSubBracket はサブブラケットをトーナメント＋試合構造含めて一括生成する。
+func (s *Tournament) GenerateSubBracket(ctx context.Context, input *model.GenerateSubBracketInput) (*db_model.Tournament, error) {
+	var tournament *db_model.Tournament
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 大会タイプチェック
+		comp, err := s.competitionRepository.Get(ctx, tx, input.CompetitionID)
+		if err != nil {
+			return err
+		}
+		if comp.Type != string(model.CompetitionTypeTournament) {
+			return errors.ErrNotTournamentCompetition
+		}
+
+		// displayOrder の算出
+		existing, err := s.tournamentRepository.ListByCompetitionID(ctx, tx, input.CompetitionID)
+		if err != nil {
+			return err
+		}
+		maxOrder := 0
+		for _, t := range existing {
+			if t.DisplayOrder > maxOrder {
+				maxOrder = t.DisplayOrder
+			}
+		}
+
+		var pm sql.NullString
+		if input.PlacementMethod != nil {
+			pm = sql.NullString{Valid: true, String: input.PlacementMethod.String()}
+		}
+
+		t := &db_model.Tournament{
+			ID:              ulid.Make(),
+			CompetitionID:   input.CompetitionID,
+			Name:            input.Name,
+			BracketType:     string(model.BracketTypeSub),
+			PlacementMethod: pm,
+			DisplayOrder:    maxOrder + 1,
+		}
+		t, err = s.tournamentRepository.Save(ctx, tx, t)
+		if err != nil {
+			return errors.ErrSaveTournament
+		}
+
+		// ブラケット構造を一括生成（generateMainBracketMatches を再利用）
+		if input.TeamCount >= 2 {
+			if _, err := s.generateMainBracketMatches(ctx, tx, t, input.TeamCount, input.CompetitionID); err != nil {
+				return err
+			}
+		}
+
+		tournament = t
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return tournament, nil
 }
 
 // --- CRUD ---
@@ -1025,7 +1261,7 @@ func (s *Tournament) CreateTournamentMatch(ctx context.Context, input *model.Cre
 		}
 
 		// 試合時間
-		matchTime := time.Time{}
+		matchTime := time.Now()
 		if input.Time != nil {
 			parsed, err := time.Parse(time.RFC3339, *input.Time)
 			if err != nil {
@@ -1349,6 +1585,43 @@ func (s *Tournament) AssignSeedTeam(ctx context.Context, input *model.AssignSeed
 	return result, nil
 }
 
+// resetBracketsInTx はトランザクション内でブラケット群を削除する内部メソッド
+func (s *Tournament) resetBracketsInTx(ctx context.Context, tx *gorm.DB, tournaments []*db_model.Tournament) error {
+	var allMatchIDs []string
+	matchIDSet := make(map[string]bool)
+
+	for _, t := range tournaments {
+		slots, err := s.tournamentRepository.ListByTournamentID(ctx, tx, t.ID)
+		if err != nil {
+			return err
+		}
+		ids, err := collectMatchIDsFromSlots(ctx, tx, s.matchRepository, slots)
+		if err != nil {
+			return err
+		}
+		for _, id := range ids {
+			if !matchIDSet[id] {
+				matchIDSet[id] = true
+				allMatchIDs = append(allMatchIDs, id)
+			}
+		}
+	}
+
+	for _, t := range tournaments {
+		if _, err := s.tournamentRepository.Delete(ctx, tx, t.ID); err != nil {
+			return err
+		}
+	}
+
+	for _, matchID := range allMatchIDs {
+		if _, err := s.matchRepository.Delete(ctx, tx, matchID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // --- ResetTournamentBrackets ---
 
 func (s *Tournament) ResetTournamentBrackets(ctx context.Context, competitionID string) (*db_model.Competition, error) {
@@ -1366,42 +1639,7 @@ func (s *Tournament) ResetTournamentBrackets(ctx context.Context, competitionID 
 			return err
 		}
 
-		// 全ブラケットの全スロットから match_ids を収集
-		var allMatchIDs []string
-		matchIDSet := make(map[string]bool)
-
-		for _, t := range tournaments {
-			slots, err := s.tournamentRepository.ListByTournamentID(ctx, tx, t.ID)
-			if err != nil {
-				return err
-			}
-			ids, err := collectMatchIDsFromSlots(ctx, tx, s.matchRepository, slots)
-			if err != nil {
-				return err
-			}
-			for _, id := range ids {
-				if !matchIDSet[id] {
-					matchIDSet[id] = true
-					allMatchIDs = append(allMatchIDs, id)
-				}
-			}
-		}
-
-		// 1. 全 tournaments を削除（slots が CASCADE）
-		for _, t := range tournaments {
-			if _, err := s.tournamentRepository.Delete(ctx, tx, t.ID); err != nil {
-				return err
-			}
-		}
-
-		// 2. matches を削除
-		for _, matchID := range allMatchIDs {
-			if _, err := s.matchRepository.Delete(ctx, tx, matchID); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return s.resetBracketsInTx(ctx, tx, tournaments)
 	})
 
 	if err != nil {

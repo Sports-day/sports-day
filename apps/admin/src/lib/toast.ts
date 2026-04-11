@@ -3,24 +3,57 @@
  * コンポーネントとは別ファイルにすることで react-refresh/only-export-components を回避。
  */
 
-type ToastEntry = { id: number; message: string }
+export type ToastType = 'success' | 'error' | 'warning'
+
+export type ToastEntry = {
+  id: number
+  message: string
+  type: ToastType
+  duration: number
+  createdAt: number
+}
+
+const DURATION: Record<ToastType, number> = {
+  success: 3000,
+  warning: 5000,
+  error: 5000,
+}
 
 let _nextId = 0
 const _listeners = new Set<() => void>()
 let _queue: ToastEntry[] = []
+let _suppressError = false
 
-export function showToast(message: string) {
-  _queue = [..._queue, { id: ++_nextId, message }]
+function _notify() {
   _listeners.forEach((fn) => fn())
+}
+
+export function showToast(message: string, type: ToastType = 'success') {
+  const duration = DURATION[type]
+  const entry: ToastEntry = { id: ++_nextId, message, type, duration, createdAt: Date.now() }
+  _queue = [..._queue, entry]
+  _notify()
   const id = _nextId
-  setTimeout(() => {
-    dismissToast(id)
-  }, 3000)
+  setTimeout(() => dismissToast(id), duration)
+}
+
+export function showErrorToast(message = '操作に失敗しました。時間をおいて再度お試しください。') {
+  if (_suppressError) {
+    _suppressError = false
+    return
+  }
+  showToast(message, 'error')
+}
+
+export function showWarningToast(message: string) {
+  showToast(message, 'warning')
+  _suppressError = true
+  setTimeout(() => { _suppressError = false }, 500)
 }
 
 export function dismissToast(id: number) {
   _queue = _queue.filter((t) => t.id !== id)
-  _listeners.forEach((fn) => fn())
+  _notify()
 }
 
 export function getToastQueue(): ToastEntry[] {

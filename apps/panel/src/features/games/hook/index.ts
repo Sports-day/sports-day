@@ -1,209 +1,44 @@
-import {useState} from "react";
-import {Game, gameFactory, LeagueResult, TournamentResult} from "../../../models/GameModel";
-import {useAsyncRetry} from "react-use";
-import {Match} from "../../../models/MatchModel";
-import {Team, teamFactory} from "../../../models/TeamModel";
+import {
+  useGetPanelCompetitionsQuery,
+  useGetPanelLeagueStandingsQuery,
+  useGetPanelTournamentRankingQuery,
+  CompetitionType,
+  GetPanelCompetitionsQuery,
+} from "@/src/gql/__generated__/graphql";
 
-export const useFetchGames = (filter: boolean = false) => {
-    const [games, setGames] = useState<Game[]>([])
-    const [isFetching, setIsFetching] = useState(true)
+type GqlCompetition = GetPanelCompetitionsQuery["competitions"][0];
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
+export const useFetchGames = (_filter: boolean = false) => {
+  const { data, loading, refetch } = useGetPanelCompetitionsQuery({
+    errorPolicy: 'all',
+  });
+  return {
+    games: (data?.competitions ?? []).filter(Boolean),
+    isFetching: loading,
+    refresh: refetch,
+  };
+};
 
-            const data = await gameFactory().index(filter);
-            setGames(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
+export const useFetchGameResultWithoutFetchGame = (game: GqlCompetition | null | undefined, _restrict: boolean = true) => {
+  const leagueId = game?.league?.id ?? '';
+  const isLeague = game?.type === CompetitionType.League;
 
-    return {
-        games: games,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+  const { data: standingsData, loading: isStandingsFetching } = useGetPanelLeagueStandingsQuery({
+    variables: { leagueId },
+    skip: !leagueId || !isLeague,
+  });
+  const { data: rankingData, loading: isRankingFetching } = useGetPanelTournamentRankingQuery({
+    variables: { competitionId: game?.id ?? '' },
+    skip: !game?.id || isLeague,
+  });
 
-export const useFetchGame = (gameId: number) => {
-    const [game, setGame] = useState<Game>()
-    const [isFetching, setIsFetching] = useState(true)
+  const result = isLeague
+    ? (standingsData?.leagueStandings ?? undefined)
+    : (rankingData?.tournamentRanking ?? undefined);
 
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await gameFactory().show(gameId);
-            setGame(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        game: game,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches all matches of a game
- * @param gameId
- */
-export const useFetchGameMatches = (gameId: number) => {
-    const [matches, setMatches] = useState<Match[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await gameFactory().getGameMatches(gameId);
-            setMatches(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        matches: matches,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches game result
- * @param gameId
- */
-export const useFetchGameResult = (gameId: number) => {
-    const [result, setResult] = useState<TournamentResult | LeagueResult>()
-    const [isFetching, setIsFetching] = useState(true)
-
-    const {game, isFetching: isFetchingGame} = useFetchGame(gameId);
-
-    const state = useAsyncRetry(async () => {
-        if (!isFetchingGame) {
-            try {
-                setIsFetching(true);
-
-                if (game?.type === "league") {
-                    const data = await gameFactory().getLeagueResult(gameId);
-                    setResult(data);
-                } else if (game?.type === "tournament") {
-                    const data = await gameFactory().getTournamentResult(gameId);
-                    setResult(data);
-                }
-            } catch (e) {
-                console.log(e);
-            } finally {
-                setIsFetching(false);
-            }
-        }
-    }, [isFetchingGame])
-
-    return {
-        result: result,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches game result without fetching game
- * @param game
- * @param restrict
- */
-export const useFetchGameResultWithoutFetchGame = (game: Game, restrict: boolean = true) => {
-    const [result, setResult] = useState<TournamentResult | LeagueResult | undefined>()
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            if (game?.type === "league") {
-                const data = await gameFactory().getLeagueResult(game.id, restrict);
-                setResult(data);
-            } else if (game?.type === "tournament") {
-                const data = await gameFactory().getTournamentResult(game.id);
-                setResult(data);
-            }
-        } catch (e) {
-            setResult(undefined);
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-
-    })
-
-    return {
-        result: result,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-/**
- * Fetches all games of a team
- * @param teamId
- */
-export const useFetchTeamGames = (teamId: number) => {
-    const [games, setGames] = useState<Game[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const team = await teamFactory().show(teamId);
-            const data = await gameFactory().index()
-                .then(values => values.filter(value => team.enteredGameIds.includes(value.id)));
-            setGames(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-    return {
-        games: games,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
-
-export const useFetchGameEntries = (gameId: number) => {
-    const [teams, setTeams] = useState<Team[]>([])
-    const [isFetching, setIsFetching] = useState(true)
-
-    const state = useAsyncRetry(async () => {
-        try {
-            setIsFetching(true);
-
-            const data = await gameFactory().getGameEntries(gameId);
-            setTeams(data);
-        } catch (e) {
-            console.log(e);
-        } finally {
-            setIsFetching(false);
-        }
-    })
-
-
-    return {
-        teams: teams,
-        isFetching: isFetching,
-        refresh: state.retry,
-    }
-}
+  return {
+    result,
+    isFetching: isStandingsFetching || isRankingFetching,
+    refresh: () => {},
+  };
+};

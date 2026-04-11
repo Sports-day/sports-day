@@ -11,10 +11,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import type { MockTMatch } from '@/features/competitions/mock'
+import type { TournamentMatchView } from '@/features/competitions/types'
 import { SAVE_BUTTON_SX } from '@/styles/commonSx'
 
-const STATUS_OPTIONS: { value: MockTMatch['status']; label: string }[] = [
+const STATUS_OPTIONS: { value: TournamentMatchView['status']; label: string }[] = [
   { value: 'STANDBY', label: '未登録' },
   { value: 'ONGOING', label: '進行中' },
   { value: 'FINISHED', label: '終了' },
@@ -32,14 +32,14 @@ const FIELD_SX = {
 
 type Props = {
   open: boolean
-  match: MockTMatch | null
+  match: TournamentMatchView | null
   tournamentName: string
   score1: string
   score2: string
-  status: MockTMatch['status']
+  status: TournamentMatchView['status']
   onScore1Change: (v: string) => void
   onScore2Change: (v: string) => void
-  onStatusChange: (v: MockTMatch['status']) => void
+  onStatusChange: (v: TournamentMatchView['status']) => void
   onClose: () => void
   onSave: () => void
 }
@@ -95,8 +95,12 @@ export function TournamentMatchEditDialog({
               size="small"
               placeholder="0"
               value={score1}
-              onChange={(e) => onScore1Change(e.target.value)}
-              inputProps={{ type: 'number', min: 0 }}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === '' || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 999)) onScore1Change(v)
+              }}
+              error={score1 !== '' && (Number(score1) < 0 || !Number.isInteger(Number(score1)))}
+              inputProps={{ type: 'number', min: 0, step: 1 }}
               sx={{ ...FIELD_SX, width: '80px' }}
             />
           </Box>
@@ -120,8 +124,12 @@ export function TournamentMatchEditDialog({
               size="small"
               placeholder="0"
               value={score2}
-              onChange={(e) => onScore2Change(e.target.value)}
-              inputProps={{ type: 'number', min: 0 }}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === '' || (/^\d+$/.test(v) && Number(v) >= 0 && Number(v) <= 999)) onScore2Change(v)
+              }}
+              error={score2 !== '' && (Number(score2) < 0 || !Number.isInteger(Number(score2)))}
+              inputProps={{ type: 'number', min: 0, step: 1 }}
               sx={{ ...FIELD_SX, width: '80px' }}
             />
           </Box>
@@ -134,7 +142,7 @@ export function TournamentMatchEditDialog({
           <FormControl size="small" sx={{ width: '50%' }}>
             <Select
               value={status}
-              onChange={(e) => onStatusChange(e.target.value as MockTMatch['status'])}
+              onChange={(e) => onStatusChange(e.target.value as TournamentMatchView['status'])}
               sx={{
                 fontSize: '13px',
                 color: '#2F3C8C',

@@ -11,6 +11,7 @@ import {
   Select,
   Typography,
 } from '@mui/material'
+import { BackButton } from '@/components/ui/BackButton'
 import { useTeamExport } from '../hooks/useTeamExport'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
@@ -23,6 +24,7 @@ export function TeamExportPage({ onBack }: Props) {
 
   return (
     <Box>
+      <BackButton onClick={onBack} />
       <Breadcrumbs separator="/" sx={{ mb: 2 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           チーム
@@ -32,7 +34,7 @@ export function TeamExportPage({ onBack }: Props) {
         </Typography>
       </Breadcrumbs>
 
-      <Card sx={{ background: CARD_GRADIENT }}>
+      <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent>
           <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             競技の情報

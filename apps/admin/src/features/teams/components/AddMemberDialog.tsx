@@ -11,8 +11,9 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material'
-import { useState } from 'react'
-import { MOCK_SELECTABLE_USERS } from '../mock'
+import { useState, useMemo } from 'react'
+import { useGetAdminUsersQuery } from '@/gql/__generated__/graphql'
+import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, SAVE_BUTTON_SX } from '@/styles/commonSx'
 
 type Props = {
@@ -23,6 +24,27 @@ type Props = {
 
 export function AddMemberDialog({ open, onClose, onAdd }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const { data } = useGetAdminUsersQuery({ skip: !open })
+
+  const microsoftUserIds = useMemo(
+    () =>
+      (data?.users ?? [])
+        .map((u) => u.identify?.microsoftUserId)
+        .filter((id): id is string => !!id),
+    [data],
+  )
+  const { msGraphUsers } = useMsGraphUsers(microsoftUserIds)
+
+  const users = (data?.users ?? []).map(u => {
+    const msUser = u.identify?.microsoftUserId
+      ? msGraphUsers.get(u.identify.microsoftUserId)
+      : undefined
+    return {
+      id: u.id,
+      userName: msUser?.displayName ?? u.name,
+      email: msUser?.mail ?? u.email,
+    }
+  })
 
   const toggle = (id: string) => {
     setSelectedIds((prev) =>
@@ -63,12 +85,11 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
               <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 40 }} padding="checkbox" />
               <TableCell sx={LIST_TABLE_HEAD_SX}>ID</TableCell>
               <TableCell sx={LIST_TABLE_HEAD_SX}>ユーザー名</TableCell>
-              <TableCell sx={LIST_TABLE_HEAD_SX}>性別</TableCell>
-              <TableCell sx={LIST_TABLE_HEAD_SX}>学籍番号</TableCell>
+              <TableCell sx={LIST_TABLE_HEAD_SX}>メール</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_SELECTABLE_USERS.map((user) => (
+            {users.map((user) => (
               <TableRow
                 key={user.id}
                 hover
@@ -84,8 +105,7 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
                 </TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.id}</TableCell>
                 <TableCell sx={LIST_TABLE_CELL_SX}>{user.userName}</TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.gender}</TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.studentId}</TableCell>
+                <TableCell sx={LIST_TABLE_CELL_SX}>{user.email}</TableCell>
               </TableRow>
             ))}
           </TableBody>

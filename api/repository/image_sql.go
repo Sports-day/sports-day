@@ -34,10 +34,22 @@ func (r image) Create(ctx context.Context, db *gorm.DB, image *db_model.Image) (
 
 func (r image) List(ctx context.Context, db *gorm.DB) ([]*db_model.Image, error) {
 	var images []*db_model.Image
-	if err := db.WithContext(ctx).Find(&images).Error; err != nil {
+	if err := db.WithContext(ctx).Order("display_order ASC, created_at ASC").Find(&images).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return images, nil
+}
+
+func (r image) UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			if err := tx.Model(&db_model.Image{}).Where("id = ?", item.ID).
+				Update("display_order", item.DisplayOrder).Error; err != nil {
+				return errors.Wrap(err)
+			}
+		}
+		return nil
+	})
 }
 
 func (r image) BatchGet(ctx context.Context, db *gorm.DB, ids []string) (map[string]*db_model.Image, error) {
