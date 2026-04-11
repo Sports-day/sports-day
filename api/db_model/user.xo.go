@@ -8,8 +8,7 @@ import (
 
 // User represents a row from 'sportsday.users'.
 type User struct {
-	ID     string         `json:"id"`     // ID
-	Name   sql.NullString `json:"name"`   // ユーザ名
-	Email  sql.NullString `json:"email"`  // メールアドレス
-	Gender sql.NullString `json:"gender"` // 性別
+	ID    string         `json:"id"`    // ID
+	Name  sql.NullString `json:"name"`  // ユーザ名
+	Email sql.NullString `json:"email"` // メールアドレス
 }
