@@ -17,8 +17,7 @@ export const GET_GROUP = gql`
       name
       users {
         id
-        name
-        email
+        identify { microsoftUserId }
       }
       teams {
         id

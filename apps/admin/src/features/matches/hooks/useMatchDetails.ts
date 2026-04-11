@@ -109,7 +109,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
   const currentJudgmentLabel = useMemo(() => {
     const j = matchData?.match?.judgment
     if (!j) return undefined
-    return j.user?.name ?? j.team?.name ?? j.group?.name ?? j.name ?? undefined
+    return j.team?.name ?? j.group?.name ?? j.name ?? undefined
   }, [matchData])
 
   const handleSave = async () => {

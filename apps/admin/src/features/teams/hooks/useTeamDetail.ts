@@ -61,7 +61,7 @@ export function useTeamDetail(teamId: string) {
     const msUser = msId ? msGraphUsers.get(msId) : undefined
     return {
       id: u.id,
-      name: msUser?.displayName ?? u.name,
+      name: msUser?.displayName ?? '',
     }
   })
 
@@ -152,7 +152,7 @@ export function useTeamDetail(teamId: string) {
       const msUser = msId ? msGraphUsers.get(msId) : undefined
       return {
         id: u.id,
-        userName: msUser?.displayName ?? u.name,
+        userName: msUser?.displayName ?? '',
       }
     })
 

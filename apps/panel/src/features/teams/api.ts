@@ -11,7 +11,7 @@ export const GET_TEAMS = gql`
       }
       users {
         id
-        name
+        identify { microsoftUserId }
       }
     }
   }
@@ -28,8 +28,7 @@ export const GET_TEAM = gql`
       }
       users {
         id
-        name
-        email
+        identify { microsoftUserId }
       }
     }
   }

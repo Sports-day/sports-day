@@ -27,6 +27,8 @@ var (
 	*/
 	ErrSaveUser                       = NewError("USER_SAVE_FAILED", "ユーザーの更新に失敗しました")
 	ErrSaveUserIdp                    = NewError("USER_IDP_SAVE_FAILED", "ユーザーIDP情報の更新に失敗しました")
+	ErrDuplicateMicrosoftUserID       = NewError("DUPLICATE_MICROSOFT_USER_ID", "同じMicrosoft User IDのユーザーが既に存在します")
+	ErrDuplicateMicrosoftUserIDInBatch = NewError("DUPLICATE_MICROSOFT_USER_ID_IN_BATCH", "バッチ内にMicrosoft User IDが重複しています")
 	ErrSaveTeam                       = NewError("TEAM_SAVE_FAILED", "チームの更新に失敗しました")
 	ErrAddTeamUser                    = NewError("TEAM_USER_ADD_FAILED", "チームユーザーの追加に失敗しました")
 	ErrDeleteTeamUser                 = NewError("TEAM_USER_REMOVE_FAILED", "チームユーザーの削除に失敗しました")

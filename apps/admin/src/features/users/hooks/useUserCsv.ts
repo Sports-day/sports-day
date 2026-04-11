@@ -1,64 +1,119 @@
 import { useState } from 'react'
 import Papa from 'papaparse'
 import {
-  useGetAdminUsersQuery,
-  useCreateAdminUserMutation,
+  useGetAdminGroupsForClassesQuery,
+  useBatchCreateAdminUsersMutation,
 } from '@/gql/__generated__/graphql'
+import { userManager } from '@/lib/userManager'
+import { fetchMsGraphUsersByEmails } from '@/lib/graphApi'
 import { showErrorToast } from '@/lib/toast'
 
 export type UserCsvRow = {
-  userName: string
   email: string
   class: string
+  microsoftUserId: string | null
   status: string
 }
 
 export function useUserCsv() {
   const [csvText, setCsvText] = useState('')
   const [rows, setRows] = useState<UserCsvRow[]>([])
+  const [loading, setLoading] = useState(false)
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
-  const { data: usersData } = useGetAdminUsersQuery()
-  const [createUser] = useCreateAdminUserMutation()
+  const { data: groupsData } = useGetAdminGroupsForClassesQuery()
+  const [batchCreateUsers] = useBatchCreateAdminUsersMutation()
 
   const handleCsvChange = (value: string) => {
     setCsvText(value)
 
-    const existingEmails = new Set((usersData?.users ?? []).map(u => u.email))
     const seenEmails = new Set<string>()
-
     const result = Papa.parse<string[]>(value, { skipEmptyLines: true })
     const parsed: UserCsvRow[] = result.data.map((parts) => {
-      const userName = (parts[0] ?? '').trim()
-      const email = (parts[1] ?? '').trim()
-      const cls = (parts[2] ?? '').trim()
+      const email = (parts[0] ?? '').trim()
+      const cls = (parts[1] ?? '').trim()
 
-      if (!userName) return { userName, email, class: cls, status: '名前が空です' }
-      if (!email) return { userName, email, class: cls, status: 'メールが空です' }
-      if (existingEmails.has(email)) return { userName, email, class: cls, status: 'メールが重複しています（既存）' }
-      if (seenEmails.has(email)) return { userName, email, class: cls, status: 'メールが重複しています（CSV内）' }
+      if (!email) return { email, class: cls, microsoftUserId: null, status: 'メールが空です' }
+      if (!cls) return { email, class: cls, microsoftUserId: null, status: 'クラスが空です' }
+      if (seenEmails.has(email.toLowerCase()))
+        return { email, class: cls, microsoftUserId: null, status: 'メールが重複しています（CSV内）' }
 
-      seenEmails.add(email)
-      return { userName, email, class: cls, status: '登録可能' }
+      seenEmails.add(email.toLowerCase())
+      return { email, class: cls, microsoftUserId: null, status: '確認中' }
     })
 
     setRows(parsed)
   }
 
-  const handleCreate = async () => {
-    const registrable = rows.filter((r) => r.status === '登録可能')
+  const resolveUsers = async () => {
+    const pendingRows = rows.filter((r) => r.status === '確認中')
+    if (pendingRows.length === 0) return
+
+    setLoading(true)
     try {
-      for (const r of registrable) {
-        await createUser({
-          variables: {
-            input: {
-              name: r.userName,
-              email: r.email,
-            },
-          },
-          refetchQueries: ['GetAdminUsers'],
-        })
+      const user = await userManager.getUser()
+      if (!user?.access_token) {
+        setRows((prev) =>
+          prev.map((r) =>
+            r.status === '確認中' ? { ...r, status: 'アクセストークン取得失敗' } : r,
+          ),
+        )
+        return
       }
+
+      const emails = pendingRows.map((r) => r.email)
+      const msUsers = await fetchMsGraphUsersByEmails(user.access_token, emails)
+
+      const groups = groupsData?.groups ?? []
+      const groupNameToId = new Map(groups.map((g) => [g.name, g.id]))
+
+      setRows((prev) =>
+        prev.map((r) => {
+          if (r.status !== '確認中') return r
+
+          const msUser = msUsers.get(r.email.toLowerCase())
+          if (!msUser) {
+            return { ...r, status: 'テナントにユーザーが見つかりません' }
+          }
+
+          if (!groupNameToId.has(r.class)) {
+            return { ...r, microsoftUserId: msUser.id, status: `クラス「${r.class}」が存在しません` }
+          }
+
+          return { ...r, microsoftUserId: msUser.id, status: '登録可能' }
+        }),
+      )
+    } catch (e) {
+      console.error('Graph API resolve failed:', e)
+      setRows((prev) =>
+        prev.map((r) =>
+          r.status === '確認中' ? { ...r, status: 'Graph API エラー' } : r,
+        ),
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreate = async () => {
+    const groups = groupsData?.groups ?? []
+    const groupNameToId = new Map(groups.map((g) => [g.name, g.id]))
+
+    const registrable = rows.filter((r) => r.status === '登録可能' && r.microsoftUserId)
+    if (registrable.length === 0) return
+
+    try {
+      await batchCreateUsers({
+        variables: {
+          input: {
+            users: registrable.map((r) => ({
+              microsoftUserId: r.microsoftUserId!,
+              groupId: groupNameToId.get(r.class),
+            })),
+          },
+        },
+        refetchQueries: ['GetAdminUsers'],
+      })
       setMutationError(null)
       setCsvText('')
       setRows([])
@@ -68,5 +123,5 @@ export function useUserCsv() {
     }
   }
 
-  return { csvText, handleCsvChange, rows, handleCreate, error: mutationError }
+  return { csvText, handleCsvChange, rows, resolveUsers, handleCreate, loading, error: mutationError }
 }

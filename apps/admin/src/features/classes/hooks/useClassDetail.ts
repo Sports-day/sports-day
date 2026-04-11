@@ -52,8 +52,8 @@ export function useClassDetail(classId: string) {
     const msUser = msId ? msGraphUsers.get(msId) : undefined
     return {
       id: u.id,
-      name: msUser?.displayName ?? u.name,
-      email: msUser?.mail ?? u.email,
+      name: msUser?.displayName ?? '',
+      email: msUser?.mail ?? '',
     }
   })
 
@@ -108,8 +108,8 @@ export function useClassDetail(classId: string) {
       const msUser = msId ? msGraphUsers.get(msId) : undefined
       return {
         id: u.id,
-        userName: msUser?.displayName ?? u.name,
-        email: msUser?.mail ?? u.email,
+        userName: msUser?.displayName ?? '',
+        email: msUser?.mail ?? '',
       }
     })
 

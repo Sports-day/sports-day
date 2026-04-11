@@ -24,7 +24,7 @@ export const GET_SCENE_USERS = gql`
           team {
             users {
               id
-              name
+              identify { microsoftUserId }
             }
           }
         }
@@ -37,7 +37,7 @@ export const GET_ALL_USERS = gql`
   query GetAllUsers {
     users {
       id
-      name
+      identify { microsoftUserId }
     }
   }
 `;

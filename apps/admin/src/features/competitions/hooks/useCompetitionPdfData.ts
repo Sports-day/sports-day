@@ -120,7 +120,7 @@ export function useCompetitionPdfData(sportId: string, sceneId: string, skip = f
             id: t.id,
             name: t.name,
             groupName: t.group.name,
-            members: t.users.map((u) => ({ id: u.id, name: u.name })),
+            members: t.users.map((u) => ({ id: u.id, name: '' })),
           }
         })
         .filter((t): t is PdfTeam => t !== null)

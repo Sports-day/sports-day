@@ -8,11 +8,10 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sports-day/api/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
-
-	"sports-day/api/graph/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -66,6 +65,10 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	BatchCreateUsersResult struct {
+		Users func(childComplexity int) int
+	}
+
 	Competition struct {
 		BreakDuration   func(childComplexity int) int
 		DefaultLocation func(childComplexity int) int
@@ -164,6 +167,7 @@ type ComplexityRoot struct {
 		AddSportScenes                 func(childComplexity int, id string, input model.AddSportScenesInput) int
 		ApplyCompetitionDefaults       func(childComplexity int, id string, input model.ApplyCompetitionDefaultsInput) int
 		AssignSeedTeam                 func(childComplexity int, input model.AssignSeedTeamInput) int
+		BatchCreateUsers               func(childComplexity int, input model.BatchCreateUsersInput) int
 		CreateCompetition              func(childComplexity int, input model.CreateCompetitionInput) int
 		CreateGroup                    func(childComplexity int, input model.CreateGroupInput) int
 		CreateImageUploadURL           func(childComplexity int, input model.CreateImageUploadURLInput) int
@@ -236,7 +240,6 @@ type ComplexityRoot struct {
 		UpdateTeam                     func(childComplexity int, id string, input model.UpdateTeamInput) int
 		UpdateTeamUsers                func(childComplexity int, id string, input model.UpdateTeamUsersInput) int
 		UpdateTournament               func(childComplexity int, id string, input model.UpdateTournamentInput) int
-		UpdateUser                     func(childComplexity int, id string, input model.UpdateUserInput) int
 		UpdateUserRole                 func(childComplexity int, userID string, role model.Role) int
 	}
 
@@ -400,12 +403,10 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Email     func(childComplexity int) int
 		Groups    func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Identify  func(childComplexity int) int
 		Judgments func(childComplexity int) int
-		Name      func(childComplexity int) int
 		Role      func(childComplexity int) int
 		Teams     func(childComplexity int) int
 	}
@@ -451,7 +452,7 @@ type MatchResolver interface {
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
-	UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error)
+	BatchCreateUsers(ctx context.Context, input model.BatchCreateUsersInput) (*model.BatchCreateUsersResult, error)
 	DeleteUser(ctx context.Context, id string) (*model.User, error)
 	CreateGroup(ctx context.Context, input model.CreateGroupInput) (*model.Group, error)
 	DeleteGroup(ctx context.Context, id string) (*model.Group, error)
@@ -642,6 +643,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "BatchCreateUsersResult.users":
+		if e.complexity.BatchCreateUsersResult.Users == nil {
+			break
+		}
+
+		return e.complexity.BatchCreateUsersResult.Users(childComplexity), true
 
 	case "Competition.breakDuration":
 		if e.complexity.Competition.BreakDuration == nil {
@@ -1151,6 +1159,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AssignSeedTeam(childComplexity, args["input"].(model.AssignSeedTeamInput)), true
+
+	case "Mutation.batchCreateUsers":
+		if e.complexity.Mutation.BatchCreateUsers == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_batchCreateUsers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BatchCreateUsers(childComplexity, args["input"].(model.BatchCreateUsersInput)), true
 
 	case "Mutation.createCompetition":
 		if e.complexity.Mutation.CreateCompetition == nil {
@@ -2015,18 +2035,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateTournament(childComplexity, args["id"].(string), args["input"].(model.UpdateTournamentInput)), true
-
-	case "Mutation.updateUser":
-		if e.complexity.Mutation.UpdateUser == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(string), args["input"].(model.UpdateUserInput)), true
 
 	case "Mutation.updateUserRole":
 		if e.complexity.Mutation.UpdateUserRole == nil {
@@ -2922,13 +2930,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TournamentSlot.Tournament(childComplexity), true
 
-	case "User.email":
-		if e.complexity.User.Email == nil {
-			break
-		}
-
-		return e.complexity.User.Email(childComplexity), true
-
 	case "User.groups":
 		if e.complexity.User.Groups == nil {
 			break
@@ -2956,13 +2957,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Judgments(childComplexity), true
-
-	case "User.name":
-		if e.complexity.User.Name == nil {
-			break
-		}
-
-		return e.complexity.User.Name(childComplexity), true
 
 	case "User.role":
 		if e.complexity.User.Role == nil {
@@ -3004,6 +2998,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAddSportScenesInput,
 		ec.unmarshalInputApplyCompetitionDefaultsInput,
 		ec.unmarshalInputAssignSeedTeamInput,
+		ec.unmarshalInputBatchCreateUsersInput,
 		ec.unmarshalInputCreateCompetitionInput,
 		ec.unmarshalInputCreateGroupInput,
 		ec.unmarshalInputCreateImageUploadURLInput,
@@ -3054,7 +3049,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateTeamInput,
 		ec.unmarshalInputUpdateTeamUsersInput,
 		ec.unmarshalInputUpdateTournamentInput,
-		ec.unmarshalInputUpdateUserInput,
 	)
 	first := true
 
@@ -3507,6 +3501,29 @@ func (ec *executionContext) field_Mutation_assignSeedTeam_argsInput(
 	}
 
 	var zeroVal model.AssignSeedTeamInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_batchCreateUsers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_batchCreateUsers_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_batchCreateUsers_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.BatchCreateUsersInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNBatchCreateUsersInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐBatchCreateUsersInput(ctx, tmp)
+	}
+
+	var zeroVal model.BatchCreateUsersInput
 	return zeroVal, nil
 }
 
@@ -5675,47 +5692,6 @@ func (ec *executionContext) field_Mutation_updateUserRole_argsRole(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_updateUser_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateUser_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_updateUser_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateUser_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.UpdateUserInput, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNUpdateUserInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateUserInput(ctx, tmp)
-	}
-
-	var zeroVal model.UpdateUserInput
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Query_Information_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -6321,6 +6297,64 @@ func (ec *executionContext) field___Type_fields_argsIncludeDeprecated(
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _BatchCreateUsersResult_users(ctx context.Context, field graphql.CollectedField, obj *model.BatchCreateUsersResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BatchCreateUsersResult_users(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Users, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BatchCreateUsersResult_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BatchCreateUsersResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "identify":
+				return ec.fieldContext_User_identify(ctx, field)
+			case "role":
+				return ec.fieldContext_User_role(ctx, field)
+			case "groups":
+				return ec.fieldContext_User_groups(ctx, field)
+			case "teams":
+				return ec.fieldContext_User_teams(ctx, field)
+			case "judgments":
+				return ec.fieldContext_User_judgments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _Competition_id(ctx context.Context, field graphql.CollectedField, obj *model.Competition) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Competition_id(ctx, field)
@@ -7230,10 +7264,6 @@ func (ec *executionContext) fieldContext_Group_users(_ context.Context, field gr
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -7913,10 +7943,6 @@ func (ec *executionContext) fieldContext_Judgment_user(_ context.Context, field 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -9296,10 +9322,6 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -9328,8 +9350,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateUser(ctx, field)
+func (ec *executionContext) _Mutation_batchCreateUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_batchCreateUsers(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -9343,17 +9365,17 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateUserInput))
+			return ec.resolvers.Mutation().BatchCreateUsers(rctx, fc.Args["input"].(model.BatchCreateUsersInput))
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
 			permission, err := ec.unmarshalNString2string(ctx, "user:write")
 			if err != nil {
-				var zeroVal *model.User
+				var zeroVal *model.BatchCreateUsersResult
 				return zeroVal, err
 			}
 			if ec.directives.HasPermission == nil {
-				var zeroVal *model.User
+				var zeroVal *model.BatchCreateUsersResult
 				return zeroVal, errors.New("directive hasPermission is not implemented")
 			}
 			return ec.directives.HasPermission(ctx, nil, directive0, permission)
@@ -9366,10 +9388,10 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.User); ok {
+		if data, ok := tmp.(*model.BatchCreateUsersResult); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *sports-day/api/graph/model.BatchCreateUsersResult`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9381,12 +9403,12 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model.BatchCreateUsersResult)
 	fc.Result = res
-	return ec.marshalNUser2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNBatchCreateUsersResult2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐBatchCreateUsersResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_batchCreateUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -9394,24 +9416,10 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "identify":
-				return ec.fieldContext_User_identify(ctx, field)
-			case "role":
-				return ec.fieldContext_User_role(ctx, field)
-			case "groups":
-				return ec.fieldContext_User_groups(ctx, field)
-			case "teams":
-				return ec.fieldContext_User_teams(ctx, field)
-			case "judgments":
-				return ec.fieldContext_User_judgments(ctx, field)
+			case "users":
+				return ec.fieldContext_BatchCreateUsersResult_users(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type BatchCreateUsersResult", field.Name)
 		},
 	}
 	defer func() {
@@ -9421,7 +9429,7 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_batchCreateUsers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -9496,10 +9504,6 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -16397,10 +16401,6 @@ func (ec *executionContext) fieldContext_Mutation_updateUserRole(ctx context.Con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -17541,10 +17541,6 @@ func (ec *executionContext) fieldContext_Query_users(_ context.Context, field gr
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -17603,10 +17599,6 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -17676,10 +17668,6 @@ func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graph
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -21962,10 +21950,6 @@ func (ec *executionContext) fieldContext_Team_users(_ context.Context, field gra
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
 			case "identify":
 				return ec.fieldContext_User_identify(ctx, field)
 			case "role":
@@ -23352,94 +23336,6 @@ func (ec *executionContext) fieldContext_User_id(_ context.Context, field graphq
 	return fc, nil
 }
 
-func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_email(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Email, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _User_identify(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_identify(ctx, field)
 	if err != nil {
@@ -23731,14 +23627,11 @@ func (ec *executionContext) _UserIdentify_sub(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserIdentify_sub(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -25882,6 +25775,33 @@ func (ec *executionContext) unmarshalInputAssignSeedTeamInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputBatchCreateUsersInput(ctx context.Context, obj any) (model.BatchCreateUsersInput, error) {
+	var it model.BatchCreateUsersInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"users"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "users":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("users"))
+			data, err := ec.unmarshalNCreateUserInput2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateUserInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Users = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateCompetitionInput(ctx context.Context, obj any) (model.CreateCompetitionInput, error) {
 	var it model.CreateCompetitionInput
 	asMap := map[string]any{}
@@ -26490,27 +26410,27 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "email"}
+	fieldsInOrder := [...]string{"microsoftUserId", "groupId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "microsoftUserId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("microsoftUserId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
-		case "email":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			it.MicrosoftUserID = data
+		case "groupId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Email = data
+			it.GroupID = data
 		}
 	}
 
@@ -27729,40 +27649,6 @@ func (ec *executionContext) unmarshalInputUpdateTournamentInput(ctx context.Cont
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, obj any) (model.UpdateUserInput, error) {
-	var it model.UpdateUserInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "email"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "email":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Email = data
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -27770,6 +27656,45 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var batchCreateUsersResultImplementors = []string{"BatchCreateUsersResult"}
+
+func (ec *executionContext) _BatchCreateUsersResult(ctx context.Context, sel ast.SelectionSet, obj *model.BatchCreateUsersResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, batchCreateUsersResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BatchCreateUsersResult")
+		case "users":
+			out.Values[i] = ec._BatchCreateUsersResult_users(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var competitionImplementors = []string{"Competition"}
 
@@ -29010,9 +28935,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "updateUser":
+		case "batchCreateUsers":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateUser(ctx, field)
+				return ec._Mutation_batchCreateUsers(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -32029,16 +31954,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "name":
-			out.Values[i] = ec._User_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "email":
-			out.Values[i] = ec._User_email(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "identify":
 			field := field
 
@@ -32255,9 +32170,6 @@ func (ec *executionContext) _UserIdentify(ctx context.Context, sel ast.Selection
 			out.Values[i] = graphql.MarshalString("UserIdentify")
 		case "sub":
 			out.Values[i] = ec._UserIdentify_sub(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "microsoftUserId":
 			out.Values[i] = ec._UserIdentify_microsoftUserId(ctx, field, obj)
 		default:
@@ -32638,6 +32550,25 @@ func (ec *executionContext) unmarshalNAssignSeedTeamInput2sportsᚑdayᚋapiᚋg
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNBatchCreateUsersInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐBatchCreateUsersInput(ctx context.Context, v any) (model.BatchCreateUsersInput, error) {
+	res, err := ec.unmarshalInputBatchCreateUsersInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBatchCreateUsersResult2sportsᚑdayᚋapiᚋgraphᚋmodelᚐBatchCreateUsersResult(ctx context.Context, sel ast.SelectionSet, v model.BatchCreateUsersResult) graphql.Marshaler {
+	return ec._BatchCreateUsersResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBatchCreateUsersResult2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐBatchCreateUsersResult(ctx context.Context, sel ast.SelectionSet, v *model.BatchCreateUsersResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BatchCreateUsersResult(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -32819,6 +32750,28 @@ func (ec *executionContext) unmarshalNCreateTournamentMatchInput2sportsᚑdayᚋ
 func (ec *executionContext) unmarshalNCreateUserInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateUserInput(ctx context.Context, v any) (model.CreateUserInput, error) {
 	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateUserInput2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateUserInputᚄ(ctx context.Context, v any) ([]*model.CreateUserInput, error) {
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.CreateUserInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCreateUserInput2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateUserInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNCreateUserInput2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateUserInput(ctx context.Context, v any) (*model.CreateUserInput, error) {
+	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNDeleteSportEntriesInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐDeleteSportEntriesInput(ctx context.Context, v any) (model.DeleteSportEntriesInput, error) {
@@ -34522,11 +34475,6 @@ func (ec *executionContext) unmarshalNUpdateTeamUsersInput2sportsᚑdayᚋapiᚋ
 
 func (ec *executionContext) unmarshalNUpdateTournamentInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateTournamentInput(ctx context.Context, v any) (model.UpdateTournamentInput, error) {
 	res, err := ec.unmarshalInputUpdateTournamentInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUpdateUserInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐUpdateUserInput(ctx context.Context, v any) (model.UpdateUserInput, error) {
-	res, err := ec.unmarshalInputUpdateUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

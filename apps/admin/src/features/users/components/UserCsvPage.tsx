@@ -10,6 +10,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  CircularProgress,
 } from '@mui/material'
 import { BackButton } from '@/components/ui/BackButton'
 import { useUserCsv } from '../hooks/useUserCsv'
@@ -41,10 +42,17 @@ type Props = {
 }
 
 export function UserCsvPage({ onBack }: Props) {
-  const { csvText, handleCsvChange, rows, handleCreate } = useUserCsv()
+  const { csvText, handleCsvChange, rows, resolveUsers, handleCreate, loading } = useUserCsv()
 
-  const onCreateClick = () => {
-    handleCreate()
+  const hasUnresolved = rows.some((r) => r.status === '確認中')
+  const hasRegistrable = rows.some((r) => r.status === '登録可能')
+
+  const onResolveClick = async () => {
+    await resolveUsers()
+  }
+
+  const onCreateClick = async () => {
+    await handleCreate()
     showToast('ユーザーを一括作成しました')
     onBack()
   }
@@ -75,18 +83,19 @@ export function UserCsvPage({ onBack }: Props) {
         </Typography>
 
         <Typography sx={{ fontSize: '13px', color: '#2F3C8C', mb: 2, lineHeight: 1.8 }}>
-          追加するユーザー一覧のCSVファイルと所属クラスを選択してください。<br />
-          所属クラスを指定してください。<br />
-          CSVを入力してください。
+          メールアドレスとクラス名のCSVを入力してください。<br />
+          形式: メールアドレス,クラス名
         </Typography>
 
         {/* CSV入力 */}
         <TextField
           fullWidth
+          multiline
+          minRows={4}
           size="small"
           value={csvText}
           onChange={(e) => handleCsvChange(e.target.value)}
-          placeholder="CSVデータ"
+          placeholder={'user1@example.com,1組\nuser2@example.com,2組'}
           sx={{
             mb: 2,
             '& .MuiOutlinedInput-root': {
@@ -100,11 +109,29 @@ export function UserCsvPage({ onBack }: Props) {
           }}
         />
 
+        {/* ユーザー確認ボタン */}
+        {hasUnresolved && (
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={onResolveClick}
+            disabled={loading}
+            sx={{
+              mb: 2,
+              height: '40px',
+              borderRadius: 2,
+              color: '#2F3C8C',
+              borderColor: '#5B6DC6',
+            }}
+          >
+            {loading ? <CircularProgress size={20} /> : 'ユーザーを確認'}
+          </Button>
+        )}
+
         {/* テーブル */}
         <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden' }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={TABLE_HEAD_SX}>ユーザー名</TableCell>
               <TableCell sx={TABLE_HEAD_SX}>メールアドレス</TableCell>
               <TableCell sx={TABLE_HEAD_SX}>クラス</TableCell>
               <TableCell sx={TABLE_HEAD_SX}>ステータス</TableCell>
@@ -114,7 +141,7 @@ export function UserCsvPage({ onBack }: Props) {
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={3}
                   sx={{ textAlign: 'center', color: '#9E9E9E', py: 4, fontSize: '13px', backgroundColor: '#FFFFFF' }}
                 >
                   No Rows To Show
@@ -122,10 +149,9 @@ export function UserCsvPage({ onBack }: Props) {
               </TableRow>
             ) : (
               rows.map((row, i) => {
-                const hasError = row.status !== '登録可能'
+                const hasError = row.status !== '登録可能' && row.status !== '確認中'
                 return (
                   <TableRow key={i} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
-                    <TableCell sx={TABLE_CELL_SX}>{row.userName}</TableCell>
                     <TableCell sx={hasError ? ERROR_CELL_SX : TABLE_CELL_SX}>{row.email}</TableCell>
                     <TableCell sx={hasError ? ERROR_CELL_SX : TABLE_CELL_SX}>{row.class}</TableCell>
                     <TableCell sx={hasError ? ERROR_CELL_SX : TABLE_CELL_SX}>{row.status}</TableCell>
@@ -142,6 +168,7 @@ export function UserCsvPage({ onBack }: Props) {
         variant="contained"
         fullWidth
         onClick={onCreateClick}
+        disabled={!hasRegistrable || loading}
         sx={{
           ...SAVE_BUTTON_SX,
           height: '48px',

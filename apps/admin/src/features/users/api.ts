@@ -4,8 +4,6 @@ export const GET_ADMIN_USERS = gql`
   query GetAdminUsers {
     users {
       id
-      name
-      email
       role
       identify { microsoftUserId }
       groups { id name }
@@ -26,8 +24,6 @@ export const GET_ADMIN_USER = gql`
   query GetAdminUser($id: ID!) {
     user(id: $id) {
       id
-      name
-      email
       role
       identify { microsoftUserId }
       groups { id name }
@@ -38,20 +34,16 @@ export const GET_ADMIN_USER = gql`
 
 export const CREATE_ADMIN_USER = gql`
   mutation CreateAdminUser($input: CreateUserInput!) {
-    createUser(input: $input) {
-      id
-      name
-      email
-    }
+    createUser(input: $input) { id }
   }
 `
 
-export const UPDATE_ADMIN_USER = gql`
-  mutation UpdateAdminUser($id: ID!, $input: UpdateUserInput!) {
-    updateUser(id: $id, input: $input) {
-      id
-      name
-      email
+export const BATCH_CREATE_ADMIN_USERS = gql`
+  mutation BatchCreateAdminUsers($input: BatchCreateUsersInput!) {
+    batchCreateUsers(input: $input) {
+      users {
+        id
+      }
     }
   }
 `

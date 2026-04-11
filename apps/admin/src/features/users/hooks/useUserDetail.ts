@@ -3,7 +3,6 @@ import {
   Role,
   useGetAdminUserQuery,
   useGetAdminGroupsQuery,
-  useUpdateAdminUserMutation,
   useUpdateAdminUserRoleMutation,
   useDeleteAdminUserMutation,
   useGetAdminUserSportExperiencesQuery,
@@ -69,10 +68,6 @@ export function useUserDetail(userId: string) {
     role !== initialState.current.role ||
     JSON.stringify([...experiencedSportIds].sort()) !== JSON.stringify([...initialState.current.experiencedSportIds].sort())
 
-  const [updateUser] = useUpdateAdminUserMutation({
-    refetchQueries: [{ query: GetAdminUsersDocument }],
-  })
-
   const [updateUserRole] = useUpdateAdminUserRoleMutation({
     refetchQueries: [{ query: GetAdminUsersDocument }],
   })
@@ -90,15 +85,6 @@ export function useUserDetail(userId: string) {
 
   const handleSave = async () => {
     if (!userId) return
-    await updateUser({
-      variables: {
-        id: userId,
-        input: {
-          name: user?.name,
-          email: user?.email,
-        },
-      },
-    })
     if (user && role && role !== user.role) {
       await updateUserRole({
         variables: { userId, role: role as Role },
@@ -126,8 +112,8 @@ export function useUserDetail(userId: string) {
   }
 
   return {
-    userName: msGraphUser?.displayName ?? user?.name ?? '',
-    userEmail: msGraphUser?.mail ?? user?.email ?? '',
+    userName: msGraphUser?.displayName ?? '',
+    userEmail: msGraphUser?.mail ?? '',
     groupId,
     setGroupId,
     groups,

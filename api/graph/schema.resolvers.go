@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 )
@@ -20,13 +19,19 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 	return model.FormatUserResponse(user), nil
 }
 
-// UpdateUser is the resolver for the updateUser field.
-func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
-	user, err := r.UserService.Update(ctx, id, &input)
+// BatchCreateUsers is the resolver for the batchCreateUsers field.
+func (r *mutationResolver) BatchCreateUsers(ctx context.Context, input model.BatchCreateUsersInput) (*model.BatchCreateUsersResult, error) {
+	users, err := r.UserService.BatchCreate(ctx, input.Users)
 	if err != nil {
 		return nil, err
 	}
-	return model.FormatUserResponse(user), nil
+	result := &model.BatchCreateUsersResult{
+		Users: make([]*model.User, len(users)),
+	}
+	for i, user := range users {
+		result.Users[i] = model.FormatUserResponse(user)
+	}
+	return result, nil
 }
 
 // DeleteUser is the resolver for the deleteUser field.

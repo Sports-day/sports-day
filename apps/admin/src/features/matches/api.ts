@@ -55,7 +55,7 @@ export const GET_ADMIN_MATCH = gql`
       location { id name }
       competition { id name }
       entries { id team { id name } score }
-      judgment { id name isAttending user { id name } team { id name } group { id name } }
+      judgment { id name isAttending user { id identify { microsoftUserId } } team { id name } group { id name } }
     }
   }
 `
@@ -124,7 +124,7 @@ export const UPDATE_ADMIN_JUDGMENT = gql`
     updateJudgment(id: $id, input: $input) {
       id
       name
-      user { id name }
+      user { id identify { microsoftUserId } }
       team { id name }
       group { id name }
     }
@@ -169,7 +169,7 @@ export const GET_ADMIN_COMPETITION_JUDGE_OPTIONS = gql`
         id
         name
         group { id name }
-        users { id name }
+        users { id identify { microsoftUserId } }
       }
     }
   }

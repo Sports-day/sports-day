@@ -5,14 +5,12 @@ enum Role {
 }
 
 type UserIdentify {
-  sub: ID!
+  sub: ID
   microsoftUserId: String
 }
 
 type User {
   id: ID!
-  name: String!
-  email: String!
   identify: UserIdentify!
   role: Role!
   groups: [Group!]!

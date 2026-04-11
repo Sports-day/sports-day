@@ -6,15 +6,14 @@ export const GET_ME = gql`
   query GetMe {
     me {
       id
-      name
       role
+      identify { microsoftUserId }
     }
   }
 `
 
 type CurrentUser = {
   id: string
-  name: string
   role: Role
 }
 

@@ -23,7 +23,7 @@ export async function fetchMsGraphUsers(
 
   const responses = await Promise.allSettled(
     chunks.map(async (chunk) => {
-      const filter = chunk.map((id) => `'${id}'`).join(',')
+      const filter = chunk.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')
       const params = new URLSearchParams({
         $filter: `id in (${filter})`,
         $select: 'id,displayName,mail',
@@ -45,6 +45,53 @@ export async function fetchMsGraphUsers(
     if (response.status === 'fulfilled') {
       for (const user of response.value) {
         result.set(user.id, user)
+      }
+    }
+  }
+
+  return result
+}
+
+export async function fetchMsGraphUsersByEmails(
+  accessToken: string,
+  emails: string[],
+): Promise<Map<string, MsGraphUser>> {
+  const result = new Map<string, MsGraphUser>()
+  if (emails.length === 0) return result
+
+  const unique = [...new Set(emails)]
+
+  const chunks: string[][] = []
+  for (let i = 0; i < unique.length; i += CHUNK_SIZE) {
+    chunks.push(unique.slice(i, i + CHUNK_SIZE))
+  }
+
+  const responses = await Promise.allSettled(
+    chunks.map(async (chunk) => {
+      const filter = chunk.map((email) => `mail eq '${email.replace(/'/g, "''")}'`).join(' or ')
+      const params = new URLSearchParams({
+        $filter: filter,
+        $select: 'id,displayName,mail',
+      })
+      const url = `${GRAPH_BASE_URL}/users?${params.toString()}`
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!res.ok) {
+        console.error(`Graph API error: ${res.status} ${res.statusText}`)
+        return []
+      }
+      const json = await res.json()
+      return (json.value ?? []) as MsGraphUser[]
+    }),
+  )
+
+  for (const response of responses) {
+    if (response.status === 'fulfilled') {
+      for (const user of response.value) {
+        if (user.mail) {
+          result.set(user.mail.toLowerCase(), user)
+        }
       }
     }
   }
