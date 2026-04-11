@@ -67,144 +67,113 @@ function colX(r: number) { return r * (MATCH_W + H_GAP) }
 const Y_PAD = V_GAP
 
 /**
- * After computing raw centre-Y values, shift them so the topmost card
- * starts at Y_PAD from the top and recalculate totalHeight to fit.
+ * ブラケットのツリー構造から各試合のY座標を計算する。
+ *
+ * アルゴリズム:
+ *   1. 試合データからツリーを構築（各試合の2スロットが子ノード）
+ *   2. ルートを特定（他の試合から参照されない試合 = 決勝）
+ *   3. DFS で葉ノードに順番にスロット位置を割り当て
+ *   4. 内部ノード（上位ラウンド試合）は2つの子の中央に配置
+ *
+ * これにより標準ブラケット / all-play fold / play-in 等の
+ * あらゆるブラケット構造で正しいレイアウトが得られる。
  */
-function normalizePositions(
-  matchCenterY: Map<string, number>,
+function computeLayout(
+  matches: TournamentMatchView[],
+  _bracketType: BracketView['bracketType'],
 ): { matchCenterY: Map<string, number>; totalHeight: number } {
-  if (matchCenterY.size === 0) return { matchCenterY, totalHeight: SLOT_H }
+  if (matches.length === 0) return { matchCenterY: new Map(), totalHeight: SLOT_H }
 
+  // ── Step 1: lookup テーブル構築 ──
+  const matchMap = new Map<string, TournamentMatchView>()
+  for (const m of matches) matchMap.set(m.id, m)
+
+  // ── Step 2: ルート特定（他の試合から参照されない試合） ──
+  const referenced = new Set<string>()
+  for (const m of matches) {
+    if (m.slot1.sourceMatchId && matchMap.has(m.slot1.sourceMatchId)) {
+      referenced.add(m.slot1.sourceMatchId)
+    }
+    if (m.slot2.sourceMatchId && matchMap.has(m.slot2.sourceMatchId)) {
+      referenced.add(m.slot2.sourceMatchId)
+    }
+  }
+  const roots = matches
+    .filter((m) => !referenced.has(m.id))
+    .sort((a, b) => b.round - a.round)
+
+  // ── Step 3-4: DFS で Y 座標割り当て ──
+  const matchCenterY = new Map<string, number>()
+  let leafIdx = 0
+
+  function visit(matchId: string): number {
+    if (matchCenterY.has(matchId)) return matchCenterY.get(matchId)!
+
+    const match = matchMap.get(matchId)
+    if (!match) {
+      // 別ブラケットの試合 → 仮想リーフ
+      const y = leafIdx * SLOT_H + SLOT_H / 2
+      leafIdx++
+      return y
+    }
+
+    const s1Id = match.slot1.sourceMatchId
+    const s2Id = match.slot2.sourceMatchId
+    const s1InBracket = !!(s1Id && matchMap.has(s1Id))
+    const s2InBracket = !!(s2Id && matchMap.has(s2Id))
+
+    // 葉ノード: 両スロットにフィーダー試合なし（R0のSEED試合等）
+    if (!s1InBracket && !s2InBracket) {
+      const y = leafIdx * SLOT_H + SLOT_H / 2
+      leafIdx++
+      matchCenterY.set(matchId, y)
+      return y
+    }
+
+    // 片方だけフィーダー試合あり（もう片方はBYE/SEED）→ フィーダーと同じYに配置
+    // BYEに仮想リーフを割り当てないことで、線が水平になりコンパクトに収まる
+    if (s1InBracket && !s2InBracket) {
+      const y = visit(s1Id!)
+      matchCenterY.set(matchId, y)
+      return y
+    }
+    if (!s1InBracket && s2InBracket) {
+      const y = visit(s2Id!)
+      matchCenterY.set(matchId, y)
+      return y
+    }
+
+    // 両方フィーダー試合あり → 2つの子の中央に配置
+    const topY = visit(s1Id!)
+    const botY = visit(s2Id!)
+    const y = (topY + botY) / 2
+    matchCenterY.set(matchId, y)
+    return y
+  }
+
+  for (const root of roots) {
+    visit(root.id)
+  }
+
+  // 孤立試合の安全策
+  for (const m of matches) {
+    if (!matchCenterY.has(m.id)) {
+      matchCenterY.set(m.id, leafIdx * SLOT_H + SLOT_H / 2)
+      leafIdx++
+    }
+  }
+
+  // ── 正規化: 上端をパディングに揃え、高さを算出 ──
+  if (matchCenterY.size === 0) return { matchCenterY, totalHeight: SLOT_H }
   const allY = Array.from(matchCenterY.values())
   const minCenter = Math.min(...allY)
   const maxCenter = Math.max(...allY)
-
-  // Shift so the topmost card's top edge sits at Y_PAD
   const offset = minCenter - MATCH_H / 2 - Y_PAD
   for (const [k, v] of matchCenterY) {
     matchCenterY.set(k, v - offset)
   }
   const totalHeight = (maxCenter - offset) + MATCH_H / 2 + Y_PAD
   return { matchCenterY, totalHeight }
-}
-
-function computeLayout(
-  matches: TournamentMatchView[],
-  bracketType: BracketView['bracketType'],
-): { matchCenterY: Map<string, number>; totalHeight: number } {
-  if (matches.length === 0) return { matchCenterY: new Map(), totalHeight: SLOT_H }
-
-  const maxRound = Math.max(...matches.map((m) => m.round))
-  const rounds: TournamentMatchView[][] = Array.from({ length: maxRound + 1 }, (_, r) =>
-    matches.filter((m) => m.round === r),
-  )
-
-  // ── MAIN bracket positioning ──────────────────────────
-  if (bracketType === 'MAIN') {
-    let maxSeed = 0
-    for (const m of matches) {
-      for (const slot of [m.slot1, m.slot2]) {
-        if (slot.sourceType === 'SEED' && slot.seedNumber != null) {
-          maxSeed = Math.max(maxSeed, slot.seedNumber)
-        }
-      }
-    }
-
-    if (maxSeed > 0) {
-      // round 0のマッチ数が標準ブラケット（2の冪/2）かどうかで判定
-      const round0Count = rounds[0]?.length ?? 0
-      const bracketSize = nextPow2(maxSeed)
-      const isStandardLayout = round0Count > 0 && round0Count === bracketSize / 2
-
-      if (isStandardLayout) {
-        // ── 標準ブラケット / p-bracket: seed-order-based ──
-        const order = getSeedOrder(bracketSize)
-        const seedPos = new Map<number, number>()
-        order.forEach((s, i) => seedPos.set(s, i))
-
-        const seedCenterY = (seedNumber: number) => {
-          const pos = seedPos.get(seedNumber) ?? 0
-          return (Math.floor(pos / 2) + 0.5) * SLOT_H
-        }
-
-        const matchCenterY = new Map<string, number>()
-        for (let r = 0; r <= maxRound; r++) {
-          for (const m of rounds[r]) {
-            const y = (slot: TournamentSlotView): number => {
-              if (slot.sourceType === 'SEED' && slot.seedNumber != null) return seedCenterY(slot.seedNumber)
-              if (slot.sourceMatchId) return matchCenterY.get(slot.sourceMatchId) ?? 0
-              return 0
-            }
-            const y1 = y(m.slot1)
-            const y2 = y(m.slot2)
-            const isByeSlot1 = m.slot1.sourceType === 'SEED' && !m.slot1.sourceMatchId && r > 0
-            const isByeSlot2 = m.slot2.sourceType === 'SEED' && !m.slot2.sourceMatchId && r > 0
-            const isMatchSlot1 = !!m.slot1.sourceMatchId
-            const isMatchSlot2 = !!m.slot2.sourceMatchId
-            if (isByeSlot1 && isMatchSlot2) {
-              matchCenterY.set(m.id, y2)
-            } else if (isByeSlot2 && isMatchSlot1) {
-              matchCenterY.set(m.id, y1)
-            } else {
-              matchCenterY.set(m.id, (y1 + y2) / 2)
-            }
-          }
-        }
-        return normalizePositions(matchCenterY)
-      }
-
-      // ── all-play fold / コンパクトブラケット: feeder-based ──
-      // Round 0をスタック、Round 1以降はフィーダーの平均Y
-      const matchCenterY = new Map<string, number>()
-      rounds[0].forEach((m, i) => matchCenterY.set(m.id, i * SLOT_H + SLOT_H / 2))
-      for (let r = 1; r <= maxRound; r++) {
-        for (const m of rounds[r]) {
-          const feederYs: number[] = []
-          for (const slot of [m.slot1, m.slot2]) {
-            if (slot.sourceMatchId && matchCenterY.has(slot.sourceMatchId)) {
-              feederYs.push(matchCenterY.get(slot.sourceMatchId)!)
-            }
-          }
-          if (feederYs.length > 0) {
-            matchCenterY.set(m.id, feederYs.reduce((a, b) => a + b, 0) / feederYs.length)
-          } else {
-            matchCenterY.set(m.id, rounds[r].indexOf(m) * SLOT_H + SLOT_H / 2)
-          }
-        }
-      }
-      return normalizePositions(matchCenterY)
-    }
-  }
-
-  // ── SUB bracket (or fallback): feeder-based positioning ──
-  // Round 0 matches are stacked vertically.
-  // Later rounds center on their feeder matches within this bracket.
-  const matchCenterY = new Map<string, number>()
-
-  // Place round 0
-  rounds[0].forEach((m, i) => matchCenterY.set(m.id, i * SLOT_H + SLOT_H / 2))
-
-  // Place subsequent rounds based on feeder positions
-  for (let r = 1; r <= maxRound; r++) {
-    for (const m of rounds[r]) {
-      const feederYs: number[] = []
-      for (const slot of [m.slot1, m.slot2]) {
-        if (slot.sourceMatchId && matchCenterY.has(slot.sourceMatchId)) {
-          feederYs.push(matchCenterY.get(slot.sourceMatchId)!)
-        }
-      }
-      if (feederYs.length > 0) {
-        // Center between feeder matches in this bracket
-        matchCenterY.set(m.id, feederYs.reduce((a, b) => a + b, 0) / feederYs.length)
-      } else {
-        // No feeders in this bracket (e.g., MATCH_LOSER from main bracket) — stack
-        const sh = SLOT_H * Math.pow(2, r)
-        const idx = rounds[r].indexOf(m)
-        matchCenterY.set(m.id, idx * sh + sh / 2)
-      }
-    }
-  }
-  return normalizePositions(matchCenterY)
 }
 
 // ─── Helpers ────────────────────────────────────────────
@@ -450,11 +419,14 @@ function BracketTree({ matches, bracketType, onMatchClick, onSeedClick, onSwapMa
       const f1Y = match.slot1.sourceMatchId ? (matchCenterY.get(match.slot1.sourceMatchId) ?? null) : null
       const f2Y = match.slot2.sourceMatchId ? (matchCenterY.get(match.slot2.sourceMatchId) ?? null) : null
 
-      // フィーダーの実際のラウンドからX座標を計算（非隣接ラウンド対応）
+      // フィーダーのX座標を計算。
+      // 非隣接ラウンド（all-play fold等でラウンドを飛び越えるフィーダー）は
+      // 直前ラウンド列の右端を起点にして、長い水平線が中間列を横断するのを防ぐ。
+      const prevColRightX = colX(r - 1) + MATCH_W
       const f1Round = match.slot1.sourceMatchId ? matchRoundMap.get(match.slot1.sourceMatchId) : undefined
       const f2Round = match.slot2.sourceMatchId ? matchRoundMap.get(match.slot2.sourceMatchId) : undefined
-      const f1RightX = f1Round != null ? colX(f1Round) + MATCH_W : colX(r - 1) + MATCH_W
-      const f2RightX = f2Round != null ? colX(f2Round) + MATCH_W : colX(r - 1) + MATCH_W
+      const f1RightX = f1Round != null ? Math.max(colX(f1Round) + MATCH_W, prevColRightX) : prevColRightX
+      const f2RightX = f2Round != null ? Math.max(colX(f2Round) + MATCH_W, prevColRightX) : prevColRightX
 
       // フィーダー試合の勝者が決まっている場合、その線をハイライト
       const f1Winner = match.slot1.sourceMatchId ? matchWinnerMap.get(match.slot1.sourceMatchId) : null
@@ -462,11 +434,21 @@ function BracketTree({ matches, bracketType, onMatchClick, onSeedClick, onSwapMa
       const f1Highlighted = !!(f1Winner && match.slot1.teamId && f1Winner === match.slot1.teamId)
       const f2Highlighted = !!(f2Winner && match.slot2.teamId && f2Winner === match.slot2.teamId)
 
+      // 非隣接ラウンドのフィーダー→直前列右端までウォークオーバー線を描画
+      const f1ActualRightX = f1Round != null ? colX(f1Round) + MATCH_W : prevColRightX
+      const f2ActualRightX = f2Round != null ? colX(f2Round) + MATCH_W : prevColRightX
+      if (f1Y != null && f1ActualRightX < prevColRightX) {
+        pathEntries.push({ d: `M ${f1ActualRightX} ${f1Y} L ${prevColRightX} ${f1Y}`, highlighted: f1Highlighted })
+      }
+      if (f2Y != null && f2ActualRightX < prevColRightX) {
+        pathEntries.push({ d: `M ${f2ActualRightX} ${f2Y} L ${prevColRightX} ${f2Y}`, highlighted: f2Highlighted })
+      }
+
       if (f1Y != null && f2Y != null) {
         const midX = leftX - H_GAP / 2
         const topY = Math.min(f1Y, f2Y)
         const botY = Math.max(f1Y, f2Y)
-        // フィーダー1→中間（フィーダーの実際の列から描画）
+        // フィーダー1→中間
         pathEntries.push({ d: `M ${f1RightX} ${f1Y} L ${midX} ${f1Y}`, highlighted: f1Highlighted })
         // フィーダー2→中間
         pathEntries.push({ d: `M ${f2RightX} ${f2Y} L ${midX} ${f2Y}`, highlighted: f2Highlighted })
@@ -483,9 +465,19 @@ function BracketTree({ matches, bracketType, onMatchClick, onSeedClick, onSwapMa
         // 中間→次の試合
         pathEntries.push({ d: `M ${midX} ${parentY} L ${leftX} ${parentY}`, highlighted: f1Highlighted || f2Highlighted })
       } else if (f1Y != null || f2Y != null) {
+        // 片方のフィーダーのみ存在する場合: L字コネクタで正しく接続
+        const feederY = f1Y ?? f2Y!
         const feederRightX = f1Y != null ? f1RightX : f2RightX
         const isHighlighted = (f1Y != null && f1Highlighted) || (f2Y != null && f2Highlighted)
-        pathEntries.push({ d: `M ${feederRightX} ${parentY} L ${leftX} ${parentY}`, highlighted: isHighlighted })
+        const midX = leftX - H_GAP / 2
+        // フィーダーから中間点へ水平線
+        pathEntries.push({ d: `M ${feederRightX} ${feederY} L ${midX} ${feederY}`, highlighted: isHighlighted })
+        // フィーダーY と parentY が異なる場合は垂直線で接続
+        if (Math.abs(feederY - parentY) > 1) {
+          pathEntries.push({ d: `M ${midX} ${feederY} L ${midX} ${parentY}`, highlighted: isHighlighted })
+        }
+        // 中間点から次の試合へ水平線
+        pathEntries.push({ d: `M ${midX} ${parentY} L ${leftX} ${parentY}`, highlighted: isHighlighted })
       }
       // 両スロットがSEED（フィーダー試合なし）の場合は左側の線を描画しない
     }

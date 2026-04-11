@@ -6,7 +6,10 @@ import type { BracketView, TournamentMatchView, TournamentSlotView, TournamentDe
  *
  * 各 Match は 2つの MatchEntry を持ち、各 TournamentSlot は matchEntry で
  * どの MatchEntry に対応するかを示す。
- * round は SEED スロット → 0、MATCH_WINNER/LOSER → sourceMatch.round + 1 で計算する。
+ * round は SEED スロット → 0、MATCH_WINNER/LOSER → sourceMatch.round + 1 で
+ * トポロジカルソートにより算出する。
+ * バックエンドが全てのブラケット構造（標準 / all-play fold / play-in）で
+ * 正しい試合ツリーを生成するため、追加のラウンド補正は不要。
  */
 function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTournamentQuery>['data']>['tournament']): BracketView {
   if (!tournament) {
@@ -24,7 +27,7 @@ function buildBracket(tournament: NonNullable<ReturnType<typeof useGetAdminTourn
     }
   }
 
-  // Match.id → round の計算（トポロジカル順：前方パス）
+  // Match.id → round の計算（トポロジカルソート）
   const matchRound = new Map<string, number>()
   let changed = true
   while (changed) {
