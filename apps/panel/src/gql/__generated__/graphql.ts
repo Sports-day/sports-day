@@ -1375,10 +1375,12 @@ export type UpdateTournamentInput = {
 
 export type User = {
   __typename?: 'User';
+  email?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   identify: UserIdentify;
   judgments: Array<Judgment>;
+  name?: Maybe<Scalars['String']['output']>;
   role: Role;
   teams: Array<Team>;
 };
@@ -1399,7 +1401,7 @@ export type GetPanelGroupQueryVariables = Exact<{
 }>;
 
 
-export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1510,31 +1512,31 @@ export type GetPanelSceneQuery = { __typename?: 'Query', scene: { __typename?: '
 export type GetPanelTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> };
+export type GetPanelTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> };
 
 export type GetPanelTeamQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type GetPanelTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type GetPanelMeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetPanelMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type GetPanelUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
+export type GetPanelUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
 
 export type GetPanelUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetPanelUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 
 export const GetPanelGroupsDocument = gql`
@@ -1584,6 +1586,8 @@ export const GetPanelGroupDocument = gql`
     name
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2480,6 +2484,8 @@ export const GetPanelTeamsDocument = gql`
     }
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2530,6 +2536,8 @@ export const GetPanelTeamDocument = gql`
     }
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2574,6 +2582,8 @@ export const GetPanelMeDocument = gql`
     query GetPanelMe {
   me {
     id
+    name
+    email
     identify {
       microsoftUserId
     }
@@ -2624,6 +2634,8 @@ export const GetPanelUsersDocument = gql`
     query GetPanelUsers {
   users {
     id
+    name
+    email
     identify {
       microsoftUserId
     }
@@ -2670,6 +2682,8 @@ export const GetPanelUserDocument = gql`
     query GetPanelUser($id: ID!) {
   user(id: $id) {
     id
+    name
+    email
     identify {
       microsoftUserId
     }

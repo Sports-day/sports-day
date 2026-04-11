@@ -28,8 +28,8 @@ export const useFetchUsers = () => {
         const msUser = msId ? msGraphUsers.get(msId) : undefined;
         return {
           ...u,
-          name: msUser?.displayName ?? '',
-          email: msUser?.mail ?? '',
+          name: msUser?.displayName ?? u.name ?? '',
+          email: msUser?.mail ?? u.email ?? '',
         };
       }),
     [data, msGraphUsers],
