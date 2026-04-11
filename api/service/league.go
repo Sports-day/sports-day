@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"math"
 	"sort"
 	"time"
 
@@ -666,26 +665,51 @@ func needsAveraging(stats []*teamStats) bool {
 	return false
 }
 
-// getValue は条件キーに応じたチームの値を返す（平均化対応）
-func getValue(s *teamStats, conditionKey string, useAverage bool) float64 {
-	if s.MatchesPlayed == 0 {
-		return 0
-	}
-	var raw float64
+// getRawValue は条件キーに応じたチームの生値（整数）を返す
+func getRawValue(s *teamStats, conditionKey string) int {
 	switch conditionKey {
 	case "WIN_POINTS":
-		raw = float64(s.Points)
+		return s.Points
 	case "GOAL_DIFF":
-		raw = float64(s.GoalsFor - s.GoalsAgainst)
+		return s.GoalsFor - s.GoalsAgainst
 	case "TOTAL_GOALS":
-		raw = float64(s.GoalsFor)
+		return s.GoalsFor
 	default:
 		return 0
 	}
-	if useAverage {
-		return raw / float64(s.MatchesPlayed)
+}
+
+// compareValues は2チームの値を通分比較する（整数演算のみ、float誤差なし）
+// useAverage 時は a/b vs c/d を a*d vs c*b に変換して比較する
+// 戻り値: 正=iが大きい, 負=jが大きい, 0=等しい
+func compareValues(si, sj *teamStats, conditionKey string, useAverage bool) int {
+	ri, rj := getRawValue(si, conditionKey), getRawValue(sj, conditionKey)
+	if !useAverage || (si.MatchesPlayed == 0 && sj.MatchesPlayed == 0) {
+		return ri - rj
 	}
-	return raw
+	// MatchesPlayed == 0 のチームは率0として扱い、相手の率の符号で比較する
+	if si.MatchesPlayed == 0 {
+		// si の率は 0。相手 rj/sj.MatchesPlayed の符号と比較
+		// sj.MatchesPlayed > 0 なので rj の符号 = 率の符号
+		if rj > 0 {
+			return -1 // 0 < 正の率
+		} else if rj < 0 {
+			return 1 // 0 > 負の率
+		}
+		return 0 // 0 == 0
+	}
+	if sj.MatchesPlayed == 0 {
+		if ri > 0 {
+			return 1 // 正の率 > 0
+		} else if ri < 0 {
+			return -1 // 負の率 < 0
+		}
+		return 0 // 0 == 0
+	}
+	// a/b vs c/d → a*d vs c*b （b,d > 0 なので不等号の向きは保存される）
+	lhs := ri * sj.MatchesPlayed
+	rhs := rj * si.MatchesPlayed
+	return lhs - rhs
 }
 
 // splitByValue はグループを条件値でサブグループに分離する（降順）
@@ -694,17 +718,16 @@ func splitByValue(group []*teamStats, conditionKey string, useAverage bool) [][]
 		return [][]*teamStats{group}
 	}
 
-	// 降順ソート
+	// 降順ソート（整数の通分比較）
 	sort.SliceStable(group, func(i, j int) bool {
-		return getValue(group[i], conditionKey, useAverage) > getValue(group[j], conditionKey, useAverage)
+		return compareValues(group[i], group[j], conditionKey, useAverage) > 0
 	})
 
-	// 同値でグルーピング（浮動小数点誤差を考慮した epsilon 比較）
-	const epsilon = 1e-9
+	// 同値でグルーピング（整数比較なので誤差なし）
 	var subgroups [][]*teamStats
 	current := []*teamStats{group[0]}
 	for i := 1; i < len(group); i++ {
-		if math.Abs(getValue(group[i], conditionKey, useAverage)-getValue(group[i-1], conditionKey, useAverage)) < epsilon {
+		if compareValues(group[i], group[i-1], conditionKey, useAverage) == 0 {
 			current = append(current, group[i])
 		} else {
 			subgroups = append(subgroups, current)

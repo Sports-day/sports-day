@@ -28,7 +28,7 @@ func (r *sportsRepository) Get(ctx context.Context, db *gorm.DB, id string) (*db
 
 func (r *sportsRepository) List(ctx context.Context, db *gorm.DB) ([]*db_model.Sport, error) {
 	var sports []*db_model.Sport
-	if err := db.Order("display_order ASC, created_at ASC").Find(&sports).Error; err != nil {
+	if err := db.Order("display_order ASC").Find(&sports).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return sports, nil
