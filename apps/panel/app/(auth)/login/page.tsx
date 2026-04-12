@@ -6,10 +6,14 @@ import LoginButton from "@/components/auth/LoginButton";
 import WiderLogo from "@/components/layouts/logo/widerlogo";
 import PrivacyPolicyDrawer from "@/components/layouts/privacyPolicyDrawer";
 import {useTheme} from "@mui/material/styles";
+import {useLocation} from "react-router-dom";
 
 
 export default function Page() {
     const theme = useTheme();
+    const location = useLocation();
+    const from = (location.state as { from?: { pathname: string; search: string } })?.from;
+    const fromPath = from ? `${from.pathname}${from.search ?? ''}` : undefined;
     return (
         <AnimatePresence mode={"wait"}>
             <Stack height="100vh" width="100vw" justifyContent="center" alignItems="center"
@@ -77,7 +81,7 @@ export default function Page() {
                             >
                                 <Container maxWidth={"xs"}>
                                     <Box sx={{justifyContent: "center", width: "100%", mt:2}}>
-                                        <LoginButton/>
+                                        <LoginButton from={fromPath}/>
                                         <PrivacyPolicyDrawer transparent>
                                             <Typography fontSize={"14px"} py={1} color={theme.palette.text.secondary}>
                                                 プライバシーポリシー

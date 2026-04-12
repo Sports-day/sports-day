@@ -16,7 +16,12 @@ export default function AuthCallbackPage() {
     isRunning.current = true
 
     userManager.signinRedirectCallback()
-      .then(() => navigate('/', { replace: true }))
+      .then((user) => {
+        const target = (typeof user?.state === 'string' && user.state.startsWith('/'))
+          ? user.state
+          : '/'
+        navigate(target, { replace: true })
+      })
       .catch((err) => {
         console.error('OIDC callback error:', err)
         navigate('/login')
