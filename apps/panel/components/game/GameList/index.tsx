@@ -1,7 +1,7 @@
 import {Box, Stack, Tab, Tabs, Typography, useTheme} from "@mui/material";
 import * as React from "react";
 import {GameListContent} from "./GameListContent";
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import {motion} from "framer-motion";
 import { type GetPanelCompetitionsQuery, CompetitionType } from "@/src/gql/__generated__/graphql";
 import {LeagueRankList} from "@/components/game/RankList/LeagueRankList";
@@ -59,7 +59,7 @@ export const GameList = (props: GameListProps) => {
 
 
 
-    const sortedGame = [...props.games]
+    const sortedGame = useMemo(() => [...props.games], [props.games])
 
     useEffect(() => {
         //  set tab value if game id not undefined

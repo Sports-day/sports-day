@@ -31,8 +31,8 @@ export function useMsGraphUsers(microsoftUserIds: string[]) {
         if (cancelled) return
 
         setMsGraphUsers(result)
-      } catch (e) {
-        console.error('Failed to fetch MS Graph users:', e)
+      } catch {
+        // MS Graph API失敗はサイレントに処理（表示名がフォールバック値になる）
       } finally {
         if (!cancelled) setLoading(false)
       }

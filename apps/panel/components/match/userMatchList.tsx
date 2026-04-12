@@ -29,7 +29,6 @@ export const UserMatchList = (props: UserMatchListProps) => {
                 .sort((a, b) => a.time.localeCompare(b.time))
                 .map((match) => {
                     return (
-                        <>
                             <GamePointBar
                                 key={match.id}
                                 match={match}
@@ -37,7 +36,6 @@ export const UserMatchList = (props: UserMatchListProps) => {
                                 myTeamId={userTeam?.id}
                                 otherUser={true}
                             />
-                        </>
                     )
                 }
             )}

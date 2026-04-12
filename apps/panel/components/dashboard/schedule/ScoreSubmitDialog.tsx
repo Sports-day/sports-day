@@ -10,13 +10,27 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import { useTheme } from "@mui/material/styles";
-import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import { useSubmitPanelMatchScoreMutation } from "@/src/gql/__generated__/graphql";
 
-type PanelMatch = GetPanelMatchesQuery["matches"][number];
+/**
+ * ScoreSubmitDialog が必要とする最小限のmatch型。
+ * GET_MATCHES / nextJudgeMatchAtLocation / startMatchJudging の
+ * いず���の結果からも渡せるようにする。
+ */
+type ScoreSubmitMatch = {
+  id: string;
+  entries: ReadonlyArray<{
+    id: string;
+    team?: { id: string; name: string } | null;
+    score: number;
+  }>;
+  competition: {
+    type: string;
+  };
+};
 
 type Props = {
-  match: PanelMatch;
+  match: ScoreSubmitMatch;
   open: boolean;
   onClose: () => void;
   onSubmitSuccess?: () => void;
@@ -54,7 +68,7 @@ export const ScoreSubmitDialog = ({ match, open, onClose, onSubmitSuccess }: Pro
     }
 
     // トーナメントの引き分けチェック
-    const isTournament = match.competition.type === "TOURNAMENT";
+    const isTournament = match.competition?.type === "TOURNAMENT";
     if (isTournament && s0 === s1) {
       setError("トーナメントでは引き分けは許可されていません。スコアを修正してください");
       return;

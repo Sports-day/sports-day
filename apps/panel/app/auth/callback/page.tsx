@@ -22,8 +22,7 @@ export default function AuthCallbackPage() {
           : '/'
         navigate(target, { replace: true })
       })
-      .catch((err) => {
-        console.error('OIDC callback error:', err)
+      .catch(() => {
         navigate('/login')
       })
   }, [navigate])

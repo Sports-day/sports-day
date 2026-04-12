@@ -27,6 +27,8 @@ export function useJudgeFlow(locationId: string): JudgeFlowResult {
   const [currentMatch, setCurrentMatch] = useState<JudgeMatch | null>(null);
   const [error, setError] = useState<string | null>(null);
   const hasSubmittedRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const MAX_RETRY = 10;
 
   const [fetchMatch] = useGetJudgeMatchAtLocationLazyQuery({
     fetchPolicy: "network-only",
@@ -44,6 +46,7 @@ export function useJudgeFlow(locationId: string): JudgeFlowResult {
 
       if (!match) {
         setState(hasSubmittedRef.current ? "done" : "no-match");
+        retryCountRef.current = 0;
         return;
       }
 
@@ -51,6 +54,7 @@ export function useJudgeFlow(locationId: string): JudgeFlowResult {
       if (match.status === "ONGOING" && match.judgment?.isAttending) {
         setCurrentMatch(match);
         setState("ready");
+        retryCountRef.current = 0;
         return;
       }
 
@@ -64,6 +68,7 @@ export function useJudgeFlow(locationId: string): JudgeFlowResult {
       if (updated) {
         setCurrentMatch(updated as JudgeMatch);
         setState("ready");
+        retryCountRef.current = 0;
       } else {
         setState("error");
         setError("試合の開始に失敗しました");
@@ -73,8 +78,14 @@ export function useJudgeFlow(locationId: string): JudgeFlowResult {
       if (message.includes("NOT_ASSIGNED_REFEREE")) {
         setState("no-match");
       } else if (message.includes("MATCH_ALREADY_FINISHED")) {
-        // 既にFINISHED → 次の試合を探す（再帰）
-        findAndStartMatch();
+        // 既にFINISHED → 次の試合を探す（再帰、上限あり）
+        retryCountRef.current += 1;
+        if (retryCountRef.current < MAX_RETRY) {
+          findAndStartMatch();
+        } else {
+          setState("no-match");
+          retryCountRef.current = 0;
+        }
       } else {
         setState("error");
         setError(message || "エラーが発生しました");

@@ -104,11 +104,11 @@ export default function Page() {
     }, [sport?.name])
 
     //  set focusedGameId when games is loaded
-    if (!isFetching && focusedGameId === null) {
-        if (games.length > 0) {
+    useEffect(() => {
+        if (!isFetching && focusedGameId === null && games.length > 0) {
             setFocusedGameId(games[0].id)
         }
-    }
+    }, [isFetching, games, focusedGameId])
 
     useInterval(
         () => {
@@ -125,23 +125,25 @@ export default function Page() {
         setOpen(false);
     };
 
-    {isFetching && (
-        <motion.div
-            key={"loading"}
-            initial={{opacity: 0, y:-150}}
-            animate={{opacity: 0.5, y:0}}
-            exit={{opacity: 0}}
-            transition={{duration: 1, ease: [0, 0.5, 0, 1]}}
-        >
-            <CircleContainer>
-                <Container maxWidth={"xl"}>
-                    <Box py={7} px={2}>
-                        <LinearProgress />
-                    </Box>
-                </Container>
-            </CircleContainer>
-        </motion.div>
-    )}
+    if (isFetching) {
+        return (
+            <motion.div
+                key={"loading"}
+                initial={{opacity: 0, y:-150}}
+                animate={{opacity: 0.5, y:0}}
+                exit={{opacity: 0}}
+                transition={{duration: 1, ease: [0, 0.5, 0, 1]}}
+            >
+                <CircleContainer>
+                    <Container maxWidth={"xl"}>
+                        <Box py={7} px={2}>
+                            <LinearProgress />
+                        </Box>
+                    </Container>
+                </CircleContainer>
+            </motion.div>
+        )
+    }
 
     if (!sport) {
         return null

@@ -10,16 +10,20 @@ import { onError } from "@apollo/client/link/error";
 import { setContext } from "@apollo/client/link/context";
 import { userManager } from "@/src/lib/userManager";
 
-const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
-    if (graphQLErrors) {
-        graphQLErrors
-            .filter(({ message }) => !message.includes('LEAGUE_NOT_FOUND'))
-            .forEach(({ message, path }) =>
-                console.error(`[GraphQL error]: Message: ${message}, Path: ${path}, Operation: ${operation.operationName}`)
-            );
-    }
-    if (networkError) {
-        console.error(`[Network error]: ${networkError}, Operation: ${operation.operationName}`);
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+    // エラーはApolloのキャッシュ・hookレベルで処理されるため、
+    // コンソールへの出力は開発時のみに限定する
+    if (import.meta.env.DEV) {
+        if (graphQLErrors) {
+            graphQLErrors
+                .filter(({ message }) => !message.includes('LEAGUE_NOT_FOUND'))
+                .forEach(({ message, path }) =>
+                    console.warn(`[GraphQL error]: ${message}, Path: ${path}`)
+                );
+        }
+        if (networkError) {
+            console.warn(`[Network error]: ${networkError}`);
+        }
     }
 });
 
