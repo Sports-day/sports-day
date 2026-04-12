@@ -7,10 +7,12 @@ import {
   useGetAdminCompetitionsQuery,
   useGetAdminPromotionRulesQuery,
   useGetAdminSportsWithScenesQuery,
+  useGetAdminLocationsForMatchesQuery,
   useUpdateAdminTournamentMutation,
   useDeleteAdminTournamentMutation,
   useUpdateAdminCompetitionMutation,
   useDeleteAdminCompetitionMutation,
+  useApplyAdminCompetitionDefaultsMutation,
   GetAdminCompetitionsDocument,
   useCreateAdminPromotionRuleMutation,
   useDeleteAdminPromotionRuleMutation,
@@ -82,6 +84,30 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     [competitionTeams],
   )
 
+  // ─── デフォルト設定 ─────────────────────────────────
+  const { data: locData } = useGetAdminLocationsForMatchesQuery()
+  const locations = (locData?.locations ?? []).map(l => ({ id: l.id, name: l.name }))
+
+  const serverStartTime = competition?.startTime ? toDatetimeLocal(competition.startTime) : ''
+  const serverMatchDuration = competition?.matchDuration ?? 15
+  const serverBreakDuration = competition?.breakDuration ?? 5
+  const serverLocationId = competition?.defaultLocation?.id ?? ''
+
+  const [editStartTime, setEditStartTime] = useState<string | null>(null)
+  const [editMatchDuration, setEditMatchDuration] = useState<number | null>(null)
+  const [editBreakDuration, setEditBreakDuration] = useState<number | null>(null)
+  const [editLocationId, setEditLocationId] = useState<string | null>(null)
+
+  const defaultsForm = {
+    startTime: editStartTime ?? serverStartTime,
+    matchDuration: editMatchDuration ?? serverMatchDuration,
+    breakDuration: editBreakDuration ?? serverBreakDuration,
+    locationId: editLocationId ?? serverLocationId,
+  }
+
+  const defaultsDirty = editStartTime !== null || editMatchDuration !== null
+    || editBreakDuration !== null || editLocationId !== null
+
   // ─── ユーザー編集差分（null = 未編集 → サーバー値を使う） ───
   const [editName, setEditName] = useState<string | null>(null)
   const [editSportId, setEditSportId] = useState<string | null>(null)
@@ -147,6 +173,9 @@ export function useTournamentEdit(competitionId: string, competitionName: string
   const [updateSlotConnection] = useUpdateAdminSlotConnectionMutation({
     refetchQueries: ['GetAdminTournament'],
   })
+  const [applyDefaults] = useApplyAdminCompetitionDefaultsMutation({
+    refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+  })
   const [updateCompetition] = useUpdateAdminCompetitionMutation()
   const [deleteCompetition] = useDeleteAdminCompetitionMutation({
     refetchQueries: [{ query: GetAdminCompetitionsDocument }],
@@ -202,7 +231,7 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     })
 
   const dirty = editName !== null || editSportId !== null || editSceneId !== null
-    || bracketNeedsGeneration || bracketChanged || progressionDirty
+    || bracketNeedsGeneration || bracketChanged || progressionDirty || defaultsDirty
 
   // ─── ハンドラー ─────────────────────────────────────
   const handleChange = (field: 'name' | 'sportId' | 'sceneId' | 'teamCount' | 'placementMethod') => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -270,12 +299,31 @@ export function useTournamentEdit(competitionId: string, competitionName: string
       setSavedProgressionRules(desiredRules)
     }
 
+    // デフォルト設定を試合に適用
+    if (defaultsDirty) {
+      await applyDefaults({
+        variables: {
+          id: competitionId,
+          input: {
+            startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : undefined,
+            matchDuration: defaultsForm.matchDuration,
+            breakDuration: defaultsForm.breakDuration,
+            locationId: defaultsForm.locationId || undefined,
+          },
+        },
+      })
+    }
+
     // 保存完了 → 編集差分をクリア（サーバー値に戻る）
     setEditName(null)
     setEditSportId(null)
     setEditSceneId(null)
     setEditTeamCount(null)
     setEditPlacementMethod(null)
+    setEditStartTime(null)
+    setEditMatchDuration(null)
+    setEditBreakDuration(null)
+    setEditLocationId(null)
   }
 
   const handleDelete = async () => {
@@ -414,6 +462,12 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     progressionRules,
     availableProgressionTargets,
     subBrackets,
+    defaultsForm,
+    locations,
+    setEditStartTime,
+    setEditMatchDuration,
+    setEditBreakDuration,
+    setEditLocationId,
     handleChange,
     handleSave,
     handleDelete,
@@ -430,4 +484,10 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     handleRegenerateSubBracket,
     handleUpdateSlotSource,
   }
+}
+
+function toDatetimeLocal(isoString: string): string {
+  const d = new Date(isoString)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
