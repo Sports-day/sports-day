@@ -14,16 +14,46 @@ type roleCacheEntry struct {
 // RoleCache は userID → role のインメモリキャッシュ。
 // sync.RWMutex で並行安全を確保している。
 type RoleCache struct {
-	mu    sync.RWMutex
-	ttl   time.Duration
-	cache map[string]roleCacheEntry
+	mu      sync.RWMutex
+	ttl     time.Duration
+	cache   map[string]roleCacheEntry
+	stopCh  chan struct{}
 }
 
 // NewRoleCache は RoleCache を初期化して返す。ttlSeconds でキャッシュの有効期間（秒）を指定する。
 func NewRoleCache(ttlSeconds int) *RoleCache {
-	return &RoleCache{
-		ttl:   time.Duration(ttlSeconds) * time.Second,
-		cache: make(map[string]roleCacheEntry),
+	rc := &RoleCache{
+		ttl:    time.Duration(ttlSeconds) * time.Second,
+		cache:  make(map[string]roleCacheEntry),
+		stopCh: make(chan struct{}),
+	}
+	go rc.purgeLoop()
+	return rc
+}
+
+// Stop は purgeLoop ゴルーチンを停止する。
+func (c *RoleCache) Stop() {
+	close(c.stopCh)
+}
+
+// purgeLoop は定期的に期限切れエントリを削除する。
+func (c *RoleCache) purgeLoop() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-c.stopCh:
+			return
+		case <-ticker.C:
+			c.mu.Lock()
+			now := time.Now()
+			for k, v := range c.cache {
+				if now.After(v.expiry) {
+					delete(c.cache, k)
+				}
+			}
+			c.mu.Unlock()
+		}
 	}
 }
 

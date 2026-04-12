@@ -10,7 +10,7 @@ import (
 func NewVerifier(ctx context.Context, issuerURL string, clientID string) (*oidc.IDTokenVerifier, error) {
 	provider, err := oidc.NewProvider(ctx, issuerURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create provider")
+		return nil, fmt.Errorf("failed to create provider: %w", err)
 	}
 
 	return provider.Verifier(&oidc.Config{

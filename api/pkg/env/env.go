@@ -17,7 +17,7 @@ type Env struct {
 	Server struct {
 		Host        string   `envconfig:"SERVER_HOST" default:"127.0.0.1"`
 		Port        int      `envconfig:"SERVER_PORT" default:"8080"`
-		CORSOrigins []string `envconfig:"SERVER_CORS_ORIGINS" default:"*"`
+		CORSOrigins []string `envconfig:"SERVER_CORS_ORIGINS" required:"true"`
 	}
 	Auth struct {
 		IssuerURL    string `envconfig:"AUTH_ISSUER_URL" required:"true"`
@@ -31,7 +31,7 @@ type Env struct {
 		Bucket         string `envconfig:"STORAGE_BUCKET"`
 		AccessKey      string `envconfig:"STORAGE_ACCESS_KEY"`
 		SecretKey      string `envconfig:"STORAGE_SECRET_KEY"`
-		WebhookSecret  string `envconfig:"STORAGE_WEBHOOK_SECRET"`
+		WebhookSecret  string `envconfig:"STORAGE_WEBHOOK_SECRET" required:"true"`
 	}
 
 	Debug bool `envconfig:"DEBUG" default:"false"`
@@ -40,10 +40,8 @@ type Env struct {
 var _env Env
 
 func Load() error {
-	// load dotenv
-	if err := godotenv.Load(); err != nil {
-		return errors.Wrap(err)
-	}
+	// load dotenv (.env ファイルが存在する場合のみ読み込む)
+	_ = godotenv.Load()
 	// load env
 	if err := envconfig.Process("", &_env); err != nil {
 		return errors.Wrap(err)

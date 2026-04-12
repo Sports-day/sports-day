@@ -18,7 +18,16 @@ var (
 func Make() string {
 	mu.Lock()
 	defer mu.Unlock()
-	return ulid.MustNew(ulid.Now(), entropy).String()
+	id, err := ulid.New(ulid.Now(), entropy)
+	if err != nil {
+		// エントロピー枯渇時はソースをリセットして再生成
+		entropy = ulid.Monotonic(rand.New(rand.NewSource(time.Now().UnixNano())), 0)
+		id, err = ulid.New(ulid.Now(), entropy)
+		if err != nil {
+			panic("ulid: failed to generate ID after entropy reset: " + err.Error())
+		}
+	}
+	return id.String()
 }
 
 func Valid(s string) error {

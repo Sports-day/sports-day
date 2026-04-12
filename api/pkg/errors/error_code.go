@@ -20,6 +20,7 @@ var (
 	ErrSportSceneNotFound  = NewError("SPORT_SCENE_NOT_FOUND", "スポーツシーンが見つかりません")
 	ErrSportEntryNotFound  = NewError("SPORT_ENTRY_NOT_FOUND", "スポーツエントリーが見つかりません")
 	ErrRuleNotFound        = NewError("RULE_NOT_FOUND", "ルールが見つかりません")
+	ErrImageNotFound       = NewError("IMAGE_NOT_FOUND", "画像が見つかりません")
 	ErrRoleNotFound        = NewError("ROLE_NOT_FOUND", "ロールが見つかりません")
 
 	/*
@@ -57,6 +58,7 @@ var (
 	ErrSportEntryAlreadyExists        = NewError("SPORT_ENTRY_ALREADY_EXISTS", "このスポーツシーンとチームの組み合わせは既に存在します")
 	ErrExperiencedLimitExceeded       = NewError("EXPERIENCED_LIMIT_EXCEEDED", "チームの経験者数が上限を超えています")
 
+	ErrInvalidStatus     = NewError("INVALID_STATUS", "不正なステータスが指定されました")
 	ErrMatchesInProgress = NewError("MATCHES_IN_PROGRESS", "進行中または終了した試合があるためエントリーを変更できません")
 
 	ErrPromotionRuleNotFound   = NewError("PROMOTION_RULE_NOT_FOUND", "進出ルールが見つかりません")

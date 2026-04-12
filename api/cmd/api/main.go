@@ -41,7 +41,7 @@ func main() {
 	api.NewLogger(env.Get().Debug)
 
 	// fix timezone as Asia/Tokyo
-	time.FixedZone("Asia/Tokyo", 9*60*60)
+	time.Local = time.FixedZone("Asia/Tokyo", 9*60*60)
 
 	// setup database
 	db, err := gorm.OpenWithRetry(api.Logger)
@@ -121,7 +121,7 @@ func main() {
 	teamService := service.NewTeam(db, teamRepository, userRepository)
 	locationService := service.NewLocation(db, locationRepository)
 	informationService := service.NewInformation(db, informationRepository)
-	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository, tournamentRepository, matchRepository, sportRepository)
+	competitionService := service.NewCompetition(db, competitionRepository, teamRepository, leagueRepository, tournamentRepository, matchRepository, sportRepository, judgmentRepository)
 	sceneService := service.NewScene(db, sceneRepository, &competitionService)
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository, teamRepository, groupRepository)
@@ -148,7 +148,9 @@ func main() {
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 
-	srv.Use(extension.Introspection{})
+	if env.Get().Debug {
+		srv.Use(extension.Introspection{})
+	}
 
 	// mux
 	mux := http.NewServeMux()
@@ -171,8 +173,12 @@ func main() {
 	address := fmt.Sprintf("%s:%d", env.Get().Server.Host, env.Get().Server.Port)
 
 	server := &http.Server{
-		Addr:    address,
-		Handler: mux,
+		Addr:              address,
+		Handler:           mux,
+		ReadTimeout:       30 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	// channel to confirm server shutdown
@@ -210,6 +216,14 @@ func main() {
 
 	// wait for server to shutdown
 	<-shutdownChan
+
+	// stop role cache purge goroutine
+	roleCache.Stop()
+
+	// close database connection
+	if sqlDB, err := db.DB(); err == nil {
+		sqlDB.Close()
+	}
 
 	api.Logger.Info().Msg("Server gracefully shutdown")
 }

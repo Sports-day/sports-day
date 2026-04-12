@@ -6,13 +6,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var Logger *zerolog.Logger
-
-// default logger is nop
-func Init() {
-	logger := zerolog.Nop()
-	Logger = &logger
-}
+var Logger = func() *zerolog.Logger {
+	l := zerolog.Nop()
+	return &l
+}()
 
 func SetLogger(logger *zerolog.Logger) {
 	Logger = logger
