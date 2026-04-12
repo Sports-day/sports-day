@@ -103,5 +103,9 @@ func (l *Loaders) Attach(ctx context.Context) context.Context {
 }
 
 func getLoaders(ctx context.Context) *Loaders {
-	return ctx.Value(loadersKey{}).(*Loaders)
+	l, ok := ctx.Value(loadersKey{}).(*Loaders)
+	if !ok || l == nil {
+		panic("loader: Loaders not found in context — LoaderMiddleware is not applied")
+	}
+	return l
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -36,11 +37,20 @@ func HandleUploadWebhook(
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
 		authHeader := r.Header.Get("Authorization")
-		if authHeader != "Bearer "+secret {
+		expected := "Bearer " + secret
+		if secret == "" || subtle.ConstantTimeCompare([]byte(authHeader), []byte(expected)) != 1 {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+
+		// ボディサイズを1MBに制限（OOM攻撃防止）
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
 		var event S3Event
 		if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
@@ -51,7 +61,12 @@ func HandleUploadWebhook(
 		for _, record := range event.Records {
 			objectKey, err := url.QueryUnescape(record.S3.Object.Key)
 			if err != nil {
-				objectKey = record.S3.Object.Key
+				api.Logger.Error().
+					Err(err).
+					Str("objectKey", record.S3.Object.Key).
+					Msg("failed to unescape object key")
+				w.WriteHeader(http.StatusBadRequest)
+				return
 			}
 			publicURL := fmt.Sprintf("%s/%s/%s", cdnBase, bucket, objectKey)
 

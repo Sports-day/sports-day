@@ -16,6 +16,7 @@ type Sports interface {
 
 	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Sport, error)
 	ListRankingRules(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.RankingRule, error)
+	ListRankingRulesBySportIDs(ctx context.Context, db *gorm.DB, sportIDs []string) ([]*db_model.RankingRule, error)
 	SetRankingRules(ctx context.Context, db *gorm.DB, sportID string, rules []*db_model.RankingRule) ([]*db_model.RankingRule, error)
 	UpdateImageID(
 		ctx context.Context,

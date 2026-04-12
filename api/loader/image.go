@@ -16,16 +16,24 @@ func newImageLoader(svc service.Image) func(context.Context, []string) ([]*db_mo
 		}
 
 		images := make([]*db_model.Image, len(imageIDs))
+		errs := make([]error, len(imageIDs))
 		for i, id := range imageIDs {
-			images[i] = rowMap[id]
+			if img, ok := rowMap[id]; ok {
+				images[i] = img
+			} else {
+				errs[i] = errors.ErrImageNotFound
+			}
 		}
-		return images, nil
+		return images, errs
 	}
 }
 
 func LoadImage(ctx context.Context, imageID string) (*db_model.Image, error) {
 	img, err := getLoaders(ctx).ImageLoader.Load(ctx, imageID)
 	if err != nil {
+		if errors.Is(err, errors.ErrImageNotFound) {
+			return nil, nil
+		}
 		return nil, errors.Wrap(err)
 	}
 	return img, nil

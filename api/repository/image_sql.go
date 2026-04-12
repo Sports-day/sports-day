@@ -19,14 +19,17 @@ func NewImage() Image {
 
 func (r image) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Image, error) {
 	var img db_model.Image
-	if err := db.First(&img, "id = ?", id).Error; err != nil {
+	if err := db.WithContext(ctx).First(&img, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.ErrImageNotFound
+		}
 		return nil, errors.Wrap(err)
 	}
 	return &img, nil
 }
 
 func (r image) Create(ctx context.Context, db *gorm.DB, image *db_model.Image) (*db_model.Image, error) {
-	if err := db.Create(image).Error; err != nil {
+	if err := db.WithContext(ctx).Create(image).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return image, nil
@@ -41,7 +44,7 @@ func (r image) List(ctx context.Context, db *gorm.DB) ([]*db_model.Image, error)
 }
 
 func (r image) UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []DisplayOrderItem) error {
-	return db.Transaction(func(tx *gorm.DB) error {
+	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, item := range items {
 			if err := tx.Model(&db_model.Image{}).Where("id = ?", item.ID).
 				Update("display_order", item.DisplayOrder).Error; err != nil {
@@ -54,7 +57,7 @@ func (r image) UpdateDisplayOrders(ctx context.Context, db *gorm.DB, items []Dis
 
 func (r image) BatchGet(ctx context.Context, db *gorm.DB, ids []string) (map[string]*db_model.Image, error) {
 	var images []*db_model.Image
-	if err := db.Where("id IN ?", ids).Find(&images).Error; err != nil {
+	if err := db.WithContext(ctx).Where("id IN ?", ids).Find(&images).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	result := make(map[string]*db_model.Image, len(images))
@@ -65,7 +68,10 @@ func (r image) BatchGet(ctx context.Context, db *gorm.DB, ids []string) (map[str
 }
 
 func (r image) Delete(ctx context.Context, db *gorm.DB, id string) error {
-	return db.WithContext(ctx).Delete(&db_model.Image{}, "id = ?", id).Error
+	if err := db.WithContext(ctx).Delete(&db_model.Image{}, "id = ?", id).Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
 }
 
 func (r image) MarkUploaded(ctx context.Context, db *gorm.DB, id string, url string) error {
