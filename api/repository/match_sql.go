@@ -239,3 +239,15 @@ func (r *matchRepository) SaveMatchEntriesBatch(ctx context.Context, db *gorm.DB
 	}
 	return nil
 }
+
+func (r *matchRepository) ListActiveMatchesByLocationID(ctx context.Context, db *gorm.DB, locationID string) ([]*db_model.Match, error) {
+	var matches []*db_model.Match
+	err := db.WithContext(ctx).
+		Where("location_id = ? AND status IN ?", locationID, []string{"STANDBY", "ONGOING"}).
+		Order("time ASC, id ASC").
+		Find(&matches).Error
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return matches, nil
+}

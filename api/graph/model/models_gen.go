@@ -304,7 +304,8 @@ type UpdateInformationInput struct {
 }
 
 type UpdateJudgmentInput struct {
-	Entry *JudgmentEntry `json:"entry,omitempty"`
+	Entry       *JudgmentEntry `json:"entry,omitempty"`
+	IsAttending *bool          `json:"isAttending,omitempty"`
 }
 
 type UpdateLeagueRuleInput struct {

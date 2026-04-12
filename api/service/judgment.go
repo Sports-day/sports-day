@@ -82,6 +82,14 @@ func (s *Judgment) Update(ctx context.Context, id string, input model.UpdateJudg
 		return nil, errors.Wrap(err)
 	}
 
+	if input.IsAttending != nil {
+		// 出席を true にする場合、審判が割り当てられていることを要求
+		if *input.IsAttending && !judgment.UserID.Valid && !judgment.TeamID.Valid && !judgment.GroupID.Valid {
+			return nil, errors.ErrNotAssignedReferee
+		}
+		judgment.IsAttending = *input.IsAttending
+	}
+
 	if input.Entry != nil {
 		e := input.Entry
 

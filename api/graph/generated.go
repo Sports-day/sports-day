@@ -216,6 +216,7 @@ type ComplexityRoot struct {
 		RestoreScene                   func(childComplexity int, id string) int
 		SetRankingRules                func(childComplexity int, sportID string, rules []*model.RankingRuleInput) int
 		SetTiebreakPriorities          func(childComplexity int, leagueID string, priorities []*model.TiebreakPriorityInput) int
+		StartMatchJudging              func(childComplexity int, matchID string) int
 		SubmitMatchScore               func(childComplexity int, matchID string, input model.SubmitScoreInput) int
 		UpdateCompetition              func(childComplexity int, id string, input model.UpdateCompetitionInput) int
 		UpdateCompetitionsDisplayOrder func(childComplexity int, input []*model.DisplayOrderItem) int
@@ -258,42 +259,43 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AllSportExperiences  func(childComplexity int) int
-		Competition          func(childComplexity int, id string) int
-		Competitions         func(childComplexity int) int
-		Group                func(childComplexity int, id string) int
-		Groups               func(childComplexity int) int
-		Image                func(childComplexity int, id string) int
-		Images               func(childComplexity int) int
-		Information          func(childComplexity int, id string) int
-		Informations         func(childComplexity int) int
-		Judgment             func(childComplexity int, id string) int
-		Judgments            func(childComplexity int) int
-		League               func(childComplexity int, id string) int
-		LeagueStandings      func(childComplexity int, leagueID string) int
-		Leagues              func(childComplexity int) int
-		Location             func(childComplexity int, id string) int
-		Locations            func(childComplexity int) int
-		Match                func(childComplexity int, id string) int
-		Matches              func(childComplexity int) int
-		Me                   func(childComplexity int) int
-		PromotionRules       func(childComplexity int, sourceCompetitionID string) int
-		PromotionStatus      func(childComplexity int, targetCompetitionID string) int
-		Rule                 func(childComplexity int, id string) int
-		Rules                func(childComplexity int) int
-		Scene                func(childComplexity int, id string) int
-		Scenes               func(childComplexity int) int
-		Sport                func(childComplexity int, id string) int
-		SportExperiences     func(childComplexity int, sportID string) int
-		Sports               func(childComplexity int) int
-		Team                 func(childComplexity int, id string) int
-		Teams                func(childComplexity int) int
-		Tournament           func(childComplexity int, id string) int
-		TournamentRanking    func(childComplexity int, competitionID string) int
-		Tournaments          func(childComplexity int, competitionID string) int
-		User                 func(childComplexity int, id string) int
-		UserSportExperiences func(childComplexity int, userID string) int
-		Users                func(childComplexity int) int
+		AllSportExperiences      func(childComplexity int) int
+		Competition              func(childComplexity int, id string) int
+		Competitions             func(childComplexity int) int
+		Group                    func(childComplexity int, id string) int
+		Groups                   func(childComplexity int) int
+		Image                    func(childComplexity int, id string) int
+		Images                   func(childComplexity int) int
+		Information              func(childComplexity int, id string) int
+		Informations             func(childComplexity int) int
+		Judgment                 func(childComplexity int, id string) int
+		Judgments                func(childComplexity int) int
+		League                   func(childComplexity int, id string) int
+		LeagueStandings          func(childComplexity int, leagueID string) int
+		Leagues                  func(childComplexity int) int
+		Location                 func(childComplexity int, id string) int
+		Locations                func(childComplexity int) int
+		Match                    func(childComplexity int, id string) int
+		Matches                  func(childComplexity int) int
+		Me                       func(childComplexity int) int
+		NextJudgeMatchAtLocation func(childComplexity int, locationID string) int
+		PromotionRules           func(childComplexity int, sourceCompetitionID string) int
+		PromotionStatus          func(childComplexity int, targetCompetitionID string) int
+		Rule                     func(childComplexity int, id string) int
+		Rules                    func(childComplexity int) int
+		Scene                    func(childComplexity int, id string) int
+		Scenes                   func(childComplexity int) int
+		Sport                    func(childComplexity int, id string) int
+		SportExperiences         func(childComplexity int, sportID string) int
+		Sports                   func(childComplexity int) int
+		Team                     func(childComplexity int, id string) int
+		Teams                    func(childComplexity int) int
+		Tournament               func(childComplexity int, id string) int
+		TournamentRanking        func(childComplexity int, competitionID string) int
+		Tournaments              func(childComplexity int, competitionID string) int
+		User                     func(childComplexity int, id string) int
+		UserSportExperiences     func(childComplexity int, userID string) int
+		Users                    func(childComplexity int) int
 	}
 
 	RankingRule struct {
@@ -515,6 +517,7 @@ type MutationResolver interface {
 	AssignSeedTeam(ctx context.Context, input model.AssignSeedTeamInput) (*model.TournamentSlot, error)
 	MarkJudgmentAttendance(ctx context.Context, matchID string) (*model.Judgment, error)
 	SubmitMatchScore(ctx context.Context, matchID string, input model.SubmitScoreInput) (*model.Match, error)
+	StartMatchJudging(ctx context.Context, matchID string) (*model.Match, error)
 	CreateRule(ctx context.Context, input model.CreateRuleInput) (*model.Rule, error)
 	UpdateRule(ctx context.Context, id string, input model.UpdateRuleInput) (*model.Rule, error)
 	DeleteRule(ctx context.Context, id string) (*model.Rule, error)
@@ -573,6 +576,7 @@ type QueryResolver interface {
 	SportExperiences(ctx context.Context, sportID string) ([]*model.SportExperience, error)
 	UserSportExperiences(ctx context.Context, userID string) ([]*model.SportExperience, error)
 	AllSportExperiences(ctx context.Context) ([]*model.SportExperience, error)
+	NextJudgeMatchAtLocation(ctx context.Context, locationID string) (*model.Match, error)
 }
 type RuleResolver interface {
 	Sport(ctx context.Context, obj *model.Rule) (*model.Sport, error)
@@ -1750,6 +1754,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SetTiebreakPriorities(childComplexity, args["leagueId"].(string), args["priorities"].([]*model.TiebreakPriorityInput)), true
 
+	case "Mutation.startMatchJudging":
+		if e.complexity.Mutation.StartMatchJudging == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_startMatchJudging_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.StartMatchJudging(childComplexity, args["matchId"].(string)), true
+
 	case "Mutation.submitMatchScore":
 		if e.complexity.Mutation.SubmitMatchScore == nil {
 			break
@@ -2283,6 +2299,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Me(childComplexity), true
+
+	case "Query.nextJudgeMatchAtLocation":
+		if e.complexity.Query.NextJudgeMatchAtLocation == nil {
+			break
+		}
+
+		args, err := ec.field_Query_nextJudgeMatchAtLocation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.NextJudgeMatchAtLocation(childComplexity, args["locationId"].(string)), true
 
 	case "Query.promotionRules":
 		if e.complexity.Query.PromotionRules == nil {
@@ -4809,6 +4837,29 @@ func (ec *executionContext) field_Mutation_setTiebreakPriorities_argsPriorities(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_startMatchJudging_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_startMatchJudging_argsMatchID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["matchId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_startMatchJudging_argsMatchID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("matchId"))
+	if tmp, ok := rawArgs["matchId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_submitMatchScore_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5931,6 +5982,29 @@ func (ec *executionContext) field_Query_match_argsID(
 ) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_nextJudgeMatchAtLocation_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_nextJudgeMatchAtLocation_argsLocationID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["locationId"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_nextJudgeMatchAtLocation_argsLocationID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("locationId"))
+	if tmp, ok := rawArgs["locationId"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
@@ -15365,6 +15439,83 @@ func (ec *executionContext) fieldContext_Mutation_submitMatchScore(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_startMatchJudging(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_startMatchJudging(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().StartMatchJudging(rctx, fc.Args["matchId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Match)
+	fc.Result = res
+	return ec.marshalNMatch2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐMatch(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_startMatchJudging(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Match_id(ctx, field)
+			case "time":
+				return ec.fieldContext_Match_time(ctx, field)
+			case "status":
+				return ec.fieldContext_Match_status(ctx, field)
+			case "location":
+				return ec.fieldContext_Match_location(ctx, field)
+			case "competition":
+				return ec.fieldContext_Match_competition(ctx, field)
+			case "winnerTeam":
+				return ec.fieldContext_Match_winnerTeam(ctx, field)
+			case "entries":
+				return ec.fieldContext_Match_entries(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
+			case "timeManual":
+				return ec.fieldContext_Match_timeManual(ctx, field)
+			case "locationManual":
+				return ec.fieldContext_Match_locationManual(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_startMatchJudging_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createRule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createRule(ctx, field)
 	if err != nil {
@@ -19879,6 +20030,80 @@ func (ec *executionContext) fieldContext_Query_allSportExperiences(_ context.Con
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SportExperience", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_nextJudgeMatchAtLocation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_nextJudgeMatchAtLocation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().NextJudgeMatchAtLocation(rctx, fc.Args["locationId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Match)
+	fc.Result = res
+	return ec.marshalOMatch2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐMatch(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_nextJudgeMatchAtLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Match_id(ctx, field)
+			case "time":
+				return ec.fieldContext_Match_time(ctx, field)
+			case "status":
+				return ec.fieldContext_Match_status(ctx, field)
+			case "location":
+				return ec.fieldContext_Match_location(ctx, field)
+			case "competition":
+				return ec.fieldContext_Match_competition(ctx, field)
+			case "winnerTeam":
+				return ec.fieldContext_Match_winnerTeam(ctx, field)
+			case "entries":
+				return ec.fieldContext_Match_entries(ctx, field)
+			case "judgment":
+				return ec.fieldContext_Match_judgment(ctx, field)
+			case "timeManual":
+				return ec.fieldContext_Match_timeManual(ctx, field)
+			case "locationManual":
+				return ec.fieldContext_Match_locationManual(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Match", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_nextJudgeMatchAtLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -27270,7 +27495,7 @@ func (ec *executionContext) unmarshalInputUpdateJudgmentInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"entry"}
+	fieldsInOrder := [...]string{"entry", "isAttending"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -27284,6 +27509,13 @@ func (ec *executionContext) unmarshalInputUpdateJudgmentInput(ctx context.Contex
 				return it, err
 			}
 			it.Entry = data
+		case "isAttending":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isAttending"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsAttending = data
 		}
 	}
 
@@ -29500,6 +29732,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "startMatchJudging":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_startMatchJudging(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createRule":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createRule(ctx, field)
@@ -30570,6 +30809,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "nextJudgeMatchAtLocation":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_nextJudgeMatchAtLocation(ctx, field)
 				return res
 			}
 

@@ -698,6 +698,15 @@ func (r *mutationResolver) SubmitMatchScore(ctx context.Context, matchID string,
 	return model.FormatMatchResponse(match), nil
 }
 
+// StartMatchJudging is the resolver for the startMatchJudging field.
+func (r *mutationResolver) StartMatchJudging(ctx context.Context, matchID string) (*model.Match, error) {
+	match, err := r.MatchService.StartMatchJudging(ctx, matchID)
+	if err != nil {
+		return nil, err
+	}
+	return model.FormatMatchResponse(match), nil
+}
+
 // CreateRule is the resolver for the createRule field.
 func (r *mutationResolver) CreateRule(ctx context.Context, input model.CreateRuleInput) (*model.Rule, error) {
 	rule, err := r.RuleService.Create(ctx, &input)
@@ -1334,6 +1343,18 @@ func (r *queryResolver) AllSportExperiences(ctx context.Context) ([]*model.Sport
 		result[i] = model.FormatSportExperienceResponse(e)
 	}
 	return result, nil
+}
+
+// NextJudgeMatchAtLocation is the resolver for the nextJudgeMatchAtLocation field.
+func (r *queryResolver) NextJudgeMatchAtLocation(ctx context.Context, locationID string) (*model.Match, error) {
+	match, err := r.MatchService.NextJudgeMatchAtLocation(ctx, locationID)
+	if err != nil {
+		return nil, err
+	}
+	if match == nil {
+		return nil, nil
+	}
+	return model.FormatMatchResponse(match), nil
 }
 
 // Mutation returns MutationResolver implementation.

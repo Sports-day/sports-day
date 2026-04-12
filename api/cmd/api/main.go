@@ -125,7 +125,7 @@ func main() {
 	sceneService := service.NewScene(db, sceneRepository, &competitionService)
 	matchService := service.NewMatch(db, matchRepository, teamRepository, locationRepository, competitionRepository, judgmentRepository)
 	judgmentService := service.NewJudgment(db, judgmentRepository, teamRepository, groupRepository)
-	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService, sportRepository)
+	leagueService := service.NewLeague(db, leagueRepository, matchRepository, competitionRepository, &competitionService, sportRepository, judgmentRepository)
 	tournamentService := service.NewTournament(db, tournamentRepository, matchRepository, competitionRepository, judgmentRepository)
 	leagueService.SetCompetitionService(&competitionService)
 	matchService.SetCompetitionService(&competitionService)

@@ -9,6 +9,7 @@ import (
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
+	pkggorm "sports-day/api/pkg/gorm"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
 
@@ -22,9 +23,10 @@ type League struct {
 	competitionRepository repository.Competition
 	competitionService    *Competition
 	sportsRepository      repository.Sports
+	judgmentRepository    repository.Judgment
 }
 
-func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, sportsRepository repository.Sports) League {
+func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, sportsRepository repository.Sports, judgmentRepository repository.Judgment) League {
 	return League{
 		db:                    db,
 		leagueRepository:      leagueRepository,
@@ -32,6 +34,7 @@ func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository 
 		competitionRepository: competitionRepository,
 		competitionService:    competitionService,
 		sportsRepository:      sportsRepository,
+		judgmentRepository:    judgmentRepository,
 	}
 }
 
@@ -221,6 +224,18 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 				[]string{matchup[0], matchup[1]},
 			); err != nil {
 				return err
+			}
+
+			// 審判レコードを作成（Match と 1:1）
+			judgment := &db_model.Judgment{
+				ID:      saved.ID,
+				Name:    pkggorm.ToNullString(nil),
+				UserID:  pkggorm.ToNullString(nil),
+				TeamID:  pkggorm.ToNullString(nil),
+				GroupID: pkggorm.ToNullString(nil),
+			}
+			if _, err := s.judgmentRepository.Save(ctx, tx, judgment); err != nil {
+				return errors.ErrSaveJudgment
 			}
 
 			createdMatches = append(createdMatches, saved)

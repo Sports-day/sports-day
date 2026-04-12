@@ -160,6 +160,7 @@ input CreateJudgmentInput {
 
 input UpdateJudgmentInput {
   entry: JudgmentEntry
+  isAttending: Boolean
 }
 
 input CreateLeagueInput {
@@ -423,6 +424,12 @@ type Query {
   全ての経験者データを取得する
   """
   allSportExperiences: [SportExperience!]!
+  """
+  審判用: 指定ロケーションで審判が対応すべき次の試合を返す。
+  呼び出しユーザーが審判として割り当てられている STANDBY または ONGOING の試合を
+  時刻昇順で最初の1件返す。該当なしの場合は null を返す。
+  """
+  nextJudgeMatchAtLocation(locationId: ID!): Match
 }
 
 input DisplayOrderItem {
@@ -643,6 +650,13 @@ type Mutation {
   審判がスコアを提出する（審判本人のみ実行可能、試合は自動的にFINISHEDになる）
   """
   submitMatchScore(matchId: ID!, input: SubmitScoreInput!): Match!
+  """
+  審判がQRをスキャンした際の複合操作: 出席記録(isAttending=true)と
+  試合ステータスをONGOINGに更新する。審判本人のみ実行可能。
+  試合が既にONGOINGの場合は冪等に処理する。
+  FINISHEDまたはCANCELEDの試合には失敗する。
+  """
+  startMatchJudging(matchId: ID!): Match!
   createRule(input: CreateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   updateRule(id: ID!, input: UpdateRuleInput!): Rule! @hasPermission(permission: "rule:write")
   deleteRule(id: ID!): Rule! @hasPermission(permission: "rule:write")
