@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react'
 import {
   useCreateAdminTeamMutation,
   useGetAdminGroupsQuery,
+  GetAdminTeamsDocument,
 } from '@/gql/__generated__/graphql'
 import { showErrorToast } from '@/lib/toast'
 
@@ -40,7 +41,7 @@ export function useTeamCreate(onSuccess: (id: string) => void) {
             userIds: [],
           },
         },
-        refetchQueries: ['GetAdminTeams'],
+        refetchQueries: [{ query: GetAdminTeamsDocument }],
       })
       const created = result.data?.createTeam
       if (!created) return

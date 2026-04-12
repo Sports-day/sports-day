@@ -157,7 +157,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
           id: match.id,
           input: { time: new Date(time).toISOString(), locationId: locationId || undefined },
         },
-        refetchQueries: ['GetAdminCompetitionMatches', 'GetAdminMatches'],
+        refetchQueries: ['GetAdminMatches'],
       })
 
       // 審判に変更がある場合のみ更新
@@ -174,9 +174,10 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
               id: match.id,
               input: {
                 entry: {
-                  groupId: judgmentType === 'group' ? judgmentTargetId : undefined,
-                  teamId: judgmentType === 'team' ? judgmentTargetId : undefined,
-                  userId: judgmentType === 'user' ? judgmentTargetId : undefined,
+                  groupId: judgmentType === 'group' ? judgmentTargetId : null,
+                  teamId: judgmentType === 'team' ? judgmentTargetId : null,
+                  userId: judgmentType === 'user' ? judgmentTargetId : null,
+                  name: null,
                 },
               },
             },
@@ -194,6 +195,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 
@@ -208,6 +210,24 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     else { setJudgmentType(null); setJudgmentTargetId('') }
   }
 
+  const judgment = matchData?.match?.judgment
+  const isAttending = judgment?.isAttending ?? false
+  const hasJudgmentAssigned = !!(judgment?.user?.id || judgment?.team?.id || judgment?.group?.id)
+
+  const handleToggleAttendance = async () => {
+    try {
+      await updateJudgment({
+        variables: {
+          id: match.id,
+          input: { isAttending: !isAttending },
+        },
+        refetchQueries: ['GetAdminMatch'],
+      })
+    } catch (e) {
+      showErrorToast()
+    }
+  }
+
   return {
     locationId, setLocationId,
     locations,
@@ -216,6 +236,9 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     judgmentTargetId, setJudgmentTargetId,
     optionsByType,
     currentJudgmentLabel,
+    isAttending,
+    hasJudgmentAssigned,
+    handleToggleAttendance,
     dirty,
     handleSave, handleReset,
     error: mutationError,

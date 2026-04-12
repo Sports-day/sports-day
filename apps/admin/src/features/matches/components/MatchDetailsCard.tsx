@@ -5,7 +5,6 @@ import {
   ButtonBase,
   Card,
   CardContent,
-  Chip,
   Collapse,
   Divider,
   FormControl,
@@ -57,7 +56,9 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
     judgmentType, setJudgmentType,
     judgmentTargetId, setJudgmentTargetId,
     optionsByType,
-    currentJudgmentLabel,
+    isAttending,
+    hasJudgmentAssigned,
+    handleToggleAttendance,
     dirty,
     handleSave, handleReset,
   } = useMatchDetails(match, competitionId)
@@ -234,22 +235,6 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
               <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
                 審判
               </Typography>
-              {currentJudgmentLabel && (
-                <Chip
-                  label={currentJudgmentLabel}
-                  size="small"
-                  sx={{
-                    ml: 'auto',
-                    height: 22,
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    backgroundColor: '#E8EAF6',
-                    color: '#3949AB',
-                    border: '1px solid #C5CAE9',
-                    '& .MuiChip-label': { px: 1 },
-                  }}
-                />
-              )}
             </Box>
 
             {/* タイプ選択トグルボタン */}
@@ -355,11 +340,32 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
               />
             )}
 
-            {!judgmentType && !currentJudgmentLabel && (
+            {!judgmentType && (
               <Typography sx={{ fontSize: '12px', color: '#9E9E9E', fontStyle: 'italic', textAlign: 'center', py: 0.5 }}>
                 上のボタンから審判の種類を選択してください
               </Typography>
             )}
+
+            {/* 出席状態トグル */}
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleToggleAttendance}
+              disabled={!hasJudgmentAssigned}
+              sx={{
+                fontSize: '12px',
+                fontWeight: 700,
+                height: '40px',
+                color: '#2F3C8C',
+                backgroundColor: isAttending ? '#DEDAEB' : '#D8DEEB',
+                border: hasJudgmentAssigned ? '1px solid #5B6DC6' : 'none',
+                borderRadius: 1,
+                boxShadow: 'none',
+                '&:hover': { backgroundColor: isAttending ? '#D3CDE3' : '#CDD4E3', boxShadow: 'none' },
+              }}
+            >
+              {isAttending ? '出席を取りやめる' : '出席する'}
+            </Button>
 
             {/* トーナメント進出先設定 */}
             {isTournament && subBrackets.length > 0 && (

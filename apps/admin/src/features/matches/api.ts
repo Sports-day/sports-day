@@ -124,6 +124,7 @@ export const UPDATE_ADMIN_JUDGMENT = gql`
     updateJudgment(id: $id, input: $input) {
       id
       name
+      isAttending
       user { id name email identify { microsoftUserId } }
       team { id name }
       group { id name }

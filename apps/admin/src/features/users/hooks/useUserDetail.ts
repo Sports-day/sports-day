@@ -8,7 +8,10 @@ import {
   useGetAdminUserSportExperiencesQuery,
   useAddAdminSportExperiencesMutation,
   useDeleteAdminSportExperiencesMutation,
+  useAddAdminGroupUsersForClassMutation,
+  useRemoveAdminGroupUsersForClassMutation,
   GetAdminUsersDocument,
+  GetAdminUserDocument,
   GetAdminUserSportExperiencesDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUser } from '@/hooks/useMsGraphUsers'
@@ -83,12 +86,35 @@ export function useUserDetail(userId: string) {
     refetchQueries: [{ query: GetAdminUserSportExperiencesDocument, variables: { userId } }],
   })
 
+  const [addGroupUsers] = useAddAdminGroupUsersForClassMutation({
+    refetchQueries: [{ query: GetAdminUserDocument, variables: { id: userId } }],
+  })
+  const [removeGroupUsers] = useRemoveAdminGroupUsersForClassMutation({
+    refetchQueries: [{ query: GetAdminUserDocument, variables: { id: userId } }],
+  })
+
   const handleSave = async () => {
     if (!userId) return
     if (user && role && role !== user.role) {
       await updateUserRole({
         variables: { userId, role: role as Role },
       })
+    }
+
+    // グループ(クラス)の差分保存
+    const prevGroupId = initialState.current.groupId
+    if (groupId !== prevGroupId) {
+      if (prevGroupId) {
+        await removeGroupUsers({
+          variables: { id: prevGroupId, input: { userIds: [userId] } },
+        })
+      }
+      if (groupId) {
+        await addGroupUsers({
+          variables: { id: groupId, input: { userIds: [userId] } },
+        })
+      }
+      initialState.current.groupId = groupId
     }
 
     // 経験者スポーツの差分保存

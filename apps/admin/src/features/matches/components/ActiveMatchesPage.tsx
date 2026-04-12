@@ -214,7 +214,6 @@ export function ActiveMatchesPage() {
         onSave={async () => {
           await matchEdit.saveMatch()
           refetch()
-          setView({ type: 'list' })
         }}
       />
     )
