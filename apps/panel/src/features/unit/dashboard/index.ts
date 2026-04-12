@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useFetchLocations } from "@/src/features/locations/hook";
 import { useFetchTeams } from "@/src/features/teams/hook";
 import { useFetchSports } from "@/src/features/sports/hook";
@@ -62,15 +62,9 @@ export const useFetchDashboard = () => {
   const { users, isFetching: isFetchingUsers } = useFetchUsers();
   const { user, isFetching: isFetchingUserinfo } = useFetchUserinfo();
 
-  const [mySportState, setMySport] = useState<GqlSport | undefined>(undefined);
-  const [myGameState, setMyGame] = useState<GqlCompetition | undefined>(undefined);
-  const [myTeamState, setMyTeam] = useState<GqlTeam | undefined>(undefined);
-  const [myTeamMatchesState, setMyTeamMatches] = useState<GqlMatch[]>([]);
-  const [myTeamUsersState, setMyTeamUsers] = useState<Array<{ id: string; name: string }>>([]);
   const [myTeamRankState, setMyTeamRank] = useState<number>(0);
-  const [myJudgeMatchesState, setMyJudgeMatches] = useState<GqlMatch[]>([]);
 
-  // 全サブクエリの完了を検知してデータを処理
+  // 全サブクエリの完了を検知
   const allLoaded =
     !isFetchingImages &&
     !isFetchingLocations &&
@@ -81,61 +75,63 @@ export const useFetchDashboard = () => {
     !isFetchingUsers &&
     !isFetchingUserinfo;
 
+  // データからダッシュボードの派生状態を計算（useMemoで無限ループ防止）
+  const derived = useMemo(() => {
+    if (!allLoaded || !user) return null;
+
+    const myTeamIds = (user as GqlMeUser).teams.map((t) => t.id);
+    if (myTeamIds.length === 0) return null;
+
+    const myCompetitions = (games as GqlCompetition[]).filter((c) =>
+      c.teams.some((t) => myTeamIds.includes(t.id))
+    );
+    if (myCompetitions.length === 0) return null;
+
+    const competitionsByWeight = [...myCompetitions].sort((a, b) => {
+      const sportA = sports.find((s) => s.id === a.sport?.id);
+      const sportB = sports.find((s) => s.id === b.sport?.id);
+      return (sportA?.displayOrder ?? 0) - (sportB?.displayOrder ?? 0);
+    });
+    const myCompetition = competitionsByWeight[0];
+
+    const myTeam = teams.find(
+      (t) =>
+        myTeamIds.includes(t.id) &&
+        myCompetition.teams.some((ct) => ct.id === t.id)
+    );
+    if (!myTeam) return { myGame: myCompetition };
+
+    const mySport = sports.find((s) => s.id === myCompetition.sport?.id);
+
+    const myTeamUsers = myTeam.users.map(u => {
+      const resolved = users.find(ru => ru.id === u.id);
+      return { id: u.id, name: resolved?.name ?? '' };
+    });
+
+    const myTeamMatches = matches
+      .filter((m) => m.competition.id === myCompetition.id)
+      .filter((m) => m.entries.some((e) => e.team?.id === myTeam.id));
+
+    const myJudgeMatches = matches.filter((m) => m.judgment?.team?.id === myTeam.id);
+
+    return { myGame: myCompetition, myTeam, mySport, myTeamUsers, myTeamMatches, myJudgeMatches };
+  }, [allLoaded, user, games, sports, teams, matches, users]);
+
+  const myGameState = derived?.myGame;
+  const myTeamState = derived?.myTeam;
+  const mySportState = derived?.mySport;
+  const myTeamUsersState = derived?.myTeamUsers ?? [];
+  const myTeamMatchesState = derived?.myTeamMatches ?? [];
+  const myJudgeMatchesState = derived?.myJudgeMatches ?? [];
+
+  // isFetching を allLoaded に連動
+  const prevAllLoaded = useRef(false);
   useEffect(() => {
-    if (!allLoaded) return;
-
-    if (user) {
-      const myTeamIds = (user as GqlMeUser).teams.map((t) => t.id);
-
-      if (myTeamIds.length > 0) {
-        const myCompetitions = (games as GqlCompetition[]).filter((c) =>
-          c.teams.some((t) => myTeamIds.includes(t.id))
-        );
-
-        if (myCompetitions.length > 0) {
-          const competitionsByWeight = [...myCompetitions].sort((a, b) => {
-            const sportA = sports.find((s) => s.id === a.sport?.id);
-            const sportB = sports.find((s) => s.id === b.sport?.id);
-            return (sportA?.displayOrder ?? 0) - (sportB?.displayOrder ?? 0);
-          });
-          const myCompetition = competitionsByWeight[0];
-          setMyGame(myCompetition);
-
-          const myTeam = teams.find(
-            (t) =>
-              myTeamIds.includes(t.id) &&
-              myCompetition.teams.some((ct) => ct.id === t.id)
-          );
-
-          if (myTeam) {
-            setMyTeam(myTeam);
-            setMyTeamUsers(myTeam.users.map(u => {
-              const resolved = users.find(ru => ru.id === u.id);
-              return { id: u.id, name: resolved?.name ?? '' };
-            }));
-
-            const mySport = sports.find((s) => s.id === myCompetition.sport?.id);
-            if (mySport) setMySport(mySport);
-
-            const myCompetitionMatches = matches.filter(
-              (m) => m.competition.id === myCompetition.id
-            );
-            setMyTeamMatches(
-              myCompetitionMatches.filter((m) =>
-                m.entries.some((e) => e.team?.id === myTeam.id)
-              )
-            );
-
-            setMyJudgeMatches(
-              matches.filter((m) => m.judgment?.team?.id === myTeam.id)
-            );
-          }
-        }
-      }
+    if (allLoaded && !prevAllLoaded.current) {
+      setIsFetching(false);
     }
-
-    setIsFetching(false);
-  }, [allLoaded, user, games, sports, teams, matches]);
+    prevAllLoaded.current = allLoaded;
+  }, [allLoaded]);
 
   // myGame が確定したら standings / ranking を取得してランクを更新
   const myGameLeagueId = myGameState?.league?.id ?? '';

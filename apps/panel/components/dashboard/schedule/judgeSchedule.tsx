@@ -20,17 +20,12 @@ export const JudgeSchedule = (props: JudgeScheduleProps) => {
 
             {props.matches
                 .sort((a, b) => a.time.localeCompare(b.time))
-                .map((match) => {
-                    return (
-                        <>
+                .map((match) => (
                             <ScheduleContent
                                 key={match.id}
                                 match={match}
                             />
-
-                        </>
-                    );
-                })}
+                ))}
         </Stack>
     );
 };
