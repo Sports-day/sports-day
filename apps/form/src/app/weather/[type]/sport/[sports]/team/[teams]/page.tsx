@@ -65,7 +65,7 @@ export default function MemberEdit() {
         <Stack
           direction="row"
           display="flex"
-          justifyContent="left"
+          justifyContent="flex-start"
           sx={{ mb: "8px", flexShrink: 0 }}
         >
           <Instruction weather={weatherName} sportname={sportName} />

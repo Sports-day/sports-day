@@ -30,7 +30,7 @@ export default function PrivacyPolicyDrawer(props: PrivacyPolicyDrawerProps) {
           sx={{
             width: "100vw",
             height: "auto",
-            overflow: "scrollable",
+            overflow: "auto",
           }}
         >
           <Container maxWidth={"xl"}>
@@ -52,13 +52,11 @@ export default function PrivacyPolicyDrawer(props: PrivacyPolicyDrawerProps) {
         sx={{
           width: "100vw",
           height: "auto",
-          overflow: "scrollable",
+          overflow: "auto",
           mt: "50px",
           background: theme.palette.card.light,
         }}
         role="presentation"
-        onClick={toggleDrawer(false)}
-        onKeyDown={toggleDrawer(false)}
       >
         <PrivacyPolicy />
       </Box>

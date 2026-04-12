@@ -192,7 +192,7 @@ export default function ConfirmCard({
                       ?.slice()
                       .reverse()
                       .map((member, idx) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={idx}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`${row.teamId}-${member.name}-${idx}`}>
                           <Card
                             sx={{
                               background: theme.palette.card.main,

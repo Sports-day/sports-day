@@ -7,10 +7,12 @@ export function useAuth() {
 
   useEffect(() => {
     userManager.getUser().then(setUser)
+    const handleUnloaded = () => setUser(null)
     userManager.events.addUserLoaded(setUser)
-    userManager.events.addUserUnloaded(() => setUser(null))
+    userManager.events.addUserUnloaded(handleUnloaded)
     return () => {
       userManager.events.removeUserLoaded(setUser)
+      userManager.events.removeUserUnloaded(handleUnloaded)
     }
   }, [])
 

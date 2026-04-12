@@ -148,8 +148,8 @@ export default function TeamEdit() {
                       </Typography>
                     </Box>
                   ) : (
-                    selectedMember.map((student, index) => (
-                      <Box key={index} sx={{ p: "8px" }}>
+                    selectedMember.map((student) => (
+                      <Box key={student.studentId} sx={{ p: "8px" }}>
                         <MembersCard
                           studentname={student.studentName}
                           fixed={true}

@@ -16,7 +16,8 @@ type Props = {
 export default function SportCards({ weather, type }: Props) {
   const theme = useTheme();
 
-  const { data } = useGetTeamDataQuery();
+  const { data, error } = useGetTeamDataQuery();
+  if (error) throw error;
 
   const hasTeamMap = new Map<string, boolean>();
 

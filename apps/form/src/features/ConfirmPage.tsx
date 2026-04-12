@@ -29,18 +29,18 @@ export default function ConfirmPage() {
     ?.filter((s) => !s.isDeleted)
     ?.flatMap((s) => s.sportScenes)
     ?.map((d) => ({
-      sceneName: d.scene?.name,
-      sceneId: d.scene?.id,
-      sportName: d.sport?.name,
-      sportId: d.sport?.id,
-      teamName: d.entries?.map((s) => s.team?.name),
-      teamId: d.entries?.map((s) => s.team?.id),
+      sceneName: d.scene?.name ?? "",
+      sceneId: d.scene?.id ?? "",
+      sportName: d.sport?.name ?? "",
+      sportId: d.sport?.id ?? "",
+      teamName: d.entries?.map((s) => s.team?.name ?? "") ?? [],
+      teamId: d.entries?.map((s) => s.team?.id ?? "") ?? [],
       memberData: d.entries?.map((s) =>
         s.team?.users?.map((u) => ({
           name: u.name ?? '',
           isExperienced: experiencedSet.has(`${d.sport?.id}:${u.id}`),
-        })),
-      ),
+        })) ?? [],
+      ) ?? [],
     }));
 
   if (loading || expLoading) {
@@ -82,9 +82,9 @@ export default function ConfirmPage() {
           <Conflicted />
         </Grid>
 
-        {allData?.map((item, index) => (
+        {allData?.map((item) => (
           <Grid
-            key={index}
+            key={`${item.sceneId}-${item.sportId}`}
             size={{ xs: 12, md: 6, lg: 6, xl: 6 }}
             flexGrow={1}
           >
