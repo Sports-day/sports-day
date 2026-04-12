@@ -153,10 +153,6 @@ input JudgmentEntry {
   groupId: ID
 }
 
-input CreateJudgmentInput {
-  id: ID!
-  entry: JudgmentEntry!
-}
 
 input UpdateJudgmentInput {
   entry: JudgmentEntry
@@ -403,7 +399,7 @@ type Query {
   """
   tournamentRanking(competitionId: ID!): [TournamentRanking!]!
   rule(id: ID!): Rule!
-  rules: [Rule]!
+  rules: [Rule!]!
   """
   ID指定で画像を取得する
   """
@@ -546,10 +542,6 @@ type Mutation {
   試合からチームエントリーを削除する
   """
   deleteMatchEntries(id: ID!, input: UpdateMatchEntriesInput!): Match! @hasPermission(permission: "match:write")
-  """
-  審判を作成する
-  """
-  createJudgment(input: CreateJudgmentInput!): Judgment!
   """
   審判の情報を更新する
   """

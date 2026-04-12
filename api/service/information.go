@@ -24,9 +24,17 @@ func NewInformation(db *gorm.DB, informationRepository repository.Information) I
 	}
 }
 
+var validInformationStatuses = map[string]bool{
+	"draft":     true,
+	"published": true,
+}
+
 func (s *Information) Create(ctx context.Context, input *model.CreateInformationInput) (*db_model.Information, error) {
 	status := "draft"
 	if input.Status != nil && *input.Status != "" {
+		if !validInformationStatuses[*input.Status] {
+			return nil, errors.ErrInvalidStatus
+		}
 		status = *input.Status
 	}
 
@@ -72,6 +80,9 @@ func (s *Information) Update(ctx context.Context, input model.UpdateInformationI
 	}
 
 	if input.Status != nil && *input.Status != "" {
+		if !validInformationStatuses[*input.Status] {
+			return nil, errors.ErrInvalidStatus
+		}
 		information.Status = *input.Status
 	}
 

@@ -586,8 +586,13 @@ func computeNodeRound(node *bracketNode) int {
 	if node.seedNumber > 0 {
 		return -1 // リーフはマッチではない
 	}
-	r1 := computeNodeRound(node.child1)
-	r2 := computeNodeRound(node.child2)
+	var r1, r2 int
+	if node.child1 != nil {
+		r1 = computeNodeRound(node.child1)
+	}
+	if node.child2 != nil {
+		r2 = computeNodeRound(node.child2)
+	}
 	node.round = max(r1, r2) + 1
 	return node.round
 }

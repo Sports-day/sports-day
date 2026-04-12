@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 
+	"sports-day/api"
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/service"
@@ -34,6 +35,7 @@ type Resolver struct {
 func (r *Resolver) computeBracketStateForTournament(ctx context.Context, t *db_model.Tournament) (*model.Tournament, error) {
 	state, progress, err := r.TournamentService.ComputeBracketState(ctx, nil, t.ID)
 	if err != nil {
+		api.Logger.Warn().Err(err).Str("tournament_id", t.ID).Msg("failed to compute bracket state, falling back to BUILDING")
 		state = model.BracketStateBuilding
 		progress = 0
 	}

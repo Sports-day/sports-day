@@ -147,6 +147,18 @@ func (s *Sport) GetRankingRules(ctx context.Context, sportID string) ([]*db_mode
 	return rules, nil
 }
 
+func (s *Sport) GetRankingRulesMapBySportIDs(ctx context.Context, sportIDs []string) (map[string][]*db_model.RankingRule, error) {
+	rules, err := s.sportsRepository.ListRankingRulesBySportIDs(ctx, s.db, sportIDs)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	result := make(map[string][]*db_model.RankingRule)
+	for _, r := range rules {
+		result[r.SportID] = append(result[r.SportID], r)
+	}
+	return result, nil
+}
+
 func (s *Sport) SetRankingRules(ctx context.Context, sportID string, rules []model.RankingRuleInput) ([]*db_model.RankingRule, error) {
 	// priority 重複チェック
 	seen := make(map[int32]bool)

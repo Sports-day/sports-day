@@ -48,6 +48,9 @@ func (s *AuthService) findUserIdp(ctx context.Context, claims *auth.Claims) (*db
 				record.Sub.Valid = true
 				return s.userRepo.SaveUserIdp(ctx, s.db, record)
 			}
+			if !errors.Is(err, errors.ErrUserNotFound) {
+				return nil, err
+			}
 		}
 		return nil, errors.ErrUserNotFound
 	}

@@ -160,6 +160,13 @@ func indexEntriesByMatchID(entries []*db_model.MatchEntry) map[string][]*db_mode
 }
 
 func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, input *model.GenerateRoundRobinInput) ([]*db_model.Match, error) {
+	if input.MatchDuration <= 0 {
+		return nil, errors.NewError("INVALID_MATCH_DURATION", "試合時間は1分以上を指定してください")
+	}
+	if input.BreakDuration < 0 {
+		return nil, errors.NewError("INVALID_BREAK_DURATION", "休憩時間は0分以上を指定してください")
+	}
+
 	var createdMatches []*db_model.Match
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {

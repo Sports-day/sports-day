@@ -59,11 +59,6 @@ type CreateInformationInput struct {
 	Status  *string `json:"status,omitempty"`
 }
 
-type CreateJudgmentInput struct {
-	ID    string         `json:"id"`
-	Entry *JudgmentEntry `json:"entry"`
-}
-
 type CreateLeagueInput struct {
 	Name              string  `json:"name"`
 	SceneID           string  `json:"sceneId"`

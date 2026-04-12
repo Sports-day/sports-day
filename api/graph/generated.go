@@ -172,7 +172,6 @@ type ComplexityRoot struct {
 		CreateGroup                    func(childComplexity int, input model.CreateGroupInput) int
 		CreateImageUploadURL           func(childComplexity int, input model.CreateImageUploadURLInput) int
 		CreateInformation              func(childComplexity int, input model.CreateInformationInput) int
-		CreateJudgment                 func(childComplexity int, input model.CreateJudgmentInput) int
 		CreateLeague                   func(childComplexity int, input model.CreateLeagueInput) int
 		CreateLocation                 func(childComplexity int, input model.CreateLocationInput) int
 		CreateMatch                    func(childComplexity int, input model.CreateMatchInput) int
@@ -491,7 +490,6 @@ type MutationResolver interface {
 	DeleteMatch(ctx context.Context, id string) (*model.Match, error)
 	AddMatchEntries(ctx context.Context, id string, input model.UpdateMatchEntriesInput) (*model.Match, error)
 	DeleteMatchEntries(ctx context.Context, id string, input model.UpdateMatchEntriesInput) (*model.Match, error)
-	CreateJudgment(ctx context.Context, input model.CreateJudgmentInput) (*model.Judgment, error)
 	UpdateJudgment(ctx context.Context, id string, input model.UpdateJudgmentInput) (*model.Judgment, error)
 	CreateLeague(ctx context.Context, input model.CreateLeagueInput) (*model.League, error)
 	UpdateLeagueRule(ctx context.Context, id string, input model.UpdateLeagueRuleInput) (*model.League, error)
@@ -1225,18 +1223,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateInformation(childComplexity, args["input"].(model.CreateInformationInput)), true
-
-	case "Mutation.createJudgment":
-		if e.complexity.Mutation.CreateJudgment == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createJudgment_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateJudgment(childComplexity, args["input"].(model.CreateJudgmentInput)), true
 
 	case "Mutation.createLeague":
 		if e.complexity.Mutation.CreateLeague == nil {
@@ -3047,7 +3033,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateGroupInput,
 		ec.unmarshalInputCreateImageUploadURLInput,
 		ec.unmarshalInputCreateInformationInput,
-		ec.unmarshalInputCreateJudgmentInput,
 		ec.unmarshalInputCreateLeagueInput,
 		ec.unmarshalInputCreateLocationInput,
 		ec.unmarshalInputCreateMatchInput,
@@ -3660,29 +3645,6 @@ func (ec *executionContext) field_Mutation_createInformation_argsInput(
 	}
 
 	var zeroVal model.CreateInformationInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_createJudgment_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_createJudgment_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_createJudgment_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (model.CreateJudgmentInput, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCreateJudgmentInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateJudgmentInput(ctx, tmp)
-	}
-
-	var zeroVal model.CreateJudgmentInput
 	return zeroVal, nil
 }
 
@@ -12924,75 +12886,6 @@ func (ec *executionContext) fieldContext_Mutation_deleteMatchEntries(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteMatchEntries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createJudgment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createJudgment(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateJudgment(rctx, fc.Args["input"].(model.CreateJudgmentInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Judgment)
-	fc.Result = res
-	return ec.marshalNJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgment(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createJudgment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Judgment_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Judgment_name(ctx, field)
-			case "user":
-				return ec.fieldContext_Judgment_user(ctx, field)
-			case "team":
-				return ec.fieldContext_Judgment_team(ctx, field)
-			case "group":
-				return ec.fieldContext_Judgment_group(ctx, field)
-			case "isAttending":
-				return ec.fieldContext_Judgment_isAttending(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Judgment", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createJudgment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -26308,40 +26201,6 @@ func (ec *executionContext) unmarshalInputCreateInformationInput(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreateJudgmentInput(ctx context.Context, obj any) (model.CreateJudgmentInput, error) {
-	var it model.CreateJudgmentInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "entry"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "entry":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entry"))
-			data, err := ec.unmarshalNJudgmentEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentEntry(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Entry = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputCreateLeagueInput(ctx context.Context, obj any) (model.CreateLeagueInput, error) {
 	var it model.CreateLeagueInput
 	asMap := map[string]any{}
@@ -29546,13 +29405,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteMatchEntries":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteMatchEntries(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createJudgment":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createJudgment(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -33092,11 +32944,6 @@ func (ec *executionContext) unmarshalNCreateInformationInput2sportsᚑdayᚋapi�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateJudgmentInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateJudgmentInput(ctx context.Context, v any) (model.CreateJudgmentInput, error) {
-	res, err := ec.unmarshalInputCreateJudgmentInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNCreateLeagueInput2sportsᚑdayᚋapiᚋgraphᚋmodelᚐCreateLeagueInput(ctx context.Context, v any) (model.CreateLeagueInput, error) {
 	res, err := ec.unmarshalInputCreateLeagueInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -33542,11 +33389,6 @@ func (ec *executionContext) marshalNJudgment2ᚖsportsᚑdayᚋapiᚋgraphᚋmod
 		return graphql.Null
 	}
 	return ec._Judgment(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNJudgmentEntry2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐJudgmentEntry(ctx context.Context, v any) (*model.JudgmentEntry, error) {
-	res, err := ec.unmarshalInputJudgmentEntry(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNLeague2sportsᚑdayᚋapiᚋgraphᚋmodelᚐLeague(ctx context.Context, sel ast.SelectionSet, v model.League) graphql.Marshaler {

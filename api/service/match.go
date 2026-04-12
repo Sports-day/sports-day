@@ -235,7 +235,12 @@ func (s *Match) UpdateResult(ctx context.Context, id string, input model.UpdateM
 		}
 
 		if input.Results != nil {
+			seenTeams := make(map[string]struct{}, len(input.Results))
 			for _, result := range input.Results {
+				if _, dup := seenTeams[result.TeamID]; dup {
+					return errors.ErrUpdateMatchEntryScore
+				}
+				seenTeams[result.TeamID] = struct{}{}
 				if _, err := s.matchRepository.UpdateMatchEntryScore(ctx, tx, id, result.TeamID, int(result.Score)); err != nil {
 					return errors.ErrUpdateMatchEntryScore
 				}
@@ -447,6 +452,9 @@ func (s *Match) NextJudgeMatchAtLocation(ctx context.Context, locationID string)
 	if err != nil {
 		return nil, nil
 	}
+	if s.judgmentService == nil {
+		return nil, nil
+	}
 	if err := s.judgmentService.IsAssignedReferee(ctx, s.db, judgment, user.ID); err != nil {
 		return nil, nil
 	}
@@ -460,6 +468,10 @@ func (s *Match) StartMatchJudging(ctx context.Context, matchID string) (*db_mode
 	user, ok := auth.GetUser(ctx)
 	if !ok {
 		return nil, errors.ErrUnauthorized
+	}
+
+	if s.judgmentService == nil {
+		return nil, errors.ErrNotAssignedReferee
 	}
 
 	var result *db_model.Match
@@ -521,6 +533,10 @@ func (s *Match) SubmitScore(ctx context.Context, matchID string, input model.Sub
 	user, ok := auth.GetUser(ctx)
 	if !ok {
 		return nil, errors.ErrUnauthorized
+	}
+
+	if s.judgmentService == nil {
+		return nil, errors.ErrNotAssignedReferee
 	}
 
 	var match *db_model.Match
@@ -586,8 +602,13 @@ func (s *Match) SubmitScore(ctx context.Context, matchID string, input model.Sub
 			return errors.ErrSaveMatch
 		}
 
-		// スコア更新
+		// スコア更新（重複TeamIDチェック付き）
+		seenTeams := make(map[string]struct{}, len(input.Results))
 		for _, result := range input.Results {
+			if _, dup := seenTeams[result.TeamID]; dup {
+				return errors.ErrUpdateMatchEntryScore
+			}
+			seenTeams[result.TeamID] = struct{}{}
 			if _, err := s.matchRepository.UpdateMatchEntryScore(ctx, tx, matchID, result.TeamID, int(result.Score)); err != nil {
 				return errors.ErrUpdateMatchEntryScore
 			}

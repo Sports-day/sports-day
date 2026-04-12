@@ -274,11 +274,13 @@ func (r *mutationResolver) CreateCompetition(ctx context.Context, input model.Cr
 	// トーナメント型の場合、デフォルトブラケットを自動生成
 	if input.Type == model.CompetitionTypeTournament {
 		pm := model.PlacementMethodSeedOptimized
-		_, _ = r.TournamentService.GenerateBracket(ctx, &model.GenerateBracketInput{
+		if _, err := r.TournamentService.GenerateBracket(ctx, &model.GenerateBracketInput{
 			CompetitionID:   competition.ID,
 			TeamCount:       4,
 			PlacementMethod: &pm,
-		})
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	return model.FormatCompetitionResponse(competition), nil
@@ -380,15 +382,6 @@ func (r *mutationResolver) DeleteMatchEntries(ctx context.Context, id string, in
 		return nil, err
 	}
 	return model.FormatMatchResponse(match), nil
-}
-
-// CreateJudgment is the resolver for the createJudgment field.
-func (r *mutationResolver) CreateJudgment(ctx context.Context, input model.CreateJudgmentInput) (*model.Judgment, error) {
-	judgment, err := r.JudgmentService.Create(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
-	return model.FormatJudgmentResponse(judgment), nil
 }
 
 // UpdateJudgment is the resolver for the updateJudgment field.
@@ -971,17 +964,23 @@ func (r *queryResolver) Sports(ctx context.Context) ([]*model.Sport, error) {
 		return nil, err
 	}
 
+	sportIDs := make([]string, len(sports))
+	for i, s := range sports {
+		sportIDs[i] = s.ID
+	}
+
+	rankingRulesMap, err := r.SportService.GetRankingRulesMapBySportIDs(ctx, sportIDs)
+	if err != nil {
+		return nil, err
+	}
+	rulesMap, err := r.RuleService.GetRulesMapBySportIDs(ctx, sportIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	res := make([]*model.Sport, 0, len(sports))
 	for _, sport := range sports {
-		rankingRules, err := r.SportService.GetRankingRules(ctx, sport.ID)
-		if err != nil {
-			return nil, err
-		}
-		rules, err := r.RuleService.ListBySportID(ctx, sport.ID)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, model.FormatSportWithRankingRulesResponse(sport, rankingRules, rules))
+		res = append(res, model.FormatSportWithRankingRulesResponse(sport, rankingRulesMap[sport.ID], rulesMap[sport.ID]))
 	}
 	return res, nil
 }
@@ -1190,7 +1189,7 @@ func (r *queryResolver) Leagues(ctx context.Context) ([]*model.League, error) {
 	for _, league := range leagues {
 		comp, ok := compMap[league.ID]
 		if !ok {
-			return nil, nil
+			continue
 		}
 		res = append(res, model.FormatLeagueResponse(league, comp))
 	}

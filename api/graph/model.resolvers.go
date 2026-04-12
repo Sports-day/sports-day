@@ -119,14 +119,7 @@ func (r *groupResolver) Teams(ctx context.Context, obj *model.Group) ([]*model.T
 	if err != nil {
 		return nil, err
 	}
-	teamIds := slices.Map(groupTeams, func(team *db_model.Team) string {
-		return team.ID
-	})
-	teams, err := loader.LoadTeams(ctx, teamIds)
-	if err != nil {
-		return nil, err
-	}
-	return slices.Map(teams, func(team *db_model.Team) *model.Team {
+	return slices.Map(groupTeams, func(team *db_model.Team) *model.Team {
 		return model.FormatTeamResponse(team)
 	}), nil
 }
@@ -425,7 +418,7 @@ func (r *sportSceneResolver) Sport(ctx context.Context, obj *model.SportScene) (
 	if err != nil {
 		return nil, err
 	}
-	if len(res) == 0 {
+	if len(res) == 0 || res[0] == nil {
 		return nil, nil
 	}
 	return model.FormatSportResponse(res[0]), nil
@@ -437,7 +430,7 @@ func (r *sportSceneResolver) Scene(ctx context.Context, obj *model.SportScene) (
 	if err != nil {
 		return nil, err
 	}
-	if len(res) == 0 {
+	if len(res) == 0 || res[0] == nil {
 		return nil, nil
 	}
 	return model.FormatSceneResponse(res[0]), nil
@@ -570,7 +563,7 @@ func (r *teamResolver) Leagues(ctx context.Context, obj *model.Team) ([]*model.L
 	var leagueCompIds []string
 	compMap := make(map[string]*db_model.Competition)
 	for _, c := range competitions {
-		if c != nil && c.Type == "LEAGUE" {
+		if c != nil && c.Type == string(model.CompetitionTypeLeague) {
 			leagueCompIds = append(leagueCompIds, c.ID)
 			compMap[c.ID] = c
 		}

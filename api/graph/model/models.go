@@ -48,12 +48,12 @@ type Location struct {
 }
 
 type Judgment struct {
-	ID          string `json:"matchId"`
-	Name        string `json:"name"`
-	UserId      string `json:"userId"`
-	TeamId      string `json:"teamId"`
-	GroupId     string `json:"groupId"`
-	IsAttending bool   `json:"isAttending"`
+	ID          string  `json:"id"`
+	Name        *string `json:"name,omitempty"`
+	UserId      string  `json:"userId"`
+	TeamId      string  `json:"teamId"`
+	GroupId     string  `json:"groupId"`
+	IsAttending bool    `json:"isAttending"`
 }
 
 type League struct {

@@ -191,10 +191,11 @@ func FormatMatchEntryResponse(entry *db_model.MatchEntry) *MatchEntry {
 }
 
 func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
-	var name, userId, teamId, groupId string
+	var name *string
+	var userId, teamId, groupId string
 
 	if judgment.Name.Valid {
-		name = judgment.Name.String
+		name = &judgment.Name.String
 	}
 	if judgment.UserID.Valid {
 		userId = judgment.UserID.String
