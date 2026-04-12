@@ -19,9 +19,10 @@ type Props = {
   match: PanelMatch;
   open: boolean;
   onClose: () => void;
+  onSubmitSuccess?: () => void;
 };
 
-export const ScoreSubmitDialog = ({ match, open, onClose }: Props) => {
+export const ScoreSubmitDialog = ({ match, open, onClose, onSubmitSuccess }: Props) => {
   const theme = useTheme();
   const [submitScore, { loading }] = useSubmitPanelMatchScoreMutation();
 
@@ -89,10 +90,23 @@ export const ScoreSubmitDialog = ({ match, open, onClose }: Props) => {
       setScore0("");
       setScore1("");
       setError(null);
-      onClose();
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      } else {
+        onClose();
+      }
     } catch (e: unknown) {
-      const message =
-        e instanceof Error ? e.message : "スコアの提出に失敗しました";
+      const raw = e instanceof Error ? e.message : "";
+      let message: string;
+      if (raw.includes("MATCH_ALREADY_FINISHED")) {
+        message = "この試合は既にスコアが提出されています";
+      } else if (raw.includes("NOT_ASSIGNED_REFEREE")) {
+        message = "この試合の審判として割り当てられていません";
+      } else if (raw.includes("JUDGMENT_NOT_ATTENDING")) {
+        message = "出席確認がされていません";
+      } else {
+        message = "スコアの提出に失敗しました";
+      }
       setError(message);
     }
   };
