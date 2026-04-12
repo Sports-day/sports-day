@@ -1874,7 +1874,7 @@ export type UpdateAdminJudgmentMutationVariables = Exact<{
 }>;
 
 
-export type UpdateAdminJudgmentMutation = { __typename?: 'Mutation', updateJudgment: { __typename?: 'Judgment', id: string, name?: string | null, user?: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } };
+export type UpdateAdminJudgmentMutation = { __typename?: 'Mutation', updateJudgment: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } };
 
 export type CreateAdminTournamentMatchMutationVariables = Exact<{
   input: CreateTournamentMatchInput;
@@ -4956,6 +4956,7 @@ export const UpdateAdminJudgmentDocument = gql`
   updateJudgment(id: $id, input: $input) {
     id
     name
+    isAttending
     user {
       id
       name
