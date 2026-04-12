@@ -12,6 +12,7 @@ import {
   RankingConditionKey,
 } from '@/gql/__generated__/graphql'
 import { useImages } from '@/features/images/hooks/useImages'
+import { showErrorToast } from '@/lib/toast'
 
 const RANKING_CONDITION_OPTIONS: { value: RankingConditionKey; label: string }[] = [
   { value: RankingConditionKey.WinPoints, label: '勝ち点' },
@@ -121,57 +122,67 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
     const sIds = [...sceneIds]
     const prev = { ...saved }
 
-    // 1) 基本フィールド保存
-    await updateSport({
-      variables: { id: sportId, input: { name: n, displayOrder: w, experiencedLimit: el, imageId: img } },
-    })
+    try {
+      // 1) 基本フィールド保存
+      await updateSport({
+        variables: { id: sportId, input: { name: n, displayOrder: w, experiencedLimit: el, imageId: img } },
+      })
 
-    // 2) 採点方式保存
-    await doSetRankingRules({
-      variables: {
-        sportId,
-        rules: rk.map((key, i) => ({ conditionKey: key, priority: i + 1 })),
-      },
-    })
+      // 2) 採点方式保存
+      await doSetRankingRules({
+        variables: {
+          sportId,
+          rules: rk.map((key, i) => ({ conditionKey: key, priority: i + 1 })),
+        },
+      })
 
-    // 3) シーン保存（差分のみ）
-    const prevSceneIdSet = new Set(prev.sceneIds)
-    const newSceneIdSet = new Set(sIds)
+      // 3) シーン保存（差分のみ）
+      const prevSceneIdSet = new Set(prev.sceneIds)
+      const newSceneIdSet = new Set(sIds)
 
-    // 削除: 以前あったが今はないもの
-    const toDelete = prev.sportScenes.filter(ss => !newSceneIdSet.has(ss.sceneId))
-    for (const ss of toDelete) {
-      await deleteSportScene({ variables: { id: ss.sportSceneId } })
+      // 削除: 以前あったが今はないもの
+      const toDelete = prev.sportScenes.filter(ss => !newSceneIdSet.has(ss.sceneId))
+      for (const ss of toDelete) {
+        await deleteSportScene({ variables: { id: ss.sportSceneId } })
+      }
+
+      // 追加: 今あるが以前なかったもの
+      const toAdd = sIds.filter(id => !prevSceneIdSet.has(id))
+      for (const sceneId of toAdd) {
+        await addSportScenes({ variables: { id: sceneId, input: { sportIds: [sportId] } } })
+      }
+
+      // 4) refetchしてsportSceneを最新化
+      const { data: refreshed } = await refetch()
+      const newSportScenes: SportSceneEntry[] = (refreshed?.sport?.scene ?? []).map(ss => ({
+        sportSceneId: ss.id,
+        sceneId: ss.scene.id,
+      }))
+
+      // 5) savedをフォーム値で更新 → dirty = false
+      setSaved({
+        name: n,
+        displayOrder: w,
+        experiencedLimit: el,
+        imageId: img,
+        sceneIds: sIds,
+        rankingKeys: rk,
+        sportScenes: newSportScenes,
+      })
+    } catch (e) {
+      showErrorToast()
+      throw e
     }
-
-    // 追加: 今あるが以前なかったもの
-    const toAdd = sIds.filter(id => !prevSceneIdSet.has(id))
-    for (const sceneId of toAdd) {
-      await addSportScenes({ variables: { id: sceneId, input: { sportIds: [sportId] } } })
-    }
-
-    // 4) refetchしてsportSceneを最新化
-    const { data: refreshed } = await refetch()
-    const newSportScenes: SportSceneEntry[] = (refreshed?.sport?.scene ?? []).map(ss => ({
-      sportSceneId: ss.id,
-      sceneId: ss.scene.id,
-    }))
-
-    // 5) savedをフォーム値で更新 → dirty = false
-    setSaved({
-      name: n,
-      displayOrder: w,
-      experiencedLimit: el,
-      imageId: img,
-      sceneIds: sIds,
-      rankingKeys: rk,
-      sportScenes: newSportScenes,
-    })
   }
 
   const handleDelete = async () => {
-    await deleteSport({ variables: { id: sportId } })
-    onDelete()
+    try {
+      await deleteSport({ variables: { id: sportId } })
+      onDelete()
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return {

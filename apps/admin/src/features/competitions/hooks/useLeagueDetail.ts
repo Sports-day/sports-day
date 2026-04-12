@@ -81,7 +81,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     () => competitionTeams.map((t, i) => ({
       id: i + 1,
       teamName: t.name,
-      teamClass: t.group.name,
+      teamClass: t.group?.name ?? '',
       teamId: t.id,
     })),
     [competitionTeams],
@@ -311,11 +311,18 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 
   const handleDelete = async () => {
-    await deleteLeague({ variables: { id: leagueId } })
+    try {
+      await deleteLeague({ variables: { id: leagueId } })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleUpdateLeagueRule = async (winPt: number, drawPt: number, losePt: number) => {
@@ -341,7 +348,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       try {
         await regenerateRoundRobin({ variables: { id: competitionId } })
       } catch (regenErr) {
-        console.error('regenerateRoundRobin failed:', regenErr)
+        // ラウンドロビン再生成失敗は致命的でないためスキップ
       }
       setMutationError(null)
     } catch (e) {
@@ -363,7 +370,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       try {
         await regenerateRoundRobin({ variables: { id: competitionId } })
       } catch (regenErr) {
-        console.error('regenerateRoundRobin failed:', regenErr)
+        // ラウンドロビン再生成失敗は致命的でないためスキップ
       }
       setMutationError(null)
     } catch (e) {

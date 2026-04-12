@@ -184,7 +184,6 @@ async function fetchMsGraphUsers(
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (!res.ok) {
-        console.error(`Graph API error: ${res.status} ${res.statusText}`)
         return []
       }
       const json = await res.json()
@@ -229,7 +228,6 @@ export async function resolveUsersByEmails(
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (!res.ok) {
-        console.error(`Graph API error: ${res.status} ${res.statusText}`)
         return []
       }
       const json = await res.json()

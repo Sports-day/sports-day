@@ -20,21 +20,33 @@ export function TagDetailPage({ tagId, onBack }: Props) {
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
-    await handleSave()
-    showToast('タグを保存しました')
-    onBack()
+    try {
+      await handleSave()
+      showToast('タグを保存しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    handleDelete()
-    showToast('タグを削除しました')
-    onBack()
+    try {
+      await handleDelete()
+      showToast('タグを削除しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
-  const onRestore = () => {
-    handleRestore()
-    showToast('タグを復元しました')
+  const onRestore = async () => {
+    try {
+      await handleRestore()
+      showToast('タグを復元しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

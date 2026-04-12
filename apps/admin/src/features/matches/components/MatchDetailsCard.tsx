@@ -314,9 +314,9 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
                   />
                 )}
                 renderOption={(props, option) => {
-                  const { key, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key?: string }
+                  const { key, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key: string }
                   return (
-                    <li key={key} {...rest}>
+                    <li key={key ?? option.id} {...rest}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.3 }}>
                         <Box
                           sx={{

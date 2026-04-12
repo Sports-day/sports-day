@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCreateAdminSceneForTagMutation, GetAdminScenesForTagsDocument } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useTagCreate() {
   const [name, setName] = useState('')
@@ -9,8 +10,13 @@ export function useTagCreate() {
 
   const handleCreate = async () => {
     if (!name.trim()) return
-    await createScene({ variables: { input: { name: name.slice(0, 64) } } })
-    setName('')
+    try {
+      await createScene({ variables: { input: { name: name.slice(0, 64) } } })
+      setName('')
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return { name, setName, handleCreate }

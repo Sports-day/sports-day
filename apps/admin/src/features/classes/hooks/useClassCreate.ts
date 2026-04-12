@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCreateAdminGroupForClassMutation, GetAdminGroupsForClassesDocument } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useClassCreate() {
   const [name, setName] = useState('')
@@ -9,8 +10,13 @@ export function useClassCreate() {
 
   const handleCreate = async () => {
     if (!name.trim()) return
-    await createGroup({ variables: { input: { name: name.slice(0, 64) } } })
-    setName('')
+    try {
+      await createGroup({ variables: { input: { name: name.slice(0, 64) } } })
+      setName('')
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return { name, setName, handleCreate }

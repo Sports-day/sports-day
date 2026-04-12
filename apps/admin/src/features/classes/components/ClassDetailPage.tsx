@@ -59,16 +59,24 @@ export function ClassDetailPage({ classId, onBack }: Props) {
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
-    await handleSave()
-    showToast('クラスを保存しました')
-    onBack()
+    try {
+      await handleSave()
+      showToast('クラスを保存しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    handleDelete()
-    showToast('クラスを削除しました')
-    onBack()
+    try {
+      await handleDelete()
+      showToast('クラスを削除しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

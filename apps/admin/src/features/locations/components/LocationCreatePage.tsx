@@ -14,11 +14,15 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
   const { form, handleChange, handleSubmit: handleSubmitOriginal } = useLocationCreate(onSave)
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitted(true)
     if (!form.name.trim()) return
-    handleSubmitOriginal()
-    showToast('場所を作成しました')
+    try {
+      await handleSubmitOriginal()
+      showToast('場所を作成しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

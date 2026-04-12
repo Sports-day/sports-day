@@ -21,7 +21,7 @@ import { SportRulesSection } from './SportRulesSection'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import { ScoringDnDList } from '@/features/competitions/components/ScoringDnDList'
 import { SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT, CARD_FIELD_SX } from '@/styles/commonSx'
-import { showToast, showErrorToast } from '@/lib/toast'
+import { showToast } from '@/lib/toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Props = {
@@ -67,15 +67,19 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
     try {
       await handleSave()
       showToast('競技を保存しました')
-    } catch (e) {
-      showErrorToast('保存に失敗しました。')
+    } catch {
+      // エラートーストはhook側で表示済み
     }
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    handleDelete()
-    showToast('競技を削除しました')
+    try {
+      await handleDelete()
+      showToast('競技を削除しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   const dndOptions = rankingConditionOptions.map(o => ({ value: o.value as string, label: o.label }))

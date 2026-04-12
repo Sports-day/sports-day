@@ -5,6 +5,7 @@ import {
   useDeleteAdminLocationMutation,
   GetAdminLocationsDocument,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useLocationDetail(locationId: string, onSave: () => void, onDelete: () => void) {
   const { data, loading, error } = useGetAdminLocationQuery({ variables: { id: locationId } })
@@ -26,14 +27,24 @@ export function useLocationDetail(locationId: string, onSave: () => void, onDele
 
   const handleSave = async () => {
     if (!name.trim()) return
-    await updateLocation({ variables: { id: locationId, input: { name: name.slice(0, 64) } } })
-    setEditName(null)
-    onSave()
+    try {
+      await updateLocation({ variables: { id: locationId, input: { name: name.slice(0, 64) } } })
+      setEditName(null)
+      onSave()
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleDelete = async () => {
-    await deleteLocation({ variables: { id: locationId } })
-    onDelete()
+    try {
+      await deleteLocation({ variables: { id: locationId } })
+      onDelete()
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return { location, name, setName, dirty, handleSave, handleDelete, loading, error: error ?? null }

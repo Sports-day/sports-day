@@ -36,8 +36,7 @@ export function QrPdfExportDialog({ open, onClose, competitionId, competitionNam
     try {
       const url = await generateQrPdfBlob(data)
       setPreviewUrl(url)
-    } catch (e) {
-      console.error('QR PDF preview failed:', e)
+    } catch {
       showErrorToast('QR PDFプレビューの生成に失敗しました。')
     } finally {
       setGenerating(false)
@@ -63,8 +62,7 @@ export function QrPdfExportDialog({ open, onClose, competitionId, competitionNam
     setDownloading(true)
     try {
       await downloadQrPdf(data)
-    } catch (e) {
-      console.error('QR PDF download failed:', e)
+    } catch {
       showErrorToast('PDFダウンロードに失敗しました。再度お試しください。')
     } finally {
       setDownloading(false)

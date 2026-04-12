@@ -347,16 +347,20 @@ export function TournamentDetailPage({
       await handleSave()
       onSaved?.(form.name.trim())
       showToast('トーナメントを保存しました')
-    } catch (e) {
-      showErrorToast('保存に失敗しました。')
+    } catch {
+      // エラートーストはhook側で表示済み
     }
   }
 
   const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    await handleDelete()
-    onDeleted?.()
-    showToast('トーナメントを削除しました')
+    try {
+      await handleDelete()
+      onDeleted?.()
+      showToast('トーナメントを削除しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

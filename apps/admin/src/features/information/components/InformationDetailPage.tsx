@@ -20,16 +20,24 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
-    await handleSave()
-    showToast('お知らせを保存しました')
-    onBack()
+    try {
+      await handleSave()
+      showToast('お知らせを保存しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    handleDelete()
-    showToast('お知らせを削除しました')
-    onBack()
+    try {
+      await handleDelete()
+      showToast('お知らせを削除しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

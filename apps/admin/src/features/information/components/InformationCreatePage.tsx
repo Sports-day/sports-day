@@ -26,11 +26,15 @@ export function InformationCreatePage({ onBack }: Props) {
   const { title, setTitle, content, setContent, status, setStatus, handleCreate } = useInformationCreate(onBack)
   const [submitted, setSubmitted] = useState(false)
 
-  const onCreate = () => {
+  const onCreate = async () => {
     setSubmitted(true)
     if (!title.trim() || !content.trim()) return
-    handleCreate()
-    showToast('お知らせを作成しました')
+    try {
+      await handleCreate()
+      showToast('お知らせを作成しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

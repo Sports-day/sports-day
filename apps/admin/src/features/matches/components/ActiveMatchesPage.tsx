@@ -212,8 +212,12 @@ export function ActiveMatchesPage() {
         dirty={matchEdit.dirty}
         onReset={matchEdit.resetMatch}
         onSave={async () => {
-          await matchEdit.saveMatch()
-          refetch()
+          try {
+            await matchEdit.saveMatch()
+            refetch()
+          } catch {
+            // エラートーストはhook側で表示済み
+          }
         }}
       />
     )

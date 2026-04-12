@@ -26,12 +26,16 @@ export function TagCreatePage({ onBack }: Props) {
   const { name, setName, handleCreate } = useTagCreate()
   const [submitted, setSubmitted] = useState(false)
 
-  const onCreate = () => {
+  const onCreate = async () => {
     setSubmitted(true)
     if (!name.trim()) return
-    handleCreate()
-    showToast('タグを作成しました')
-    onBack()
+    try {
+      await handleCreate()
+      showToast('タグを作成しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

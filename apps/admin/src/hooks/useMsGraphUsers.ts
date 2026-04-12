@@ -31,8 +31,8 @@ export function useMsGraphUsers(microsoftUserIds: string[]) {
         if (cancelled) return
 
         setMsGraphUsers(result)
-      } catch (e) {
-        console.error('Failed to fetch MS Graph users:', e)
+      } catch {
+        // Graph API fetch failed - silently handled
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -68,8 +68,8 @@ export function useMsGraphUser(microsoftUserId: string | null | undefined) {
         if (cancelled) return
 
         setMsGraphUser(result)
-      } catch (e) {
-        console.error('Failed to fetch MS Graph user:', e)
+      } catch {
+        // Graph API fetch failed - silently handled
       } finally {
         if (!cancelled) setLoading(false)
       }

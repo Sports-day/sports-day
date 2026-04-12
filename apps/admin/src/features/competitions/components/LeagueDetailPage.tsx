@@ -94,16 +94,20 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
       await handleSave()
       onSaved?.(form.name.trim())
       showToast('リーグを保存しました')
-    } catch (e) {
-      showErrorToast('保存に失敗しました。')
+    } catch {
+      // エラートーストはhook側で表示済み
     }
   }
 
   const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    await handleDelete()
-    onDeleted?.()
-    showToast('リーグを削除しました')
+    try {
+      await handleDelete()
+      onDeleted?.()
+      showToast('リーグを削除しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

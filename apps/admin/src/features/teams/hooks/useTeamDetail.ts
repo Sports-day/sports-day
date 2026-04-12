@@ -127,6 +127,7 @@ export function useTeamDetail(teamId: string) {
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 
@@ -140,6 +141,7 @@ export function useTeamDetail(teamId: string) {
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 

@@ -52,9 +52,13 @@ export function UserCsvPage({ onBack }: Props) {
   }
 
   const onCreateClick = async () => {
-    await handleCreate()
-    showToast('ユーザーを一括作成しました')
-    onBack()
+    try {
+      await handleCreate()
+      showToast('ユーザーを一括作成しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

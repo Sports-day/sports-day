@@ -14,11 +14,15 @@ export function SportCreatePage({ onBack, onSave }: Props) {
   const { form, handleChange, handleSubmit: handleSubmitOriginal } = useSportCreate(onSave)
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitted(true)
     if (!form.name.trim()) return
-    handleSubmitOriginal()
-    showToast('競技を作成しました')
+    try {
+      await handleSubmitOriginal()
+      showToast('競技を作成しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
