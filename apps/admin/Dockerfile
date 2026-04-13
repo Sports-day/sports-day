@@ -10,10 +10,10 @@ COPY apps/form/package.json apps/form/package.json
 
 RUN yarn install --frozen-lockfile
 
-WORKDIR /app/apps/panel
-COPY apps/panel/ .
+WORKDIR /app/apps/admin
+COPY apps/admin/ .
 
-ARG VITE_BASE_PATH=/
+ARG VITE_BASE_PATH=/admin/
 ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 
 RUN yarn build
@@ -23,8 +23,8 @@ FROM nginx:1.27-alpine
 RUN chown -R nginx:nginx /var/cache/nginx /var/log/nginx \
     && touch /run/nginx.pid && chown nginx:nginx /run/nginx.pid
 
-COPY --from=builder --chown=nginx:nginx /app/apps/panel/dist /usr/share/nginx/html
-COPY --chown=nginx:nginx apps/panel/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder --chown=nginx:nginx /app/apps/admin/dist /usr/share/nginx/html
+COPY --chown=nginx:nginx apps/admin/nginx.conf /etc/nginx/conf.d/default.conf
 
 USER nginx
 
