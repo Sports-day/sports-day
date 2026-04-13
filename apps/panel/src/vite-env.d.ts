@@ -3,10 +3,11 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string
-  readonly VITE_OIDC_AUTHORIZE_URL: string
-  readonly VITE_OIDC_CLIENT_ID: string
-  readonly VITE_OIDC_REDIRECT_URL: string
-  readonly VITE_OIDC_SCOPE: string
+  readonly VITE_AUTHORITY: string
+  readonly VITE_CLIENT_ID: string
+  readonly VITE_REDIRECT_URI: string
+  readonly VITE_SILENT_REDIRECT_URI: string
+  readonly VITE_SCOPE: string
   readonly VITE_OIDC_DISPLAY_NAME: string
   readonly VITE_GA_ID: string
   readonly VITE_BASE_PATH: string
