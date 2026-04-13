@@ -12,47 +12,8 @@ env:
   IMAGE_PREFIX: ghcr.io/sports-day/sports-day
 
 jobs:
-  changes:
-    name: Detect changes
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-      admin: ${{ steps.filter.outputs.admin }}
-      panel: ${{ steps.filter.outputs.panel }}
-      form: ${{ steps.filter.outputs.form }}
-      is_tag: ${{ startsWith(github.ref, 'refs/tags/') }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        with:
-          filters: |
-            api:
-              - 'api/**'
-              - 'go.mod'
-              - 'go.sum'
-              - 'gqlgen.yml'
-              - 'docker/api.Dockerfile'
-            admin:
-              - 'apps/admin/**'
-              - 'package.json'
-              - 'yarn.lock'
-            panel:
-              - 'apps/panel/**'
-              - 'package.json'
-              - 'yarn.lock'
-            form:
-              - 'apps/form/**'
-              - 'package.json'
-              - 'yarn.lock'
-
   build-api:
     name: Build API
-    needs: changes
-    if: ${{ needs.changes.outputs.is_tag == 'true' || needs.changes.outputs.api == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -86,8 +47,6 @@ jobs:
 
   build-admin:
     name: Build Admin
-    needs: changes
-    if: ${{ needs.changes.outputs.is_tag == 'true' || needs.changes.outputs.admin == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -129,8 +88,6 @@ jobs:
 
   build-panel:
     name: Build Panel
-    needs: changes
-    if: ${{ needs.changes.outputs.is_tag == 'true' || needs.changes.outputs.panel == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -174,8 +131,6 @@ jobs:
 
   build-form:
     name: Build Form
-    needs: changes
-    if: ${{ needs.changes.outputs.is_tag == 'true' || needs.changes.outputs.form == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
