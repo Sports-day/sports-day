@@ -4,11 +4,15 @@ import * as React from "react";
 import {useTheme} from "@mui/material/styles";
 import {userManager} from "@/src/lib/userManager";
 
-export default function LoginButton() {
+type LoginButtonProps = {
+    from?: string;
+}
+
+export default function LoginButton({ from }: LoginButtonProps) {
     const theme = useTheme();
 
     const handleLogin = () => {
-        userManager.signinRedirect()
+        userManager.signinRedirect({ state: from ?? '/' })
     }
 
     const buttonDisplayName = import.meta.env.VITE_OIDC_DISPLAY_NAME ?? "ログインできません"

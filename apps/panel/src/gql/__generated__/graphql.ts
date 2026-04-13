@@ -419,6 +419,13 @@ export type Mutation = {
   setRankingRules: Sport;
   /** リーグのタイブレーク優先度を設定する */
   setTiebreakPriorities: Array<TiebreakPriority>;
+  /**
+   * 審判がQRをスキャンした際の複合操作: 出席記録(isAttending=true)と
+   * 試合ステータスをONGOINGに更新する。審判本人のみ実行可能。
+   * 試合が既にONGOINGの場合は冪等に処理する。
+   * FINISHEDまたはCANCELEDの試合には失敗する。
+   */
+  startMatchJudging: Match;
   /** 審判がスコアを提出する（審判本人のみ実行可能、試合は自動的にFINISHEDになる） */
   submitMatchScore: Match;
   /** 大会の情報を更新する */
@@ -763,6 +770,11 @@ export type MutationSetTiebreakPrioritiesArgs = {
 };
 
 
+export type MutationStartMatchJudgingArgs = {
+  matchId: Scalars['ID']['input'];
+};
+
+
 export type MutationSubmitMatchScoreArgs = {
   input: SubmitScoreInput;
   matchId: Scalars['ID']['input'];
@@ -963,6 +975,12 @@ export type Query = {
   /** 試合をまとめて取得する */
   matches: Array<Match>;
   me: User;
+  /**
+   * 審判用: 指定ロケーションで審判が対応すべき次の試合を返す。
+   * 呼び出しユーザーが審判として割り当てられている STANDBY または ONGOING の試合を
+   * 時刻昇順で最初の1件返す。該当なしの場合は null を返す。
+   */
+  nextJudgeMatchAtLocation?: Maybe<Match>;
   /** 進出ルールを取得する（進出元の大会IDで絞り込み） */
   promotionRules: Array<PromotionRule>;
   /** 進出先の期待チーム数と現在のエントリー数を取得する */
@@ -1034,6 +1052,11 @@ export type QueryLocationArgs = {
 
 export type QueryMatchArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryNextJudgeMatchAtLocationArgs = {
+  locationId: Scalars['ID']['input'];
 };
 
 
@@ -1296,6 +1319,7 @@ export type UpdateInformationInput = {
 
 export type UpdateJudgmentInput = {
   entry?: InputMaybe<JudgmentEntry>;
+  isAttending?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateLeagueRuleInput = {
@@ -1375,10 +1399,12 @@ export type UpdateTournamentInput = {
 
 export type User = {
   __typename?: 'User';
+  email?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   identify: UserIdentify;
   judgments: Array<Judgment>;
+  name?: Maybe<Scalars['String']['output']>;
   role: Role;
   teams: Array<Team>;
 };
@@ -1399,7 +1425,7 @@ export type GetPanelGroupQueryVariables = Exact<{
 }>;
 
 
-export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1461,13 +1487,6 @@ export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
 
-export type MarkPanelJudgmentAttendanceMutationVariables = Exact<{
-  matchId: Scalars['ID']['input'];
-}>;
-
-
-export type MarkPanelJudgmentAttendanceMutation = { __typename?: 'Mutation', markJudgmentAttendance: { __typename?: 'Judgment', id: string, isAttending: boolean } };
-
 export type SubmitPanelMatchScoreMutationVariables = Exact<{
   matchId: Scalars['ID']['input'];
   input: SubmitScoreInput;
@@ -1475,6 +1494,20 @@ export type SubmitPanelMatchScoreMutationVariables = Exact<{
 
 
 export type SubmitPanelMatchScoreMutation = { __typename?: 'Mutation', submitMatchScore: { __typename?: 'Match', id: string, status: MatchStatus, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null } };
+
+export type GetJudgeMatchAtLocationQueryVariables = Exact<{
+  locationId: Scalars['ID']['input'];
+}>;
+
+
+export type GetJudgeMatchAtLocationQuery = { __typename?: 'Query', nextJudgeMatchAtLocation?: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean } | null } | null };
+
+export type StartMatchJudgingMutationVariables = Exact<{
+  matchId: Scalars['ID']['input'];
+}>;
+
+
+export type StartMatchJudgingMutation = { __typename?: 'Mutation', startMatchJudging: { __typename?: 'Match', id: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean } | null } };
 
 export type GetPanelMatchQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1510,31 +1543,31 @@ export type GetPanelSceneQuery = { __typename?: 'Query', scene: { __typename?: '
 export type GetPanelTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> };
+export type GetPanelTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> };
 
 export type GetPanelTeamQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type GetPanelTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type GetPanelMeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetPanelMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type GetPanelUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
+export type GetPanelUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
 
 export type GetPanelUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPanelUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetPanelUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 
 export const GetPanelGroupsDocument = gql`
@@ -1584,6 +1617,8 @@ export const GetPanelGroupDocument = gql`
     name
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2108,40 +2143,6 @@ export type GetPanelMatchesQueryHookResult = ReturnType<typeof useGetPanelMatche
 export type GetPanelMatchesLazyQueryHookResult = ReturnType<typeof useGetPanelMatchesLazyQuery>;
 export type GetPanelMatchesSuspenseQueryHookResult = ReturnType<typeof useGetPanelMatchesSuspenseQuery>;
 export type GetPanelMatchesQueryResult = Apollo.QueryResult<GetPanelMatchesQuery, GetPanelMatchesQueryVariables>;
-export const MarkPanelJudgmentAttendanceDocument = gql`
-    mutation MarkPanelJudgmentAttendance($matchId: ID!) {
-  markJudgmentAttendance(matchId: $matchId) {
-    id
-    isAttending
-  }
-}
-    `;
-export type MarkPanelJudgmentAttendanceMutationFn = Apollo.MutationFunction<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>;
-
-/**
- * __useMarkPanelJudgmentAttendanceMutation__
- *
- * To run a mutation, you first call `useMarkPanelJudgmentAttendanceMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useMarkPanelJudgmentAttendanceMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [markPanelJudgmentAttendanceMutation, { data, loading, error }] = useMarkPanelJudgmentAttendanceMutation({
- *   variables: {
- *      matchId: // value for 'matchId'
- *   },
- * });
- */
-export function useMarkPanelJudgmentAttendanceMutation(baseOptions?: Apollo.MutationHookOptions<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>(MarkPanelJudgmentAttendanceDocument, options);
-      }
-export type MarkPanelJudgmentAttendanceMutationHookResult = ReturnType<typeof useMarkPanelJudgmentAttendanceMutation>;
-export type MarkPanelJudgmentAttendanceMutationResult = Apollo.MutationResult<MarkPanelJudgmentAttendanceMutation>;
-export type MarkPanelJudgmentAttendanceMutationOptions = Apollo.BaseMutationOptions<MarkPanelJudgmentAttendanceMutation, MarkPanelJudgmentAttendanceMutationVariables>;
 export const SubmitPanelMatchScoreDocument = gql`
     mutation SubmitPanelMatchScore($matchId: ID!, $input: SubmitScoreInput!) {
   submitMatchScore(matchId: $matchId, input: $input) {
@@ -2189,6 +2190,124 @@ export function useSubmitPanelMatchScoreMutation(baseOptions?: Apollo.MutationHo
 export type SubmitPanelMatchScoreMutationHookResult = ReturnType<typeof useSubmitPanelMatchScoreMutation>;
 export type SubmitPanelMatchScoreMutationResult = Apollo.MutationResult<SubmitPanelMatchScoreMutation>;
 export type SubmitPanelMatchScoreMutationOptions = Apollo.BaseMutationOptions<SubmitPanelMatchScoreMutation, SubmitPanelMatchScoreMutationVariables>;
+export const GetJudgeMatchAtLocationDocument = gql`
+    query GetJudgeMatchAtLocation($locationId: ID!) {
+  nextJudgeMatchAtLocation(locationId: $locationId) {
+    id
+    time
+    status
+    location {
+      id
+      name
+    }
+    competition {
+      id
+      name
+      type
+    }
+    entries {
+      id
+      team {
+        id
+        name
+      }
+      score
+    }
+    judgment {
+      id
+      isAttending
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetJudgeMatchAtLocationQuery__
+ *
+ * To run a query within a React component, call `useGetJudgeMatchAtLocationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetJudgeMatchAtLocationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetJudgeMatchAtLocationQuery({
+ *   variables: {
+ *      locationId: // value for 'locationId'
+ *   },
+ * });
+ */
+export function useGetJudgeMatchAtLocationQuery(baseOptions: Apollo.QueryHookOptions<GetJudgeMatchAtLocationQuery, GetJudgeMatchAtLocationQueryVariables> & ({ variables: GetJudgeMatchAtLocationQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetJudgeMatchAtLocationQuery, GetJudgeMatchAtLocationQueryVariables>(GetJudgeMatchAtLocationDocument, options);
+      }
+export function useGetJudgeMatchAtLocationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetJudgeMatchAtLocationQuery, GetJudgeMatchAtLocationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetJudgeMatchAtLocationQuery, GetJudgeMatchAtLocationQueryVariables>(GetJudgeMatchAtLocationDocument, options);
+        }
+export function useGetJudgeMatchAtLocationSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetJudgeMatchAtLocationQuery, GetJudgeMatchAtLocationQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetJudgeMatchAtLocationQuery, GetJudgeMatchAtLocationQueryVariables>(GetJudgeMatchAtLocationDocument, options);
+        }
+export type GetJudgeMatchAtLocationQueryHookResult = ReturnType<typeof useGetJudgeMatchAtLocationQuery>;
+export type GetJudgeMatchAtLocationLazyQueryHookResult = ReturnType<typeof useGetJudgeMatchAtLocationLazyQuery>;
+export type GetJudgeMatchAtLocationSuspenseQueryHookResult = ReturnType<typeof useGetJudgeMatchAtLocationSuspenseQuery>;
+export type GetJudgeMatchAtLocationQueryResult = Apollo.QueryResult<GetJudgeMatchAtLocationQuery, GetJudgeMatchAtLocationQueryVariables>;
+export const StartMatchJudgingDocument = gql`
+    mutation StartMatchJudging($matchId: ID!) {
+  startMatchJudging(matchId: $matchId) {
+    id
+    status
+    location {
+      id
+      name
+    }
+    competition {
+      id
+      name
+      type
+    }
+    entries {
+      id
+      team {
+        id
+        name
+      }
+      score
+    }
+    judgment {
+      id
+      isAttending
+    }
+  }
+}
+    `;
+export type StartMatchJudgingMutationFn = Apollo.MutationFunction<StartMatchJudgingMutation, StartMatchJudgingMutationVariables>;
+
+/**
+ * __useStartMatchJudgingMutation__
+ *
+ * To run a mutation, you first call `useStartMatchJudgingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useStartMatchJudgingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [startMatchJudgingMutation, { data, loading, error }] = useStartMatchJudgingMutation({
+ *   variables: {
+ *      matchId: // value for 'matchId'
+ *   },
+ * });
+ */
+export function useStartMatchJudgingMutation(baseOptions?: Apollo.MutationHookOptions<StartMatchJudgingMutation, StartMatchJudgingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<StartMatchJudgingMutation, StartMatchJudgingMutationVariables>(StartMatchJudgingDocument, options);
+      }
+export type StartMatchJudgingMutationHookResult = ReturnType<typeof useStartMatchJudgingMutation>;
+export type StartMatchJudgingMutationResult = Apollo.MutationResult<StartMatchJudgingMutation>;
+export type StartMatchJudgingMutationOptions = Apollo.BaseMutationOptions<StartMatchJudgingMutation, StartMatchJudgingMutationVariables>;
 export const GetPanelMatchDocument = gql`
     query GetPanelMatch($id: ID!) {
   match(id: $id) {
@@ -2480,6 +2599,8 @@ export const GetPanelTeamsDocument = gql`
     }
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2530,6 +2651,8 @@ export const GetPanelTeamDocument = gql`
     }
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2574,6 +2697,8 @@ export const GetPanelMeDocument = gql`
     query GetPanelMe {
   me {
     id
+    name
+    email
     identify {
       microsoftUserId
     }
@@ -2624,6 +2749,8 @@ export const GetPanelUsersDocument = gql`
     query GetPanelUsers {
   users {
     id
+    name
+    email
     identify {
       microsoftUserId
     }
@@ -2670,6 +2797,8 @@ export const GetPanelUserDocument = gql`
     query GetPanelUser($id: ID!) {
   user(id: $id) {
     id
+    name
+    email
     identify {
       microsoftUserId
     }

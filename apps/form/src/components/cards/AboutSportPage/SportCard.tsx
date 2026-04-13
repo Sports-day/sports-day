@@ -18,8 +18,6 @@ type SportCardProps = {
 };
 
 function SportIcon({ imageUrl }: { imageUrl: string | null }) {
-  const theme = useTheme();
-
   if (imageUrl) {
     return (
       <Box

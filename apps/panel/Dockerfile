@@ -1,28 +1,33 @@
-FROM node:18.20.0 AS Builder
+# build context = project root (.)
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json yarn.lock ./
+COPY package.json yarn.lock ./
+COPY apps/admin/package.json apps/admin/package.json
+COPY apps/panel/package.json apps/panel/package.json
+COPY apps/form/package.json apps/form/package.json
+
 RUN yarn install --frozen-lockfile
 
-COPY app/ ./app/
-COPY components/ ./components/
-COPY src/ ./src/
-COPY public/ ./public/
-COPY styles/ ./styles/
-COPY types/ ./types/
-COPY index.html .
-COPY vite.config.ts .
-COPY tsconfig.json .
-COPY schema.graphqls .
+WORKDIR /app/apps/panel
+COPY apps/panel/ .
+
+ARG VITE_BASE_PATH=/
+ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 
 RUN yarn build
 
-FROM nginx:alpine AS Runner
+FROM nginx:1.27-alpine
 
-COPY --from=Builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN chown -R nginx:nginx /var/cache/nginx /var/log/nginx \
+    && touch /run/nginx.pid && chown nginx:nginx /run/nginx.pid
 
-EXPOSE 80
+COPY --from=builder --chown=nginx:nginx /app/apps/panel/dist /usr/share/nginx/html
+COPY --chown=nginx:nginx apps/panel/nginx.conf /etc/nginx/conf.d/default.conf
+
+USER nginx
+
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

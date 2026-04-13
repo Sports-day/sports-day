@@ -13,9 +13,13 @@ export function ImageDetailPage({ imageId, onBack }: Props) {
   const { url, status, handleDelete } = useImageDetail(imageId)
 
   const onDelete = async () => {
-    await handleDelete()
-    showToast('画像を削除しました')
-    onBack()
+    try {
+      await handleDelete()
+      showToast('画像を削除しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

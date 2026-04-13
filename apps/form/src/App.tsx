@@ -33,7 +33,6 @@ function LoginRoute() {
 }
 
 export default function App() {
-  console.log("[form] App rendered")
   return (
     <AppProviders>
       <AppErrorBoundary>

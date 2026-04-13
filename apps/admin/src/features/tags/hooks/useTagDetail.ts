@@ -6,6 +6,7 @@ import {
   useRestoreAdminSceneForTagMutation,
   GetAdminScenesForTagsDocument,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useTagDetail(tagId: string) {
   const { data, loading, error } = useGetAdminSceneForTagQuery({ variables: { id: tagId } })
@@ -30,16 +31,31 @@ export function useTagDetail(tagId: string) {
 
   const handleSave = async () => {
     if (!name.trim()) return
-    await updateScene({ variables: { id: tagId, input: { name: name.slice(0, 64) } } })
-    setEditName(null)
+    try {
+      await updateScene({ variables: { id: tagId, input: { name: name.slice(0, 64) } } })
+      setEditName(null)
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleDelete = async () => {
-    await deleteScene({ variables: { id: tagId } })
+    try {
+      await deleteScene({ variables: { id: tagId } })
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleRestore = async () => {
-    await restoreScene({ variables: { id: tagId } })
+    try {
+      await restoreScene({ variables: { id: tagId } })
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return {

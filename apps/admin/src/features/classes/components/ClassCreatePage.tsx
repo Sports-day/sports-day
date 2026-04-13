@@ -26,12 +26,16 @@ export function ClassCreatePage({ onBack }: Props) {
   const { name, setName, handleCreate } = useClassCreate()
   const [submitted, setSubmitted] = useState(false)
 
-  const onCreate = () => {
+  const onCreate = async () => {
     setSubmitted(true)
     if (!name.trim()) return
-    handleCreate()
-    showToast('クラスを作成しました')
-    onBack()
+    try {
+      await handleCreate()
+      showToast('クラスを作成しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (

@@ -14,17 +14,21 @@ export function LocationCreatePage({ onBack, onSave }: Props) {
   const { form, handleChange, handleSubmit: handleSubmitOriginal } = useLocationCreate(onSave)
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitted(true)
     if (!form.name.trim()) return
-    handleSubmitOriginal()
-    showToast('場所を作成しました')
+    try {
+      await handleSubmitOriginal()
+      showToast('場所を作成しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <BackButton onClick={onBack} />
-      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+      <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           場所
         </ButtonBase>

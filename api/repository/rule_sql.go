@@ -17,7 +17,7 @@ func NewRule() Rule {
 
 func (r rule) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Rule, error) {
 	var rule db_model.Rule
-	if err := db.First(&rule, "id = ?", id).Error; err != nil {
+	if err := db.WithContext(ctx).First(&rule, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrRuleNotFound
 		}
@@ -28,14 +28,14 @@ func (r rule) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Rule, 
 
 func (r rule) List(ctx context.Context, db *gorm.DB) ([]*db_model.Rule, error) {
 	var rules []*db_model.Rule
-	if err := db.Find(&rules).Error; err != nil {
+	if err := db.WithContext(ctx).Find(&rules).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return rules, nil
 }
 
 func (r rule) Save(ctx context.Context, db *gorm.DB, rule *db_model.Rule) (*db_model.Rule, error) {
-	if err := db.Save(rule).Error; err != nil {
+	if err := db.WithContext(ctx).Save(rule).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return rule, nil
@@ -43,13 +43,13 @@ func (r rule) Save(ctx context.Context, db *gorm.DB, rule *db_model.Rule) (*db_m
 
 func (r rule) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Rule, error) {
 	var rule db_model.Rule
-	if err := db.First(&rule, "id = ?", id).Error; err != nil {
+	if err := db.WithContext(ctx).First(&rule, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrRuleNotFound
 		}
 		return nil, errors.Wrap(err)
 	}
-	if err := db.Delete(&rule).Error; err != nil {
+	if err := db.WithContext(ctx).Delete(&rule).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return &rule, nil
@@ -57,7 +57,7 @@ func (r rule) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Rul
 
 func (r rule) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Rule, error) {
 	var rules []*db_model.Rule
-	if err := db.Where("id IN ?", ids).Find(&rules).Error; err != nil {
+	if err := db.WithContext(ctx).Where("id IN ?", ids).Find(&rules).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return rules, nil
@@ -65,7 +65,7 @@ func (r rule) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_mo
 
 func (r rule) ListBySportID(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.Rule, error) {
 	var rules []*db_model.Rule
-	if err := db.Where("sport_id = ?", sportID).Find(&rules).Error; err != nil {
+	if err := db.WithContext(ctx).Where("sport_id = ?", sportID).Find(&rules).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return rules, nil
@@ -73,7 +73,7 @@ func (r rule) ListBySportID(ctx context.Context, db *gorm.DB, sportID string) ([
 
 func (r rule) ListBySportIDs(ctx context.Context, db *gorm.DB, sportIDs []string) ([]*db_model.Rule, error) {
 	var rules []*db_model.Rule
-	if err := db.Where("sport_id IN ?", sportIDs).Find(&rules).Error; err != nil {
+	if err := db.WithContext(ctx).Where("sport_id IN ?", sportIDs).Find(&rules).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return rules, nil

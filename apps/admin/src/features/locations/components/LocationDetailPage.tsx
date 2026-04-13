@@ -39,20 +39,28 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
   }
 
   const handleSaveWithToast = async () => {
-    await handleSave()
-    showToast('場所を保存しました')
+    try {
+      await handleSave()
+      showToast('場所を保存しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    handleDelete()
-    showToast('場所を削除しました')
+    try {
+      await handleDelete()
+      showToast('場所を削除しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <BackButton onClick={onBack} />
-      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+      <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           場所
         </ButtonBase>

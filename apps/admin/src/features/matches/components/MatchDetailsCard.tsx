@@ -5,7 +5,6 @@ import {
   ButtonBase,
   Card,
   CardContent,
-  Chip,
   Collapse,
   Divider,
   FormControl,
@@ -57,7 +56,10 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
     judgmentType, setJudgmentType,
     judgmentTargetId, setJudgmentTargetId,
     optionsByType,
-    currentJudgmentLabel,
+    isAttending,
+    hasJudgmentAssigned,
+    handleToggleAttendance,
+    dirty,
     handleSave, handleReset,
   } = useMatchDetails(match, competitionId)
 
@@ -174,7 +176,15 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
     showToast(targetSlotId === '' && existing ? '進出先を解除しました' : '進出先を設定しました')
   }
 
-  const onSave = async () => { await handleSave(); onClose() }
+  const onSave = async () => {
+    try {
+      await handleSave()
+      showToast('詳細設定を保存しました')
+      onClose()
+    } catch {
+      // handleSave 内でエラートーストを表示済み
+    }
+  }
   const onCancel = () => { handleReset(); onClose() }
 
   // 審判セレクト用のオプション（選択中のタイプに応じて切替）
@@ -225,22 +235,6 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
               <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C' }}>
                 審判
               </Typography>
-              {currentJudgmentLabel && (
-                <Chip
-                  label={currentJudgmentLabel}
-                  size="small"
-                  sx={{
-                    ml: 'auto',
-                    height: 22,
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    backgroundColor: '#E8EAF6',
-                    color: '#3949AB',
-                    border: '1px solid #C5CAE9',
-                    '& .MuiChip-label': { px: 1 },
-                  }}
-                />
-              )}
             </Box>
 
             {/* タイプ選択トグルボタン */}
@@ -320,9 +314,9 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
                   />
                 )}
                 renderOption={(props, option) => {
-                  const { key, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key?: string }
+                  const { key, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key: string }
                   return (
-                    <li key={key} {...rest}>
+                    <li key={key ?? option.id} {...rest}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.3 }}>
                         <Box
                           sx={{
@@ -346,11 +340,32 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
               />
             )}
 
-            {!judgmentType && !currentJudgmentLabel && (
+            {!judgmentType && (
               <Typography sx={{ fontSize: '12px', color: '#9E9E9E', fontStyle: 'italic', textAlign: 'center', py: 0.5 }}>
                 上のボタンから審判の種類を選択してください
               </Typography>
             )}
+
+            {/* 出席状態トグル */}
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleToggleAttendance}
+              disabled={!hasJudgmentAssigned}
+              sx={{
+                fontSize: '12px',
+                fontWeight: 700,
+                height: '40px',
+                color: '#2F3C8C',
+                backgroundColor: isAttending ? '#DEDAEB' : '#D8DEEB',
+                border: hasJudgmentAssigned ? '1px solid #5B6DC6' : 'none',
+                borderRadius: 1,
+                boxShadow: 'none',
+                '&:hover': { backgroundColor: isAttending ? '#D3CDE3' : '#CDD4E3', boxShadow: 'none' },
+              }}
+            >
+              {isAttending ? '出席を取りやめる' : '出席する'}
+            </Button>
 
             {/* トーナメント進出先設定 */}
             {isTournament && subBrackets.length > 0 && (
@@ -431,6 +446,7 @@ export function MatchDetailsCard({ match, open, onClose, competitionId, competit
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
+                disabled={!dirty}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

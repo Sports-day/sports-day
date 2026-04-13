@@ -4,7 +4,8 @@ import { useParams, Link } from "react-router-dom";
 
 export default function Header() {
   const theme = useTheme();
-  const { type } = useParams() as { type: string };
+  const { type } = useParams<{ type: string }>();
+  const linkTo = type ? `/weather/${type}` : "/";
   return (
     <Box
       sx={{
@@ -19,7 +20,7 @@ export default function Header() {
         px: { xs: 2, md: 4 },
       }}
     >
-      <Link to={`/weather/${type}`}>
+      <Link to={linkTo}>
         <Box
           component="img"
           src="/images/logo_form.png"

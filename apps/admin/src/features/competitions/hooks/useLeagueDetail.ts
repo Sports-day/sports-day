@@ -6,6 +6,7 @@ import {
   useGetAdminCompetitionQuery,
   useGetAdminPromotionRulesQuery,
   useGetAdminSportsWithScenesQuery,
+  useGetAdminLocationsForMatchesQuery,
   useUpdateAdminCompetitionMutation,
   useDeleteAdminLeagueMutation,
   useUpdateAdminLeagueRuleMutation,
@@ -14,6 +15,7 @@ import {
   useAddAdminCompetitionEntriesMutation,
   useDeleteAdminCompetitionEntriesMutation,
   useRegenerateAdminRoundRobinMutation,
+  useApplyAdminCompetitionDefaultsMutation,
   GetAdminLeagueDocument,
   GetAdminLeagueStandingsDocument,
   GetAdminPromotionRulesDocument,
@@ -79,7 +81,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     () => competitionTeams.map((t, i) => ({
       id: i + 1,
       teamName: t.name,
-      teamClass: t.group.name,
+      teamClass: t.group?.name ?? '',
       teamId: t.id,
     })),
     [competitionTeams],
@@ -122,6 +124,30 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
 
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
+  // ─── デフォルト設定 ─────────────────────────────────
+  const { data: locData } = useGetAdminLocationsForMatchesQuery()
+  const locations = (locData?.locations ?? []).map(l => ({ id: l.id, name: l.name }))
+
+  const serverStartTime = competition?.startTime ? toDatetimeLocal(competition.startTime) : ''
+  const serverMatchDuration = competition?.matchDuration ?? 15
+  const serverBreakDuration = competition?.breakDuration ?? 5
+  const serverLocationId = competition?.defaultLocation?.id ?? ''
+
+  const [editStartTime, setEditStartTime] = useState<string | null>(null)
+  const [editMatchDuration, setEditMatchDuration] = useState<number | null>(null)
+  const [editBreakDuration, setEditBreakDuration] = useState<number | null>(null)
+  const [editLocationId, setEditLocationId] = useState<string | null>(null)
+
+  const defaultsForm = {
+    startTime: editStartTime ?? serverStartTime,
+    matchDuration: editMatchDuration ?? serverMatchDuration,
+    breakDuration: editBreakDuration ?? serverBreakDuration,
+    locationId: editLocationId ?? serverLocationId,
+  }
+
+  const defaultsDirty = editStartTime !== null || editMatchDuration !== null
+    || editBreakDuration !== null || editLocationId !== null
+
   // ─── mutations ─────────────────────────────────────
   const [updateCompetition] = useUpdateAdminCompetitionMutation()
   const [deleteLeague] = useDeleteAdminLeagueMutation({
@@ -139,6 +165,12 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   })
   const [deleteCompetitionEntries] = useDeleteAdminCompetitionEntriesMutation({
     refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+  })
+  const [applyDefaults] = useApplyAdminCompetitionDefaultsMutation({
+    refetchQueries: [
+      { query: GetAdminCompetitionDocument, variables: { id: competitionId } },
+      { query: GetAdminCompetitionMatchesDocument, variables: { competitionId } },
+    ],
   })
   const [regenerateRoundRobin] = useRegenerateAdminRoundRobinMutation({
     refetchQueries: [
@@ -188,7 +220,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
 
   const dirty = editName !== null || editSportId !== null || editSceneId !== null
     || editWinPt !== null || editDrawPt !== null || editLosePt !== null
-    || progressionDirty
+    || progressionDirty || defaultsDirty
 
   // ─── ハンドラー ─────────────────────────────────────
   const handleChange = (field: keyof LeagueForm) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -249,6 +281,21 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
         setSavedProgressionRules(desiredRules)
       }
 
+      // デフォルト設定を試合に適用
+      if (defaultsDirty) {
+        await applyDefaults({
+          variables: {
+            id: competitionId,
+            input: {
+              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : '',
+              matchDuration: defaultsForm.matchDuration,
+              breakDuration: defaultsForm.breakDuration,
+              locationId: defaultsForm.locationId || undefined,
+            },
+          },
+        })
+      }
+
       // 保存完了 → 編集差分をクリア（サーバー値に戻る）
       setEditName(null)
       setEditSportId(null)
@@ -256,15 +303,26 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       setEditWinPt(null)
       setEditDrawPt(null)
       setEditLosePt(null)
+      setEditStartTime(null)
+      setEditMatchDuration(null)
+      setEditBreakDuration(null)
+      setEditLocationId(null)
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 
   const handleDelete = async () => {
-    await deleteLeague({ variables: { id: leagueId } })
+    try {
+      await deleteLeague({ variables: { id: leagueId } })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleUpdateLeagueRule = async (winPt: number, drawPt: number, losePt: number) => {
@@ -290,7 +348,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       try {
         await regenerateRoundRobin({ variables: { id: competitionId } })
       } catch (regenErr) {
-        console.error('regenerateRoundRobin failed:', regenErr)
+        // ラウンドロビン再生成失敗は致命的でないためスキップ
       }
       setMutationError(null)
     } catch (e) {
@@ -312,7 +370,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       try {
         await regenerateRoundRobin({ variables: { id: competitionId } })
       } catch (regenErr) {
-        console.error('regenerateRoundRobin failed:', regenErr)
+        // ラウンドロビン再生成失敗は致命的でないためスキップ
       }
       setMutationError(null)
     } catch (e) {
@@ -371,6 +429,12 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     progressionRankRange: clampedRankRange,
     progressionRules,
     availableProgressionTargets,
+    defaultsForm,
+    locations,
+    setEditStartTime,
+    setEditMatchDuration,
+    setEditBreakDuration,
+    setEditLocationId,
     handleChange,
     handleSave,
     handleDelete,
@@ -386,4 +450,10 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     error: error ?? null,
     mutationError,
   }
+}
+
+function toDatetimeLocal(isoString: string): string {
+  const d = new Date(isoString)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }

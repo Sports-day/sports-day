@@ -5,7 +5,7 @@ import {
   useBatchCreateAdminUsersMutation,
 } from '@/gql/__generated__/graphql'
 import { userManager } from '@/lib/userManager'
-import { fetchMsGraphUsersByEmails } from '@/lib/graphApi'
+import { resolveUsersByEmails } from '@/lib/graphApi'
 import { showErrorToast } from '@/lib/toast'
 
 export type UserCsvRow = {
@@ -62,7 +62,7 @@ export function useUserCsv() {
       }
 
       const emails = pendingRows.map((r) => r.email)
-      const msUsers = await fetchMsGraphUsersByEmails(user.access_token, emails)
+      const msUsers = await resolveUsersByEmails(user.access_token, emails)
 
       const groups = groupsData?.groups ?? []
       const groupNameToId = new Map(groups.map((g) => [g.name, g.id]))
@@ -83,8 +83,7 @@ export function useUserCsv() {
           return { ...r, microsoftUserId: msUser.id, status: '登録可能' }
         }),
       )
-    } catch (e) {
-      console.error('Graph API resolve failed:', e)
+    } catch {
       setRows((prev) =>
         prev.map((r) =>
           r.status === '確認中' ? { ...r, status: 'Graph API エラー' } : r,
@@ -99,7 +98,9 @@ export function useUserCsv() {
     const groups = groupsData?.groups ?? []
     const groupNameToId = new Map(groups.map((g) => [g.name, g.id]))
 
-    const registrable = rows.filter((r) => r.status === '登録可能' && r.microsoftUserId)
+    const registrable = rows.filter((r): r is UserCsvRow & { microsoftUserId: string } =>
+      r.status === '登録可能' && r.microsoftUserId !== null,
+    )
     if (registrable.length === 0) return
 
     try {
@@ -107,7 +108,7 @@ export function useUserCsv() {
         variables: {
           input: {
             users: registrable.map((r) => ({
-              microsoftUserId: r.microsoftUserId!,
+              microsoftUserId: r.microsoftUserId,
               groupId: groupNameToId.get(r.class),
             })),
           },
@@ -120,6 +121,7 @@ export function useUserCsv() {
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 

@@ -17,25 +17,38 @@ type Props = {
   myTeamMatches: PanelMatch[];
 };
 
-/**
- * アプリ起動時にFINISHED試合の結果をポップアップ表示する。
- * state管理のみ（localStorageなし）。OKで消えるが、次回アプリ起動時にまた表示される。
- */
+const SEEN_KEY = "seen_match_results";
+
+function getSeenIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(SEEN_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function markSeen(id: string) {
+  const seen = getSeenIds();
+  seen.add(id);
+  localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
+}
+
 export const MatchResultPopup = ({ myTeamMatches }: Props) => {
   const theme = useTheme();
   const [queue, setQueue] = useState<string[]>([]);
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    // 初回データ取得時のみキューを構築。refetchでは追加しない
     if (initializedRef.current) return;
-    const finishedIds = myTeamMatches
-      .filter((m) => m.status === "FINISHED")
+    const seen = getSeenIds();
+    const newFinishedIds = myTeamMatches
+      .filter((m) => m.status === "FINISHED" && !seen.has(m.id))
       .map((m) => m.id);
-    if (finishedIds.length > 0) {
-      setQueue(finishedIds);
-      initializedRef.current = true;
+    if (newFinishedIds.length > 0) {
+      setQueue(newFinishedIds);
     }
+    initializedRef.current = true;
   }, [myTeamMatches]);
 
   const currentMatchId = queue[0];
@@ -52,6 +65,7 @@ export const MatchResultPopup = ({ myTeamMatches }: Props) => {
   const winnerId = currentMatch.winnerTeam?.id;
 
   const handleClose = () => {
+    if (currentMatchId) markSeen(currentMatchId);
     setQueue((prev) => prev.slice(1));
   };
 

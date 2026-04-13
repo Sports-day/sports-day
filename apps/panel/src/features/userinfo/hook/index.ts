@@ -16,7 +16,7 @@ export const useFetchUserinfo = () => {
     const msUser = msId ? msGraphUsers.get(msId) : undefined;
     return {
       ...data.me,
-      name: msUser?.displayName ?? '',
+      name: msUser?.displayName ?? data.me.name ?? '',
     };
   }, [data, msGraphUsers]);
 

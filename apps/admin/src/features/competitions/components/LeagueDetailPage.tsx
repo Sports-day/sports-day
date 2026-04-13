@@ -18,12 +18,11 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import DeleteIcon from '@mui/icons-material/Delete'
-import ScheduleIcon from '@mui/icons-material/Schedule'
+import QrCode2Icon from '@mui/icons-material/QrCode2'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { navigateToPage } from '@/hooks/useAppNavigation'
 import { useLeagueDetail } from '../hooks/useLeagueDetail'
-import { useCompetitionDefaults } from '../hooks/useCompetitionDefaults'
 import { useActiveMatchLeague } from '@/features/matches/hooks/useActiveMatchLeague'
 import { ProgressionRulesEditor } from './ProgressionRulesEditor'
 import { AddEntryDialog } from './AddEntryDialog'
@@ -33,8 +32,9 @@ import { SceneSelect } from '@/components/ui/SceneSelect'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
 import { DateTimeInput } from '@/components/ui/DateTimeInput'
 import { NumberInput } from '@/components/ui/NumberInput'
-import { showToast, showErrorToast } from '@/lib/toast'
+import { showToast } from '@/lib/toast'
 import { BackButton } from '@/components/ui/BackButton'
+import { QrPdfExportDialog } from './QrPdfExportDialog'
 
 type Props = {
   leagueId: string
@@ -61,6 +61,12 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
     progressionRankRange,
     progressionRules,
     availableProgressionTargets,
+    defaultsForm,
+    locations,
+    setEditStartTime,
+    setEditMatchDuration,
+    setEditBreakDuration,
+    setEditLocationId,
     handleChange,
     handleSave,
     handleDelete,
@@ -73,12 +79,11 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
     handleProgressionRuleChange,
   } = useLeagueDetail(leagueId, leagueName, competitionId)
 
-  const defaults = useCompetitionDefaults(competitionId)
-
   const { league: leagueStandings, grid, statsMap, rankLabels, matchOrderMap } = useActiveMatchLeague(competitionId, leagueId)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [entryConfirmAction, setEntryConfirmAction] = useState<(() => Promise<void>) | null>(null)
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
   useUnsavedWarning(dirty)
 
   const hasMatches = leagueStandings != null && leagueStandings.matches.length > 0
@@ -89,16 +94,20 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
       await handleSave()
       onSaved?.(form.name.trim())
       showToast('リーグを保存しました')
-    } catch (e) {
-      showErrorToast('保存に失敗しました。')
+    } catch {
+      // エラートーストはhook側で表示済み
     }
   }
 
   const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    await handleDelete()
-    onDeleted?.()
-    showToast('リーグを削除しました')
+    try {
+      await handleDelete()
+      onDeleted?.()
+      showToast('リーグを削除しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
@@ -140,15 +149,15 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
             <TextField
               label="デフォルト場所"
               select
-              value={defaults.form.locationId}
-              onChange={(e) => defaults.setForm(prev => ({ ...prev, locationId: e.target.value }))}
+              value={defaultsForm.locationId}
+              onChange={(e) => setEditLocationId(e.target.value)}
               size="small"
               fullWidth
               sx={CARD_FIELD_SX}
               slotProps={{ select: { displayEmpty: true } }}
             >
               <MenuItem value=""><Typography sx={{ fontSize: '14px', color: '#2F3C8C', opacity: 0.5 }}>未設定</Typography></MenuItem>
-              {defaults.locations.map(loc => (
+              {locations.map(loc => (
                 <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
               ))}
             </TextField>
@@ -160,14 +169,14 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
             </Typography>
             <DateTimeInput
               label="開始時刻"
-              value={defaults.form.startTime}
-              onChange={(v) => defaults.setForm(prev => ({ ...prev, startTime: v }))}
+              value={defaultsForm.startTime}
+              onChange={(v) => setEditStartTime(v)}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <NumberInput
                 label="試合時間（分）"
-                value={defaults.form.matchDuration}
-                onChange={(v) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, v) }))}
+                value={defaultsForm.matchDuration}
+                onChange={(v) => setEditMatchDuration(Math.max(1, v))}
                 min={1}
                 max={999}
                 fullWidth
@@ -175,25 +184,14 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
               />
               <NumberInput
                 label="休憩時間（分）"
-                value={defaults.form.breakDuration}
-                onChange={(v) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, v) }))}
+                value={defaultsForm.breakDuration}
+                onChange={(v) => setEditBreakDuration(Math.max(0, v))}
                 min={0}
                 max={999}
                 fullWidth
                 sx={CARD_FIELD_SX}
               />
             </Box>
-
-            <Button
-              variant="contained"
-              fullWidth
-              startIcon={<ScheduleIcon />}
-              onClick={defaults.handleApply}
-              disabled={!defaults.isValid || !defaults.dirty || defaults.loading}
-              sx={SAVE_BUTTON_SX}
-            >
-              {defaults.loading ? '適用中...' : 'デフォルト設定を試合に適用'}
-            </Button>
 
             <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
 
@@ -252,6 +250,14 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
             <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
 
             <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="outlined"
+                startIcon={<QrCode2Icon />}
+                onClick={() => setQrDialogOpen(true)}
+                sx={{ flexShrink: 0, fontSize: '13px', borderColor: '#5B6DC6', color: '#2F3C8C', borderRadius: 1, '&:hover': { borderColor: '#2F3C8C', backgroundColor: '#F0F1FA' } }}
+              >
+                審判QR
+              </Button>
               <Button
                 variant="outlined"
                 startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
@@ -490,6 +496,13 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
           setEntryConfirmAction(null)
           await action?.()
         }}
+      />
+
+      <QrPdfExportDialog
+        open={qrDialogOpen}
+        onClose={() => setQrDialogOpen(false)}
+        competitionId={competitionId}
+        competitionName={form.name || leagueName}
       />
 
     </Box>

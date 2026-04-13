@@ -8,9 +8,10 @@ import {
   Button,
   Typography,
   Slide,
+  Alert,
 } from "@mui/material";
 import type { TransitionProps } from "@mui/material/transitions";
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import type { ReactElement } from "react";
 import { useDeleteTeamFromPopupMutation } from "@/gql/__generated__/graphql";
 
@@ -39,17 +40,25 @@ export default function CheckPopupBase({
   const [deleteTeam] = useDeleteTeamFromPopupMutation({
     refetchQueries,
   });
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleClose = () => {
+    setDeleteError(null);
     setOpen(false);
   };
 
   const handleDelete = async (dteam: string) => {
-    await deleteTeam({
-      variables: {
-        deleteTeamId: dteam,
-      },
-    });
+    setDeleteError(null);
+    try {
+      await deleteTeam({
+        variables: {
+          deleteTeamId: dteam,
+        },
+      });
+      handleClose();
+    } catch {
+      setDeleteError("チーム削除に失敗しました。もう一度お試しください。");
+    }
   };
 
   return (
@@ -67,7 +76,7 @@ export default function CheckPopupBase({
           width: "100%",
           height: "100%",
           maxWidth: 400,
-          maxHeight: 200,
+          maxHeight: deleteError ? 260 : 200,
           p: "16px",
         },
       }}
@@ -75,13 +84,15 @@ export default function CheckPopupBase({
       <DialogTitle>チーム削除の確認</DialogTitle>
       <DialogContent>
         <Typography>本当に削除しますか?</Typography>
+        {deleteError && (
+          <Alert severity="error" sx={{ mt: "8px" }}>
+            {deleteError}
+          </Alert>
+        )}
       </DialogContent>
       <DialogActions sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
         <Button
-          onClick={async () => {
-            await handleDelete(teamid);
-            handleClose();
-          }}
+          onClick={() => handleDelete(teamid)}
           sx={{
             width: "100%",
             p: "4px",

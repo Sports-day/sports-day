@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"sports-day/api"
 	"sports-day/api/db_model"
 	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/ulid"
@@ -59,8 +60,13 @@ func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) 
 		return nil, errors.Wrap(err)
 	}
 
+	// DB削除を先に行う。S3削除が失敗してもゴミファイルが残るだけで済む。
+	// 逆順（S3→DB）だとS3成功後にDB削除失敗で参照不整合が起きる。
+	if err := s.imageRepository.Delete(ctx, s.db, id); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
 	if img.URL.Valid {
-		// URLからバケット名以降のパスをオブジェクトキーとして抽出
 		bucketPrefix := "/" + s.bucket + "/"
 		if idx := strings.Index(img.URL.String, bucketPrefix); idx >= 0 {
 			key := img.URL.String[idx+len(bucketPrefix):]
@@ -68,13 +74,10 @@ func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) 
 				Bucket: &s.bucket,
 				Key:    &key,
 			}); err != nil {
-				return nil, errors.Wrap(err)
+				// S3削除失敗はログに残すが、DBレコードは既に削除済みなのでエラーとしない
+				api.Logger.Warn().Err(err).Str("key", key).Msg("failed to delete S3 object")
 			}
 		}
-	}
-
-	if err := s.imageRepository.Delete(ctx, s.db, id); err != nil {
-		return nil, errors.Wrap(err)
 	}
 
 	return img, nil

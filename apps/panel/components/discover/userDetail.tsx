@@ -264,7 +264,7 @@ export const UserDetail = (props: UserDetailProps) => {
                                         color={"secondary"}
                                     />
                                     <Chip
-                                        label={`場所：${locationName}`}
+                                        label={`場所：${locationName ?? "未登録"}`}
                                         avatar={<Avatar><HiMapPin/></Avatar>}
                                         color={"secondary"}
                                     />

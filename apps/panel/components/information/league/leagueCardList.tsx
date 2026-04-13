@@ -35,11 +35,15 @@ export default function LeagueCardList(props: LeagueCardListProps) {
         Promise.all(
             leagueGames.map(async (game) => {
                 const leagueId = game.league!.id;
-                const { data } = await client.query<GetPanelLeagueStandingsQuery>({
-                    query: GetPanelLeagueStandingsDocument,
-                    variables: { leagueId },
-                });
-                return { game, standings: data?.leagueStandings ?? [] };
+                try {
+                    const { data } = await client.query<GetPanelLeagueStandingsQuery>({
+                        query: GetPanelLeagueStandingsDocument,
+                        variables: { leagueId },
+                    });
+                    return { game, standings: data?.leagueStandings ?? [] };
+                } catch {
+                    return { game, standings: [] };
+                }
             })
         ).then((allResults) => {
             const extended: ExtendedStandingResult[] = [];
@@ -65,7 +69,7 @@ export default function LeagueCardList(props: LeagueCardListProps) {
     return (
         <Grid2 container spacing={2} columns={12} margin={2}>
             {results.map((value, index) => (
-                <Grid2 size={{ xs: 6 }} key={index} direction="row">
+                <Grid2 size={{ xs: 6 }} key={`${value.game.id}-${value.teamName}`} direction="row">
                     <LeagueCard
                         league={value.game.name}
                         team={value.teamName}

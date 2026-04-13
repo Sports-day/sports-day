@@ -8,14 +8,12 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
-import { useMarkPanelJudgmentAttendanceMutation } from "@/src/gql/__generated__/graphql";
 import {
     HiClock,
     HiMapPin,
 } from "react-icons/hi2";
 import {useTheme} from "@mui/material/styles";
 import {MatchDetail} from "@/components/game/GameList/matchDetail";
-import {ScoreSubmitDialog} from "./ScoreSubmitDialog";
 
 type PanelMatch = GetPanelMatchesQuery["matches"][number];
 
@@ -26,26 +24,10 @@ export type ScheduleContentProps = {
 export const ScheduleContent = (props: ScheduleContentProps) => {
     const theme = useTheme();
     const [open, toggleDrawer] = React.useState(false);
-    const [scoreDialogOpen, setScoreDialogOpen] = React.useState(false);
-    const [markAttendance, { loading: attendanceLoading }] = useMarkPanelJudgmentAttendanceMutation();
 
     const isAttending = props.match.judgment?.isAttending ?? false;
     const isFinished = props.match.status === "FINISHED";
     const isCanceled = props.match.status === "CANCELED";
-    const canMarkAttendance = !isAttending && !isFinished && !isCanceled;
-    const canSubmitScore = isAttending && !isFinished && !isCanceled;
-
-    const handleAttendance = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        try {
-            await markAttendance({
-                variables: { matchId: props.match.id },
-                refetchQueries: ["GetPanelMatches"],
-            });
-        } catch {
-            // エラーは無視（Apollo error linkで処理）
-        }
-    };
 
     const leftEntry = props.match.entries[0];
     const rightEntry = props.match.entries[1];
@@ -202,55 +184,6 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                 <MatchDetail match={props.match} dashboard={true}/>
             </SwipeableDrawer>
 
-            {/* 審判アクションボタン */}
-            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }} alignItems="center">
-                {canMarkAttendance && (
-                    <Button
-                        variant="contained"
-                        size="small"
-                        onClick={handleAttendance}
-                        disabled={attendanceLoading}
-                        sx={{
-                            fontSize: "12px",
-                            textTransform: "none",
-                            flex: 1,
-                            backgroundColor: theme.palette.background.default,
-                            color: theme.palette.text.primary,
-                            border: "1px solid rgba(255,255,255,0.4)",
-                            "&:hover": { backgroundColor: theme.palette.background.paper },
-                        }}
-                    >
-                        出席する
-                    </Button>
-                )}
-                {canSubmitScore && (
-                    <Button
-                        variant="contained"
-                        size="small"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setScoreDialogOpen(true);
-                        }}
-                        sx={{
-                            fontSize: "12px",
-                            textTransform: "none",
-                            flex: 1,
-                            backgroundColor: theme.palette.background.default,
-                            color: theme.palette.text.secondary,
-                            border: `1px solid ${theme.palette.text.secondary}`,
-                            "&:hover": { backgroundColor: theme.palette.background.paper },
-                        }}
-                    >
-                        スコア入力
-                    </Button>
-                )}
-            </Stack>
-
-            <ScoreSubmitDialog
-                match={props.match}
-                open={scoreDialogOpen}
-                onClose={() => setScoreDialogOpen(false)}
-            />
         </>
     )
 }

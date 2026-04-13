@@ -10,18 +10,33 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import { useTheme } from "@mui/material/styles";
-import type { GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import { useSubmitPanelMatchScoreMutation } from "@/src/gql/__generated__/graphql";
 
-type PanelMatch = GetPanelMatchesQuery["matches"][number];
-
-type Props = {
-  match: PanelMatch;
-  open: boolean;
-  onClose: () => void;
+/**
+ * ScoreSubmitDialog が必要とする最小限のmatch型。
+ * GET_MATCHES / nextJudgeMatchAtLocation / startMatchJudging の
+ * いず���の結果からも渡せるようにする。
+ */
+type ScoreSubmitMatch = {
+  id: string;
+  entries: ReadonlyArray<{
+    id: string;
+    team?: { id: string; name: string } | null;
+    score: number;
+  }>;
+  competition: {
+    type: string;
+  };
 };
 
-export const ScoreSubmitDialog = ({ match, open, onClose }: Props) => {
+type Props = {
+  match: ScoreSubmitMatch;
+  open: boolean;
+  onClose: () => void;
+  onSubmitSuccess?: () => void;
+};
+
+export const ScoreSubmitDialog = ({ match, open, onClose, onSubmitSuccess }: Props) => {
   const theme = useTheme();
   const [submitScore, { loading }] = useSubmitPanelMatchScoreMutation();
 
@@ -53,7 +68,7 @@ export const ScoreSubmitDialog = ({ match, open, onClose }: Props) => {
     }
 
     // トーナメントの引き分けチェック
-    const isTournament = match.competition.type === "TOURNAMENT";
+    const isTournament = match.competition?.type === "TOURNAMENT";
     if (isTournament && s0 === s1) {
       setError("トーナメントでは引き分けは許可されていません。スコアを修正してください");
       return;
@@ -89,10 +104,23 @@ export const ScoreSubmitDialog = ({ match, open, onClose }: Props) => {
       setScore0("");
       setScore1("");
       setError(null);
-      onClose();
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      } else {
+        onClose();
+      }
     } catch (e: unknown) {
-      const message =
-        e instanceof Error ? e.message : "スコアの提出に失敗しました";
+      const raw = e instanceof Error ? e.message : "";
+      let message: string;
+      if (raw.includes("MATCH_ALREADY_FINISHED")) {
+        message = "この試合は既にスコアが提出されています";
+      } else if (raw.includes("NOT_ASSIGNED_REFEREE")) {
+        message = "この試合の審判として割り当てられていません";
+      } else if (raw.includes("JUDGMENT_NOT_ATTENDING")) {
+        message = "出席確認がされていません";
+      } else {
+        message = "スコアの提出に失敗しました";
+      }
       setError(message);
     }
   };

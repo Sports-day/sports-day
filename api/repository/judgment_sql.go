@@ -16,7 +16,7 @@ func NewJudgment() Judgment {
 }
 
 func (r judgment) Save(ctx context.Context, db *gorm.DB, judgment *db_model.Judgment) (*db_model.Judgment, error) {
-	if err := db.Save(judgment).Error; err != nil {
+	if err := db.WithContext(ctx).Save(judgment).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return judgment, nil
@@ -24,14 +24,14 @@ func (r judgment) Save(ctx context.Context, db *gorm.DB, judgment *db_model.Judg
 
 func (r judgment) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model.Judgment, error) {
 	var judgment db_model.Judgment
-	if err := db.First(&judgment, "id = ?", id).Error; err != nil {
+	if err := db.WithContext(ctx).First(&judgment, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrJudgmentNotFound
 		}
 		return nil, errors.Wrap(err)
 	}
 
-	if err := db.Delete(&judgment).Error; err != nil {
+	if err := db.WithContext(ctx).Delete(&judgment).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return &judgment, nil
@@ -39,7 +39,7 @@ func (r judgment) Delete(ctx context.Context, db *gorm.DB, id string) (*db_model
 
 func (r judgment) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Judgment, error) {
 	var judgment db_model.Judgment
-	if err := db.First(&judgment, "id = ?", id).Error; err != nil {
+	if err := db.WithContext(ctx).First(&judgment, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrJudgmentNotFound
 		}
@@ -50,7 +50,7 @@ func (r judgment) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Ju
 
 func (r judgment) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Judgment, error) {
 	var judgments []*db_model.Judgment
-	if err := db.Where("id IN ?", ids).Find(&judgments).Error; err != nil {
+	if err := db.WithContext(ctx).Where("id IN ?", ids).Find(&judgments).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return judgments, nil
@@ -58,7 +58,7 @@ func (r judgment) BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*d
 
 func (r judgment) List(ctx context.Context, db *gorm.DB) ([]*db_model.Judgment, error) {
 	var judgments []*db_model.Judgment
-	if err := db.Find(&judgments).Error; err != nil {
+	if err := db.WithContext(ctx).Find(&judgments).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return judgments, nil

@@ -4,7 +4,7 @@ import CircularUnderLoad from "@/features/Loading";
 import { useGetTypeQuery } from "@/gql/__generated__/graphql";
 
 export default function Home() {
-  const { data, loading, error } = useGetTypeQuery({
+  const { data, error } = useGetTypeQuery({
     fetchPolicy: "cache-and-network",
   });
   const navigate = useNavigate();

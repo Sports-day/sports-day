@@ -51,15 +51,6 @@ export const GET_MATCHES = gql`
   }
 `;
 
-export const MARK_PANEL_JUDGMENT_ATTENDANCE = gql`
-  mutation MarkPanelJudgmentAttendance($matchId: ID!) {
-    markJudgmentAttendance(matchId: $matchId) {
-      id
-      isAttending
-    }
-  }
-`;
-
 export const SUBMIT_PANEL_MATCH_SCORE = gql`
   mutation SubmitPanelMatchScore($matchId: ID!, $input: SubmitScoreInput!) {
     submitMatchScore(matchId: $matchId, input: $input) {
@@ -76,6 +67,67 @@ export const SUBMIT_PANEL_MATCH_SCORE = gql`
       winnerTeam {
         id
         name
+      }
+    }
+  }
+`;
+
+export const GET_JUDGE_MATCH_AT_LOCATION = gql`
+  query GetJudgeMatchAtLocation($locationId: ID!) {
+    nextJudgeMatchAtLocation(locationId: $locationId) {
+      id
+      time
+      status
+      location {
+        id
+        name
+      }
+      competition {
+        id
+        name
+        type
+      }
+      entries {
+        id
+        team {
+          id
+          name
+        }
+        score
+      }
+      judgment {
+        id
+        isAttending
+      }
+    }
+  }
+`;
+
+export const START_MATCH_JUDGING = gql`
+  mutation StartMatchJudging($matchId: ID!) {
+    startMatchJudging(matchId: $matchId) {
+      id
+      status
+      location {
+        id
+        name
+      }
+      competition {
+        id
+        name
+        type
+      }
+      entries {
+        id
+        team {
+          id
+          name
+        }
+        score
+      }
+      judgment {
+        id
+        isAttending
       }
     }
   }

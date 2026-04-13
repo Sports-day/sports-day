@@ -1,4 +1,4 @@
-import { Box, Tooltip } from '@mui/material'
+import { Tooltip } from '@mui/material'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 
 type Props = {

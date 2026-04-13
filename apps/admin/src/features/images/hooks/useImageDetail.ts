@@ -23,6 +23,7 @@ export function useImageDetail(imageId: string) {
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 

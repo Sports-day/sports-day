@@ -7,10 +7,12 @@ import {
   useGetAdminCompetitionsQuery,
   useGetAdminPromotionRulesQuery,
   useGetAdminSportsWithScenesQuery,
+  useGetAdminLocationsForMatchesQuery,
   useUpdateAdminTournamentMutation,
   useDeleteAdminTournamentMutation,
   useUpdateAdminCompetitionMutation,
   useDeleteAdminCompetitionMutation,
+  useApplyAdminCompetitionDefaultsMutation,
   GetAdminCompetitionsDocument,
   useCreateAdminPromotionRuleMutation,
   useDeleteAdminPromotionRuleMutation,
@@ -25,6 +27,7 @@ import {
   CompetitionType,
   SlotSourceType,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 import type { ProgressionRule, ProgressionTarget } from '../types'
 
 type PlacementMethod = 'SEED_OPTIMIZED' | 'BALANCED' | 'RANDOM' | 'MANUAL'
@@ -76,11 +79,35 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     () => competitionTeams.map((t, i) => ({
       id: i + 1,
       teamName: t.name,
-      teamClass: t.group.name,
+      teamClass: t.group?.name ?? '',
       teamId: t.id,
     })),
     [competitionTeams],
   )
+
+  // ─── デフォルト設定 ─────────────────────────────────
+  const { data: locData } = useGetAdminLocationsForMatchesQuery()
+  const locations = (locData?.locations ?? []).map(l => ({ id: l.id, name: l.name }))
+
+  const serverStartTime = competition?.startTime ? toDatetimeLocal(competition.startTime) : ''
+  const serverMatchDuration = competition?.matchDuration ?? 15
+  const serverBreakDuration = competition?.breakDuration ?? 5
+  const serverLocationId = competition?.defaultLocation?.id ?? ''
+
+  const [editStartTime, setEditStartTime] = useState<string | null>(null)
+  const [editMatchDuration, setEditMatchDuration] = useState<number | null>(null)
+  const [editBreakDuration, setEditBreakDuration] = useState<number | null>(null)
+  const [editLocationId, setEditLocationId] = useState<string | null>(null)
+
+  const defaultsForm = {
+    startTime: editStartTime ?? serverStartTime,
+    matchDuration: editMatchDuration ?? serverMatchDuration,
+    breakDuration: editBreakDuration ?? serverBreakDuration,
+    locationId: editLocationId ?? serverLocationId,
+  }
+
+  const defaultsDirty = editStartTime !== null || editMatchDuration !== null
+    || editBreakDuration !== null || editLocationId !== null
 
   // ─── ユーザー編集差分（null = 未編集 → サーバー値を使う） ───
   const [editName, setEditName] = useState<string | null>(null)
@@ -147,6 +174,9 @@ export function useTournamentEdit(competitionId: string, competitionName: string
   const [updateSlotConnection] = useUpdateAdminSlotConnectionMutation({
     refetchQueries: ['GetAdminTournament'],
   })
+  const [applyDefaults] = useApplyAdminCompetitionDefaultsMutation({
+    refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+  })
   const [updateCompetition] = useUpdateAdminCompetitionMutation()
   const [deleteCompetition] = useDeleteAdminCompetitionMutation({
     refetchQueries: [{ query: GetAdminCompetitionsDocument }],
@@ -202,7 +232,7 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     })
 
   const dirty = editName !== null || editSportId !== null || editSceneId !== null
-    || bracketNeedsGeneration || bracketChanged || progressionDirty
+    || bracketNeedsGeneration || bracketChanged || progressionDirty || defaultsDirty
 
   // ─── ハンドラー ─────────────────────────────────────
   const handleChange = (field: 'name' | 'sportId' | 'sceneId' | 'teamCount' | 'placementMethod') => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -215,79 +245,118 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     }
   }
 
+  const [mutationError, setMutationError] = useState<Error | null>(null)
+
   const handleSave = async () => {
     const n = form.name.trim().slice(0, 64)
     if (!n) return
-    // トーナメント名の更新
-    if (editName !== null && resolvedTournamentId) {
-      await updateTournament({
-        variables: { id: resolvedTournamentId, input: { name: n } },
-      })
-    }
-    // competition（名前/競技/タグ）の更新
-    await updateCompetition({
-      variables: { id: competitionId, input: { name: n, sportId: form.sportId || undefined, sceneId: form.sceneId || undefined } },
-      refetchQueries: ['GetAdminCompetitions', 'GetAdminCompetition'],
-    })
-
-    // ブラケット生成/再生成（既存があればAPI側で自動リセット）
-    if (bracketNeedsGeneration || bracketChanged) {
-      await generateBracket({
-        variables: {
-          input: {
-            competitionId,
-            teamCount,
-            placementMethod: placementMethod as string,
-          },
-        },
-      })
-    }
-
-    // プログレッションルールの差分保存
-    if (progressionDirty) {
-      const desiredRules = effectiveProgressionRules
-      for (const sr of savedProgressionRules) {
-        const desired = desiredRules.find(r => r.rank === sr.rank)
-        const ruleId = ruleIdByRank[sr.rank]
-        if (ruleId && (!desired || desired.targetId !== sr.targetId)) {
-          await deletePromotionRule({ variables: { id: ruleId } })
-        }
+    try {
+      // トーナメント名の更新
+      if (editName !== null && resolvedTournamentId) {
+        await updateTournament({
+          variables: { id: resolvedTournamentId, input: { name: n } },
+        })
       }
-      for (const rule of desiredRules) {
-        const sr = savedProgressionRules.find(r => r.rank === rule.rank)
-        if (!sr || sr.targetId !== rule.targetId) {
-          await createPromotionRule({
-            variables: {
-              input: {
-                sourceCompetitionId: competitionId,
-                targetCompetitionId: rule.targetId,
-                rankSpec: String(rule.rank),
-              },
+      // competition（名前/競技/タグ）の更新
+      await updateCompetition({
+        variables: { id: competitionId, input: { name: n, sportId: form.sportId || undefined, sceneId: form.sceneId || undefined } },
+        refetchQueries: ['GetAdminCompetitions', 'GetAdminCompetition'],
+      })
+
+      // ブラケット生成/再生成（既存があればAPI側で自動リセット）
+      if (bracketNeedsGeneration || bracketChanged) {
+        await generateBracket({
+          variables: {
+            input: {
+              competitionId,
+              teamCount,
+              placementMethod: placementMethod as import('@/gql/__generated__/graphql').PlacementMethod,
             },
-          })
-        }
+          },
+        })
       }
-      setSavedProgressionRules(desiredRules)
-    }
 
-    // 保存完了 → 編集差分をクリア（サーバー値に戻る）
-    setEditName(null)
-    setEditSportId(null)
-    setEditSceneId(null)
-    setEditTeamCount(null)
-    setEditPlacementMethod(null)
+      // プログレッションルールの差分保存
+      if (progressionDirty) {
+        const desiredRules = effectiveProgressionRules
+        for (const sr of savedProgressionRules) {
+          const desired = desiredRules.find(r => r.rank === sr.rank)
+          const ruleId = ruleIdByRank[sr.rank]
+          if (ruleId && (!desired || desired.targetId !== sr.targetId)) {
+            await deletePromotionRule({ variables: { id: ruleId } })
+          }
+        }
+        for (const rule of desiredRules) {
+          const sr = savedProgressionRules.find(r => r.rank === rule.rank)
+          if (!sr || sr.targetId !== rule.targetId) {
+            await createPromotionRule({
+              variables: {
+                input: {
+                  sourceCompetitionId: competitionId,
+                  targetCompetitionId: rule.targetId,
+                  rankSpec: String(rule.rank),
+                },
+              },
+            })
+          }
+        }
+        setSavedProgressionRules(desiredRules)
+      }
+
+      // デフォルト設定を試合に適用
+      if (defaultsDirty) {
+        await applyDefaults({
+          variables: {
+            id: competitionId,
+            input: {
+              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : '',
+              matchDuration: defaultsForm.matchDuration,
+              breakDuration: defaultsForm.breakDuration,
+              locationId: defaultsForm.locationId || undefined,
+            },
+          },
+        })
+      }
+
+      // 保存完了 → 編集差分をクリア（サーバー値に戻る）
+      setEditName(null)
+      setEditSportId(null)
+      setEditSceneId(null)
+      setEditTeamCount(null)
+      setEditPlacementMethod(null)
+      setEditStartTime(null)
+      setEditMatchDuration(null)
+      setEditBreakDuration(null)
+      setEditLocationId(null)
+      setMutationError(null)
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleDelete = async () => {
-    await deleteCompetition({ variables: { id: competitionId } })
+    try {
+      await deleteCompetition({ variables: { id: competitionId } })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleDeleteEntry = async (id: number) => {
     const entry = entries.find(e => e.id === id)
     if (!entry?.teamId) return
-    await deleteCompetitionEntries({
-      variables: { id: competitionId, input: { teamIds: [entry.teamId] } },
-    })
+    try {
+      await deleteCompetitionEntries({
+        variables: { id: competitionId, input: { teamIds: [entry.teamId] } },
+      })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleOpenAddDialog = () => setAddDialogOpen(true)
@@ -295,9 +364,14 @@ export function useTournamentEdit(competitionId: string, competitionName: string
 
   const handleAddEntries = async (selectedIds: string[]) => {
     if (selectedIds.length === 0) return
-    await addCompetitionEntries({
-      variables: { id: competitionId, input: { teamIds: selectedIds } },
-    })
+    try {
+      await addCompetitionEntries({
+        variables: { id: competitionId, input: { teamIds: selectedIds } },
+      })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleProgressionRuleChange = (rank: number, targetId: string) => {
@@ -339,41 +413,61 @@ export function useTournamentEdit(competitionId: string, competitionName: string
 
   // ─── SUBブラケット操作 ─────────────────────────────
   const handleCreateSubBracket = async (name: string, subTeamCount?: number, subPlacementMethod?: PlacementMethod) => {
-    await generateSubBracket({
-      variables: {
-        input: {
-          competitionId,
-          name,
-          teamCount: subTeamCount ?? 2,
-          placementMethod: subPlacementMethod ?? undefined,
+    try {
+      await generateSubBracket({
+        variables: {
+          input: {
+            competitionId,
+            name,
+            teamCount: subTeamCount ?? 2,
+            placementMethod: subPlacementMethod ?? undefined,
+          },
         },
-      },
-    })
+      })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleDeleteSubBracket = async (bracketId: string) => {
-    await deleteTournament({ variables: { id: bracketId } })
+    try {
+      await deleteTournament({ variables: { id: bracketId } })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleUpdateSubBracketName = async (bracketId: string, name: string) => {
-    await updateTournament({
-      variables: { id: bracketId, input: { name: name.trim().slice(0, 64) } },
-      refetchQueries: refetchTournaments,
-    })
+    try {
+      await updateTournament({
+        variables: { id: bracketId, input: { name: name.trim().slice(0, 64) } },
+        refetchQueries: refetchTournaments,
+      })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleRegenerateSubBracket = async (bracketId: string, name: string, subTeamCount: number, subPlacementMethod: PlacementMethod) => {
-    await deleteTournament({ variables: { id: bracketId } })
-    await generateSubBracket({
-      variables: {
-        input: {
-          competitionId,
-          name,
-          teamCount: subTeamCount,
-          placementMethod: subPlacementMethod,
+    try {
+      await deleteTournament({ variables: { id: bracketId } })
+      await generateSubBracket({
+        variables: {
+          input: {
+            competitionId,
+            name,
+            teamCount: subTeamCount,
+            placementMethod: subPlacementMethod,
+          },
         },
-      },
-    })
+      })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   const handleUpdateSlotSource = async (
@@ -386,16 +480,21 @@ export function useTournamentEdit(competitionId: string, competitionName: string
       sourceType === 'MATCH_WINNER' ? SlotSourceType.MatchWinner
         : sourceType === 'MATCH_LOSER' ? SlotSourceType.MatchLoser
         : SlotSourceType.Seed
-    await updateSlotConnection({
-      variables: {
-        input: {
-          slotId,
-          sourceType: gqlSourceType,
-          sourceMatchId: sourceMatchId ?? null,
-          seedNumber: seedNumber ?? null,
+    try {
+      await updateSlotConnection({
+        variables: {
+          input: {
+            slotId,
+            sourceType: gqlSourceType,
+            sourceMatchId: sourceMatchId ?? null,
+            seedNumber: seedNumber ?? null,
+          },
         },
-      },
-    })
+      })
+    } catch (e) {
+      setMutationError(e instanceof Error ? e : new Error(String(e)))
+      showErrorToast()
+    }
   }
 
   return {
@@ -414,6 +513,12 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     progressionRules,
     availableProgressionTargets,
     subBrackets,
+    defaultsForm,
+    locations,
+    setEditStartTime,
+    setEditMatchDuration,
+    setEditBreakDuration,
+    setEditLocationId,
     handleChange,
     handleSave,
     handleDelete,
@@ -429,5 +534,12 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     handleUpdateSubBracketName,
     handleRegenerateSubBracket,
     handleUpdateSlotSource,
+    mutationError,
   }
+}
+
+function toDatetimeLocal(isoString: string): string {
+  const d = new Date(isoString)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }

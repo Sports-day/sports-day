@@ -41,8 +41,7 @@ export function PdfExportDialog({ open, onClose, sportId, sceneId }: Props) {
       .then((url) => {
         if (!cancelled) setPreviewUrl(url)
       })
-      .catch((e) => {
-        console.error('PDF preview failed:', e)
+      .catch(() => {
         if (!cancelled) showErrorToast('PDFプレビューの生成に失敗しました。')
       })
       .finally(() => {
@@ -65,8 +64,7 @@ export function PdfExportDialog({ open, onClose, sportId, sceneId }: Props) {
     setDownloading(true)
     try {
       await downloadCompetitionPdf(data)
-    } catch (e) {
-      console.error('PDF download failed:', e)
+    } catch {
       showErrorToast('PDFダウンロードに失敗しました。再度お試しください。')
     } finally {
       setDownloading(false)

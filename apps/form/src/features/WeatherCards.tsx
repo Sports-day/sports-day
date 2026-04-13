@@ -13,10 +13,10 @@ type weatherProps = {
 export default function WeatherCards({ id }: weatherProps) {
   const { data, loading, error } = useGetWeatherQuery();
   if (loading) return <CircularUnderLoad />;
-  if (error) return <div>error</div>;
+  if (error) throw error;
   const weather = data?.scenes
-    .filter((d) => !d.isDeleted)
-    .map((d) => ({
+    ?.filter((d) => !d.isDeleted)
+    ?.map((d) => ({
       id: d.id,
       name: d.name,
     })) ?? [];

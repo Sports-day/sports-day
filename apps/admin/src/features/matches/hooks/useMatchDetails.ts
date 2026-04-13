@@ -9,6 +9,7 @@ import {
 } from '@/gql/__generated__/graphql'
 import { GET_ADMIN_COMPETITION_JUDGE_OPTIONS } from '../api'
 import { showErrorToast } from '@/lib/toast'
+import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 
 export type JudgeType = 'group' | 'team' | 'user'
 
@@ -21,7 +22,7 @@ type CompetitionJudgeData = {
       id: string
       name: string
       group: { id: string; name: string }
-      users: Array<{ id: string; name: string }>
+      users: Array<{ id: string; name?: string | null; identify?: { microsoftUserId?: string | null } | null }>
     }>
   }
 }
@@ -32,6 +33,18 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
   const [judgmentType, setJudgmentType] = useState<JudgeType | null>(null)
   const [judgmentTargetId, setJudgmentTargetId] = useState('')
   const [mutationError, setMutationError] = useState<Error | null>(null)
+
+  // dirty 検知用の初期値
+  const [savedLocationId, setSavedLocationId] = useState(match.locationId ?? '')
+  const [savedTime, setSavedTime] = useState(toDatetimeLocal(match.time))
+  const [savedJudgmentType, setSavedJudgmentType] = useState<JudgeType | null>(null)
+  const [savedJudgmentTargetId, setSavedJudgmentTargetId] = useState('')
+
+  const dirty =
+    locationId !== savedLocationId ||
+    time !== savedTime ||
+    judgmentType !== savedJudgmentType ||
+    judgmentTargetId !== savedJudgmentTargetId
 
   const hasInitialized = useRef(false)
 
@@ -62,12 +75,18 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     if (j.group?.id) {
       setJudgmentType('group')
       setJudgmentTargetId(j.group.id)
+      setSavedJudgmentType('group')
+      setSavedJudgmentTargetId(j.group.id)
     } else if (j.team?.id) {
       setJudgmentType('team')
       setJudgmentTargetId(j.team.id)
+      setSavedJudgmentType('team')
+      setSavedJudgmentTargetId(j.team.id)
     } else if (j.user?.id) {
       setJudgmentType('user')
       setJudgmentTargetId(j.user.id)
+      setSavedJudgmentType('user')
+      setSavedJudgmentTargetId(j.user.id)
     }
   }, [matchData])
 
@@ -80,6 +99,21 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     },
   )
 
+  // 大会エントリーのユーザーから microsoftUserId を収集して Graph API で名前を取得
+  const microsoftUserIds = useMemo(() => {
+    const teams = compData?.competition?.teams ?? []
+    const ids: string[] = []
+    for (const team of teams) {
+      for (const user of team.users ?? []) {
+        const msId = user.identify?.microsoftUserId
+        if (msId) ids.push(msId)
+      }
+    }
+    return ids
+  }, [compData])
+
+  const { msGraphUsers } = useMsGraphUsers(microsoftUserIds)
+
   const judgeOptions = useMemo(() => {
     const teams = compData?.competition?.teams ?? []
     const groupMap = new Map<string, JudgeOption>()
@@ -88,7 +122,10 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     for (const team of teams) {
       if (team.group) groupMap.set(team.group.id, { id: team.group.id, name: team.group.name })
       for (const user of team.users ?? []) {
-        userMap.set(user.id, { id: user.id, name: user.name })
+        const msId = user.identify?.microsoftUserId
+        const msUser = msId ? msGraphUsers.get(msId) : undefined
+        const name = msUser?.displayName ?? user.name ?? user.id
+        userMap.set(user.id, { id: user.id, name })
       }
     }
 
@@ -97,7 +134,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
       teams: teams.map(t => ({ id: t.id, name: t.name })).sort((a, b) => a.name.localeCompare(b.name)),
       users: Array.from(userMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
     }
-  }, [compData])
+  }, [compData, msGraphUsers])
 
   const optionsByType: Record<JudgeType, JudgeOption[]> = {
     group: judgeOptions.groups,
@@ -120,7 +157,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
           id: match.id,
           input: { time: new Date(time).toISOString(), locationId: locationId || undefined },
         },
-        refetchQueries: ['GetAdminCompetitionMatches', 'GetAdminMatches'],
+        refetchQueries: ['GetAdminMatches'],
       })
 
       // 審判に変更がある場合のみ更新
@@ -137,9 +174,10 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
               id: match.id,
               input: {
                 entry: {
-                  groupId: judgmentType === 'group' ? judgmentTargetId : undefined,
-                  teamId: judgmentType === 'team' ? judgmentTargetId : undefined,
-                  userId: judgmentType === 'user' ? judgmentTargetId : undefined,
+                  groupId: judgmentType === 'group' ? judgmentTargetId : null,
+                  teamId: judgmentType === 'team' ? judgmentTargetId : null,
+                  userId: judgmentType === 'user' ? judgmentTargetId : null,
+                  name: null,
                 },
               },
             },
@@ -150,9 +188,14 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
       }
 
       setMutationError(null)
+      setSavedLocationId(locationId)
+      setSavedTime(time)
+      setSavedJudgmentType(judgmentType)
+      setSavedJudgmentTargetId(judgmentTargetId)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 
@@ -167,6 +210,24 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     else { setJudgmentType(null); setJudgmentTargetId('') }
   }
 
+  const judgment = matchData?.match?.judgment
+  const isAttending = judgment?.isAttending ?? false
+  const hasJudgmentAssigned = !!(judgment?.user?.id || judgment?.team?.id || judgment?.group?.id)
+
+  const handleToggleAttendance = async () => {
+    try {
+      await updateJudgment({
+        variables: {
+          id: match.id,
+          input: { isAttending: !isAttending },
+        },
+        refetchQueries: ['GetAdminMatch'],
+      })
+    } catch (e) {
+      showErrorToast()
+    }
+  }
+
   return {
     locationId, setLocationId,
     locations,
@@ -175,6 +236,10 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
     judgmentTargetId, setJudgmentTargetId,
     optionsByType,
     currentJudgmentLabel,
+    isAttending,
+    hasJudgmentAssigned,
+    handleToggleAttendance,
+    dirty,
     handleSave, handleReset,
     error: mutationError,
   }

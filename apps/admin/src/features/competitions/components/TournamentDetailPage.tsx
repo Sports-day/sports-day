@@ -20,7 +20,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import CheckIcon from '@mui/icons-material/Check'
 import DeleteIcon from '@mui/icons-material/Delete'
-import ScheduleIcon from '@mui/icons-material/Schedule'
+import QrCode2Icon from '@mui/icons-material/QrCode2'
 import SportsScoreIcon from '@mui/icons-material/SportsScore'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
@@ -57,7 +57,7 @@ import { useTournamentDetail } from '../hooks/useTournamentDetail'
 import { TournamentBracketView } from './TournamentBracketView'
 import { useTournamentEdit } from '../hooks/useTournamentEdit'
 import { useSeedAssignment } from '@/hooks/useSeedAssignment'
-import { useCompetitionDefaults } from '../hooks/useCompetitionDefaults'
+import { QrPdfExportDialog } from './QrPdfExportDialog'
 import type { TournamentMatchView } from '../types'
 
 const PLACEMENT_OPTIONS = [
@@ -119,9 +119,13 @@ export function TournamentDetailPage({
     handleDeleteSubBracket,
     handleUpdateSubBracketName,
     handleRegenerateSubBracket,
+    defaultsForm,
+    locations,
+    setEditStartTime,
+    setEditMatchDuration,
+    setEditBreakDuration,
+    setEditLocationId,
   } = useTournamentEdit(competitionId, competitionName)
-
-  const defaults = useCompetitionDefaults(competitionId)
   const [activeBracketId, setActiveBracketId] = useState('')
   const seed = useSeedAssignment(activeBracketId)
   const client = useApolloClient()
@@ -310,6 +314,7 @@ export function TournamentDetailPage({
   }
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [subDeleteTarget, setSubDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [subEdits, setSubEdits] = useState<Record<string, { teamCount?: number; placement?: string }>>({})
   const [subCreateName, setSubCreateName] = useState('')
@@ -342,16 +347,20 @@ export function TournamentDetailPage({
       await handleSave()
       onSaved?.(form.name.trim())
       showToast('トーナメントを保存しました')
-    } catch (e) {
-      showErrorToast('保存に失敗しました。')
+    } catch {
+      // エラートーストはhook側で表示済み
     }
   }
 
   const onConfirmDelete = async () => {
     setDeleteDialogOpen(false)
-    await handleDelete()
-    onDeleted?.()
-    showToast('トーナメントを削除しました')
+    try {
+      await handleDelete()
+      onDeleted?.()
+      showToast('トーナメントを削除しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
@@ -391,15 +400,15 @@ export function TournamentDetailPage({
             <TextField
               label="デフォルト場所"
               select
-              value={defaults.form.locationId}
-              onChange={(e) => defaults.setForm(prev => ({ ...prev, locationId: e.target.value }))}
+              value={defaultsForm.locationId}
+              onChange={(e) => setEditLocationId(e.target.value)}
               size="small"
               fullWidth
               sx={CARD_FIELD_SX}
               slotProps={{ select: { displayEmpty: true } }}
             >
               <MenuItem value=""><Typography sx={{ fontSize: '14px', color: '#2F3C8C', opacity: 0.5 }}>未設定</Typography></MenuItem>
-              {defaults.locations.map(loc => (
+              {locations.map(loc => (
                 <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
               ))}
             </TextField>
@@ -411,14 +420,14 @@ export function TournamentDetailPage({
             </Typography>
             <DateTimeInput
               label="開始時刻"
-              value={defaults.form.startTime}
-              onChange={(v) => defaults.setForm(prev => ({ ...prev, startTime: v }))}
+              value={defaultsForm.startTime}
+              onChange={(v) => setEditStartTime(v)}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <NumberInput
                 label="試合時間（分）"
-                value={defaults.form.matchDuration}
-                onChange={(v) => defaults.setForm(prev => ({ ...prev, matchDuration: Math.max(1, v) }))}
+                value={defaultsForm.matchDuration}
+                onChange={(v) => setEditMatchDuration(Math.max(1, v))}
                 min={1}
                 max={999}
                 fullWidth
@@ -426,25 +435,14 @@ export function TournamentDetailPage({
               />
               <NumberInput
                 label="休憩時間（分）"
-                value={defaults.form.breakDuration}
-                onChange={(v) => defaults.setForm(prev => ({ ...prev, breakDuration: Math.max(0, v) }))}
+                value={defaultsForm.breakDuration}
+                onChange={(v) => setEditBreakDuration(Math.max(0, v))}
                 min={0}
                 max={999}
                 fullWidth
                 sx={CARD_FIELD_SX}
               />
             </Box>
-
-            <Button
-              variant="contained"
-              fullWidth
-              startIcon={<ScheduleIcon />}
-              onClick={defaults.handleApply}
-              disabled={!defaults.isValid || !defaults.dirty || defaults.loading}
-              sx={SAVE_BUTTON_SX}
-            >
-              {defaults.loading ? '適用中...' : 'デフォルト設定を試合に適用'}
-            </Button>
 
             <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
 
@@ -496,6 +494,14 @@ export function TournamentDetailPage({
             <Divider sx={{ borderColor: '#5B6DC6', opacity: 0.3, my: 0.5 }} />
 
             <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="outlined"
+                startIcon={<QrCode2Icon />}
+                onClick={() => setQrDialogOpen(true)}
+                sx={{ flexShrink: 0, fontSize: '13px', borderColor: '#5B6DC6', color: '#2F3C8C', borderRadius: 1, '&:hover': { borderColor: '#2F3C8C', backgroundColor: '#F0F1FA' } }}
+              >
+                審判QR
+              </Button>
               <Button
                 variant="outlined"
                 startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
@@ -870,6 +876,13 @@ export function TournamentDetailPage({
             showToast('サブブラケットを削除しました')
           }
         }}
+      />
+
+      <QrPdfExportDialog
+        open={qrDialogOpen}
+        onClose={() => setQrDialogOpen(false)}
+        competitionId={competitionId}
+        competitionName={form.name || competitionName}
       />
 
     </Box>

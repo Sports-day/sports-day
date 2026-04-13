@@ -350,6 +350,15 @@ func (s *Tournament) GenerateBracket(ctx context.Context, input *model.GenerateB
 			}
 		}
 
+		// 大会のデフォルトロケーションを全試合に設定
+		if comp.DefaultLocationID.Valid {
+			if err := tx.WithContext(ctx).Model(&db_model.Match{}).
+				Where("competition_id = ? AND location_id IS NULL", input.CompetitionID).
+				Update("location_id", comp.DefaultLocationID.String).Error; err != nil {
+				return errors.Wrap(err)
+			}
+		}
+
 		return nil
 	})
 
@@ -577,8 +586,13 @@ func computeNodeRound(node *bracketNode) int {
 	if node.seedNumber > 0 {
 		return -1 // リーフはマッチではない
 	}
-	r1 := computeNodeRound(node.child1)
-	r2 := computeNodeRound(node.child2)
+	var r1, r2 int
+	if node.child1 != nil {
+		r1 = computeNodeRound(node.child1)
+	}
+	if node.child2 != nil {
+		r2 = computeNodeRound(node.child2)
+	}
 	node.round = max(r1, r2) + 1
 	return node.round
 }
@@ -1094,6 +1108,15 @@ func (s *Tournament) GenerateSubBracket(ctx context.Context, input *model.Genera
 			}
 		}
 
+		// デフォルトロケーションを生成した試合に適用
+		if comp.DefaultLocationID.Valid {
+			if err := tx.WithContext(ctx).Model(&db_model.Match{}).
+				Where("competition_id = ? AND location_id IS NULL", input.CompetitionID).
+				Update("location_id", comp.DefaultLocationID.String).Error; err != nil {
+				return errors.Wrap(err)
+			}
+		}
+
 		tournament = t
 		return nil
 	})
@@ -1270,12 +1293,19 @@ func (s *Tournament) CreateTournamentMatch(ctx context.Context, input *model.Cre
 			matchTime = parsed
 		}
 
+		// デフォルトロケーションを取得
+		comp, err := s.competitionRepository.Get(ctx, tx, t.CompetitionID)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
 		// Match 作成
 		m := &db_model.Match{
 			ID:            ulid.Make(),
 			Time:          matchTime,
 			Status:        string(model.MatchStatusStandby),
 			CompetitionID: t.CompetitionID,
+			LocationID:    comp.DefaultLocationID,
 		}
 		m, err = s.matchRepository.Save(ctx, tx, m)
 		if err != nil {

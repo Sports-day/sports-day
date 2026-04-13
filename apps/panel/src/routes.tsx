@@ -6,6 +6,7 @@ import AboutPage from "@/app/(authenticated)/about/page"
 import DiscoverPage from "@/app/(authenticated)/discover/page"
 import PrivacyPage from "@/app/(authenticated)/privacy/page"
 import SportsPage from "@/app/(authenticated)/sports/[id]/page"
+import JudgePage from "@/app/(authenticated)/judge/[locationId]/page"
 import AuthenticatedLayout from "@/app/(authenticated)/layout"
 import InformationListPage from "@/app/(information)/information/page"
 import InformationDetailPage from "@/app/(information)/information/[id]/page"
@@ -28,6 +29,7 @@ export function AppRoutes() {
           <Route path="/discover" element={<DiscoverPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/sports/:id" element={<SportsPage />} />
+          <Route path="/judge/:locationId" element={<JudgePage />} />
         </Route>
       </Route>
 

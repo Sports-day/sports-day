@@ -7,9 +7,16 @@ import (
 )
 
 func FormatUserResponse(user *db_model.User) *User {
-	return &User{
+	u := &User{
 		ID: user.ID,
 	}
+	if user.Name.Valid {
+		u.Name = &user.Name.String
+	}
+	if user.Email.Valid {
+		u.Email = &user.Email.String
+	}
+	return u
 }
 
 func FormatGroupResponse(group *db_model.Group) *Group {
@@ -24,6 +31,7 @@ func FormatInformationResponse(information *db_model.Information) *Information {
 		ID:           information.ID,
 		Title:        information.Title,
 		Content:      information.Content,
+		Status:       information.Status,
 		DisplayOrder: int32(information.DisplayOrder),
 	}
 }
@@ -183,10 +191,11 @@ func FormatMatchEntryResponse(entry *db_model.MatchEntry) *MatchEntry {
 }
 
 func FormatJudgmentResponse(judgment *db_model.Judgment) *Judgment {
-	var name, userId, teamId, groupId string
+	var name *string
+	var userId, teamId, groupId string
 
 	if judgment.Name.Valid {
-		name = judgment.Name.String
+		name = &judgment.Name.String
 	}
 	if judgment.UserID.Valid {
 		userId = judgment.UserID.String

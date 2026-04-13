@@ -1304,6 +1304,7 @@ export type UpdateInformationInput = {
 
 export type UpdateJudgmentInput = {
   entry?: InputMaybe<JudgmentEntry>;
+  isAttending?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateLeagueRuleInput = {
@@ -1383,10 +1384,12 @@ export type UpdateTournamentInput = {
 
 export type User = {
   __typename?: 'User';
+  email?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   identify: UserIdentify;
   judgments: Array<Judgment>;
+  name?: Maybe<Scalars['String']['output']>;
   role: Role;
   teams: Array<Team>;
 };
@@ -1407,7 +1410,7 @@ export type GetAdminGroupForClassQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminGroupForClassQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type GetAdminGroupForClassQuery = { __typename?: 'Query', group: { __typename?: 'Group', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type CreateAdminGroupForClassMutationVariables = Exact<{
   input: CreateGroupInput;
@@ -1437,7 +1440,7 @@ export type AddAdminGroupUsersForClassMutationVariables = Exact<{
 }>;
 
 
-export type AddAdminGroupUsersForClassMutation = { __typename?: 'Mutation', addGroupUsers: { __typename?: 'Group', id: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type AddAdminGroupUsersForClassMutation = { __typename?: 'Mutation', addGroupUsers: { __typename?: 'Group', id: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type RemoveAdminGroupUsersForClassMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1445,7 +1448,7 @@ export type RemoveAdminGroupUsersForClassMutationVariables = Exact<{
 }>;
 
 
-export type RemoveAdminGroupUsersForClassMutation = { __typename?: 'Mutation', removeGroupUsers: { __typename?: 'Group', id: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type RemoveAdminGroupUsersForClassMutation = { __typename?: 'Mutation', removeGroupUsers: { __typename?: 'Group', id: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type GetAdminCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1818,7 +1821,7 @@ export type GetAdminMatchQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } | null } };
+export type GetAdminMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } | null } };
 
 export type UpdateAdminMatchResultMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -1872,7 +1875,7 @@ export type UpdateAdminJudgmentMutationVariables = Exact<{
 }>;
 
 
-export type UpdateAdminJudgmentMutation = { __typename?: 'Mutation', updateJudgment: { __typename?: 'Judgment', id: string, name?: string | null, user?: { __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } };
+export type UpdateAdminJudgmentMutation = { __typename?: 'Mutation', updateJudgment: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } };
 
 export type CreateAdminTournamentMatchMutationVariables = Exact<{
   input: CreateTournamentMatchInput;
@@ -1900,7 +1903,7 @@ export type GetAdminCompetitionJudgeOptionsQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminCompetitionJudgeOptionsQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> } };
+export type GetAdminCompetitionJudgeOptionsQuery = { __typename?: 'Query', competition: { __typename?: 'Competition', id: string, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> } };
 
 export type SetAdminTiebreakPrioritiesMutationVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -2052,14 +2055,14 @@ export type UpdateAdminScenesDisplayOrderMutation = { __typename?: 'Mutation', u
 export type GetAdminTeamsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> };
+export type GetAdminTeamsQuery = { __typename?: 'Query', teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> }> };
 
 export type GetAdminTeamQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type GetAdminTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type CreateAdminTeamMutationVariables = Exact<{
   input: CreateTeamInput;
@@ -2089,7 +2092,7 @@ export type UpdateAdminTeamUsersMutationVariables = Exact<{
 }>;
 
 
-export type UpdateAdminTeamUsersMutation = { __typename?: 'Mutation', updateTeamUsers: { __typename?: 'Team', id: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type UpdateAdminTeamUsersMutation = { __typename?: 'Mutation', updateTeamUsers: { __typename?: 'Team', id: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type GetAdminGroupsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2099,14 +2102,14 @@ export type GetAdminGroupsQuery = { __typename?: 'Query', groups: Array<{ __type
 export type GetAdminUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, role: Role, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> }>, sports: Array<{ __typename?: 'Sport', id: string, name: string }>, allSportExperiences: Array<{ __typename?: 'SportExperience', userId: string, sportId: string }> };
+export type GetAdminUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name?: string | null, email?: string | null, role: Role, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> }>, sports: Array<{ __typename?: 'Sport', id: string, name: string }>, allSportExperiences: Array<{ __typename?: 'SportExperience', userId: string, sportId: string }> };
 
 export type GetAdminUserQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, role: Role, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
+export type GetAdminUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, name?: string | null, email?: string | null, role: Role, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string, name: string }>, teams: Array<{ __typename?: 'Team', id: string, name: string }> } };
 
 export type CreateAdminUserMutationVariables = Exact<{
   input: CreateUserInput;
@@ -2216,6 +2219,8 @@ export const GetAdminGroupForClassDocument = gql`
     name
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2364,6 +2369,8 @@ export const AddAdminGroupUsersForClassDocument = gql`
     id
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -2404,6 +2411,8 @@ export const RemoveAdminGroupUsersForClassDocument = gql`
     id
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -4642,6 +4651,8 @@ export const GetAdminMatchDocument = gql`
       isAttending
       user {
         id
+        name
+        email
         identify {
           microsoftUserId
         }
@@ -4946,8 +4957,11 @@ export const UpdateAdminJudgmentDocument = gql`
   updateJudgment(id: $id, input: $input) {
     id
     name
+    isAttending
     user {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -5117,6 +5131,8 @@ export const GetAdminCompetitionJudgeOptionsDocument = gql`
       }
       users {
         id
+        name
+        email
         identify {
           microsoftUserId
         }
@@ -5957,6 +5973,8 @@ export const GetAdminTeamsDocument = gql`
     }
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -6007,6 +6025,8 @@ export const GetAdminTeamDocument = gql`
     }
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -6163,6 +6183,8 @@ export const UpdateAdminTeamUsersDocument = gql`
     id
     users {
       id
+      name
+      email
       identify {
         microsoftUserId
       }
@@ -6241,6 +6263,8 @@ export const GetAdminUsersDocument = gql`
     query GetAdminUsers {
   users {
     id
+    name
+    email
     role
     identify {
       microsoftUserId
@@ -6300,6 +6324,8 @@ export const GetAdminUserDocument = gql`
     query GetAdminUser($id: ID!) {
   user(id: $id) {
     id
+    name
+    email
     role
     identify {
       microsoftUserId

@@ -59,11 +59,6 @@ type CreateInformationInput struct {
 	Status  *string `json:"status,omitempty"`
 }
 
-type CreateJudgmentInput struct {
-	ID    string         `json:"id"`
-	Entry *JudgmentEntry `json:"entry"`
-}
-
 type CreateLeagueInput struct {
 	Name              string  `json:"name"`
 	SceneID           string  `json:"sceneId"`
@@ -304,7 +299,8 @@ type UpdateInformationInput struct {
 }
 
 type UpdateJudgmentInput struct {
-	Entry *JudgmentEntry `json:"entry,omitempty"`
+	Entry       *JudgmentEntry `json:"entry,omitempty"`
+	IsAttending *bool          `json:"isAttending,omitempty"`
 }
 
 type UpdateLeagueRuleInput struct {

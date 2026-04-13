@@ -23,11 +23,11 @@ export const useFetchGameResultWithoutFetchGame = (game: GqlCompetition | null |
   const leagueId = game?.league?.id ?? '';
   const isLeague = game?.type === CompetitionType.League;
 
-  const { data: standingsData, loading: isStandingsFetching } = useGetPanelLeagueStandingsQuery({
+  const { data: standingsData, loading: isStandingsFetching, refetch: refetchStandings } = useGetPanelLeagueStandingsQuery({
     variables: { leagueId },
     skip: !leagueId || !isLeague,
   });
-  const { data: rankingData, loading: isRankingFetching } = useGetPanelTournamentRankingQuery({
+  const { data: rankingData, loading: isRankingFetching, refetch: refetchRanking } = useGetPanelTournamentRankingQuery({
     variables: { competitionId: game?.id ?? '' },
     skip: !game?.id || isLeague,
   });
@@ -39,6 +39,9 @@ export const useFetchGameResultWithoutFetchGame = (game: GqlCompetition | null |
   return {
     result,
     isFetching: isStandingsFetching || isRankingFetching,
-    refresh: () => {},
+    refresh: () => {
+      if (isLeague) refetchStandings();
+      else refetchRanking();
+    },
   };
 };

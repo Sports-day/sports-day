@@ -20,7 +20,7 @@ const authLink = setContext(async (_, { headers }) => {
     }
 })
 
-const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors) {
         for (const err of graphQLErrors) {
             const msg = err.message ?? ""
@@ -32,13 +32,11 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
                 showWarningToast("ログインセッションが切れました。再度ログインしてください。")
                 return
             }
-            console.warn(
-                `[GraphQL error] operation=${operation.operationName}`,
-            )
         }
     }
     if (networkError) {
-        console.warn(`[Network error] operation=${operation.operationName}`)
+        showErrorToast("サーバーに接続できません。ネットワーク接続を確認してください。")
+        return
     }
 })
 

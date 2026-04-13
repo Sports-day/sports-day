@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Typography, Stack, useTheme } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
 
 type InstructionProps = {
   weather: string;
@@ -8,7 +8,6 @@ type InstructionProps = {
 };
 
 export default function Instruction({ weather, sportname }: InstructionProps) {
-  const theme = useTheme();
   return (
     <Box>
       <Stack direction="row" spacing={"8px"}>

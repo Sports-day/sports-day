@@ -72,7 +72,7 @@ export default function MakingTeams({
             my: "8px",
             width: "100%",
             display: "flex",
-            justifyContent: "left",
+            justifyContent: "flex-start",
           }}
         >
           <Instruction sportname={sportname} weather={weather} />
@@ -141,7 +141,7 @@ export default function MakingTeams({
                 container
                 spacing={"16px"}
                 alignItems="flex-start"
-                justifyContent="left"
+                justifyContent="flex-start"
               >
                 {selectedTeams
                   ?.slice()
@@ -158,7 +158,7 @@ export default function MakingTeams({
                         sports={sports}
                         member={item.users.map((u) => ({
                           id: u.id,
-                          name: u.name,
+                          name: u.name ?? '',
                           isExperienced: experiencedUserIds.has(u.id),
                         }))}
                       />

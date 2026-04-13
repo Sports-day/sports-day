@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import AddIcon from '@mui/icons-material/Add'
 import {
   Box,
   Button,
@@ -16,7 +16,6 @@ import { useClasses } from '../hooks/useClasses'
 import { QueryError } from '@/components/ui/QueryError'
 import { CARD_GRADIENT, ACTION_BUTTON_SX, LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX } from '@/styles/commonSx'
 import { SearchFilterBar } from '@/components/ui/SearchFilterBar'
-import { useFilterParams } from '@/hooks/useFilterParams'
 
 type Props = {
   onCreateClick: () => void
@@ -24,15 +23,7 @@ type Props = {
 }
 
 export function ClassListPage({ onCreateClick, onClassClick }: Props) {
-  const { data: classes, loading, error } = useClasses()
-  const { values: fp, set: setFilter } = useFilterParams(['keyword'])
-  const keyword = fp.keyword
-
-  const filtered = useMemo(() => {
-    if (!keyword) return classes
-    const kw = keyword.toLowerCase()
-    return classes.filter(c => c.name.toLowerCase().includes(kw))
-  }, [classes, keyword])
+  const { data: filtered, keyword, setFilter, loading, error } = useClasses()
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
@@ -61,10 +52,11 @@ export function ClassListPage({ onCreateClick, onClassClick }: Props) {
             <Button
               variant="contained"
               size="small"
+              startIcon={<AddIcon />}
               onClick={onCreateClick}
               sx={{ ...ACTION_BUTTON_SX }}
             >
-              作成
+              クラスを新規作成
             </Button>
           </Box>
 

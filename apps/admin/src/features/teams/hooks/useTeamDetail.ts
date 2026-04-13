@@ -61,7 +61,7 @@ export function useTeamDetail(teamId: string) {
     const msUser = msId ? msGraphUsers.get(msId) : undefined
     return {
       id: u.id,
-      name: msUser?.displayName ?? '',
+      name: msUser?.displayName ?? u.name ?? '',
     }
   })
 
@@ -127,6 +127,7 @@ export function useTeamDetail(teamId: string) {
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 
@@ -140,6 +141,7 @@ export function useTeamDetail(teamId: string) {
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
       showErrorToast()
+      throw e
     }
   }
 
@@ -152,7 +154,7 @@ export function useTeamDetail(teamId: string) {
       const msUser = msId ? msGraphUsers.get(msId) : undefined
       return {
         id: u.id,
-        userName: msUser?.displayName ?? '',
+        userName: msUser?.displayName ?? u.name ?? '',
       }
     })
 

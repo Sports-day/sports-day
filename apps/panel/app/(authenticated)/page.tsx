@@ -144,7 +144,7 @@ export default function Page() {
                                                                 あなたが参加する試合
                                                             </Typography>
 
-                                                            {mySport && myGame && myTeam &&　
+                                                            {mySport && myGame && myTeam &&
                                                                 <>
                                                                     <Schedule
                                                                         matches={myTeamMatches}

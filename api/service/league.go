@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"database/sql"
-	"math"
 	"sort"
 	"time"
 
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
+	pkggorm "sports-day/api/pkg/gorm"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
 
@@ -23,9 +23,10 @@ type League struct {
 	competitionRepository repository.Competition
 	competitionService    *Competition
 	sportsRepository      repository.Sports
+	judgmentRepository    repository.Judgment
 }
 
-func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, sportsRepository repository.Sports) League {
+func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository repository.Match, competitionRepository repository.Competition, competitionService *Competition, sportsRepository repository.Sports, judgmentRepository repository.Judgment) League {
 	return League{
 		db:                    db,
 		leagueRepository:      leagueRepository,
@@ -33,6 +34,7 @@ func NewLeague(db *gorm.DB, leagueRepository repository.League, matchRepository 
 		competitionRepository: competitionRepository,
 		competitionService:    competitionService,
 		sportsRepository:      sportsRepository,
+		judgmentRepository:    judgmentRepository,
 	}
 }
 
@@ -158,6 +160,13 @@ func indexEntriesByMatchID(entries []*db_model.MatchEntry) map[string][]*db_mode
 }
 
 func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, input *model.GenerateRoundRobinInput) ([]*db_model.Match, error) {
+	if input.MatchDuration <= 0 {
+		return nil, errors.NewError("INVALID_MATCH_DURATION", "試合時間は1分以上を指定してください")
+	}
+	if input.BreakDuration < 0 {
+		return nil, errors.NewError("INVALID_BREAK_DURATION", "休憩時間は0分以上を指定してください")
+	}
+
 	var createdMatches []*db_model.Match
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -222,6 +231,18 @@ func (s *League) GenerateRoundRobin(ctx context.Context, competitionID string, i
 				[]string{matchup[0], matchup[1]},
 			); err != nil {
 				return err
+			}
+
+			// 審判レコードを作成（Match と 1:1）
+			judgment := &db_model.Judgment{
+				ID:      saved.ID,
+				Name:    pkggorm.ToNullString(nil),
+				UserID:  pkggorm.ToNullString(nil),
+				TeamID:  pkggorm.ToNullString(nil),
+				GroupID: pkggorm.ToNullString(nil),
+			}
+			if _, err := s.judgmentRepository.Save(ctx, tx, judgment); err != nil {
+				return errors.ErrSaveJudgment
 			}
 
 			createdMatches = append(createdMatches, saved)
@@ -666,26 +687,51 @@ func needsAveraging(stats []*teamStats) bool {
 	return false
 }
 
-// getValue は条件キーに応じたチームの値を返す（平均化対応）
-func getValue(s *teamStats, conditionKey string, useAverage bool) float64 {
-	if s.MatchesPlayed == 0 {
-		return 0
-	}
-	var raw float64
+// getRawValue は条件キーに応じたチームの生値（整数）を返す
+func getRawValue(s *teamStats, conditionKey string) int {
 	switch conditionKey {
 	case "WIN_POINTS":
-		raw = float64(s.Points)
+		return s.Points
 	case "GOAL_DIFF":
-		raw = float64(s.GoalsFor - s.GoalsAgainst)
+		return s.GoalsFor - s.GoalsAgainst
 	case "TOTAL_GOALS":
-		raw = float64(s.GoalsFor)
+		return s.GoalsFor
 	default:
 		return 0
 	}
-	if useAverage {
-		return raw / float64(s.MatchesPlayed)
+}
+
+// compareValues は2チームの値を通分比較する（整数演算のみ、float誤差なし）
+// useAverage 時は a/b vs c/d を a*d vs c*b に変換して比較する
+// 戻り値: 正=iが大きい, 負=jが大きい, 0=等しい
+func compareValues(si, sj *teamStats, conditionKey string, useAverage bool) int {
+	ri, rj := getRawValue(si, conditionKey), getRawValue(sj, conditionKey)
+	if !useAverage || (si.MatchesPlayed == 0 && sj.MatchesPlayed == 0) {
+		return ri - rj
 	}
-	return raw
+	// MatchesPlayed == 0 のチームは率0として扱い、相手の率の符号で比較する
+	if si.MatchesPlayed == 0 {
+		// si の率は 0。相手 rj/sj.MatchesPlayed の符号と比較
+		// sj.MatchesPlayed > 0 なので rj の符号 = 率の符号
+		if rj > 0 {
+			return -1 // 0 < 正の率
+		} else if rj < 0 {
+			return 1 // 0 > 負の率
+		}
+		return 0 // 0 == 0
+	}
+	if sj.MatchesPlayed == 0 {
+		if ri > 0 {
+			return 1 // 正の率 > 0
+		} else if ri < 0 {
+			return -1 // 負の率 < 0
+		}
+		return 0 // 0 == 0
+	}
+	// a/b vs c/d → a*d vs c*b （b,d > 0 なので不等号の向きは保存される）
+	lhs := ri * sj.MatchesPlayed
+	rhs := rj * si.MatchesPlayed
+	return lhs - rhs
 }
 
 // splitByValue はグループを条件値でサブグループに分離する（降順）
@@ -694,17 +740,16 @@ func splitByValue(group []*teamStats, conditionKey string, useAverage bool) [][]
 		return [][]*teamStats{group}
 	}
 
-	// 降順ソート
+	// 降順ソート（整数の通分比較）
 	sort.SliceStable(group, func(i, j int) bool {
-		return getValue(group[i], conditionKey, useAverage) > getValue(group[j], conditionKey, useAverage)
+		return compareValues(group[i], group[j], conditionKey, useAverage) > 0
 	})
 
-	// 同値でグルーピング（浮動小数点誤差を考慮した epsilon 比較）
-	const epsilon = 1e-9
+	// 同値でグルーピング（整数比較なので誤差なし）
 	var subgroups [][]*teamStats
 	current := []*teamStats{group[0]}
 	for i := 1; i < len(group); i++ {
-		if math.Abs(getValue(group[i], conditionKey, useAverage)-getValue(group[i-1], conditionKey, useAverage)) < epsilon {
+		if compareValues(group[i], group[i-1], conditionKey, useAverage) == 0 {
 			current = append(current, group[i])
 		} else {
 			subgroups = append(subgroups, current)

@@ -1,3 +1,4 @@
+import AddIcon from '@mui/icons-material/Add'
 import {
   Box,
   Button,
@@ -47,10 +48,11 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
             <Button
               variant="contained"
               size="small"
+              startIcon={<AddIcon />}
               onClick={onCreateClick}
               sx={{ ...ACTION_BUTTON_SX }}
             >
-              作成
+              画像を新規作成
             </Button>
           </Box>
 

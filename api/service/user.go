@@ -56,6 +56,11 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 
 // BatchCreate はユーザーを一括作成する（1トランザクション）
 func (s *User) BatchCreate(ctx context.Context, inputs []*model.CreateUserInput) ([]*db_model.User, error) {
+	const maxBatchSize = 500
+	if len(inputs) > maxBatchSize {
+		return nil, errors.NewError("BATCH_SIZE_EXCEEDED", "一括作成は最大500件までです")
+	}
+
 	// バッチ内の重複チェック
 	seenMsIds := make(map[string]struct{})
 	for _, input := range inputs {
@@ -65,15 +70,17 @@ func (s *User) BatchCreate(ctx context.Context, inputs []*model.CreateUserInput)
 		seenMsIds[input.MicrosoftUserID] = struct{}{}
 	}
 
-	// DB上の既存ユーザーとの重複チェック
-	for _, input := range inputs {
-		_, err := s.userRepository.FindUserIdpByMicrosoftUserID(ctx, s.db, input.MicrosoftUserID)
-		if err == nil {
-			return nil, errors.ErrDuplicateMicrosoftUserID
-		}
-		if !errors.Is(err, errors.ErrUserNotFound) {
-			return nil, errors.Wrap(err)
-		}
+	// DB上の既存ユーザーとの重複チェック（一括取得）
+	msIds := make([]string, len(inputs))
+	for i, input := range inputs {
+		msIds[i] = input.MicrosoftUserID
+	}
+	existingIdps, err := s.userRepository.BatchFindUserIdpByMicrosoftUserIDs(ctx, s.db, msIds)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if len(existingIdps) > 0 {
+		return nil, errors.ErrDuplicateMicrosoftUserID
 	}
 
 	// groupId の存在チェック
@@ -113,11 +120,11 @@ func (s *User) BatchCreate(ctx context.Context, inputs []*model.CreateUserInput)
 		}
 	}
 
-	err := s.db.Transaction(func(tx *gorm.DB) error {
-		if _, err := s.userRepository.BatchSave(ctx, tx, users); err != nil {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if _, err := s.userRepository.BatchCreate(ctx, tx, users); err != nil {
 			return errors.Wrap(err)
 		}
-		if _, err := s.userRepository.BatchSaveUserIdp(ctx, tx, idps); err != nil {
+		if _, err := s.userRepository.BatchCreateUserIdp(ctx, tx, idps); err != nil {
 			return errors.Wrap(err)
 		}
 		if len(groupUsers) > 0 {

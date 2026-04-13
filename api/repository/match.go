@@ -30,4 +30,5 @@ type Match interface {
 	DeleteByCompetitionID(ctx context.Context, db *gorm.DB, competitionID string) error
 	SaveBatch(ctx context.Context, db *gorm.DB, matches []*db_model.Match) error
 	SaveMatchEntriesBatch(ctx context.Context, db *gorm.DB, entries []*db_model.MatchEntry) error
+	ListActiveMatchesByLocationID(ctx context.Context, db *gorm.DB, locationID string) ([]*db_model.Match, error)
 }

@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
 import {
   Box,
   Button,
@@ -12,56 +12,35 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import FileDownloadIcon from '@mui/icons-material/FileDownload'
-import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline'
+import AddIcon from '@mui/icons-material/Add'
 import { useTeams } from '../hooks/useTeams'
 import { QueryError } from '@/components/ui/QueryError'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
-import { useFilterParams } from '@/hooks/useFilterParams'
 
 type Props = {
-  onExport: () => void
-  onBulkRename: () => void
   onTeamClick: (id: string) => void
+  onNavigateToCreate: () => void
 }
 
-export function TeamListPage({ onExport, onBulkRename, onTeamClick }: Props) {
-  const { data: teams, loading, error } = useTeams()
-  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'group'])
-  const keyword = fp.keyword
-  const groupFilter = fp.group
-
-  const groupOptions = useMemo(() => {
-    const set = new Map<string, string>()
-    for (const t of teams) {
-      if (t.groupName && !set.has(t.groupName)) set.set(t.groupName, t.groupName)
-    }
-    return Array.from(set, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label))
-  }, [teams])
+export function TeamListPage({ onTeamClick, onNavigateToCreate }: Props) {
+  const {
+    data: filtered,
+    keyword,
+    groupFilter,
+    groupOptions,
+    setFilter,
+    handleFilterChange,
+    resetFilters,
+    loading,
+    error,
+  } = useTeams()
 
   const filterDefs: FilterDef[] = useMemo(() => [
     { key: 'group', label: 'クラス', options: groupOptions },
   ], [groupOptions])
 
   const filterValues = useMemo(() => ({ group: groupFilter }), [groupFilter])
-
-  const handleFilterChange = useCallback((key: string, value: string) => {
-    setFilter(key, value)
-  }, [setFilter])
-
-  const filtered = useMemo(() => {
-    let result = teams
-    if (keyword) {
-      const kw = keyword.toLowerCase()
-      result = result.filter(t =>
-        t.name.toLowerCase().includes(kw) ||
-        t.groupName.toLowerCase().includes(kw)
-      )
-    }
-    if (groupFilter) result = result.filter(t => t.groupName === groupFilter)
-    return result
-  }, [teams, keyword, groupFilter])
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
@@ -94,55 +73,44 @@ export function TeamListPage({ onExport, onBulkRename, onTeamClick }: Props) {
             <Button
               variant="contained"
               size="small"
-              startIcon={<FileDownloadIcon />}
-              onClick={onExport}
+              startIcon={<AddIcon />}
+              onClick={onNavigateToCreate}
               sx={{ ...ACTION_BUTTON_SX }}
             >
-              エクスポート
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<DriveFileRenameOutlineIcon />}
-              onClick={onBulkRename}
-              sx={{ ...ACTION_BUTTON_SX }}
-            >
-              一括名前変更
+              チームを新規作成
             </Button>
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={LIST_TABLE_HEAD_SX}>チーム名</TableCell>
-                <TableCell sx={LIST_TABLE_HEAD_SX}>クラス</TableCell>
-                <TableCell sx={LIST_TABLE_HEAD_SX}>タグ</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.length === 0 ? (
+            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={3} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
-                    {keyword || groupFilter ? '条件に一致するチームがありません' : 'データがありません'}
-                  </TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>チーム名</TableCell>
+                  <TableCell sx={LIST_TABLE_HEAD_SX}>クラス</TableCell>
                 </TableRow>
-              ) : (
-                filtered.map((team) => (
-                  <TableRow
-                    key={team.id}
-                    hover
-                    onClick={() => onTeamClick(team.id)}
-                    sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
-                  >
-                    <TableCell sx={LIST_TABLE_CELL_SX}>{team.name}</TableCell>
-                    <TableCell sx={LIST_TABLE_CELL_SX}>{team.groupName}</TableCell>
-                    <TableCell sx={LIST_TABLE_CELL_SX}></TableCell>
+              </TableHead>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} align="center" sx={{ py: 8, color: '#888', fontSize: '13px', backgroundColor: '#FFFFFF' }}>
+                      {keyword || groupFilter ? '条件に一致するチームがありません' : 'データがありません'}
+                    </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filtered.map((team) => (
+                    <TableRow key={team.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }}>
+                      <TableCell
+                        sx={{ ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                        onClick={() => onTeamClick(team.id)}
+                      >
+                        {team.name}
+                      </TableCell>
+                      <TableCell sx={LIST_TABLE_CELL_SX}>{team.groupName}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </Box>
         </CardContent>
       </Card>

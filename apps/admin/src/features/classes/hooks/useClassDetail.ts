@@ -9,6 +9,7 @@ import {
   GetAdminGroupsForClassesDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
+import { showErrorToast } from '@/lib/toast'
 import type { ClassMember } from '../types'
 
 export function useClassDetail(classId: string) {
@@ -52,8 +53,8 @@ export function useClassDetail(classId: string) {
     const msUser = msId ? msGraphUsers.get(msId) : undefined
     return {
       id: u.id,
-      name: msUser?.displayName ?? '',
-      email: msUser?.mail ?? '',
+      name: msUser?.displayName ?? u.name ?? '',
+      email: msUser?.mail ?? u.email ?? '',
     }
   })
 
@@ -68,35 +69,53 @@ export function useClassDetail(classId: string) {
 
   const handleSave = async () => {
     if (!name.trim()) return
-    await updateGroup({ variables: { id: classId, input: { name: name.slice(0, 64) } } })
-    setEditName(null)
+    try {
+      await updateGroup({ variables: { id: classId, input: { name: name.slice(0, 64) } } })
+      setEditName(null)
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleDelete = async () => {
-    await deleteGroup({ variables: { id: classId } })
+    try {
+      await deleteGroup({ variables: { id: classId } })
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   const handleAddMembers = async (selectedIds: string[]) => {
-    await addGroupUsers({
-      variables: {
-        id: classId,
-        input: { userIds: selectedIds },
-      },
-      refetchQueries: ['GetAdminGroupForClass'],
-    })
-    setDialogOpen(false)
+    try {
+      await addGroupUsers({
+        variables: {
+          id: classId,
+          input: { userIds: selectedIds },
+        },
+        refetchQueries: ['GetAdminGroupForClass'],
+      })
+      setDialogOpen(false)
+    } catch {
+      showErrorToast()
+    }
   }
 
   const handleDeleteMember = async (index: number) => {
     const userId = group?.users[index]?.id
     if (!userId) return
-    await removeGroupUsers({
-      variables: {
-        id: classId,
-        input: { userIds: [userId] },
-      },
-      refetchQueries: ['GetAdminGroupForClass'],
-    })
+    try {
+      await removeGroupUsers({
+        variables: {
+          id: classId,
+          input: { userIds: [userId] },
+        },
+        refetchQueries: ['GetAdminGroupForClass'],
+      })
+    } catch {
+      showErrorToast()
+    }
   }
 
   // 追加可能なユーザー（現メンバー以外）
@@ -108,8 +127,8 @@ export function useClassDetail(classId: string) {
       const msUser = msId ? msGraphUsers.get(msId) : undefined
       return {
         id: u.id,
-        userName: msUser?.displayName ?? '',
-        email: msUser?.mail ?? '',
+        userName: msUser?.displayName ?? u.name ?? '',
+        email: msUser?.mail ?? u.email ?? '',
       }
     })
 

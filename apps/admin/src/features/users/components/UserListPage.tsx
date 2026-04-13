@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
 import {
   Box,
   Button,
@@ -17,7 +17,6 @@ import { useUsers } from '../hooks/useUsers'
 import { QueryError } from '@/components/ui/QueryError'
 import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
-import { useFilterParams } from '@/hooks/useFilterParams'
 
 type Props = {
   onCsvCreate: () => void
@@ -31,19 +30,18 @@ const ROLE_OPTIONS = [
 ]
 
 export function UserListPage({ onCsvCreate, onUserClick }: Props) {
-  const { data: users, loading, error } = useUsers()
-  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'role', 'group'])
-  const keyword = fp.keyword
-  const roleFilter = fp.role
-  const groupFilter = fp.group
-
-  const groupOptions = useMemo(() => {
-    const set = new Map<string, string>()
-    for (const u of users) {
-      if (u.groupName && !set.has(u.groupName)) set.set(u.groupName, u.groupName)
-    }
-    return Array.from(set, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label))
-  }, [users])
+  const {
+    data: filtered,
+    keyword,
+    roleFilter,
+    groupFilter,
+    groupOptions,
+    setFilter,
+    handleFilterChange,
+    resetFilters,
+    loading,
+    error,
+  } = useUsers()
 
   const filterDefs: FilterDef[] = useMemo(() => [
     { key: 'role', label: 'ロール', options: ROLE_OPTIONS },
@@ -54,26 +52,6 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
     role: roleFilter,
     group: groupFilter,
   }), [roleFilter, groupFilter])
-
-  const handleFilterChange = useCallback((key: string, value: string) => {
-    setFilter(key, value)
-  }, [setFilter])
-
-  const filtered = useMemo(() => {
-    let result = users
-    if (keyword) {
-      const kw = keyword.toLowerCase()
-      result = result.filter(u =>
-        u.name.toLowerCase().includes(kw) ||
-        u.email.toLowerCase().includes(kw) ||
-        u.groupName.toLowerCase().includes(kw) ||
-        u.teams.some(t => t.name.toLowerCase().includes(kw))
-      )
-    }
-    if (roleFilter) result = result.filter(u => u.role === roleFilter)
-    if (groupFilter) result = result.filter(u => u.groupName === groupFilter)
-    return result
-  }, [users, keyword, roleFilter, groupFilter])
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
@@ -138,7 +116,7 @@ export function UserListPage({ onCsvCreate, onUserClick }: Props) {
                   const cellSx = { ...LIST_TABLE_CELL_SX, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }
                   return (
                     <TableRow key={user.id} hover sx={{ '&:hover': { backgroundColor: '#E5E6F0' } }} onClick={() => onUserClick(user.id)}>
-                      <TableCell sx={cellSx}>{user.id}</TableCell>
+                      <TableCell sx={cellSx}>{user.studentNumber}</TableCell>
                       <TableCell sx={cellSx}>{user.name}</TableCell>
                       <TableCell sx={cellSx}>{user.email}</TableCell>
                       <TableCell sx={cellSx}>{user.groupName}</TableCell>

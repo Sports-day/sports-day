@@ -11,6 +11,8 @@ type UserIdentify {
 
 type User {
   id: ID!
+  name: String
+  email: String
   identify: UserIdentify!
   role: Role!
   groups: [Group!]!
@@ -428,6 +430,7 @@ input CreateJudgmentInput {
 
 input UpdateJudgmentInput {
   entry: JudgmentEntry
+  isAttending: Boolean
 }
 
 input CreateLeagueInput {

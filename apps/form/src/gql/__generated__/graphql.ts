@@ -1375,10 +1375,12 @@ export type UpdateTournamentInput = {
 
 export type User = {
   __typename?: 'User';
+  email?: Maybe<Scalars['String']['output']>;
   groups: Array<Group>;
   id: Scalars['ID']['output'];
   identify: UserIdentify;
   judgments: Array<Judgment>;
+  name?: Maybe<Scalars['String']['output']>;
   role: Role;
   teams: Array<Team>;
 };
@@ -1397,12 +1399,12 @@ export type GetSceneIdQuery = { __typename?: 'Query', scenes: Array<{ __typename
 export type GetSceneUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSceneUsersQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }> }> }> };
+export type GetSceneUsersQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }> }> }> };
 
 export type GetAllUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> };
+export type GetAllUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> };
 
 export type GetTypeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1445,12 +1447,12 @@ export type GetTeamDataQuery = { __typename?: 'Query', scenes: Array<{ __typenam
 export type GetSceneSportQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
+export type GetSceneSportQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }>, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }> }> };
 
 export type GetAllTeamdataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }> }> }> };
+export type GetAllTeamdataQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', scene: { __typename?: 'Scene', id: string, name: string }, sport: { __typename?: 'Sport', id: string, name: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } }> }> }> };
 
 export type GetAllSportExperiencesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1472,7 +1474,7 @@ export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: 
 export type GetUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> };
+export type GetUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> };
 
 export type GetSportsceneQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1489,7 +1491,7 @@ export type GetTeamQueryVariables = Exact<{
 }>;
 
 
-export type GetTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
+export type GetTeamQuery = { __typename?: 'Query', team: { __typename?: 'Team', users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> } };
 
 export type CreateTeamMutationVariables = Exact<{
   input: CreateTeamInput;
@@ -1606,6 +1608,7 @@ export const GetSceneUsersDocument = gql`
         team {
           users {
             id
+            name
             identify {
               microsoftUserId
             }
@@ -1652,6 +1655,7 @@ export const GetAllUsersDocument = gql`
     query GetAllUsers {
   users {
     id
+    name
     identify {
       microsoftUserId
     }
@@ -1976,6 +1980,7 @@ export const GetSceneSportDocument = gql`
           name
           users {
             id
+            name
             identify {
               microsoftUserId
             }
@@ -2043,6 +2048,7 @@ export const GetAllTeamdataDocument = gql`
           name
           users {
             id
+            name
             identify {
               microsoftUserId
             }
@@ -2204,6 +2210,7 @@ export const GetUsersDocument = gql`
     query GetUsers {
   users {
     id
+    name
     identify {
       microsoftUserId
     }
@@ -2353,6 +2360,7 @@ export const GetTeamDocument = gql`
   team(id: $teamId) {
     users {
       id
+      name
       identify {
         microsoftUserId
       }

@@ -77,7 +77,7 @@ export function ActiveMatchTournamentPage({
         onScore2Change={setScore2}
         onStatusChange={setStatus}
         onClose={closeMatch}
-        onSave={() => { saveMatch(); showToast('試合を保存しました') }}
+        onSave={async () => { try { await saveMatch(); showToast('試合を保存しました') } catch { /* hook側で処理済み */ } }}
       />
     </Box>
   )

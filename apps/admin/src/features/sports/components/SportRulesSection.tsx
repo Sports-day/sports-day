@@ -100,7 +100,7 @@ export function SportRulesSection({ sportId, rule }: Props) {
             </IconButton>
             <IconButton
               size="small"
-              onClick={() => handleSave(rule?.id ?? null)}
+              onClick={() => handleSave(rule?.id ?? null).catch(() => {})}
               disabled={!editText.trim()}
               sx={{
                 px: 1.5,
@@ -146,7 +146,7 @@ export function SportRulesSection({ sportId, rule }: Props) {
               </IconButton>
               <IconButton
                 size="small"
-                onClick={() => handleDelete(rule.id)}
+                onClick={() => handleDelete(rule.id).catch(() => {})}
                 sx={{
                   p: 0.5,
                   color: COLOR_BORDER,

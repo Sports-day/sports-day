@@ -9,7 +9,7 @@ type ErrorFallbackProps = {
 
 export default function ErrorFallback({ error }: ErrorFallbackProps) {
   useEffect(() => {
-    console.error(error);
+    // エラー情報はUIに表示するため、コンソール出力は省略
   }, [error]);
 
   return (
@@ -57,14 +57,9 @@ export default function ErrorFallback({ error }: ErrorFallbackProps) {
             <Typography fontSize={"16px"} color={"#99a5d6"}>
               エラーが発生しました
             </Typography>
-            <Stack spacing={"8px"} direction={"row"}>
-              <Typography sx={{ color: "#99a5d6", fontSize: "16px", lineHeight: 1 }}>
-                !
-              </Typography>
-              <Typography fontSize={"16px"} color={"#99a5d6"}>
-                status code : see the console
-              </Typography>
-            </Stack>
+            <Typography fontSize={"14px"} color={"#99a5d6"} sx={{ wordBreak: "break-word" }}>
+              {error.message || "不明なエラーが発生しました"}
+            </Typography>
           </Stack>
           <Button
             href={"/"}

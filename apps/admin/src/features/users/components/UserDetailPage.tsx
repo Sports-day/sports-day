@@ -45,23 +45,30 @@ export function UserDetailPage({ userId, onBack }: Props) {
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
-    await handleSave()
-    showToast('ユーザーを保存しました')
-    onBack()
+    try {
+      await handleSave()
+      showToast('ユーザーを保存しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     closeDeleteDialog()
-    handleDeleteUser()
-    showToast('ユーザーを削除しました')
-    onBack()
+    try {
+      await handleDeleteUser()
+      showToast('ユーザーを削除しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
-    <Box>
-      {/* パンくずリスト */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <BackButton onClick={onBack} />
-      <Breadcrumbs separator="/" sx={{ mb: 2 }}>
+      <Breadcrumbs separator="/" sx={{ mb: 0 }}>
         <ButtonBase onClick={onBack} sx={BREADCRUMB_LINK_SX}>
           ユーザー
         </ButtonBase>

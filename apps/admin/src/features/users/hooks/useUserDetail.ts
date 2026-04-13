@@ -8,10 +8,14 @@ import {
   useGetAdminUserSportExperiencesQuery,
   useAddAdminSportExperiencesMutation,
   useDeleteAdminSportExperiencesMutation,
+  useAddAdminGroupUsersForClassMutation,
+  useRemoveAdminGroupUsersForClassMutation,
   GetAdminUsersDocument,
+  GetAdminUserDocument,
   GetAdminUserSportExperiencesDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUser } from '@/hooks/useMsGraphUsers'
+import { showErrorToast } from '@/lib/toast'
 
 const ROLE_SCENES = [
   { id: Role.Admin, name: '管理者' },
@@ -83,37 +87,70 @@ export function useUserDetail(userId: string) {
     refetchQueries: [{ query: GetAdminUserSportExperiencesDocument, variables: { userId } }],
   })
 
+  const [addGroupUsers] = useAddAdminGroupUsersForClassMutation({
+    refetchQueries: [{ query: GetAdminUserDocument, variables: { id: userId } }],
+  })
+  const [removeGroupUsers] = useRemoveAdminGroupUsersForClassMutation({
+    refetchQueries: [{ query: GetAdminUserDocument, variables: { id: userId } }],
+  })
+
   const handleSave = async () => {
     if (!userId) return
-    if (user && role && role !== user.role) {
-      await updateUserRole({
-        variables: { userId, role: role as Role },
-      })
-    }
+    try {
+      if (user && role && role !== user.role) {
+        await updateUserRole({
+          variables: { userId, role: role as Role },
+        })
+      }
 
-    // 経験者スポーツの差分保存
-    const prevSet = new Set(initialState.current.experiencedSportIds)
-    const currSet = new Set(experiencedSportIds)
-    const toAdd = experiencedSportIds.filter((id) => !prevSet.has(id))
-    const toRemove = initialState.current.experiencedSportIds.filter((id) => !currSet.has(id))
-    for (const sportId of toAdd) {
-      await addSportExperiences({ variables: { sportId, userIds: [userId] } })
+      // グループ(クラス)の差分保存
+      const prevGroupId = initialState.current.groupId
+      if (groupId !== prevGroupId) {
+        if (prevGroupId) {
+          await removeGroupUsers({
+            variables: { id: prevGroupId, input: { userIds: [userId] } },
+          })
+        }
+        if (groupId) {
+          await addGroupUsers({
+            variables: { id: groupId, input: { userIds: [userId] } },
+          })
+        }
+        initialState.current.groupId = groupId
+      }
+
+      // 経験者スポーツの差分保存
+      const prevSet = new Set(initialState.current.experiencedSportIds)
+      const currSet = new Set(experiencedSportIds)
+      const toAdd = experiencedSportIds.filter((id) => !prevSet.has(id))
+      const toRemove = initialState.current.experiencedSportIds.filter((id) => !currSet.has(id))
+      for (const sportId of toAdd) {
+        await addSportExperiences({ variables: { sportId, userIds: [userId] } })
+      }
+      for (const sportId of toRemove) {
+        await deleteSportExperiences({ variables: { sportId, userIds: [userId] } })
+      }
+      initialState.current.experiencedSportIds = [...experiencedSportIds]
+    } catch (e) {
+      showErrorToast()
+      throw e
     }
-    for (const sportId of toRemove) {
-      await deleteSportExperiences({ variables: { sportId, userIds: [userId] } })
-    }
-    initialState.current.experiencedSportIds = [...experiencedSportIds]
   }
 
   const handleDeleteUser = async () => {
     if (!userId) return
-    await deleteUser({ variables: { id: userId } })
-    setDeleteDialogOpen(false)
+    try {
+      await deleteUser({ variables: { id: userId } })
+      setDeleteDialogOpen(false)
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return {
-    userName: msGraphUser?.displayName ?? '',
-    userEmail: msGraphUser?.mail ?? '',
+    userName: msGraphUser?.displayName ?? user?.name ?? '',
+    userEmail: msGraphUser?.mail ?? user?.email ?? '',
     groupId,
     setGroupId,
     groups,

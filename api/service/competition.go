@@ -25,10 +25,11 @@ type Competition struct {
 	tournamentRepository  repository.Tournament
 	matchRepository       repository.Match
 	sportsRepository      repository.Sports
+	judgmentRepository    repository.Judgment
 	tournamentService     *Tournament
 }
 
-func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, teamRepository repository.Team, leagueRepository repository.League, tournamentRepository repository.Tournament, matchRepository repository.Match, sportsRepository repository.Sports) Competition {
+func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, teamRepository repository.Team, leagueRepository repository.League, tournamentRepository repository.Tournament, matchRepository repository.Match, sportsRepository repository.Sports, judgmentRepository repository.Judgment) Competition {
 	return Competition{
 		db:                    db,
 		competitionRepository: competitionRepository,
@@ -37,6 +38,7 @@ func NewCompetition(db *gorm.DB, competitionRepository repository.Competition, t
 		tournamentRepository:  tournamentRepository,
 		matchRepository:       matchRepository,
 		sportsRepository:      sportsRepository,
+		judgmentRepository:    judgmentRepository,
 	}
 }
 
@@ -676,6 +678,17 @@ func (s *Competition) tryGenerateLeagueMatches(ctx context.Context, tx *gorm.DB,
 			return errors.Wrap(err)
 		}
 		if _, err := s.matchRepository.AddMatchEntries(ctx, tx, saved.ID, []string{matchup[0], matchup[1]}); err != nil {
+			return errors.Wrap(err)
+		}
+		// 審判レコードを作成（Match と 1:1）
+		judgment := &db_model.Judgment{
+			ID:      saved.ID,
+			Name:    pkggorm.ToNullString(nil),
+			UserID:  pkggorm.ToNullString(nil),
+			TeamID:  pkggorm.ToNullString(nil),
+			GroupID: pkggorm.ToNullString(nil),
+		}
+		if _, err := s.judgmentRepository.Save(ctx, tx, judgment); err != nil {
 			return errors.Wrap(err)
 		}
 	}

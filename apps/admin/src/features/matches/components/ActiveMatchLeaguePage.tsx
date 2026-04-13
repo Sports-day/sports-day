@@ -17,10 +17,8 @@ import LocationOnIcon from '@mui/icons-material/LocationOn'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import { useActiveMatchLeague, statusLabel } from '../hooks/useActiveMatchLeague'
 import { useLeagueRegenerate } from '../hooks/useLeagueRegenerate'
-import { useBulkEdit } from '../hooks/useBulkEdit'
 import { useMatchEdit } from '../hooks/useMatchEdit'
 import { LeagueRegenerateOverlay } from './LeagueRegenerateOverlay'
-import { ActiveMatchBulkEditPage } from './ActiveMatchBulkEditPage'
 import { MatchEditPage } from './MatchEditPage'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
 import { BackButton } from '@/components/ui/BackButton'
@@ -74,7 +72,6 @@ export function ActiveMatchLeaguePage({
 }: Props) {
   const { league, grid, allFinished, statsMap, rankLabels, tiedGroups } = useActiveMatchLeague(competitionId, leagueId)
   const regen = useLeagueRegenerate(competitionId, leagueId)
-  const bulkEdit = useBulkEdit(competitionId, leagueId)
   const matchEdit = useMatchEdit()
   const progression = useExecuteProgression()
   if (!league) {
@@ -89,28 +86,6 @@ export function ActiveMatchLeaguePage({
           試合データがまだありません。大会設定からリーグの試合を登録してください。
         </Typography>
       </Box>
-    )
-  }
-
-  // 一括編集ページ表示中
-  if (bulkEdit.isOpen) {
-    return (
-      <ActiveMatchBulkEditPage
-        competitionName={competitionName}
-        leagueId={leagueId}
-        leagueName={leagueName}
-        filterDate={bulkEdit.filterDate}
-        filterLocation={bulkEdit.filterLocation}
-        csvData={bulkEdit.csvData}
-        onFilterDateChange={bulkEdit.setFilterDate}
-        onFilterLocationChange={bulkEdit.setFilterLocation}
-        parsedRows={bulkEdit.parsedRows}
-        onCsvDataChange={bulkEdit.setCsvData}
-        onBack={bulkEdit.close}
-        onBackToList={() => { bulkEdit.close(); onBackToList() }}
-        onBackToCompetition={() => { bulkEdit.close(); onBackToCompetition() }}
-        onExecute={bulkEdit.execute}
-      />
     )
   }
 
@@ -162,6 +137,7 @@ export function ActiveMatchLeaguePage({
             onBackToList: () => { matchEdit.closeMatch(); onBackToList() },
             onBackToCompetition: () => { matchEdit.closeMatch(); onBackToCompetition() },
           }}
+          dirty={matchEdit.dirty}
           onReset={matchEdit.resetMatch}
           onSave={matchEdit.saveMatch}
         />
@@ -293,9 +269,6 @@ export function ActiveMatchLeaguePage({
             <Typography sx={{ fontSize: '14px', fontWeight: 600, color: '#2F3C8C', whiteSpace: 'nowrap' }}>
               {leagueName} 試合一覧
             </Typography>
-            <Button variant="text" size="small" sx={SMALL_BTN_SX} onClick={bulkEdit.open}>
-              一括編集
-            </Button>
           </Box>
 
           {/* 試合カード: 4列グリッド */}

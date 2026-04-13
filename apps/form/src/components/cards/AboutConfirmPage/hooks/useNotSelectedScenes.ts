@@ -55,7 +55,7 @@ export function useNotSelectedScenes(): HookResult {
         scenename: scene.name,
         users: allUsers
           .filter((user) => !assignedUserIds.has(user.id))
-          .map((user) => user.name),
+          .map((user) => user.name ?? ''),
       };
     });
   }, [allUserData?.users, sceneData?.scenes, sportSceneData?.scenes]);

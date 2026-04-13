@@ -29,10 +29,14 @@ func Open(logger gormlogger.Writer) (*gorm.DB, error) {
 	dsn := mysqlConfig.FormatDSN()
 
 	// setup logger
+	logLevel := gormlogger.Warn
+	if config.Debug {
+		logLevel = gormlogger.Info
+	}
 	gormLogger := gormlogger.New(
 		logger,
 		gormlogger.Config{
-			LogLevel:                  gormlogger.Info,
+			LogLevel:                  logLevel,
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  true,
 		},
@@ -49,11 +53,23 @@ func Open(logger gormlogger.Writer) (*gorm.DB, error) {
 		return nil, errors.Wrap(err)
 	}
 
+	// connection pool settings
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+
 	return db, nil
 }
 
 func OpenWithRetry(logger gormlogger.Writer) (*gorm.DB, error) {
-	for i := 0; i < 100; i++ {
+	const maxRetries = 20
+	const retryInterval = 3 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
 		db, err := Open(logger)
 		if err == nil {
 			api.Logger.Info().
@@ -65,9 +81,10 @@ func OpenWithRetry(logger gormlogger.Writer) (*gorm.DB, error) {
 		api.Logger.Warn().
 			Err(err).
 			Str("label", "database").
+			Int("attempt", i+1).
+			Int("max_retries", maxRetries).
 			Msg("failed to connect to database. retry...")
-		// wait for 3 seconds
-		time.Sleep(time.Second * 3)
+		time.Sleep(retryInterval)
 	}
-	return nil, errors.Wrap(fmt.Errorf("failed to connect to database"))
+	return nil, errors.Wrap(fmt.Errorf("failed to connect to database after %d attempts", maxRetries))
 }

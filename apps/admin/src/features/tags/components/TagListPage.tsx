@@ -1,4 +1,5 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
+import AddIcon from '@mui/icons-material/Add'
 import {
   Box,
   Button,
@@ -17,7 +18,6 @@ import { useTags } from '../hooks/useTags'
 import { QueryError } from '@/components/ui/QueryError'
 import { CARD_GRADIENT, ACTION_BUTTON_SX, LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
-import { useFilterParams } from '@/hooks/useFilterParams'
 
 type Props = {
   onCreateClick: () => void
@@ -30,31 +30,22 @@ const STATUS_OPTIONS = [
 ]
 
 export function TagListPage({ onCreateClick, onTagClick }: Props) {
-  const { data: tags, loading, error } = useTags()
-  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'status'])
-  const keyword = fp.keyword
-  const statusFilter = fp.status
+  const {
+    data: filtered,
+    keyword,
+    statusFilter,
+    setFilter,
+    handleFilterChange,
+    resetFilters,
+    loading,
+    error,
+  } = useTags()
 
   const filterDefs: FilterDef[] = useMemo(() => [
     { key: 'status', label: '状態', options: STATUS_OPTIONS },
   ], [])
 
   const filterValues = useMemo(() => ({ status: statusFilter }), [statusFilter])
-
-  const handleFilterChange = useCallback((key: string, value: string) => {
-    setFilter(key, value)
-  }, [setFilter])
-
-  const filtered = useMemo(() => {
-    let result = tags
-    if (keyword) {
-      const kw = keyword.toLowerCase()
-      result = result.filter(t => t.name.toLowerCase().includes(kw))
-    }
-    if (statusFilter === 'active') result = result.filter(t => !t.isDeleted)
-    if (statusFilter === 'deleted') result = result.filter(t => t.isDeleted)
-    return result
-  }, [tags, keyword, statusFilter])
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
   if (error) return <QueryError />
@@ -87,10 +78,11 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
             <Button
               variant="contained"
               size="small"
+              startIcon={<AddIcon />}
               onClick={onCreateClick}
               sx={{ ...ACTION_BUTTON_SX }}
             >
-              作成
+              タグを新規作成
             </Button>
           </Box>
 

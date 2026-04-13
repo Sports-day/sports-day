@@ -3,6 +3,7 @@ import {
   useSetAdminTiebreakPrioritiesMutation,
   GetAdminLeagueStandingsDocument,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 type TiedTeam = {
   id: string
@@ -39,15 +40,20 @@ export function useTiebreak(leagueId: string) {
   const handleDragEnd = () => setDragIndex(null)
 
   const handleSave = async () => {
-    await setTiebreakPriorities({
-      variables: {
-        leagueId,
-        priorities: order.map((team, i) => ({
-          teamId: team.id,
-          priority: i + 1,
-        })),
-      },
-    })
+    try {
+      await setTiebreakPriorities({
+        variables: {
+          leagueId,
+          priorities: order.map((team, i) => ({
+            teamId: team.id,
+            priority: i + 1,
+          })),
+        },
+      })
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return {

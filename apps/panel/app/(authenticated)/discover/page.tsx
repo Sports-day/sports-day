@@ -178,14 +178,14 @@ export default function DiscoverPage() {
                                             color: `${theme.palette.text.primary}FF`,
                                             border: `1px solid ${theme.palette.text.primary}4D`,
                                             borderRadius: "15px"
-                                        }} label={"名前で検索"} {...a11yProps(1)} />
+                                        }} label={"名前で検索"} {...a11yProps(0)} />
                                         <Tab sx={{
                                             zIndex: 1,
                                             mr: 1,
                                             color: `${theme.palette.text.primary}FF`,
                                             border: `1px solid ${theme.palette.text.primary}4D`,
                                             borderRadius: "15px"
-                                        }} label={"同じクラス"} {...a11yProps(2)} />
+                                        }} label={"同じクラス"} {...a11yProps(1)} />
                                     </Tabs>
                                 </Box>
                                 <TabPanel value={value} index={0}>
@@ -260,17 +260,15 @@ export default function DiscoverPage() {
                                         {isSuccessful && (
                                             <Grid container spacing={1.5}>
                                                 {matchSets
-                                                    .map((matchSet, index) => {
+                                                    .map((matchSet) => {
                                                         return (
-                                                            <>
                                                                 <DiscoverTeamContent
                                                                     matchSet={matchSet}
                                                                     images={images}
                                                                     locations={locations}
                                                                     users={users}
-                                                                    key={index}
+                                                                    key={`${matchSet.match.id}-${matchSet.team.id}`}
                                                                 />
-                                                            </>
                                                         );
                                                     })}
                                             </Grid>

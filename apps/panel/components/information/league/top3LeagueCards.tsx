@@ -37,11 +37,15 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
         Promise.all(
             leagueGames.map(async (game) => {
                 const leagueId = game.league!.id;
-                const { data } = await client.query<GetPanelLeagueStandingsQuery>({
-                    query: GetPanelLeagueStandingsDocument,
-                    variables: { leagueId },
-                });
-                return { game, standings: data?.leagueStandings ?? [] };
+                try {
+                    const { data } = await client.query<GetPanelLeagueStandingsQuery>({
+                        query: GetPanelLeagueStandingsDocument,
+                        variables: { leagueId },
+                    });
+                    return { game, standings: data?.leagueStandings ?? [] };
+                } catch {
+                    return { game, standings: [] };
+                }
             })
         ).then((allResults) => {
             const extended: ExtendedStandingResult[] = [];

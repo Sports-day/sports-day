@@ -29,7 +29,7 @@ export function useConflictedScenes(): HookResult {
       if (!sceneId) return;
       const names =
         sportScene.entries?.flatMap((entry) =>
-          entry.team?.users?.map((user) => user.name?.trim()).filter(Boolean) ?? [],
+          entry.team?.users?.map((user) => user.name?.trim()).filter((n): n is string => !!n) ?? [],
         ) ?? [];
       if (!sceneUserNamesMap.has(sceneId)) {
         sceneUserNamesMap.set(sceneId, []);

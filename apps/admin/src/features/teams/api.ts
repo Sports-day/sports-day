@@ -6,7 +6,7 @@ export const GET_ADMIN_TEAMS = gql`
       id
       name
       group { id name }
-      users { id identify { microsoftUserId } }
+      users { id name email identify { microsoftUserId } }
     }
   }
 `
@@ -17,7 +17,7 @@ export const GET_ADMIN_TEAM = gql`
       id
       name
       group { id name }
-      users { id identify { microsoftUserId } }
+      users { id name email identify { microsoftUserId } }
     }
   }
 `
@@ -54,7 +54,7 @@ export const UPDATE_ADMIN_TEAM_USERS = gql`
   mutation UpdateAdminTeamUsers($id: ID!, $input: UpdateTeamUsersInput!) {
     updateTeamUsers(id: $id, input: $input) {
       id
-      users { id identify { microsoftUserId } }
+      users { id name email identify { microsoftUserId } }
     }
   }
 `

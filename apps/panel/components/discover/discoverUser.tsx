@@ -152,8 +152,8 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                         <Typography fontSize={"14px"} sx={{color: theme.palette.text.primary}}>
                                             {props.user.name}の競技
                                         </Typography>
-                                        {userMatchSports.map((sport, index) => (
-                                            <Typography fontSize={"14px"} fontWeight={"600"} key={index}>
+                                        {userMatchSports.map((sport) => (
+                                            <Typography fontSize={"14px"} fontWeight={"600"} key={sport.id}>
                                                 {sport.name}
                                             </Typography>
                                         ))}

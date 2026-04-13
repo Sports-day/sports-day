@@ -312,6 +312,17 @@ export function SearchFilterBar({
 
   const [open, setOpen] = useState(defaultOpen || filtersOnly)
 
+  // デバウンス: 入力中はローカル state を即時更新し、200ms 後に親へ通知
+  const [localKeyword, setLocalKeyword] = useState(keyword ?? '')
+  useEffect(() => {
+    setLocalKeyword(keyword ?? '')
+  }, [keyword])
+  useEffect(() => {
+    if (localKeyword === (keyword ?? '')) return
+    const id = setTimeout(() => onKeywordChange?.(localKeyword), 200)
+    return () => clearTimeout(id)
+  }, [localKeyword]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // 何も渡されていなければ何も描画しない
   if (!hasSearch && !hasFilters) return null
 
@@ -332,8 +343,8 @@ export function SearchFilterBar({
             <SearchIcon sx={{ fontSize: 20, color: COLOR_PRIMARY_MAIN, flexShrink: 0 }} />
             <Box
               component="input"
-              value={keyword}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onKeywordChange!(e.target.value)}
+              value={localKeyword}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLocalKeyword(e.target.value)}
               placeholder={placeholder}
               sx={{
                 flex: 1,
@@ -346,8 +357,8 @@ export function SearchFilterBar({
                 '&::placeholder': { color: COLOR_PRIMARY_DARK, opacity: 0.35 },
               }}
             />
-            {keyword && (
-              <IconButton size="small" onClick={() => onKeywordChange!('')} sx={{ color: '#999', flexShrink: 0 }}>
+            {localKeyword && (
+              <IconButton size="small" onClick={() => { setLocalKeyword(''); onKeywordChange!('') }} sx={{ color: '#999', flexShrink: 0 }}>
                 <CloseIcon sx={{ fontSize: 16 }} />
               </IconButton>
             )}

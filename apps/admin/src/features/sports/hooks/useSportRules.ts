@@ -5,6 +5,7 @@ import {
   useDeleteAdminRuleMutation,
   GetAdminSportDocument,
 } from '@/gql/__generated__/graphql'
+import { showErrorToast } from '@/lib/toast'
 
 export function useSportRules(sportId: string) {
   const [isEditing, setIsEditing] = useState(false)
@@ -29,19 +30,29 @@ export function useSportRules(sportId: string) {
   const handleSave = async (existingRuleId: string | null) => {
     const text = editText.trim()
     if (!text) return
-    if (existingRuleId) {
-      await updateRule({ variables: { id: existingRuleId, input: { rule: text } } })
-    } else {
-      await createRule({ variables: { input: { rule: text, sportId } } })
+    try {
+      if (existingRuleId) {
+        await updateRule({ variables: { id: existingRuleId, input: { rule: text } } })
+      } else {
+        await createRule({ variables: { input: { rule: text, sportId } } })
+      }
+      setIsEditing(false)
+      setEditText('')
+    } catch (e) {
+      showErrorToast()
+      throw e
     }
-    setIsEditing(false)
-    setEditText('')
   }
 
   const handleDelete = async (ruleId: string) => {
-    await deleteRule({ variables: { id: ruleId } })
-    setIsEditing(false)
-    setEditText('')
+    try {
+      await deleteRule({ variables: { id: ruleId } })
+      setIsEditing(false)
+      setEditText('')
+    } catch (e) {
+      showErrorToast()
+      throw e
+    }
   }
 
   return {

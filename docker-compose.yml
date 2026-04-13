@@ -1,0 +1,154 @@
+services:
+  # ─── MySQL ───────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sportsday}
+      MYSQL_USER: ${MYSQL_USER:-sportsday}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ${DATA_DIR:-./data}/mysql:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  # ─── RustFS (S3-compatible storage) ─────────────────
+  rustfs:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+      RUSTFS_ROOT_USER: ${STORAGE_ACCESS_KEY}
+      RUSTFS_ROOT_PASSWORD: ${STORAGE_SECRET_KEY}
+    volumes:
+      - ${DATA_DIR:-./data}/rustfs:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # ─── Go API server ──────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+      RDB_ADDRESS: mysql:3306
+      RDB_USER: ${MYSQL_USER:-sportsday}
+      RDB_PASS: ${MYSQL_PASSWORD}
+      RDB_NAME: ${MYSQL_DATABASE:-sportsday}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+      SERVER_CORS_ORIGINS: ${CORS_ORIGINS}
+      AUTH_ISSUER_URL: ${AUTH_ISSUER_URL}
+      AUTH_CLIENT_ID: ${AUTH_CLIENT_ID}
+      AUTH_ROLE_CACHE_TTL: ${AUTH_ROLE_CACHE_TTL:-60}
+      STORAGE_ENDPOINT: http://rustfs:9000
+      STORAGE_PUBLIC_ENDPOINT: ${STORAGE_PUBLIC_ENDPOINT}
+      STORAGE_REGION: ${STORAGE_REGION:-us-east-1}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-sportsday}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
+      STORAGE_WEBHOOK_SECRET: ${STORAGE_WEBHOOK_SECRET}
+      DEBUG: "false"
+    networks:
+      - backend
+      - frontend
+
+  # ─── Panel (/) ──────────────────────────────────────
+  panel:
+    build:
+      context: .
+      dockerfile: apps/panel/Dockerfile
+      args:
+        VITE_BASE_PATH: /
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+
+  # ─── Admin (/admin/) ────────────────────────────────
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        VITE_BASE_PATH: /admin/
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+
+  # ─── Form (/form/) ─────────────────────────────────
+  form:
+    build:
+      context: .
+      dockerfile: apps/form/Dockerfile
+      args:
+        VITE_BASE_PATH: /form/
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+
+  # ─── Nginx (HTTPS termination + routing) ────────────
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+    depends_on:
+      api:
+        condition: service_started
+      panel:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      form:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${DATA_DIR:-./data}/ssl:/etc/nginx/ssl:ro
+    networks:
+      - frontend
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge

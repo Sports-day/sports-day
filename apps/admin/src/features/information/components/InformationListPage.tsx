@@ -1,3 +1,4 @@
+import AddIcon from '@mui/icons-material/Add'
 import {
   Box,
   Button,
@@ -59,10 +60,11 @@ export function InformationListPage({ onCreateClick, onAnnouncementClick }: Prop
             <Button
               variant="contained"
               size="small"
+              startIcon={<AddIcon />}
               onClick={onCreateClick}
               sx={{ ...ACTION_BUTTON_SX }}
             >
-              作成
+              お知らせを新規作成
             </Button>
           </Box>
 

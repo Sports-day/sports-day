@@ -64,16 +64,24 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
-    await handleSave()
-    showToast('チームを保存しました')
-    onBack()
+    try {
+      await handleSave()
+      showToast('チームを保存しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async () => {
     handleCloseDeleteDialog()
-    handleDeleteTeam()
-    showToast('チームを削除しました')
-    onBack()
+    try {
+      await handleDeleteTeam()
+      showToast('チームを削除しました')
+      onBack()
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
@@ -149,7 +157,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
             <TableHead>
               <TableRow>
                 {['学籍番号', '名前', ''].map((header, i) => (
-                  <TableCell key={i} sx={{ ...CARD_TABLE_HEAD_SX, ...(i === 3 ? { width: 48 } : {}) }}>
+                  <TableCell key={header || 'actions'} sx={{ ...CARD_TABLE_HEAD_SX, ...(i === 2 ? { width: 48 } : {}) }}>
                     {header}
                   </TableCell>
                 ))}

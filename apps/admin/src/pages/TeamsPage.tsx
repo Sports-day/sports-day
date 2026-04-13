@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
-import { TeamListPage, TeamExportPage, TeamBulkRenamePage, TeamDetailPage } from '@/features/teams'
+import { TeamListPage, TeamCreatePage, TeamDetailPage } from '@/features/teams'
 import { useResetToList } from '@/hooks/useResetToList'
 
-type View = 'list' | 'export' | 'bulkRename' | 'detail'
+type View = 'list' | 'create' | 'detail'
 
 export default function TeamsPage() {
   const [view, setView] = useState<View>('list')
@@ -10,12 +10,13 @@ export default function TeamsPage() {
 
   useResetToList(view === 'list', useCallback(() => setView('list'), []))
 
-  if (view === 'export') {
-    return <TeamExportPage onBack={() => setView('list')} />
-  }
-
-  if (view === 'bulkRename') {
-    return <TeamBulkRenamePage onBack={() => setView('list')} />
+  if (view === 'create') {
+    return (
+      <TeamCreatePage
+        onBack={() => setView('list')}
+        onSave={(id) => { setSelectedTeamId(id); setView('detail') }}
+      />
+    )
   }
 
   if (view === 'detail') {
@@ -24,9 +25,8 @@ export default function TeamsPage() {
 
   return (
     <TeamListPage
-      onExport={() => setView('export')}
-      onBulkRename={() => setView('bulkRename')}
       onTeamClick={(id) => { setSelectedTeamId(id); setView('detail') }}
+      onNavigateToCreate={() => setView('create')}
     />
   )
 }

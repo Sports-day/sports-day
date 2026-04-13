@@ -39,8 +39,12 @@ export function TiebreakCard({ leagueId, tiedGroups }: Props) {
   if (tiedGroups.length === 0) return null
 
   const handleSave = async () => {
-    await tiebreak.handleSave()
-    showToast('タイブレーク優先度を保存しました')
+    try {
+      await tiebreak.handleSave()
+      showToast('タイブレーク優先度を保存しました')
+    } catch {
+      // エラートーストはhook側で表示済み
+    }
   }
 
   return (
