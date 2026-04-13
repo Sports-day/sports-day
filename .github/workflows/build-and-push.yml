@@ -118,6 +118,14 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_AUTHORITY=${{ vars.VITE_AUTHORITY }}
+            VITE_CLIENT_ID=${{ vars.VITE_CLIENT_ID }}
+            VITE_REDIRECT_URI=${{ vars.VITE_ADMIN_REDIRECT_URI }}
+            VITE_SILENT_REDIRECT_URI=${{ vars.VITE_ADMIN_SILENT_REDIRECT_URI }}
+            VITE_SCOPE=${{ vars.VITE_SCOPE }}
+            VITE_GRAPHQL_ENDPOINT=${{ vars.VITE_GRAPHQL_ENDPOINT }}
+            VITE_PANEL_URL=${{ vars.VITE_PANEL_URL }}
 
   build-panel:
     name: Build Panel
@@ -153,6 +161,16 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_AUTHORITY=${{ vars.VITE_AUTHORITY }}
+            VITE_CLIENT_ID=${{ vars.VITE_CLIENT_ID }}
+            VITE_REDIRECT_URI=${{ vars.VITE_PANEL_REDIRECT_URI }}
+            VITE_SILENT_REDIRECT_URI=${{ vars.VITE_PANEL_SILENT_REDIRECT_URI }}
+            VITE_SCOPE=${{ vars.VITE_SCOPE }}
+            VITE_OIDC_DISPLAY_NAME=${{ vars.VITE_OIDC_DISPLAY_NAME }}
+            VITE_GA_ID=${{ vars.VITE_GA_ID }}
+            VITE_GRAPHQL_ENDPOINT=${{ vars.VITE_GRAPHQL_ENDPOINT }}
 
   build-form:
     name: Build Form
@@ -188,3 +206,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_AUTHORITY=${{ vars.VITE_AUTHORITY }}
+            VITE_CLIENT_ID=${{ vars.VITE_CLIENT_ID }}
+            VITE_REDIRECT_URI=${{ vars.VITE_FORM_REDIRECT_URI }}
+            VITE_SILENT_REDIRECT_URI=${{ vars.VITE_FORM_SILENT_REDIRECT_URI }}
+            VITE_SCOPE=${{ vars.VITE_SCOPE }}
+            VITE_GRAPHQL_ENDPOINT=${{ vars.VITE_GRAPHQL_ENDPOINT }}
