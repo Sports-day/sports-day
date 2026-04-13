@@ -83,13 +83,13 @@ const theme = createTheme({
     MuiSelect: {
       defaultProps: {
         IconComponent: (props: React.ComponentProps<'svg'>) =>
-          createElement(KeyboardArrowDownIcon, { ...props, style: { ...props.style, fontSize: 20, color: '#5B6DC6' } }),
+          createElement(KeyboardArrowDownIcon, { ...(props as Record<string, unknown>), style: { ...props.style, fontSize: 20, color: '#5B6DC6' } } as React.ComponentProps<typeof KeyboardArrowDownIcon>),
       },
     },
     MuiNativeSelect: {
       defaultProps: {
         IconComponent: (props: React.ComponentProps<'svg'>) =>
-          createElement(KeyboardArrowDownIcon, { ...props, style: { ...props.style, fontSize: 20, color: '#5B6DC6' } }),
+          createElement(KeyboardArrowDownIcon, { ...(props as Record<string, unknown>), style: { ...props.style, fontSize: 20, color: '#5B6DC6' } } as React.ComponentProps<typeof KeyboardArrowDownIcon>),
       },
     },
     MuiDrawer: {

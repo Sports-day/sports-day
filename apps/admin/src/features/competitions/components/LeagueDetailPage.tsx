@@ -32,7 +32,7 @@ import { SceneSelect } from '@/components/ui/SceneSelect'
 import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
 import { DateTimeInput } from '@/components/ui/DateTimeInput'
 import { NumberInput } from '@/components/ui/NumberInput'
-import { showToast, showErrorToast } from '@/lib/toast'
+import { showToast } from '@/lib/toast'
 import { BackButton } from '@/components/ui/BackButton'
 import { QrPdfExportDialog } from './QrPdfExportDialog'
 

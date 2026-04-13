@@ -287,7 +287,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
           variables: {
             id: competitionId,
             input: {
-              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : undefined,
+              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : '',
               matchDuration: defaultsForm.matchDuration,
               breakDuration: defaultsForm.breakDuration,
               locationId: defaultsForm.locationId || undefined,

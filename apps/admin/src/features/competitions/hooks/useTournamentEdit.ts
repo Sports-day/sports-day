@@ -270,7 +270,7 @@ export function useTournamentEdit(competitionId: string, competitionName: string
             input: {
               competitionId,
               teamCount,
-              placementMethod: placementMethod as string,
+              placementMethod: placementMethod as import('@/gql/__generated__/graphql').PlacementMethod,
             },
           },
         })
@@ -309,7 +309,7 @@ export function useTournamentEdit(competitionId: string, competitionName: string
           variables: {
             id: competitionId,
             input: {
-              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : undefined,
+              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : '',
               matchDuration: defaultsForm.matchDuration,
               breakDuration: defaultsForm.breakDuration,
               locationId: defaultsForm.locationId || undefined,

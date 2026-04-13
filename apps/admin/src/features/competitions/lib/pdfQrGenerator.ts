@@ -56,7 +56,7 @@ async function generateQrPngDataUrl(url: string): Promise<string> {
     const reader = new FileReader()
     reader.onload = () => resolve(reader.result as string)
     reader.onerror = reject
-    reader.readAsDataURL(blob)
+    reader.readAsDataURL(blob as Blob)
   })
 }
 

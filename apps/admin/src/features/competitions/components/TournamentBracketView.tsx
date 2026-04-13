@@ -40,18 +40,6 @@ const C = {
 //
 // For SUB brackets (all MATCH_LOSER slots), we use the simple round-doubling formula.
 
-function nextPow2(n: number): number {
-  let p = 1
-  while (p < n) p *= 2
-  return p
-}
-
-function getSeedOrder(size: number): number[] {
-  if (size === 2) return [1, 2]
-  const prev = getSeedOrder(size / 2)
-  return prev.flatMap((s) => [s, size + 1 - s])
-}
-
 function colX(r: number) { return r * (MATCH_W + H_GAP) }
 
 /**
