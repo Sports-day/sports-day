@@ -1,6 +1,8 @@
 import { Box, Typography, Stack } from "@mui/material";
 import { motion } from "framer-motion";
 import { useTheme } from "@mui/material/styles";
+import logoForm from "@/assets/logo_form.png";
+import widerHoriz from "@/assets/wider_horiz.png";
 
 export default function Comp() {
   const submitBackground = useTheme().palette.background.default;
@@ -36,7 +38,7 @@ export default function Comp() {
           }}
         >
           <img
-            src="/images/logo_form.png"
+            src={logoForm}
             alt=""
             width={320}
             height={28}
@@ -105,7 +107,7 @@ export default function Comp() {
             </Typography>
             <Box>
               <img
-                src="/images/wider_horiz.png"
+                src={widerHoriz}
                 alt=""
                 width={160}
                 height={48}

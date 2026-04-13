@@ -1,5 +1,7 @@
 import { Box, Button, Typography, Stack, useTheme } from '@mui/material'
 import PrivacyPolicyDrawer from '@/components/layouts/PrivacyPolicyDrawer'
+import logoForm from '@/assets/logo_form.png'
+import widerHoriz from '@/assets/wider_horiz.png'
 
 type Props = {
   onLogin: () => void
@@ -29,7 +31,7 @@ export default function LoginPage({ onLogin }: Props) {
         }}
       >
         <img
-          src="/images/logo_form.png"
+          src={logoForm}
           alt=""
           width={380}
           height={30}
@@ -88,7 +90,7 @@ export default function LoginPage({ onLogin }: Props) {
           </Typography>
           <Box>
             <img
-              src="/images/wider_horiz.png"
+              src={widerHoriz}
               alt=""
               width={160}
               height={48}

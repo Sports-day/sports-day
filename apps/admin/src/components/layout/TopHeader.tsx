@@ -1,5 +1,6 @@
 import { Box, IconButton } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
+import logoAdmin from '@/assets/logo_admin.png'
 
 /** レスポンシブ対応: xs=64, md=72 */
 export const TOP_HEADER_HEIGHT = { xs: 64, md: 72 } as const
@@ -35,7 +36,7 @@ export function TopHeader({ onMobileMenuToggle }: TopHeaderProps) {
       </IconButton>
       <Box
         component="img"
-        src="/logo_admin.png"
+        src={logoAdmin}
         alt="SPORTSDAY Admin"
         sx={{
           width: 'clamp(110px, 17.5vw, 220px)',
