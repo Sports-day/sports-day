@@ -4,6 +4,7 @@ services:
     image: mysql:8.0
     restart: unless-stopped
     environment:
+      TZ: ${TZ:-Asia/Tokyo}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-sportsday}
       MYSQL_USER: ${MYSQL_USER:-sportsday}
@@ -25,6 +26,7 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
+      TZ: ${TZ:-Asia/Tokyo}
       RUSTFS_ROOT_USER: ${STORAGE_ACCESS_KEY}
       RUSTFS_ROOT_PASSWORD: ${STORAGE_SECRET_KEY}
     volumes:
@@ -49,6 +51,7 @@ services:
       rustfs:
         condition: service_healthy
     environment:
+      TZ: ${TZ:-Asia/Tokyo}
       RDB_ADDRESS: mysql:3306
       RDB_USER: ${MYSQL_USER:-sportsday}
       RDB_PASS: ${MYSQL_PASSWORD}
@@ -123,6 +126,8 @@ services:
   nginx:
     image: nginx:1.27-alpine
     restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
     depends_on:
       api:
         condition: service_started
@@ -138,75 +143,9 @@ services:
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ${DATA_DIR:-./data}/ssl:/etc/nginx/ssl:ro
-      - ${DATA_DIR:-./data}/certbot-webroot:/var/www/certbot:ro
     networks:
       - frontend
-
-  # ─── DB migration (run once) ────────────────────────
-  migrate:
-    image: ghcr.io/amacneil/dbmate:2
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-sportsday}"
-    volumes:
-      - ./api/db_schema/migrations:/db/migrations:ro
-    command: ["up"]
-    networks:
       - backend
-    profiles:
-      - setup
-
-  # ─── DB seed (run once after migrate) ───────────────
-  seed:
-    image: mysql:8.0
-    depends_on:
-      mysql:
-        condition: service_healthy
-    volumes:
-      - ./api/db_schema/seed:/seed:ro
-    entrypoint: >
-      sh -c 'for f in /seed/*.sql; do
-        echo "Applying $$f ...";
-        mysql -h mysql -u root -p"${MYSQL_ROOT_PASSWORD}" "${MYSQL_DATABASE:-sportsday}" < "$$f";
-      done'
-    networks:
-      - backend
-    profiles:
-      - setup
-
-  # ─── Backup ────────────────────────────────────────
-  backup:
-    image: mysql:8.0
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      MYSQL_HOST: mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-sportsday}
-      BACKUP_RETENTION_HOURS: ${BACKUP_RETENTION_HOURS:-72}
-    volumes:
-      - ./docker/backup/backup.sh:/backup/backup.sh:ro
-      - ${DATA_DIR:-./data}/backups:/backups
-    entrypoint: ["tail", "-f", "/dev/null"]
-    networks:
-      - backend
-    profiles:
-      - tools
-
-  # ─── Certbot (Let's Encrypt) ────────────────────────
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ${DATA_DIR:-./data}/ssl:/etc/letsencrypt
-      - ${DATA_DIR:-./data}/certbot-webroot:/var/www/certbot
-    networks:
-      - frontend
-    profiles:
-      - setup
 
 networks:
   backend:
