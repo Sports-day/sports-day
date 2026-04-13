@@ -1,4 +1,5 @@
 import { Box, Button, Typography } from '@mui/material'
+import logoAdmin from '@/assets/logo_admin.png'
 
 type Props = {
   onLogin: () => void
@@ -20,7 +21,7 @@ export default function LoginPage({ onLogin, onPrivacy }: Props) {
         {/* ロゴ */}
         <Box
           component="img"
-          src="/logo_admin.png"
+          src={logoAdmin}
           alt="SPORTSDAY Admin"
           sx={{
             width: 'clamp(150px, 24vw, 300px)',

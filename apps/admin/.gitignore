@@ -36,4 +36,7 @@ dist-ssr
 *.png
 *.jpg
 *.jpeg
+
+# src/assets/ 内の画像はVite importで使うため許可
+!src/assets/**
 # 特定のディレクトリに固まっている場合は "screenshots/" のようにディレクトリ名で指定

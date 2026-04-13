@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useParams, Link } from "react-router-dom";
+import logoForm from "@/assets/logo_form.png";
 
 export default function Header() {
   const theme = useTheme();
@@ -23,7 +24,7 @@ export default function Header() {
       <Link to={linkTo}>
         <Box
           component="img"
-          src="/images/logo_form.png"
+          src={logoForm}
           alt=""
           sx={{
             width: "clamp(110px, 17.5vw, 220px)",

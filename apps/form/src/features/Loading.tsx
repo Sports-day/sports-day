@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import faviconIco from "@/assets/favicon.ico";
 
 export default function CircularUnderLoad() {
   return (
@@ -15,7 +16,7 @@ export default function CircularUnderLoad() {
     >
       <Box
         component="img"
-        src="/images/favicon.ico"
+        src={faviconIco}
         alt="Loading"
         sx={{
           width: "30px",
