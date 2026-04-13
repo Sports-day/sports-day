@@ -59,8 +59,5 @@ api/db_schema/schema.sql
 
 package-lock.json
 
-# Temporary and redundant files
-/temp.md
-/logo_admin.png
-/スクリーンショット*.pngトーナメント機能の方針だて*.md
-リーグ機能の方針だて*.md
+# Data Directory
+data
