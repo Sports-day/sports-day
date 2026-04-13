@@ -1304,6 +1304,7 @@ export type UpdateInformationInput = {
 
 export type UpdateJudgmentInput = {
   entry?: InputMaybe<JudgmentEntry>;
+  isAttending?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateLeagueRuleInput = {

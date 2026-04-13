@@ -430,6 +430,7 @@ input CreateJudgmentInput {
 
 input UpdateJudgmentInput {
   entry: JudgmentEntry
+  isAttending: Boolean
 }
 
 input CreateLeagueInput {
