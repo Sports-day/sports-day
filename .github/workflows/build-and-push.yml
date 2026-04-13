@@ -119,7 +119,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VITE_API_URL=${{ vars.VITE_API_URL }}
             VITE_AUTHORITY=${{ vars.VITE_AUTHORITY }}
             VITE_CLIENT_ID=${{ vars.VITE_CLIENT_ID }}
             VITE_REDIRECT_URI=${{ vars.VITE_PANEL_REDIRECT_URI }}
