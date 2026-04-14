@@ -16,15 +16,33 @@ const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const PrivacyPolicyPage = lazy(() => import("@/pages/PrivacyPolicyPage"));
 const AuthCallbackPage = lazy(() => import("@/pages/AuthCallbackPage"));
 const CompetitionsPage = lazy(() => import("@/pages/CompetitionsPage"));
+const CompetitionNewPage = lazy(() => import("@/pages/CompetitionNewPage"));
+const CompetitionDetailPage = lazy(() => import("@/pages/CompetitionDetailPage"));
 const SportsPage = lazy(() => import("@/pages/SportsPage"));
+const SportNewPage = lazy(() => import("@/pages/SportNewPage"));
+const SportDetailPage = lazy(() => import("@/pages/SportDetailPage"));
 const TeamsPage = lazy(() => import("@/pages/TeamsPage"));
+const TeamNewPage = lazy(() => import("@/pages/TeamNewPage"));
+const TeamDetailPage = lazy(() => import("@/pages/TeamDetailPage"));
 const UsersPage = lazy(() => import("@/pages/UsersPage"));
+const UserCsvPage = lazy(() => import("@/pages/UserCsvPage"));
+const UserDetailPage = lazy(() => import("@/pages/UserDetailPage"));
 const LocationsPage = lazy(() => import("@/pages/LocationsPage"));
+const LocationNewPage = lazy(() => import("@/pages/LocationNewPage"));
+const LocationDetailPage = lazy(() => import("@/pages/LocationDetailPage"));
 const ClassesPage = lazy(() => import("@/pages/ClassesPage"));
+const ClassNewPage = lazy(() => import("@/pages/ClassNewPage"));
+const ClassDetailPage = lazy(() => import("@/pages/ClassDetailPage"));
 const TagsPage = lazy(() => import("@/pages/TagsPage"));
+const TagNewPage = lazy(() => import("@/pages/TagNewPage"));
+const TagDetailPage = lazy(() => import("@/pages/TagDetailPage"));
 const ImagesPage = lazy(() => import("@/pages/ImagesPage"));
+const ImageNewPage = lazy(() => import("@/pages/ImageNewPage"));
+const ImageDetailPage = lazy(() => import("@/pages/ImageDetailPage"));
 const ActiveMatchesPage = lazy(() => import("@/pages/ActiveMatchesPage"));
 const InformationPage = lazy(() => import("@/pages/InformationPage"));
+const InformationNewPage = lazy(() => import("@/pages/InformationNewPage"));
+const InformationDetailPage = lazy(() => import("@/pages/InformationDetailPage"));
 
 function PageFallback() {
   return (
@@ -52,6 +70,12 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
 
   useEffect(() => {
     registerNavigate((page: string, params?: Record<string, string>) => {
+      // 大会詳細へのディープリンク（試合ページからの戻り先など）
+      if (page === 'competitions' && params?.competitionId) {
+        const { competitionId, competitionName = '', type = 'TOURNAMENT' } = params
+        navigate(`/competitions/${competitionId}?type=${type}&name=${encodeURIComponent(competitionName)}`)
+        return
+      }
       const path = keyToPath(page)
       if (params && Object.keys(params).length > 0) {
         const search = new URLSearchParams(params).toString()
@@ -72,10 +96,12 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
   const selected = pathToKey(location.pathname)
 
   const handleSidebarSelect = (key: string) => {
-    if (key === selected) {
+    const path = keyToPath(key)
+    if (location.pathname === path) {
+      // 一覧ページで同じメニューを再クリック → stateベースページ用リセット（試合ページ等）
       setResetKey((k) => k + 1)
     } else {
-      navigate(keyToPath(key))
+      navigate(path)
     }
   }
 
@@ -121,15 +147,33 @@ function AppShell({ onPrivacy }: { onPrivacy: () => void }) {
               <ResetToListContext.Provider value={resetKey}>
                 <Routes>
                   <Route path="/competitions" element={<CompetitionsPage />} />
+                  <Route path="/competitions/new" element={<CompetitionNewPage />} />
+                  <Route path="/competitions/:id" element={<CompetitionDetailPage />} />
                   <Route path="/sports" element={<SportsPage />} />
-                  <Route path="/classes" element={<ClassesPage />} />
+                  <Route path="/sports/new" element={<SportNewPage />} />
+                  <Route path="/sports/:id" element={<SportDetailPage />} />
                   <Route path="/teams" element={<TeamsPage />} />
+                  <Route path="/teams/new" element={<TeamNewPage />} />
+                  <Route path="/teams/:id" element={<TeamDetailPage />} />
                   <Route path="/users" element={<UsersPage />} />
+                  <Route path="/users/csv" element={<UserCsvPage />} />
+                  <Route path="/users/:id" element={<UserDetailPage />} />
                   <Route path="/locations" element={<LocationsPage />} />
+                  <Route path="/locations/new" element={<LocationNewPage />} />
+                  <Route path="/locations/:id" element={<LocationDetailPage />} />
+                  <Route path="/classes" element={<ClassesPage />} />
+                  <Route path="/classes/new" element={<ClassNewPage />} />
+                  <Route path="/classes/:id" element={<ClassDetailPage />} />
                   <Route path="/tags" element={<TagsPage />} />
+                  <Route path="/tags/new" element={<TagNewPage />} />
+                  <Route path="/tags/:id" element={<TagDetailPage />} />
                   <Route path="/images" element={<ImagesPage />} />
+                  <Route path="/images/new" element={<ImageNewPage />} />
+                  <Route path="/images/:id" element={<ImageDetailPage />} />
                   <Route path="/active-matches" element={<ActiveMatchesPage />} />
                   <Route path="/information" element={<InformationPage />} />
+                  <Route path="/information/new" element={<InformationNewPage />} />
+                  <Route path="/information/:id" element={<InformationDetailPage />} />
                   <Route path="*" element={<Navigate to="/competitions" replace />} />
                 </Routes>
               </ResetToListContext.Provider>
