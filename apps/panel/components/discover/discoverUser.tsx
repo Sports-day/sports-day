@@ -8,6 +8,7 @@ import {
     useTheme, Avatar, Card
 } from "@mui/material";
 import * as React from "react";
+import {useMemo} from "react";
 import {HiOutlineExclamationTriangle, HiUser} from "react-icons/hi2";
 import type { GetPanelCompetitionsQuery, GetPanelTeamsQuery, GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import type { ResolvedUser } from "@/src/features/users/hook";
@@ -29,17 +30,26 @@ export type DiscoverUserProps = {
 export const DiscoverUser = (props: DiscoverUserProps) => {
     const theme = useTheme();
     const [open, toggleDrawer] = React.useState(false);
-    // Find the team that the user belongs to
-    const userTeam = props.teams.find(team => team.users.some(u => u.id === props.user.id));
-    const userMatches = props.matches.filter(match => {
-        const teamIds = match.entries.map(e => e.team?.id);
-        return teamIds.includes(userTeam?.id);
-    });
-    const userMatchSceneIds = userMatches.map(match => match.competition.scene.id);
     const {sports} = useFetchSports();
-    const userMatchSports = sports.filter(sport =>
-        sport.scene?.some(ss => userMatchSceneIds.includes(ss.scene.id))
+
+    // Find the team that the user belongs to
+    const userTeam = useMemo(
+        () => props.teams.find(team => team.users.some(u => u.id === props.user.id)),
+        [props.teams, props.user.id]
     );
+    const userMatches = useMemo(
+        () => props.matches.filter(match => {
+            const teamIds = match.entries.map(e => e.team?.id);
+            return teamIds.includes(userTeam?.id);
+        }),
+        [props.matches, userTeam?.id]
+    );
+    const userMatchSports = useMemo(() => {
+        const sceneIds = userMatches.map(match => match.competition.scene.id);
+        return sports.filter(sport =>
+            sport.scene?.some(ss => sceneIds.includes(ss.scene.id))
+        );
+    }, [userMatches, sports]);
     const userMatchSport = userMatchSports[0];
 
     return(

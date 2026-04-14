@@ -9,6 +9,7 @@ import { useTheme } from '@mui/material/styles';
 export type CircleContainerProps = {
     children?: React.ReactNode
     noLogo?: boolean
+    noInformation?: boolean
 }
 
 export default function CircleContainer(props: CircleContainerProps) {
@@ -41,13 +42,15 @@ export default function CircleContainer(props: CircleContainerProps) {
                     </Box>
                 }
 
-                <Container
-                    maxWidth={"xl"}
-                >
-                    <Box mb={1} mt={0}>
-                        <InformationList/>
-                    </Box>
-                </Container>
+                {!props.noInformation &&
+                    <Container
+                        maxWidth={"xl"}
+                    >
+                        <Box mb={1} mt={0}>
+                            <InformationList/>
+                        </Box>
+                    </Container>
+                }
                 {props.children}
             </Container>
             <Container

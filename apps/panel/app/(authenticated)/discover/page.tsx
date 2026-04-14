@@ -72,12 +72,15 @@ export default function DiscoverPage() {
     const {locations, isFetching: isFetchingLocations} = useFetchLocations()
 
     const [searchText, setSearchText] = React.useState("");
-    const filteredUsers = searchText
-        ? users.filter(user =>
-            (user.name ?? '').toLowerCase().includes(searchText.toLowerCase()) ||
-            (user.email ?? '').toLowerCase().includes(searchText.toLowerCase())
-        )
-        : [];
+    const filteredUsers = React.useMemo(() =>
+        searchText
+            ? users.filter(user =>
+                (user.name ?? '').toLowerCase().includes(searchText.toLowerCase()) ||
+                (user.email ?? '').toLowerCase().includes(searchText.toLowerCase())
+            )
+            : [],
+        [users, searchText]
+    );
 
     const [value, setValue] = React.useState(0);
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {

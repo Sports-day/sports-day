@@ -54,7 +54,7 @@ export default function Page() {
                         exit={{opacity: 0}}
                         transition={{delay: 0, duration: 1, ease: [0, 0.55, 0.45, 1]}}
                     >
-                        <CircleContainer noLogo={true}>
+                        <CircleContainer noLogo={true} noInformation={true}>
                             <Stack
                                 direction={"column"}
                                 justifyContent={"center"}
