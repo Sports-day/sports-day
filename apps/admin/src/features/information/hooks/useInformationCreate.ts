@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCreateAdminInformationMutation, GetAdminInformationsDocument } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 export function useInformationCreate(onSave: () => void) {
   const [title, setTitle] = useState('')
@@ -22,7 +22,7 @@ export function useInformationCreate(onSave: () => void) {
       onSave()
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

@@ -5,7 +5,7 @@ import {
   useGetAdminGroupsQuery,
   GetAdminTeamsDocument,
 } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 type TeamCreateForm = {
   name: string
@@ -46,8 +46,8 @@ export function useTeamCreate(onSuccess: (id: string) => void) {
       const created = result.data?.createTeam
       if (!created) return
       onSuccess(created.id)
-    } catch {
-      showErrorToast()
+    } catch (e) {
+      showApiErrorToast(e)
     }
   }
 

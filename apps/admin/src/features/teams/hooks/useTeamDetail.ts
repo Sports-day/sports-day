@@ -10,7 +10,7 @@ import {
   GetAdminTeamDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 import type { TeamMember, SelectableUser } from '../types'
 
 export function useTeamDetail(teamId: string) {
@@ -91,7 +91,7 @@ export function useTeamDetail(teamId: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
     }
     setDialogOpen(false)
   }
@@ -110,7 +110,7 @@ export function useTeamDetail(teamId: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
     }
   }
 
@@ -132,7 +132,7 @@ export function useTeamDetail(teamId: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -149,7 +149,7 @@ export function useTeamDetail(teamId: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

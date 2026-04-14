@@ -5,7 +5,7 @@ import {
   useDeleteAdminLocationMutation,
   GetAdminLocationsDocument,
 } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 export function useLocationDetail(locationId: string, onSave: () => void, onDelete: () => void) {
   const { data, loading, error } = useGetAdminLocationQuery({ variables: { id: locationId }, fetchPolicy: 'cache-and-network' })
@@ -32,7 +32,7 @@ export function useLocationDetail(locationId: string, onSave: () => void, onDele
       setEditName(null)
       onSave()
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -42,7 +42,7 @@ export function useLocationDetail(locationId: string, onSave: () => void, onDele
       await deleteLocation({ variables: { id: locationId } })
       onDelete()
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

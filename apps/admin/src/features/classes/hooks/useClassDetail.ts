@@ -9,7 +9,7 @@ import {
   GetAdminGroupsForClassesDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 import type { ClassMember } from '../types'
 
 export function useClassDetail(classId: string) {
@@ -74,7 +74,7 @@ export function useClassDetail(classId: string) {
       await updateGroup({ variables: { id: classId, input: { name: name.slice(0, 64) } } })
       setEditName(null)
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -83,7 +83,7 @@ export function useClassDetail(classId: string) {
     try {
       await deleteGroup({ variables: { id: classId } })
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -98,8 +98,8 @@ export function useClassDetail(classId: string) {
         refetchQueries: ['GetAdminGroupForClass'],
       })
       setDialogOpen(false)
-    } catch {
-      showErrorToast()
+    } catch (e) {
+      showApiErrorToast(e)
     }
   }
 
@@ -114,8 +114,8 @@ export function useClassDetail(classId: string) {
         },
         refetchQueries: ['GetAdminGroupForClass'],
       })
-    } catch {
-      showErrorToast()
+    } catch (e) {
+      showApiErrorToast(e)
     }
   }
 

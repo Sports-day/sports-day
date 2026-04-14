@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useUpdateAdminMatchResultMutation, MatchStatus } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 import type { TournamentMatchView } from '@/features/competitions/types'
 
 export function useTournamentMatchEdit() {
@@ -60,7 +60,7 @@ export function useTournamentMatchEdit() {
       closeMatch()
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

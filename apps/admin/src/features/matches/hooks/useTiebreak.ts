@@ -3,7 +3,7 @@ import {
   useSetAdminTiebreakPrioritiesMutation,
   GetAdminLeagueStandingsDocument,
 } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 type TiedTeam = {
   id: string
@@ -51,7 +51,7 @@ export function useTiebreak(leagueId: string) {
         },
       })
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
