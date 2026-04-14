@@ -37,8 +37,8 @@ type Snapshot = {
 const EMPTY: Snapshot = { name: '', displayOrder: 0, experiencedLimit: null, rankingKeys: [], imageId: null, sceneIds: [], sportScenes: [] }
 
 export function useSportDetail(sportId: string, onDelete: () => void) {
-  const { data, loading, error, refetch } = useGetAdminSportQuery({ variables: { id: sportId } })
-  const { data: allSportsData } = useGetAdminSportsQuery()
+  const { data, loading, error, refetch } = useGetAdminSportQuery({ variables: { id: sportId }, fetchPolicy: 'cache-and-network' })
+  const { data: allSportsData } = useGetAdminSportsQuery({ fetchPolicy: 'cache-and-network' })
   const { data: images } = useImages()
   const sport = data?.sport
 
@@ -54,7 +54,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
   const [saved, setSaved] = useState<Snapshot>(EMPTY)
 
   // シーン一覧
-  const { data: scenesData } = useGetAdminScenesForSportsQuery()
+  const { data: scenesData } = useGetAdminScenesForSportsQuery({ fetchPolicy: 'cache-and-network' })
   const allScenes = useMemo(() => (scenesData?.scenes ?? []).filter(s => !s.isDeleted), [scenesData])
 
   // 初回のみAPIデータでフォームを初期化（保存中のリセットを防ぐ）
@@ -103,7 +103,9 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
   }, [allSportsData, sportId])
 
   // ミューテーション
-  const [updateSport] = useUpdateAdminSportMutation()
+  const [updateSport] = useUpdateAdminSportMutation({
+    refetchQueries: [{ query: GetAdminSportsDocument }],
+  })
   const [deleteSport] = useDeleteAdminSportMutation({
     refetchQueries: [{ query: GetAdminSportsDocument }],
   })

@@ -25965,7 +25965,7 @@ func (ec *executionContext) unmarshalInputApplyCompetitionDefaultsInput(ctx cont
 		switch k {
 		case "startTime":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

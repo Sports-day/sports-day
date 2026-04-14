@@ -4,7 +4,7 @@ import { useFilterParams } from '@/hooks/useFilterParams'
 import type { Location } from '../types'
 
 export function useLocations() {
-  const { data, loading, error } = useGetAdminLocationsQuery()
+  const { data, loading, error } = useGetAdminLocationsQuery({ fetchPolicy: 'cache-and-network' })
   const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword'])
 
   const locations: Location[] = (data?.locations ?? []).map(l => ({

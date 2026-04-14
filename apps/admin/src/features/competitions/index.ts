@@ -1,4 +1,5 @@
 export { CompetitionsContainer } from './components/CompetitionsContainer'
+export { CompetitionDetailContainer } from './components/CompetitionDetailContainer'
 export { CompetitionListPage } from './components/CompetitionListPage'
 export { CompetitionCreatePage } from './components/CompetitionCreatePage'
 export { LeagueDetailPage } from './components/LeagueDetailPage'

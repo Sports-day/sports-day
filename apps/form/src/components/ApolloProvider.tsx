@@ -9,7 +9,17 @@ import { setContext } from "@apollo/client/link/context";
 import { userManager } from "@/lib/userManager";
 
 const authLink = setContext(async (_, { headers }) => {
-  const user = await userManager.getUser();
+  let user = await userManager.getUser();
+
+  // トークンが期限切れの場合、サイレントリニューを試みる
+  if (user?.expired) {
+    try {
+      user = await userManager.signinSilent();
+    } catch {
+      user = null;
+    }
+  }
+
   return {
     headers: {
       ...headers,

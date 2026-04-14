@@ -1,42 +1,12 @@
-import { LocationListPage, LocationCreatePage, LocationDetailPage } from '@/features/locations'
-import { useState, useCallback } from 'react'
-import { useResetToList } from '@/hooks/useResetToList'
-
-type View = 'list' | 'create' | 'detail'
+import { useNavigate } from 'react-router-dom'
+import { LocationListPage } from '@/features/locations'
 
 export default function LocationsPage() {
-  const [view, setView] = useState<View>('list')
-  const [selectedId, setSelectedId] = useState('')
-
-  useResetToList(view === 'list', useCallback(() => setView('list'), []))
-
-  if (view === 'create') {
-    return (
-      <LocationCreatePage
-        onBack={() => setView('list')}
-        onSave={() => setView('list')}
-      />
-    )
-  }
-
-  if (view === 'detail') {
-    return (
-      <LocationDetailPage
-        locationId={selectedId}
-        onBack={() => setView('list')}
-        onSave={() => setView('list')}
-        onDelete={() => setView('list')}
-      />
-    )
-  }
-
+  const navigate = useNavigate()
   return (
     <LocationListPage
-      onNavigateToCreate={() => setView('create')}
-      onSelectLocation={(id) => {
-        setSelectedId(id)
-        setView('detail')
-      }}
+      onNavigateToCreate={() => navigate('/locations/new')}
+      onSelectLocation={(id) => navigate(`/locations/${id}`)}
     />
   )
 }

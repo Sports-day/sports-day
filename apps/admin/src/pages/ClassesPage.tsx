@@ -1,27 +1,12 @@
-import { useState, useCallback } from 'react'
-import { ClassListPage, ClassCreatePage, ClassDetailPage } from '@/features/classes'
-import { useResetToList } from '@/hooks/useResetToList'
-
-type View = 'list' | 'create' | 'detail'
+import { useNavigate } from 'react-router-dom'
+import { ClassListPage } from '@/features/classes'
 
 export default function ClassesPage() {
-  const [view, setView] = useState<View>('list')
-  const [selectedClassId, setSelectedClassId] = useState('')
-
-  useResetToList(view === 'list', useCallback(() => setView('list'), []))
-
-  if (view === 'create') {
-    return <ClassCreatePage onBack={() => setView('list')} />
-  }
-
-  if (view === 'detail') {
-    return <ClassDetailPage classId={selectedClassId} onBack={() => setView('list')} />
-  }
-
+  const navigate = useNavigate()
   return (
     <ClassListPage
-      onCreateClick={() => setView('create')}
-      onClassClick={(id) => { setSelectedClassId(id); setView('detail') }}
+      onCreateClick={() => navigate('/classes/new')}
+      onClassClick={(id) => navigate(`/classes/${id}`)}
     />
   )
 }

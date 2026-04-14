@@ -17,7 +17,7 @@ type AddSportScenesInput struct {
 }
 
 type ApplyCompetitionDefaultsInput struct {
-	StartTime     string  `json:"startTime"`
+	StartTime     *string `json:"startTime,omitempty"`
 	MatchDuration int32   `json:"matchDuration"`
 	BreakDuration int32   `json:"breakDuration"`
 	LocationID    *string `json:"locationId,omitempty"`

@@ -6,6 +6,8 @@ import {
   useDeleteAdminTeamMutation,
   useUpdateAdminTeamUsersMutation,
   useGetAdminGroupsQuery,
+  GetAdminTeamsDocument,
+  GetAdminTeamDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 import { showErrorToast } from '@/lib/toast'
@@ -15,9 +17,10 @@ export function useTeamDetail(teamId: string) {
   const { data, loading, error } = useGetAdminTeamQuery({
     variables: { id: teamId },
     skip: !teamId,
+    fetchPolicy: 'cache-and-network',
   })
-  const { data: usersData } = useGetAdminUsersQuery()
-  const { data: groupsData } = useGetAdminGroupsQuery()
+  const { data: usersData } = useGetAdminUsersQuery({ fetchPolicy: 'cache-and-network' })
+  const { data: groupsData } = useGetAdminGroupsQuery({ fetchPolicy: 'cache-and-network' })
 
   const team = data?.team
 
@@ -83,7 +86,7 @@ export function useTeamDetail(teamId: string) {
           id: teamId,
           input: { addUserIds: selectedIds },
         },
-        refetchQueries: ['GetAdminTeam'],
+        refetchQueries: [{ query: GetAdminTeamDocument, variables: { id: teamId } }],
       })
       setMutationError(null)
     } catch (e) {
@@ -102,7 +105,7 @@ export function useTeamDetail(teamId: string) {
           id: teamId,
           input: { removeUserIds: [userId] },
         },
-        refetchQueries: ['GetAdminTeam'],
+        refetchQueries: [{ query: GetAdminTeamDocument, variables: { id: teamId } }],
       })
       setMutationError(null)
     } catch (e) {
@@ -119,7 +122,10 @@ export function useTeamDetail(teamId: string) {
           id: teamId,
           input: { name: name.slice(0, 64), groupId },
         },
-        refetchQueries: ['GetAdminTeams', 'GetAdminTeam'],
+        refetchQueries: [
+          { query: GetAdminTeamsDocument },
+          { query: GetAdminTeamDocument, variables: { id: teamId } },
+        ],
       })
       setEditName(null)
       setEditGroupId(null)
@@ -135,7 +141,10 @@ export function useTeamDetail(teamId: string) {
     try {
       await deleteTeam({
         variables: { id: teamId },
-        refetchQueries: ['GetAdminTeams'],
+        update(cache) {
+          cache.evict({ id: cache.identify({ __typename: 'Team', id: teamId }) })
+          cache.gc()
+        },
       })
       setMutationError(null)
     } catch (e) {

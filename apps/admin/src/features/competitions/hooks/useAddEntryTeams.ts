@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useGetAdminTeamsQuery, useGetAdminUsersQuery } from '@/gql/__generated__/graphql'
+import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 
 export type EntryTeamMember = {
   id: string
@@ -18,6 +19,15 @@ export function useAddEntryTeams(sportId: string) {
   const { data: teamsData } = useGetAdminTeamsQuery()
   const { data: usersData } = useGetAdminUsersQuery()
 
+  const allUserMsIds = useMemo(() => {
+    return (teamsData?.teams ?? [])
+      .flatMap(t => t.users ?? [])
+      .map(u => u.identify?.microsoftUserId)
+      .filter((id): id is string => !!id)
+  }, [teamsData])
+
+  const { msGraphUsers } = useMsGraphUsers(allUserMsIds)
+
   const teams: EntryTeam[] = useMemo(() => {
     const experiencedUserIds = new Set(
       (usersData?.allSportExperiences ?? [])
@@ -26,11 +36,14 @@ export function useAddEntryTeams(sportId: string) {
     )
 
     return (teamsData?.teams ?? []).map(t => {
-      const members: EntryTeamMember[] = (t.users ?? []).map(u => ({
-        id: u.id,
-        name: '',
-        isExperienced: sportId ? experiencedUserIds.has(u.id) : false,
-      }))
+      const members: EntryTeamMember[] = (t.users ?? []).map(u => {
+        const msUser = u.identify?.microsoftUserId ? msGraphUsers.get(u.identify.microsoftUserId) : undefined
+        return {
+          id: u.id,
+          name: msUser?.displayName ?? u.name ?? '',
+          isExperienced: sportId ? experiencedUserIds.has(u.id) : false,
+        }
+      })
       return {
         id: t.id,
         name: t.name,
@@ -38,7 +51,7 @@ export function useAddEntryTeams(sportId: string) {
         experiencedCount: members.filter(m => m.isExperienced).length,
       }
     })
-  }, [teamsData, usersData, sportId])
+  }, [teamsData, usersData, sportId, msGraphUsers])
 
   return { teams }
 }

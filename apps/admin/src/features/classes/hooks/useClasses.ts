@@ -4,7 +4,7 @@ import { useFilterParams } from '@/hooks/useFilterParams'
 import type { Class } from '../types'
 
 export function useClasses() {
-  const { data, loading, error } = useGetAdminGroupsForClassesQuery()
+  const { data, loading, error } = useGetAdminGroupsForClassesQuery({ fetchPolicy: 'cache-and-network' })
   const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword'])
 
   const classes: Class[] = (data?.groups ?? []).map(g => ({

@@ -27,11 +27,13 @@ export function useUserDetail(userId: string) {
   const { data, loading, error } = useGetAdminUserQuery({
     variables: { id: userId },
     skip: !userId,
+    fetchPolicy: 'cache-and-network',
   })
-  const { data: groupsData } = useGetAdminGroupsQuery()
+  const { data: groupsData } = useGetAdminGroupsQuery({ fetchPolicy: 'cache-and-network' })
   const { data: expData } = useGetAdminUserSportExperiencesQuery({
     variables: { userId },
     skip: !userId,
+    fetchPolicy: 'cache-and-network',
   })
   const user = data?.user
 

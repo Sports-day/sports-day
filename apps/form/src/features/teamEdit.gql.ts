@@ -6,6 +6,7 @@ export const GET_ME = gql`
       id
       groups {
         id
+        name
       }
     }
   }
@@ -17,6 +18,7 @@ export const GET_USERS = gql`
       id
       name
       identify { microsoftUserId }
+      groups { id }
     }
   }
 `;
@@ -36,6 +38,7 @@ export const GET_SPORTSCENE = gql`
         entries {
           team {
             id
+            name
             users {
               id
             }

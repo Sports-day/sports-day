@@ -9,7 +9,7 @@ import {
 import { showErrorToast } from '@/lib/toast'
 
 export function useTagDetail(tagId: string) {
-  const { data, loading, error } = useGetAdminSceneForTagQuery({ variables: { id: tagId } })
+  const { data, loading, error } = useGetAdminSceneForTagQuery({ variables: { id: tagId }, fetchPolicy: 'cache-and-network' })
   const scene = data?.scene
 
   // サーバー値 + 編集差分パターン

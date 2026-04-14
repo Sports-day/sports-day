@@ -30,9 +30,10 @@ export default function MakingTeams({
   weather,
 }: MakingProps) {
   const theme = useTheme();
-  const { data, loading } = useGetSceneSportQuery();
+  const { data, loading } = useGetSceneSportQuery({ fetchPolicy: "cache-and-network" });
   const { data: expData } = useGetSportExperienceQuery({
     variables: { sportId: sports },
+    fetchPolicy: "cache-and-network",
   });
   const experiencedUserIds = new Set(
     expData?.sportExperiences?.map((e) => e.userId) ?? [],

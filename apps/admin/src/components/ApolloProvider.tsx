@@ -11,7 +11,18 @@ import { userManager } from "@/lib/userManager";
 import { showErrorToast, showWarningToast } from "@/lib/toast";
 
 const authLink = setContext(async (_, { headers }) => {
-    const user = await userManager.getUser()
+    let user = await userManager.getUser()
+
+    // トークンが期限切れの場合、サイレントリニューを試みる
+    if (user?.expired) {
+        try {
+            user = await userManager.signinSilent()
+        } catch {
+            // サイレントリニュー失敗時はトークンなしで送信（401が返りerrorLinkで処理）
+            user = null
+        }
+    }
+
     return {
         headers: {
             ...headers,
@@ -35,6 +46,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         }
     }
     if (networkError) {
+        // HTTP 401 は認証エラー（ネットワーク障害ではない）
+        if ('statusCode' in networkError && networkError.statusCode === 401) {
+            showWarningToast("ログインセッションが切れました。再度ログインしてください。")
+            return
+        }
         showErrorToast("サーバーに接続できません。ネットワーク接続を確認してください。")
         return
     }

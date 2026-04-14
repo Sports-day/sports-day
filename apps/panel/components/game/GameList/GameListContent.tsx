@@ -1,5 +1,6 @@
 import {Stack, Typography, useTheme} from "@mui/material";
 import * as React from "react";
+import {useMemo} from "react";
 import {GamePointBar} from "./GamePointBar";
 import type { GetPanelCompetitionsQuery, GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import {useContext} from "react";
@@ -17,10 +18,15 @@ export type GameListContentProps = {
 export const GameListContent = (props: GameListContentProps) => {
     const theme = useTheme()
     const { data: matches } = useContext(MatchesContext)
-    const filteredMatches = (matches as PanelMatch[]).filter(match => match.competition.id === props.game.id)
-    const allScores = filteredMatches.flatMap(match => match.entries.map(e => e.score))
-    const maxScore = allScores.length > 0 ? Math.max(...allScores) : 0
-    const barOffset = (maxScore == 0) ? 1 : (95 / maxScore)
+    const filteredMatches = useMemo(
+        () => (matches as PanelMatch[]).filter(match => match.competition.id === props.game.id),
+        [matches, props.game.id]
+    )
+    const barOffset = useMemo(() => {
+        const allScores = filteredMatches.flatMap(match => match.entries.map(e => e.score))
+        const maxScore = allScores.length > 0 ? Math.max(...allScores) : 0
+        return (maxScore == 0) ? 1 : (95 / maxScore)
+    }, [filteredMatches])
 
     if (filteredMatches.length === 0) {
         return (

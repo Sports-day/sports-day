@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Box,
   Button,
@@ -31,13 +31,14 @@ type Props = {
 
 export function AddEntryDialog({ open, leagueName, sportId = '', existingTeamNames = [], onClose, onAdd }: Props) {
   const { teams } = useAddEntryTeams(sportId)
-  const existingSet = new Set(existingTeamNames)
-  const availableTeams = teams.filter(t => !existingSet.has(t.name))
+  const existingSet = useMemo(() => new Set(existingTeamNames), [existingTeamNames])
+  const availableTeams = useMemo(() => teams.filter(t => !existingSet.has(t.name)), [teams, existingSet])
   const { selected, allSelected, expandedTeamId, toggle, toggleAll, toggleExpand, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
   const [search, setSearch] = useState('')
 
-  const filteredTeams = availableTeams.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase()),
+  const filteredTeams = useMemo(
+    () => availableTeams.filter(t => t.name.toLowerCase().includes(search.toLowerCase())),
+    [availableTeams, search]
   )
 
   return (

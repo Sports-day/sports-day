@@ -5,7 +5,7 @@ import { useFilterParams } from '@/hooks/useFilterParams'
 import type { User } from '../types'
 
 export function useUsers() {
-  const { data, loading, error } = useGetAdminUsersQuery()
+  const { data, loading, error } = useGetAdminUsersQuery({ fetchPolicy: 'cache-and-network' })
   const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'role', 'group'])
 
   const microsoftUserIds = useMemo(

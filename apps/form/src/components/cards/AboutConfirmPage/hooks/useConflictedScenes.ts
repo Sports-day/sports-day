@@ -13,9 +13,9 @@ type HookResult = {
 };
 
 export function useConflictedScenes(): HookResult {
-  const { data: sceneData, loading: sceneLoading, error: sceneError } = useGetSceneIdQuery();
+  const { data: sceneData, loading: sceneLoading, error: sceneError } = useGetSceneIdQuery({ fetchPolicy: "cache-and-network" });
   const { data: sportSceneData, loading: sportSceneLoading, error: sportSceneError } =
-    useGetSceneUsersQuery();
+    useGetSceneUsersQuery({ fetchPolicy: "cache-and-network" });
 
   const allUserMsIds = useMemo(() => {
     const sportScenes = sportSceneData?.scenes?.filter((s) => !s.isDeleted)?.flatMap((s) => s.sportScenes) ?? [];

@@ -1262,21 +1262,30 @@ func (s *Competition) FindBySceneID(ctx context.Context, sceneID string) ([]*db_
 // ApplyDefaults は大会のスケジュールパラメータを保存し、試合時間を自動適用する。
 // 手動設定された試合は変更せず、新たな基準点として後続の試合時間をずらす。
 func (s *Competition) ApplyDefaults(ctx context.Context, id string, input *model.ApplyCompetitionDefaultsInput) ([]*db_model.Match, error) {
-	startTime, err := time.Parse(time.RFC3339, input.StartTime)
-	if err != nil {
-		return nil, errors.Wrap(err)
+	// startTime は省略可能：指定がない場合は試合時間の更新をスキップ
+	var startTime time.Time
+	startTimeValid := false
+	if input.StartTime != nil && *input.StartTime != "" {
+		var err error
+		startTime, err = time.Parse(time.RFC3339, *input.StartTime)
+		if err != nil {
+			return nil, errors.Wrap(err)
+		}
+		startTimeValid = true
 	}
 
 	var allMatches []*db_model.Match
 
-	err = s.db.Transaction(func(tx *gorm.DB) error {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
 		// 1. スケジュールパラメータをcompetitionに保存
 		comp, err := s.competitionRepository.Get(ctx, tx, id)
 		if err != nil {
 			return errors.Wrap(err)
 		}
 
-		comp.StartTime = sql.NullTime{Valid: true, Time: startTime}
+		if startTimeValid {
+			comp.StartTime = sql.NullTime{Valid: true, Time: startTime}
+		}
 		comp.MatchDuration = sql.NullInt64{Valid: true, Int64: int64(input.MatchDuration)}
 		comp.BreakDuration = sql.NullInt64{Valid: true, Int64: int64(input.BreakDuration)}
 		comp.DefaultLocationID = pkggorm.ToNullString(input.LocationID)
@@ -1296,7 +1305,7 @@ func (s *Competition) ApplyDefaults(ctx context.Context, id string, input *model
 			return matches[i].ID < matches[j].ID
 		})
 
-		// 4. 手動変更を基準点として後続試合の時間をずらすロジック
+		// 4. 手動変更を基準点として後続試合の時間をずらすロジック（startTime指定時のみ）
 		interval := time.Duration(input.MatchDuration+input.BreakDuration) * time.Minute
 		anchor := startTime
 		autoIndex := 0
@@ -1307,16 +1316,18 @@ func (s *Competition) ApplyDefaults(ctx context.Context, id string, input *model
 		for _, m := range matches {
 			needsSave := false
 
-			// 時間の適用
-			if m.TimeManual {
-				// 手動設定: 時間は変更せず、新たな基準点にする
-				anchor = m.Time.Add(interval)
-				autoIndex = 0
-			} else {
-				// 自動設定: anchor + autoIndex * interval
-				m.Time = anchor.Add(time.Duration(autoIndex) * interval)
-				needsSave = true
-				autoIndex++
+			// 時間の適用（startTime が指定された場合のみ）
+			if startTimeValid {
+				if m.TimeManual {
+					// 手動設定: 時間は変更せず、新たな基準点にする
+					anchor = m.Time.Add(interval)
+					autoIndex = 0
+				} else {
+					// 自動設定: anchor + autoIndex * interval
+					m.Time = anchor.Add(time.Duration(autoIndex) * interval)
+					needsSave = true
+					autoIndex++
+				}
 			}
 
 			// 場所の適用: 手動設定でない試合のみ

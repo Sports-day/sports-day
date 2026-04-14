@@ -7,7 +7,7 @@ function parseStatus(s: string | null | undefined): Announcement['status'] {
 }
 
 export function useAnnouncements() {
-  const { data, loading, error } = useGetAdminInformationsQuery()
+  const { data, loading, error } = useGetAdminInformationsQuery({ fetchPolicy: 'cache-and-network' })
   const announcements: Announcement[] = (data?.Informations ?? []).map(i => ({
     id: i.id,
     title: i.title,

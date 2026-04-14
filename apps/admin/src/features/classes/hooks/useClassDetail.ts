@@ -16,8 +16,9 @@ export function useClassDetail(classId: string) {
   const { data, loading, error } = useGetAdminGroupForClassQuery({
     variables: { id: classId },
     skip: !classId,
+    fetchPolicy: 'cache-and-network',
   })
-  const { data: usersData } = useGetAdminUsersQuery()
+  const { data: usersData } = useGetAdminUsersQuery({ fetchPolicy: 'cache-and-network' })
 
   const group = data?.group
 

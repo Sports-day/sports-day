@@ -4,7 +4,7 @@ import { useFilterParams } from '@/hooks/useFilterParams'
 import type { Team } from '../types'
 
 export function useTeams() {
-  const { data, loading, error } = useGetAdminTeamsQuery()
+  const { data, loading, error } = useGetAdminTeamsQuery({ fetchPolicy: 'cache-and-network' })
   const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'group'])
 
   const teams: Team[] = (data?.teams ?? []).map(t => ({
