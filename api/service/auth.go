@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
+	api "sports-day/api"
 	"sports-day/api/db_model"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/authz"
@@ -72,9 +73,19 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 		return errors.Wrap(err)
 	}
 
+	api.Logger.Info().
+		Str("event", "user_provisioning").
+		Str("sub", claims.Sub).
+		Msg("New user detected, provisioning user and IDP record")
+
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		newUser := &db_model.User{ID: ulid.Make()}
 		if _, err := s.userRepo.Save(ctx, tx, newUser); err != nil {
+			api.Logger.Error().
+				Err(err).
+				Str("event", "user_save_failed").
+				Str("sub", claims.Sub).
+				Msg("Failed to save new user record")
 			return errors.ErrSaveUser
 		}
 
@@ -88,8 +99,21 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 		newIdp.MicrosoftUserID.Valid = claims.MicrosoftUserID != ""
 
 		if _, err := s.userRepo.SaveUserIdp(ctx, tx, newIdp); err != nil {
+			api.Logger.Error().
+				Err(err).
+				Str("event", "user_idp_save_failed").
+				Str("user_id", newUser.ID).
+				Str("sub", claims.Sub).
+				Msg("Failed to save IDP record for new user")
 			return errors.ErrSaveUserIdp
 		}
+
+		api.Logger.Info().
+			Str("event", "user_provisioned").
+			Str("user_id", newUser.ID).
+			Str("sub", claims.Sub).
+			Str("provider", "microsoft").
+			Msg("New user and IDP record created successfully")
 
 		return nil
 	})
@@ -148,6 +172,11 @@ func roleLevel(role string) int {
 func (s *AuthService) ChangeUserRole(ctx context.Context, callerID string, targetUserID string, newRole string) error {
 	// 自己変更防止
 	if callerID == targetUserID {
+		api.Logger.Warn().
+			Str("event", "role_change_denied").
+			Str("reason", "self_change").
+			Str("caller_id", callerID).
+			Msg("User attempted to change own role")
 		return errors.ErrSelfRoleChange
 	}
 
@@ -163,13 +192,38 @@ func (s *AuthService) ChangeUserRole(ctx context.Context, callerID string, targe
 		return err
 	}
 	if roleLevel(targetRole) > callerLevel {
+		api.Logger.Warn().
+			Str("event", "role_change_denied").
+			Str("reason", "target_higher_role").
+			Str("caller_id", callerID).
+			Str("caller_role", callerRole).
+			Str("target_user_id", targetUserID).
+			Str("target_role", targetRole).
+			Msg("Insufficient role to modify higher-level user")
 		return errors.ErrInsufficientRole
 	}
 
 	// 変更先ロールが自分より上なら不可
 	if roleLevel(newRole) > callerLevel {
+		api.Logger.Warn().
+			Str("event", "role_change_denied").
+			Str("reason", "new_role_higher").
+			Str("caller_id", callerID).
+			Str("caller_role", callerRole).
+			Str("target_user_id", targetUserID).
+			Str("new_role", newRole).
+			Msg("Insufficient role to assign higher-level role")
 		return errors.ErrInsufficientRole
 	}
+
+	api.Logger.Info().
+		Str("event", "role_changed").
+		Str("caller_id", callerID).
+		Str("caller_role", callerRole).
+		Str("target_user_id", targetUserID).
+		Str("old_role", targetRole).
+		Str("new_role", newRole).
+		Msg("User role changed")
 
 	return s.updateRole(ctx, targetUserID, newRole)
 }
