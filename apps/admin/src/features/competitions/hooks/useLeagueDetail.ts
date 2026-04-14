@@ -50,17 +50,20 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   const { data: leagueData, loading, error } = useGetAdminLeagueQuery({
     variables: { id: leagueId },
     skip: !leagueId,
+    fetchPolicy: 'cache-and-network',
   })
   const { data: compData } = useGetAdminCompetitionQuery({
     variables: { id: competitionId },
     skip: !competitionId,
+    fetchPolicy: 'cache-and-network',
   })
-  const { data: competitionsData } = useGetAdminCompetitionsQuery()
+  const { data: competitionsData } = useGetAdminCompetitionsQuery({ fetchPolicy: 'cache-and-network' })
   const { data: promotionRulesData } = useGetAdminPromotionRulesQuery({
     variables: { sourceCompetitionId: competitionId },
     skip: !competitionId,
+    fetchPolicy: 'cache-and-network',
   })
-  const { data: sportsData } = useGetAdminSportsWithScenesQuery()
+  const { data: sportsData } = useGetAdminSportsWithScenesQuery({ fetchPolicy: 'cache-and-network' })
 
   // ─── API から取得した「保存済み」の値（常に最新を反映） ──────
   const league = leagueData?.league
@@ -125,7 +128,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
   const [mutationError, setMutationError] = useState<Error | null>(null)
 
   // ─── デフォルト設定 ─────────────────────────────────
-  const { data: locData } = useGetAdminLocationsForMatchesQuery()
+  const { data: locData } = useGetAdminLocationsForMatchesQuery({ fetchPolicy: 'cache-and-network' })
   const locations = (locData?.locations ?? []).map(l => ({ id: l.id, name: l.name }))
 
   const serverStartTime = competition?.startTime ? toDatetimeLocal(competition.startTime) : ''
@@ -287,7 +290,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
           variables: {
             id: competitionId,
             input: {
-              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : '',
+              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : undefined,
               matchDuration: defaultsForm.matchDuration,
               breakDuration: defaultsForm.breakDuration,
               locationId: defaultsForm.locationId || undefined,

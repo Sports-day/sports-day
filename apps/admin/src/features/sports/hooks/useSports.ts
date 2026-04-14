@@ -4,7 +4,7 @@ import { useFilterParams } from '@/hooks/useFilterParams'
 import type { Sport } from '../types'
 
 export function useSports() {
-  const { data, loading, error } = useGetAdminSportsQuery()
+  const { data, loading, error } = useGetAdminSportsQuery({ fetchPolicy: 'cache-and-network' })
   const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'scene'])
 
   const sports: Sport[] = (data?.sports ?? []).map(s => ({

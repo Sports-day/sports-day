@@ -191,7 +191,10 @@ export function useTournamentEdit(competitionId: string, competitionName: string
     refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
   })
   const [deleteCompetitionEntries] = useDeleteAdminCompetitionEntriesMutation({
-    refetchQueries: [{ query: GetAdminCompetitionDocument, variables: { id: competitionId } }],
+    refetchQueries: [
+      { query: GetAdminCompetitionDocument, variables: { id: competitionId } },
+      'GetAdminTournament',
+    ],
   })
 
   // ─── プログレッションルール初期化 ─────────────────────
@@ -309,7 +312,7 @@ export function useTournamentEdit(competitionId: string, competitionName: string
           variables: {
             id: competitionId,
             input: {
-              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : '',
+              startTime: defaultsForm.startTime ? new Date(defaultsForm.startTime).toISOString() : undefined,
               matchDuration: defaultsForm.matchDuration,
               breakDuration: defaultsForm.breakDuration,
               locationId: defaultsForm.locationId || undefined,

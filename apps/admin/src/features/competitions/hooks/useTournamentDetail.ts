@@ -110,6 +110,7 @@ export function useTournamentDetail(competitionId: string, tournamentName: strin
   const { data: tournamentsData } = useGetAdminTournamentsQuery({
     variables: { competitionId },
     skip: !competitionId,
+    fetchPolicy: 'cache-and-network',
   })
   const allTournaments = tournamentsData?.tournaments ?? []
   const mainTournament = allTournaments.find(t => t.bracketType === 'MAIN')
@@ -119,17 +120,18 @@ export function useTournamentDetail(competitionId: string, tournamentName: strin
   const { data: mainData } = useGetAdminTournamentQuery({
     variables: { id: resolvedTournamentId },
     skip: !resolvedTournamentId,
+    fetchPolicy: 'cache-and-network',
   })
 
   // SUBブラケットのIDリストを取得
   const subTournaments = allTournaments.filter(t => t.bracketType === 'SUB')
 
   // 各SUBの詳細を取得（最大10個まで対応）
-  const sub0 = useGetAdminTournamentQuery({ variables: { id: subTournaments[0]?.id ?? '' }, skip: !subTournaments[0] })
-  const sub1 = useGetAdminTournamentQuery({ variables: { id: subTournaments[1]?.id ?? '' }, skip: !subTournaments[1] })
-  const sub2 = useGetAdminTournamentQuery({ variables: { id: subTournaments[2]?.id ?? '' }, skip: !subTournaments[2] })
-  const sub3 = useGetAdminTournamentQuery({ variables: { id: subTournaments[3]?.id ?? '' }, skip: !subTournaments[3] })
-  const sub4 = useGetAdminTournamentQuery({ variables: { id: subTournaments[4]?.id ?? '' }, skip: !subTournaments[4] })
+  const sub0 = useGetAdminTournamentQuery({ variables: { id: subTournaments[0]?.id ?? '' }, skip: !subTournaments[0], fetchPolicy: 'cache-and-network' })
+  const sub1 = useGetAdminTournamentQuery({ variables: { id: subTournaments[1]?.id ?? '' }, skip: !subTournaments[1], fetchPolicy: 'cache-and-network' })
+  const sub2 = useGetAdminTournamentQuery({ variables: { id: subTournaments[2]?.id ?? '' }, skip: !subTournaments[2], fetchPolicy: 'cache-and-network' })
+  const sub3 = useGetAdminTournamentQuery({ variables: { id: subTournaments[3]?.id ?? '' }, skip: !subTournaments[3], fetchPolicy: 'cache-and-network' })
+  const sub4 = useGetAdminTournamentQuery({ variables: { id: subTournaments[4]?.id ?? '' }, skip: !subTournaments[4], fetchPolicy: 'cache-and-network' })
   const subQueries = [sub0, sub1, sub2, sub3, sub4]
 
   const brackets: BracketView[] = []

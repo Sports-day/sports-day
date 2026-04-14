@@ -8,7 +8,7 @@ import {
 import { showErrorToast } from '@/lib/toast'
 
 export function useLocationDetail(locationId: string, onSave: () => void, onDelete: () => void) {
-  const { data, loading, error } = useGetAdminLocationQuery({ variables: { id: locationId } })
+  const { data, loading, error } = useGetAdminLocationQuery({ variables: { id: locationId }, fetchPolicy: 'cache-and-network' })
   const location = data?.location
 
   // サーバー値 + 編集差分パターン

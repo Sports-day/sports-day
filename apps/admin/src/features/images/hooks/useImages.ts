@@ -2,7 +2,7 @@ import { useGetAdminImagesQuery } from '@/gql/__generated__/graphql'
 import type { Image } from '../types'
 
 export function useImages() {
-  const { data, loading, error } = useGetAdminImagesQuery()
+  const { data, loading, error } = useGetAdminImagesQuery({ fetchPolicy: 'cache-and-network' })
   const images: Image[] = (data?.images ?? []).map(i => ({
     id: i.id,
     url: i.url ?? '',

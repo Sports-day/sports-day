@@ -7,7 +7,7 @@ import {
 import { showErrorToast } from '@/lib/toast'
 
 export function useImageDetail(imageId: string) {
-  const { data, loading, error } = useGetAdminImageQuery({ variables: { id: imageId } })
+  const { data, loading, error } = useGetAdminImageQuery({ variables: { id: imageId }, fetchPolicy: 'cache-and-network' })
   const image = data?.image
 
   const [mutationError, setMutationError] = useState<Error | null>(null)

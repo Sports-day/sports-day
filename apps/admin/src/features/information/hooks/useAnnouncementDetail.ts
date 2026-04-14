@@ -14,7 +14,7 @@ function parseStatus(s: string | null | undefined): Announcement['status'] {
 }
 
 export function useAnnouncementDetail(id: string) {
-  const { data, loading, error } = useGetAdminInformationQuery({ variables: { id } })
+  const { data, loading, error } = useGetAdminInformationQuery({ variables: { id }, fetchPolicy: 'cache-and-network' })
   const item = data?.Information
 
   // サーバー値 + 編集差分パターン

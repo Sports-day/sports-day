@@ -4,7 +4,7 @@ import { useFilterParams } from '@/hooks/useFilterParams'
 import type { Tag } from '../types'
 
 export function useTags() {
-  const { data, loading, error } = useGetAdminScenesForTagsQuery()
+  const { data, loading, error } = useGetAdminScenesForTagsQuery({ fetchPolicy: 'cache-and-network' })
   const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['keyword', 'status'])
 
   const tags: Tag[] = (data?.scenes ?? []).map(s => ({
