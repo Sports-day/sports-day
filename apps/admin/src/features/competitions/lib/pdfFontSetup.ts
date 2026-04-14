@@ -6,8 +6,9 @@ let cachedBase64: string | null = null
 
 export async function setupJapaneseFont(doc: jsPDF): Promise<void> {
   if (!cachedBase64) {
-    const res = await fetch('/fonts/NotoSansJP-Regular.ttf')
-    if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`)
+    const fontUrl = `${import.meta.env.BASE_URL ?? '/'}fonts/NotoSansJP-Regular.ttf`
+    const res = await fetch(fontUrl)
+    if (!res.ok) throw new Error(`Font fetch failed: ${res.status} (${fontUrl})`)
     const buf = await res.arrayBuffer()
     // Blob + FileReader で確実に base64 変換
     cachedBase64 = await arrayBufferToBase64(buf)
