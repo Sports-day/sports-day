@@ -79,37 +79,39 @@ export function AddMemberDialog({ open, onClose, onAdd }: Props) {
         チームメンバーの追加
       </DialogTitle>
       <DialogContent sx={{ p: 0, px: 2, pb: 2 }}>
-        <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 40 }} padding="checkbox" />
-              <TableCell sx={LIST_TABLE_HEAD_SX}>ID</TableCell>
-              <TableCell sx={LIST_TABLE_HEAD_SX}>ユーザー名</TableCell>
-              <TableCell sx={LIST_TABLE_HEAD_SX}>メール</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow
-                key={user.id}
-                hover
-                onClick={() => toggle(user.id)}
-                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
-              >
-                <TableCell padding="checkbox" sx={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #D6D6D6' }}>
-                  <Checkbox
-                    checked={selectedIds.includes(user.id)}
-                    size="small"
-                    sx={{ color: '#5B6DC6', '&.Mui-checked': { color: '#5B6DC6' } }}
-                  />
-                </TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.id}</TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.userName}</TableCell>
-                <TableCell sx={LIST_TABLE_CELL_SX}>{user.email}</TableCell>
+        <Box sx={{ maxHeight: 420, overflowY: 'auto' }}>
+          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 40, position: 'sticky', top: 0, zIndex: 1 }} padding="checkbox" />
+                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, position: 'sticky', top: 0, zIndex: 1 }}>ID</TableCell>
+                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, position: 'sticky', top: 0, zIndex: 1 }}>ユーザー名</TableCell>
+                <TableCell sx={{ ...LIST_TABLE_HEAD_SX, position: 'sticky', top: 0, zIndex: 1 }}>メール</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow
+                  key={user.id}
+                  hover
+                  onClick={() => toggle(user.id)}
+                  sx={{ cursor: 'pointer', '&:hover': { backgroundColor: '#E5E6F0' } }}
+                >
+                  <TableCell padding="checkbox" sx={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #D6D6D6' }}>
+                    <Checkbox
+                      checked={selectedIds.includes(user.id)}
+                      size="small"
+                      sx={{ color: '#5B6DC6', '&.Mui-checked': { color: '#5B6DC6' } }}
+                    />
+                  </TableCell>
+                  <TableCell sx={LIST_TABLE_CELL_SX}>{user.id}</TableCell>
+                  <TableCell sx={LIST_TABLE_CELL_SX}>{user.userName}</TableCell>
+                  <TableCell sx={LIST_TABLE_CELL_SX}>{user.email}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
           <Button
