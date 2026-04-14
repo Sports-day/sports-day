@@ -18,6 +18,7 @@ import { MatchEditPage } from './MatchEditPage'
 import { CARD_GRADIENT } from '@/styles/commonSx'
 import { useResetToList } from '@/hooks/useResetToList'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
+import { useGetAdminMatchQuery } from '@/gql/__generated__/graphql'
 
 function toActiveMatch(row: MatchRow): ActiveMatch {
   return {
@@ -41,6 +42,16 @@ function toActiveMatch(row: MatchRow): ActiveMatch {
 
 function toActiveTeam(id: string, name: string): ActiveTeam {
   return { id, name, shortName: name }
+}
+
+function toStatusLabel(status: string): string {
+  switch (status) {
+    case 'FINISHED': return '終了'
+    case 'ONGOING': return '進行中'
+    case 'STANDBY': return 'スタンバイ'
+    case 'CANCELED': return '中止'
+    default: return status
+  }
 }
 
 const STATUS_OPTIONS = [
@@ -111,19 +122,62 @@ export function ActiveMatchesPage() {
 
   const matchEdit = useMatchEdit()
 
-  // matchId クエリパラメータによるディープリンク（allMatchesからも検索）
+  // ディープリンク時に単一試合クエリで高速解決（全試合ロード待ち不要）
+  const { data: singleMatchData, loading: singleMatchLoading } = useGetAdminMatchQuery({
+    variables: { id: matchIdParam ?? '' },
+    skip: !matchIdParam || view.type !== 'pending-deeplink',
+    fetchPolicy: 'cache-and-network',
+  })
+
   useEffect(() => {
-    if (view.type !== 'pending-deeplink' || loading || matches.length === 0) return
-    const row = matches.find(m => m.id === view.matchId)
-    if (row) {
-      matchEdit.openMatch(toActiveMatch(row))
-      setView({ type: 'edit', row })
-    } else {
-      setView({ type: 'list' })
+    if (view.type !== 'pending-deeplink' || singleMatchLoading) return
+    const m = singleMatchData?.match
+    if (!m) {
+      // 単一クエリで取れない場合は全試合ロードを待つ（フォールバック）
+      if (!loading && matches.length > 0) {
+        const row = matches.find(r => r.id === view.matchId)
+        if (row) {
+          matchEdit.openMatch(toActiveMatch(row))
+          setView({ type: 'edit', row })
+        } else {
+          setView({ type: 'list' })
+        }
+        setSearchParams({}, { replace: true })
+      }
+      return
     }
-    // from/competitionId/competitionName は competitionReturn に保存済みのでまとめてクリア
+    // 単一試合データから MatchRow を構築
+    const entry0 = m.entries[0]
+    const entry1 = m.entries[1]
+    const row: MatchRow = {
+      id: m.id,
+      time: m.time,
+      status: m.status,
+      statusLabel: toStatusLabel(m.status),
+      competitionId: m.competition.id,
+      competitionName: m.competition.name,
+      competitionType: m.competition.type,
+      bracketType: '',
+      bracketName: '',
+      sportId: m.competition.sport?.id ?? '',
+      sportName: m.competition.sport?.name ?? '',
+      locationId: m.location?.id ?? '',
+      locationName: m.location?.name ?? '',
+      teamAId: entry0?.team?.id ?? '',
+      teamAName: entry0?.team?.name ?? '',
+      teamBId: entry1?.team?.id ?? '',
+      teamBName: entry1?.team?.name ?? '',
+      scoreA: entry0?.score ?? 0,
+      scoreB: entry1?.score ?? 0,
+      winnerTeamId: m.winnerTeam?.id ?? '',
+      judgmentName: m.judgment?.name ?? '',
+      hasJudgment: m.judgment != null && !!(m.judgment.user || m.judgment.team || m.judgment.group || m.judgment.name),
+      judgmentIsAttending: m.judgment?.isAttending ?? false,
+    }
+    matchEdit.openMatch(toActiveMatch(row))
+    setView({ type: 'edit', row })
     setSearchParams({}, { replace: true })
-  }, [view, matches, loading]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [singleMatchData, singleMatchLoading, view, matches, loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filterDefs: FilterDef[] = useMemo(() => {
     const defs: FilterDef[] = [

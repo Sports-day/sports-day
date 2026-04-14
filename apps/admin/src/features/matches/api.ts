@@ -53,7 +53,8 @@ export const GET_ADMIN_MATCH = gql`
       time
       status
       location { id name }
-      competition { id name }
+      competition { id name type sport { id name } }
+      winnerTeam { id }
       entries { id team { id name } score }
       judgment { id name isAttending user { id name email identify { microsoftUserId } } team { id name } group { id name } }
     }
