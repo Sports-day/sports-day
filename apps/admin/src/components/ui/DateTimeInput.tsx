@@ -23,19 +23,22 @@ export function DateTimeInput({ value, onChange, label }: Props) {
   const [currentHour, currentMinute] = parseTime(timePart)
   const [expanded, setExpanded] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [calAnchor, setCalAnchor] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!expanded) return
     const handleClickOutside = (e: MouseEvent) => {
+      // Popover が開いているときは外側クリック判定をスキップ
+      // （Popover は document.body 直下のポータルにレンダリングされるため
+      //   containerRef の外側と誤判定されてしまうのを防ぐ）
+      if (calAnchor) return
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setExpanded(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [expanded])
-
-  const [calAnchor, setCalAnchor] = useState<HTMLElement | null>(null)
+  }, [expanded, calAnchor])
   const [viewYear, setViewYear] = useState(0)
   const [viewMonth, setViewMonth] = useState(0)
   const chipRef = useRef<HTMLButtonElement>(null)
