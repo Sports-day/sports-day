@@ -10,6 +10,7 @@ import {
   useGetAllTeamdataQuery,
   useGetAllSportExperiencesQuery,
 } from "@/gql/__generated__/graphql";
+import { useMsGraphUsers } from "@/hooks/useMsGraphUsers";
 
 export default function ConfirmPage() {
   const theme = useTheme();
@@ -19,6 +20,19 @@ export default function ConfirmPage() {
   const { data: expData, loading: expLoading } = useGetAllSportExperiencesQuery({
     fetchPolicy: "cache-and-network",
   });
+
+  const allUserMsIds = (data?.scenes ?? [])
+    .filter((s) => !s.isDeleted)
+    .flatMap((s) => s.sportScenes ?? [])
+    .flatMap((d) => d.entries ?? [])
+    .flatMap((e) => e.team?.users ?? [])
+    .map((u) => u.identify?.microsoftUserId)
+    .filter((id): id is string => !!id);
+  const { msGraphUsers, loading: msGraphLoading } = useMsGraphUsers(allUserMsIds);
+
+  if (loading || expLoading || msGraphLoading) {
+    return <CircularUnderLoad />;
+  }
 
   // sportId+userId のセットで経験者判定
   const experiencedSet = new Set(
@@ -37,15 +51,11 @@ export default function ConfirmPage() {
       teamId: d.entries?.map((s) => s.team?.id ?? "") ?? [],
       memberData: d.entries?.map((s) =>
         s.team?.users?.map((u) => ({
-          name: u.name ?? '',
+          name: (u.identify?.microsoftUserId ? msGraphUsers.get(u.identify.microsoftUserId)?.displayName : undefined) ?? u.name ?? '',
           isExperienced: experiencedSet.has(`${d.sport?.id}:${u.id}`),
         })) ?? [],
       ) ?? [],
     }));
-
-  if (loading || expLoading) {
-    return <CircularUnderLoad />;
-  }
 
   return (
     <Box

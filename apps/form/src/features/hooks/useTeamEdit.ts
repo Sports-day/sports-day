@@ -134,11 +134,12 @@ export function useTeamEdit() {
 
   const filteredUsers = useMemo(() => {
     if (!userData?.users) return [];
-    return userData.users.filter((u) => {
-      if (searchName === "") return true;
-      const displayName = resolveName(u);
-      return displayName.includes(searchName);
-    });
+    return userData.users
+      .filter((u) => {
+        if (searchName === "") return true;
+        return resolveName(u).includes(searchName);
+      })
+      .map((u) => ({ ...u, name: resolveName(u) }));
   }, [userData?.users, searchName, resolveName]);
 
   const myTeamUserIds = useMemo(() => {

@@ -8,6 +8,7 @@ import {
   useGetSceneIdQuery,
   useGetSceneUsersQuery,
 } from "@/gql/__generated__/graphql";
+import { useMsGraphUsers } from "@/hooks/useMsGraphUsers";
 
 type HookResult = {
   items: SceneStatusItem[];
@@ -22,15 +23,25 @@ export function useNotSelectedScenes(): HookResult {
   const { data: allUserData, loading: allUsersLoading, error: allUsersError } =
     useGetAllUsersQuery();
 
-  const loading = sceneLoading || sportSceneLoading || allUsersLoading;
+  const allUserMsIds = useMemo(() => {
+    return (allUserData?.users ?? [])
+      .map((u) => u.identify?.microsoftUserId)
+      .filter((id): id is string => !!id);
+  }, [allUserData?.users]);
+  const { msGraphUsers, loading: msGraphLoading } = useMsGraphUsers(allUserMsIds);
+
+  const loading = sceneLoading || sportSceneLoading || allUsersLoading || msGraphLoading;
   const error = sceneError || sportSceneError || allUsersError || null;
 
   const items = useMemo(() => {
     const allUsers =
-      allUserData?.users?.map((d) => ({
-        id: d.id?.trim(),
-        name: d.name?.trim(),
-      })) ?? [];
+      allUserData?.users?.map((d) => {
+        const msUser = d.identify?.microsoftUserId ? msGraphUsers.get(d.identify.microsoftUserId) : undefined;
+        return {
+          id: d.id?.trim(),
+          name: (msUser?.displayName ?? d.name)?.trim(),
+        };
+      }) ?? [];
     const scenes = (sceneData?.scenes ?? []).filter((s) => !s.isDeleted);
     const sportScenes = sportSceneData?.scenes?.filter((s) => !s.isDeleted)?.flatMap((s) => s.sportScenes) ?? [];
 
@@ -58,7 +69,7 @@ export function useNotSelectedScenes(): HookResult {
           .map((user) => user.name ?? ''),
       };
     });
-  }, [allUserData?.users, sceneData?.scenes, sportSceneData?.scenes]);
+  }, [allUserData?.users, sceneData?.scenes, sportSceneData?.scenes, msGraphUsers]);
 
   return { items, loading, error };
 }
