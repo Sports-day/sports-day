@@ -120,11 +120,23 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 }
 
 func (s *Sport) Delete(ctx context.Context, id string) (*db_model.Sport, error) {
-	sport, err := s.sportsRepository.Delete(ctx, s.db, id)
+	var result *db_model.Sport
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 外部キー制約のためルールを先に削除
+		if err := tx.WithContext(ctx).Where("sport_id = ?", id).Delete(&db_model.Rule{}).Error; err != nil {
+			return errors.Wrap(err)
+		}
+		sport, err := s.sportsRepository.Delete(ctx, tx, id)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		result = sport
+		return nil
+	})
 	if err != nil {
-		return nil, errors.Wrap(err)
+		return nil, err
 	}
-	return sport, nil
+	return result, nil
 }
 
 func (s *Sport) GetSportMapByIDs(ctx context.Context, ids []string) (map[string]*db_model.Sport, error) {
