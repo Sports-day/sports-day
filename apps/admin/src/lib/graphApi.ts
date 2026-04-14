@@ -203,7 +203,7 @@ async function executeBatch(
   }
   const body = JSON.stringify({ requests })
 
-  let res = await fetch(BATCH_URL, { method: 'POST', headers, body })
+  let res: Response = await fetch(BATCH_URL, { method: 'POST', headers, body })
 
   // Retry if the $batch POST itself is throttled (429)
   if (res.status === 429) {
@@ -215,7 +215,7 @@ async function executeBatch(
 
   if (!res.ok) return { users: [], succeededRequestIds: [] }
 
-  const json = await res.json()
+  const json: { responses?: BatchResponseItem[] } = await res.json()
   const responses: BatchResponseItem[] = json.responses ?? []
   const users: MsGraphUser[] = []
   const succeededRequestIds: string[] = []
@@ -372,7 +372,7 @@ export async function fetchAllDirectoryUsers(
   let url: string | null = `${GRAPH_BASE_URL}/users?${params.toString()}`
 
   while (url) {
-    let res = await fetch(url, {
+    let res: Response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         ConsistencyLevel: 'eventual',
@@ -394,7 +394,7 @@ export async function fetchAllDirectoryUsers(
 
     if (!res.ok) break
 
-    const json = await res.json()
+    const json: { value?: MsGraphUser[]; '@odata.nextLink'?: string } = await res.json()
     const users: MsGraphUser[] = json.value ?? []
 
     for (const user of users) {
