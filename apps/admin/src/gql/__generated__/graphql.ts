@@ -1807,7 +1807,7 @@ export type GetAdminLocationsForMatchesQuery = { __typename?: 'Query', locations
 export type GetAdminMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, timeManual: boolean, status: MatchStatus, locationManual: boolean, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, tournaments: Array<{ __typename?: 'Tournament', id: string, name: string, bracketType: BracketType, matches: Array<{ __typename?: 'Match', id: string }> }> }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
+export type GetAdminMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, timeManual: boolean, status: MatchStatus, locationManual: boolean, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string } }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
 
 export type GetAdminCompetitionMatchesQueryVariables = Exact<{
   competitionId: Scalars['ID']['input'];
@@ -4492,14 +4492,6 @@ export const GetAdminMatchesDocument = gql`
       sport {
         id
         name
-      }
-      tournaments {
-        id
-        name
-        bracketType
-        matches {
-          id
-        }
       }
     }
     winnerTeam {

@@ -20,7 +20,6 @@ export const GET_ADMIN_MATCHES = gql`
       locationManual
       competition {
         id name type sport { id name }
-        tournaments { id name bracketType matches { id } }
       }
       winnerTeam { id }
       entries { id team { id name } score }
