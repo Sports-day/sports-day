@@ -17,19 +17,26 @@ type Props = {
 export function TagDetailPage({ tagId, onBack }: Props) {
   const { name, setName, dirty, isDeleted, handleSave, handleDelete, handleRestore, tagName } = useTagDetail(tagId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       showToast('タグを保存しました')
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
@@ -37,6 +44,8 @@ export function TagDetailPage({ tagId, onBack }: Props) {
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -107,7 +116,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty || !name.trim()}
+                disabled={!dirty || !name.trim() || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

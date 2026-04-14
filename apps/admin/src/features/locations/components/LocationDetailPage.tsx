@@ -28,6 +28,7 @@ type Props = {
 export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Props) {
   const { location, name, setName, dirty, handleSave, handleDelete } = useLocationDetail(locationId, onSave, onDelete)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   if (!location) {
@@ -39,21 +40,29 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
   }
 
   const handleSaveWithToast = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       showToast('場所を保存しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
       showToast('場所を削除しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -102,7 +111,7 @@ export function LocationDetailPage({ locationId, onBack, onSave, onDelete }: Pro
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={handleSaveWithToast}
-                disabled={!dirty || !name.trim()}
+                disabled={!dirty || !name.trim() || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

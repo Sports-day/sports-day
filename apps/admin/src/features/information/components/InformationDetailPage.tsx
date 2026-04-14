@@ -17,19 +17,26 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
   const { announcementTitle, title, setTitle, content, setContent, status, setStatus, dirty, handleSave, handleDelete } =
     useAnnouncementDetail(announcementId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       showToast('お知らせを保存しました')
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
@@ -37,6 +44,8 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -108,7 +117,7 @@ export function InformationDetailPage({ announcementId, onBack }: Props) {
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty || !title.trim() || !content.trim()}
+                disabled={!dirty || !title.trim() || !content.trim() || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

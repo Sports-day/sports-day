@@ -61,19 +61,26 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
     teamName,
   } = useTeamDetail(teamId)
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       showToast('チームを保存しました')
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     handleCloseDeleteDialog()
     try {
       await handleDeleteTeam()
@@ -81,6 +88,8 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -137,7 +146,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty || !name.trim()}
+                disabled={!dirty || !name.trim() || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存
