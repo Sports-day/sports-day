@@ -12,7 +12,7 @@ import {
   RankingConditionKey,
 } from '@/gql/__generated__/graphql'
 import { useImages } from '@/features/images/hooks/useImages'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 const RANKING_CONDITION_OPTIONS: { value: RankingConditionKey; label: string }[] = [
   { value: RankingConditionKey.WinPoints, label: '勝ち点' },
@@ -172,7 +172,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
         sportScenes: newSportScenes,
       })
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -182,7 +182,7 @@ export function useSportDetail(sportId: string, onDelete: () => void) {
       await deleteSport({ variables: { id: sportId } })
       onDelete()
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

@@ -53,6 +53,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
   } = useSportDetail(sportId, onDelete)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [imageDialogOpen, setImageDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   if (!sport) {
@@ -64,21 +65,29 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
   }
 
   const handleSaveWithToast = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       showToast('競技を保存しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
       showToast('競技を削除しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -241,7 +250,7 @@ export function SportDetailPage({ sportId, onBack, onDelete }: Props) {
               fullWidth
               startIcon={<CheckIcon />}
               onClick={handleSaveWithToast}
-              disabled={!dirty || !name.trim()}
+              disabled={!dirty || !name.trim() || isSubmitting}
               sx={SAVE_BUTTON_SX}
             >
               保存

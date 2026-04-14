@@ -6,7 +6,7 @@ import {
 } from '@/gql/__generated__/graphql'
 import { userManager } from '@/lib/userManager'
 import { resolveUsersByEmails } from '@/lib/graphApi'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 export type UserCsvRow = {
   email: string
@@ -120,7 +120,7 @@ export function useUserCsv() {
       setRows([])
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

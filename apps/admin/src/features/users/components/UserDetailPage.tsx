@@ -42,19 +42,26 @@ export function UserDetailPage({ userId, onBack }: Props) {
     roleScenes,
   } = useUserDetail(userId)
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       showToast('ユーザーを保存しました')
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     closeDeleteDialog()
     try {
       await handleDeleteUser()
@@ -62,6 +69,8 @@ export function UserDetailPage({ userId, onBack }: Props) {
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -125,7 +134,7 @@ export function UserDetailPage({ userId, onBack }: Props) {
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty}
+                disabled={!dirty || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

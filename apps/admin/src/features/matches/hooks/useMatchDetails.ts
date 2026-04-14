@@ -8,7 +8,7 @@ import {
   useGetAdminMatchQuery,
 } from '@/gql/__generated__/graphql'
 import { GET_ADMIN_COMPETITION_JUDGE_OPTIONS } from '../api'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 
 export type JudgeType = 'group' | 'team' | 'user'
@@ -194,7 +194,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
       setSavedJudgmentTargetId(judgmentTargetId)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -224,7 +224,7 @@ export function useMatchDetails(match: ActiveMatch, competitionId?: string) {
         refetchQueries: ['GetAdminMatch'],
       })
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
     }
   }
 

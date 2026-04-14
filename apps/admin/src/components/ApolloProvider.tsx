@@ -8,7 +8,7 @@ import {
 import { onError } from "@apollo/client/link/error";
 import { setContext } from "@apollo/client/link/context";
 import { userManager } from "@/lib/userManager";
-import { showErrorToast, showWarningToast } from "@/lib/toast";
+import { showErrorToast, showWarningToast, suppressNextError } from "@/lib/toast";
 
 const authLink = setContext(async (_, { headers }) => {
     let user = await userManager.getUser()
@@ -39,7 +39,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
                 showWarningToast("この操作を行う権限がありません。")
                 return
             }
-            if (msg.includes("UNAUTHORIZED") || msg.includes("TOKEN_EXPIRED") || msg.includes("TOKEN_MISSING")) {
+            if (msg.includes("UNAUTHORIZED") || msg.includes("TOKEN_EXPIRED") || msg.includes("TOKEN_MISSING") || msg.includes("TOKEN_INVALID") || msg.includes("TOKEN_CLAIMS_INVALID")) {
                 showWarningToast("ログインセッションが切れました。再度ログインしてください。")
                 return
             }
@@ -52,6 +52,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
             return
         }
         showErrorToast("サーバーに接続できません。ネットワーク接続を確認してください。")
+        suppressNextError()
         return
     }
 })

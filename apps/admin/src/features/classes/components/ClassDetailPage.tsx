@@ -56,19 +56,26 @@ export function ClassDetailPage({ classId, onBack }: Props) {
     className,
   } = useClassDetail(classId)
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       showToast('クラスを保存しました')
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
@@ -76,6 +83,8 @@ export function ClassDetailPage({ classId, onBack }: Props) {
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -122,7 +131,7 @@ export function ClassDetailPage({ classId, onBack }: Props) {
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty || !name.trim()}
+                disabled={!dirty || !name.trim() || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

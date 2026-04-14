@@ -5,7 +5,7 @@ import {
   useDeleteAdminInformationMutation,
   GetAdminInformationsDocument,
 } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 import type { Announcement } from '../types'
 
 function parseStatus(s: string | null | undefined): Announcement['status'] {
@@ -56,7 +56,7 @@ export function useAnnouncementDetail(id: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -67,7 +67,7 @@ export function useAnnouncementDetail(id: string) {
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

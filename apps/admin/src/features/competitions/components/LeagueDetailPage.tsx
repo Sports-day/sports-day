@@ -84,22 +84,29 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [entryConfirmAction, setEntryConfirmAction] = useState<(() => Promise<void>) | null>(null)
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
   const hasMatches = leagueStandings != null && leagueStandings.matches.length > 0
   const hasInProgressMatches = leagueStandings?.matches.some(m => m.status === 'ongoing' || m.status === 'finished') ?? false
 
   const onSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       onSaved?.(form.name.trim())
       showToast('リーグを保存しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
@@ -107,6 +114,8 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
       showToast('リーグを削除しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -271,7 +280,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty || !form.name.trim() || [form.winPt, form.drawPt, form.losePt].some(v => Number(v) < 0 || !Number.isInteger(Number(v)))}
+                disabled={!dirty || !form.name.trim() || [form.winPt, form.drawPt, form.losePt].some(v => Number(v) < 0 || !Number.isInteger(Number(v))) || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

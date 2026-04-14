@@ -315,6 +315,7 @@ export function TournamentDetailPage({
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [subDeleteTarget, setSubDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [subEdits, setSubEdits] = useState<Record<string, { teamCount?: number; placement?: string }>>({})
   const [subCreateName, setSubCreateName] = useState('')
@@ -343,16 +344,22 @@ export function TournamentDetailPage({
   }
 
   const onSave = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       await handleSave()
       onSaved?.(form.name.trim())
       showToast('トーナメントを保存しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
@@ -360,6 +367,8 @@ export function TournamentDetailPage({
       showToast('トーナメントを削除しました')
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -515,7 +524,7 @@ export function TournamentDetailPage({
                 fullWidth
                 startIcon={<CheckIcon />}
                 onClick={onSave}
-                disabled={!dirty || !form.name.trim() || Number(teamCount) < 2 || Number(teamCount) > 64 || !Number.isInteger(Number(teamCount))}
+                disabled={!dirty || !form.name.trim() || Number(teamCount) < 2 || Number(teamCount) > 64 || !Number.isInteger(Number(teamCount)) || isSubmitting}
                 sx={SAVE_BUTTON_SX}
               >
                 保存

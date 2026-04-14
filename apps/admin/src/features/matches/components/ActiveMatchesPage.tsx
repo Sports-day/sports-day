@@ -133,17 +133,18 @@ export function ActiveMatchesPage() {
     if (view.type !== 'pending-deeplink' || singleMatchLoading) return
     const m = singleMatchData?.match
     if (!m) {
-      // 単一クエリで取れない場合は全試合ロードを待つ（フォールバック）
-      if (!loading && matches.length > 0) {
-        const row = matches.find(r => r.id === view.matchId)
-        if (row) {
-          matchEdit.openMatch(toActiveMatch(row))
-          setView({ type: 'edit', row })
-        } else {
-          setView({ type: 'list' })
-        }
-        setSearchParams({}, { replace: true })
+      // 単一クエリで試合が取れなかった場合：
+      // 全試合リストがすでに読み込まれていればそこから探し、
+      // ロード中または見つからない場合はリスト画面へ即遷移する
+      // （全試合クエリがハング中でも pending-deeplink で永久ブロックしない）
+      const row = !loading ? matches.find(r => r.id === view.matchId) : undefined
+      if (row) {
+        matchEdit.openMatch(toActiveMatch(row))
+        setView({ type: 'edit', row })
+      } else {
+        setView({ type: 'list' })
       }
+      setSearchParams({}, { replace: true })
       return
     }
     // 単一試合データから MatchRow を構築

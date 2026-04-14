@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCreateAdminSportMutation, GetAdminSportsDocument } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 type SportCreateForm = {
   name: string
@@ -24,7 +24,7 @@ export function useSportCreate(onSave: () => void) {
       await createSport({ variables: { input: { name: form.name.slice(0, 64) } } })
       onSave()
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

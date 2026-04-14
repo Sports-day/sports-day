@@ -173,11 +173,18 @@ export function useTeamEdit() {
       if (next.has(userId)) {
         next.delete(userId);
       } else {
+        // 上限に達している場合は追加しない
+        if (experiencedLimit !== null) {
+          const currentCount = selectedIds.filter((id) => next.has(id)).length;
+          if (currentCount >= experiencedLimit) {
+            return prev;
+          }
+        }
         next.add(userId);
       }
       return next;
     });
-  }, []);
+  }, [experiencedLimit, selectedIds]);
 
   const [addTeamMemberMutation] = useAddTeamMemberMutation();
   const [createSportEntryMutation] = useCreateSportEntryMutation();

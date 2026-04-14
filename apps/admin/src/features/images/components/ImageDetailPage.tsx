@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Box, Breadcrumbs, Button, ButtonBase, Chip, Typography } from '@mui/material'
 import { BackButton } from '@/components/ui/BackButton'
 import { useImageDetail } from '../hooks/useImageDetail'
 import { showToast } from '@/lib/toast'
 import { DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Props = {
   imageId: string
@@ -11,14 +13,21 @@ type Props = {
 
 export function ImageDetailPage({ imageId, onBack }: Props) {
   const { url, status, handleDelete } = useImageDetail(imageId)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const onDelete = async () => {
+  const onConfirmDelete = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    setDeleteDialogOpen(false)
     try {
       await handleDelete()
       showToast('画像を削除しました')
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -98,11 +107,24 @@ export function ImageDetailPage({ imageId, onBack }: Props) {
         </Box>
 
         <Box sx={{ width: 160 }}>
-          <Button variant="outlined" onClick={onDelete} fullWidth sx={DELETE_BUTTON_SX}>
+          <Button
+            variant="outlined"
+            onClick={() => setDeleteDialogOpen(true)}
+            fullWidth
+            sx={DELETE_BUTTON_SX}
+          >
             削除
           </Button>
         </Box>
       </Box>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="画像を削除しますか？"
+        description="この画像を削除します。この操作は元に戻せません。"
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={onConfirmDelete}
+      />
     </Box>
   )
 }

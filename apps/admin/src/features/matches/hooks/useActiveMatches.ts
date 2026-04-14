@@ -50,20 +50,9 @@ export function useActiveMatches() {
   const statusFilter = fp.status
 
   const matches: MatchRow[] = useMemo(() => {
-    // matchId → tournament(bracketType, name) のマッピングを構築
-    const bracketMap = new Map<string, { bracketType: string; name: string }>()
-    for (const m of data?.matches ?? []) {
-      for (const t of m.competition.tournaments ?? []) {
-        for (const tm of t.matches) {
-          bracketMap.set(tm.id, { bracketType: t.bracketType, name: t.name })
-        }
-      }
-    }
-
     return (data?.matches ?? []).map(m => {
       const entry0 = m.entries[0]
       const entry1 = m.entries[1]
-      const bracket = bracketMap.get(m.id)
       return {
         id: m.id,
         time: m.time,
@@ -72,8 +61,8 @@ export function useActiveMatches() {
         competitionId: m.competition.id,
         competitionName: m.competition.name,
         competitionType: m.competition.type,
-        bracketType: bracket?.bracketType ?? '',
-        bracketName: bracket?.name ?? '',
+        bracketType: '',
+        bracketName: '',
         sportId: m.competition.sport.id,
         sportName: m.competition.sport.name,
         locationId: m.location?.id ?? '',

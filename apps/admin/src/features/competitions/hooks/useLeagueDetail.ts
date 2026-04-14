@@ -26,7 +26,7 @@ import {
   CompetitionType,
 } from '@/gql/__generated__/graphql'
 
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast, showWarningToast } from '@/lib/toast'
 import type { ProgressionRule, ProgressionTarget } from '../types'
 
 type LeagueForm = {
@@ -241,13 +241,16 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
     if (!n) return
     if ([form.winPt, form.drawPt, form.losePt].some(v => v < 0 || !Number.isInteger(v))) return
     try {
-      await updateCompetition({
-        variables: { id: competitionId, input: { name: n, sportId: form.sportId || undefined, sceneId: form.sceneId || undefined } },
-        refetchQueries: [
-          { query: GetAdminCompetitionsDocument },
-          { query: GetAdminCompetitionDocument, variables: { id: competitionId } },
-        ],
-      })
+      // competition（名前/競技/タグ）の更新（変更があった場合のみ）
+      if (editName !== null || editSportId !== null || editSceneId !== null) {
+        await updateCompetition({
+          variables: { id: competitionId, input: { name: n, sportId: form.sportId || undefined, sceneId: form.sceneId || undefined } },
+          refetchQueries: [
+            { query: GetAdminCompetitionsDocument },
+            { query: GetAdminCompetitionDocument, variables: { id: competitionId } },
+          ],
+        })
+      }
       if (editWinPt !== null || editDrawPt !== null || editLosePt !== null) {
         await updateLeagueRule({
           variables: { id: leagueId, input: { winPt: form.winPt, drawPt: form.drawPt, losePt: form.losePt } },
@@ -257,18 +260,21 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
         })
       }
 
-      // プログレッションルールの差分保存
+      // プログレッションルールの差分保存（部分失敗時のリトライ安全性のため逐次更新）
       if (progressionDirty) {
         const desiredRules = effectiveProgressionRules
-        for (const sr of savedProgressionRules) {
+        let currentSaved = [...savedProgressionRules]
+        for (const sr of [...savedProgressionRules]) {
           const desired = desiredRules.find(r => r.rank === sr.rank)
           const ruleId = ruleIdByRank[sr.rank]
           if (ruleId && (!desired || desired.targetId !== sr.targetId)) {
             await deletePromotionRule({ variables: { id: ruleId } })
+            currentSaved = currentSaved.filter(r => r.rank !== sr.rank)
+            setSavedProgressionRules([...currentSaved])
           }
         }
         for (const rule of desiredRules) {
-          const sr = savedProgressionRules.find(r => r.rank === rule.rank)
+          const sr = currentSaved.find(r => r.rank === rule.rank)
           if (!sr || sr.targetId !== rule.targetId) {
             await createPromotionRule({
               variables: {
@@ -279,9 +285,10 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
                 },
               },
             })
+            currentSaved = [...currentSaved.filter(r => r.rank !== rule.rank), rule]
+            setSavedProgressionRules([...currentSaved])
           }
         }
-        setSavedProgressionRules(desiredRules)
       }
 
       // デフォルト設定を試合に適用
@@ -313,7 +320,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -323,7 +330,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       await deleteLeague({ variables: { id: leagueId } })
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -336,7 +343,7 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
     }
   }
 
@@ -350,13 +357,13 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       // エントリー変更後にラウンドロビンを自動再生成
       try {
         await regenerateRoundRobin({ variables: { id: competitionId } })
-      } catch (regenErr) {
-        // ラウンドロビン再生成失敗は致命的でないためスキップ
+      } catch {
+        showWarningToast('試合の自動再生成に失敗しました。手動で再生成してください。')
       }
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
     }
   }
 
@@ -372,13 +379,13 @@ export function useLeagueDetail(leagueId: string, leagueName: string, competitio
       // エントリー変更後にラウンドロビンを自動再生成
       try {
         await regenerateRoundRobin({ variables: { id: competitionId } })
-      } catch (regenErr) {
-        // ラウンドロビン再生成失敗は致命的でないためスキップ
+      } catch {
+        showWarningToast('試合の自動再生成に失敗しました。手動で再生成してください。')
       }
       setMutationError(null)
     } catch (e) {
       setMutationError(e instanceof Error ? e : new Error(String(e)))
-      showErrorToast()
+      showApiErrorToast(e)
     }
   }
 

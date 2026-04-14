@@ -5,7 +5,7 @@ import {
   useDeleteAdminRuleMutation,
   GetAdminSportDocument,
 } from '@/gql/__generated__/graphql'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 export function useSportRules(sportId: string) {
   const [isEditing, setIsEditing] = useState(false)
@@ -39,7 +39,7 @@ export function useSportRules(sportId: string) {
       setIsEditing(false)
       setEditText('')
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -50,7 +50,7 @@ export function useSportRules(sportId: string) {
       setIsEditing(false)
       setEditText('')
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }

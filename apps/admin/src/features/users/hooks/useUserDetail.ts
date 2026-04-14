@@ -15,7 +15,7 @@ import {
   GetAdminUserSportExperiencesDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUser } from '@/hooks/useMsGraphUsers'
-import { showErrorToast } from '@/lib/toast'
+import { showApiErrorToast } from '@/lib/toast'
 
 const ROLE_SCENES = [
   { id: Role.Admin, name: '管理者' },
@@ -134,7 +134,7 @@ export function useUserDetail(userId: string) {
       }
       initialState.current.experiencedSportIds = [...experiencedSportIds]
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
@@ -145,7 +145,7 @@ export function useUserDetail(userId: string) {
       await deleteUser({ variables: { id: userId } })
       setDeleteDialogOpen(false)
     } catch (e) {
-      showErrorToast()
+      showApiErrorToast(e)
       throw e
     }
   }
