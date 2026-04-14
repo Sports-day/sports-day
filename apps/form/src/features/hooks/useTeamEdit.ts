@@ -136,11 +136,13 @@ export function useTeamEdit() {
     if (!userData?.users) return [];
     return userData.users
       .filter((u) => {
+        // 登録者と同じクラスのメンバーのみ表示
+        if (groupId && !(u.groups ?? []).some((g) => g.id === groupId)) return false;
         if (searchName === "") return true;
         return resolveName(u).includes(searchName);
       })
       .map((u) => ({ ...u, name: resolveName(u) }));
-  }, [userData?.users, searchName, resolveName]);
+  }, [userData?.users, searchName, resolveName, groupId]);
 
   const myTeamUserIds = useMemo(() => {
     return teamMembersFromQuery.map((u) => u.studentId);
@@ -195,12 +197,32 @@ export function useTeamEdit() {
     });
   };
 
+  // クラス名＋a,b,c,... 形式で被らないチーム名を生成
+  const generateTeamName = useCallback(() => {
+    const className = meData?.me?.groups?.[0]?.name ?? "チーム";
+    // 現在の sportScene 内の既存チーム名を収集
+    const existingNames = new Set(
+      sportSceneData?.scenes
+        ?.filter((s) => !s.isDeleted)
+        ?.flatMap((s) => s.sportScenes)
+        ?.filter((ss) => ss.sport.id === sports && ss.scene.id === type)
+        ?.flatMap((ss) => ss.entries)
+        ?.map((e) => e.team?.name ?? "") ?? [],
+    );
+    const letters = "abcdefghijklmnopqrstuvwxyz";
+    for (const letter of letters) {
+      const candidate = `${className}${letter}`;
+      if (!existingNames.has(candidate)) return candidate;
+    }
+    return `${className}${Date.now()}`;
+  }, [meData, sportSceneData, sports, type]);
+
   const createTeam = async (memberIds: string[]) => {
     if (!groupId) throw new Error("グループに所属していません。管理者にグループの割り当てを依頼してください。");
     const { data } = await createTeamMutation({
       variables: {
         input: {
-          name: `チーム${teamCount + 1}`,
+          name: generateTeamName(),
           groupId,
           userIds: memberIds,
         },

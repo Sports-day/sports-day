@@ -17,11 +17,11 @@ type HookResult = {
 };
 
 export function useNotSelectedScenes(): HookResult {
-  const { data: sceneData, loading: sceneLoading, error: sceneError } = useGetSceneIdQuery();
+  const { data: sceneData, loading: sceneLoading, error: sceneError } = useGetSceneIdQuery({ fetchPolicy: "cache-and-network" });
   const { data: sportSceneData, loading: sportSceneLoading, error: sportSceneError } =
-    useGetSceneUsersQuery();
+    useGetSceneUsersQuery({ fetchPolicy: "cache-and-network" });
   const { data: allUserData, loading: allUsersLoading, error: allUsersError } =
-    useGetAllUsersQuery();
+    useGetAllUsersQuery({ fetchPolicy: "cache-and-network" });
 
   const allUserMsIds = useMemo(() => {
     return (allUserData?.users ?? [])
