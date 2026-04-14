@@ -36,7 +36,7 @@ export default function App() {
   return (
     <AppProviders>
       <AppErrorBoundary>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
           <Routes>
             <Route path="/api/auth/callback" element={<AuthCallbackPage />} />
             <Route path="/login" element={<LoginRoute />} />
