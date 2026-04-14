@@ -19,6 +19,8 @@ services:
       retries: 10
     networks:
       - backend
+    ports:
+      - "3306:3306"
 
   # ─── RustFS (S3-compatible storage) ─────────────────
   rustfs:
@@ -38,6 +40,8 @@ services:
       retries: 5
     networks:
       - backend
+    ports:
+      - "9001:9001"
 
   # ─── Go API server ──────────────────────────────────
   api:
@@ -85,7 +89,11 @@ services:
         VITE_BASE_PATH: /
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/healthz || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:8080/api/healthz || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -102,7 +110,11 @@ services:
         VITE_BASE_PATH: /admin/
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/healthz || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:8080/api/healthz || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -119,7 +131,11 @@ services:
         VITE_BASE_PATH: /form/
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/healthz || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:8080/api/healthz || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
