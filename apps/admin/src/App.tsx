@@ -165,7 +165,7 @@ export default function App() {
   const [showPrivacy, setShowPrivacy] = useState(false)
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
       <Suspense fallback={null}>
         {showPrivacy && (
           <PrivacyPolicyPage onClose={() => setShowPrivacy(false)} />
