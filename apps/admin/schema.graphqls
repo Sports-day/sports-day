@@ -572,7 +572,7 @@ input UpdatePromotionRuleInput {
 }
 
 input ApplyCompetitionDefaultsInput {
-  startTime: String!
+  startTime: String
   matchDuration: Int!
   breakDuration: Int!
   locationId: ID
