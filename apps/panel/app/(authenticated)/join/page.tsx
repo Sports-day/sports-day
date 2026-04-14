@@ -66,7 +66,11 @@ export default function JoinPage() {
                   key={"join-content"}
                   initial={{ opacity: 0, y: "50px" }}
                   animate={{ opacity: 1, y: "0px" }}
-                  transition={{ delay: 1.5, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{
+                    delay: 1.5,
+                    duration: 1,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
                 >
                   <Stack
                     direction={"column"}
@@ -88,16 +92,24 @@ export default function JoinPage() {
                       </Typography>
                     </Stack>
                     <Typography
-                      sx={{ color: "#e8ebf8", fontSize: { xs: "32px", sm: "42px" }, fontWeight: 700 }}
+                      sx={{
+                        color: "#e8ebf8",
+                        fontSize: { xs: "32px", sm: "42px" },
+                        fontWeight: 700,
+                      }}
                       textAlign={"center"}
                     >
                       SPORTSDAYの開発者になりませんか？
                     </Typography>
                     <Typography
-                      sx={{ color: "#e8ebf8cc", fontSize: "16px", maxWidth: "720px" }}
+                      sx={{
+                        color: "#e8ebf8cc",
+                        fontSize: "16px",
+                        maxWidth: "720px",
+                      }}
                       textAlign={"center"}
                     >
-                      SPORTSDAYをより良くしていく仲間を募集しています。興味があればフォームから連絡してください。プロジェクトの雰囲気を知りたい場合は GitHub もそのまま見られます。
+                      SPORTSDAYは、体育祭運営を効率化する為の開発プロジェクトです。経験の有無、学年を問わず開発者となるメンバーを募集しています。
                     </Typography>
                   </Stack>
                 </motion.div>
@@ -134,7 +146,7 @@ export default function JoinPage() {
                       開発参加はこちら
                     </Typography>
                     <Typography fontSize={"16px"}>
-                      フォーム回答後、必要に応じて開発チームから連絡します。まずは雰囲気だけ見たい場合は GitHub を確認してください。
+                      フォーム回答後、必要に応じて開発チームから連絡します。
                     </Typography>
                     <Button
                       sx={{ width: "100%" }}
@@ -153,7 +165,11 @@ export default function JoinPage() {
                       href={"https://github.com/Sports-day"}
                       target={"_blank"}
                     >
-                      <Stack direction={"row"} spacing={1} alignItems={"center"}>
+                      <Stack
+                        direction={"row"}
+                        spacing={1}
+                        alignItems={"center"}
+                      >
                         <SvgIcon>
                           <FaGithubAlt />
                         </SvgIcon>
