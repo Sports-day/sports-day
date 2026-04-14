@@ -29,7 +29,7 @@ export type ApplyCompetitionDefaultsInput = {
   breakDuration: Scalars['Int']['input'];
   locationId?: InputMaybe<Scalars['ID']['input']>;
   matchDuration: Scalars['Int']['input'];
-  startTime: Scalars['String']['input'];
+  startTime?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** SEEDスロットへのチーム手動配置 */
@@ -102,11 +102,6 @@ export type CreateInformationInput = {
   content: Scalars['String']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
-};
-
-export type CreateJudgmentInput = {
-  entry: JudgmentEntry;
-  id: Scalars['ID']['input'];
 };
 
 export type CreateLeagueInput = {
@@ -343,8 +338,6 @@ export type Mutation = {
   /** 画像アップロード用のURLを発行する */
   createImageUploadURL: ImageUploadUrl;
   createInformation: Information;
-  /** 審判を作成する */
-  createJudgment: Judgment;
   /** リーグを追加する */
   createLeague: League;
   /** 場所を追加する */
@@ -419,6 +412,13 @@ export type Mutation = {
   setRankingRules: Sport;
   /** リーグのタイブレーク優先度を設定する */
   setTiebreakPriorities: Array<TiebreakPriority>;
+  /**
+   * 審判がQRをスキャンした際の複合操作: 出席記録(isAttending=true)と
+   * 試合ステータスをONGOINGに更新する。審判本人のみ実行可能。
+   * 試合が既にONGOINGの場合は冪等に処理する。
+   * FINISHEDまたはCANCELEDの試合には失敗する。
+   */
+  startMatchJudging: Match;
   /** 審判がスコアを提出する（審判本人のみ実行可能、試合は自動的にFINISHEDになる） */
   submitMatchScore: Match;
   /** 大会の情報を更新する */
@@ -531,11 +531,6 @@ export type MutationCreateImageUploadUrlArgs = {
 
 export type MutationCreateInformationArgs = {
   input: CreateInformationInput;
-};
-
-
-export type MutationCreateJudgmentArgs = {
-  input: CreateJudgmentInput;
 };
 
 
@@ -763,6 +758,11 @@ export type MutationSetTiebreakPrioritiesArgs = {
 };
 
 
+export type MutationStartMatchJudgingArgs = {
+  matchId: Scalars['ID']['input'];
+};
+
+
 export type MutationSubmitMatchScoreArgs = {
   input: SubmitScoreInput;
   matchId: Scalars['ID']['input'];
@@ -963,12 +963,18 @@ export type Query = {
   /** 試合をまとめて取得する */
   matches: Array<Match>;
   me: User;
+  /**
+   * 審判用: 指定ロケーションで審判が対応すべき次の試合を返す。
+   * 呼び出しユーザーが審判として割り当てられている STANDBY または ONGOING の試合を
+   * 時刻昇順で最初の1件返す。該当なしの場合は null を返す。
+   */
+  nextJudgeMatchAtLocation?: Maybe<Match>;
   /** 進出ルールを取得する（進出元の大会IDで絞り込み） */
   promotionRules: Array<PromotionRule>;
   /** 進出先の期待チーム数と現在のエントリー数を取得する */
   promotionStatus: PromotionStatus;
   rule: Rule;
-  rules: Array<Maybe<Rule>>;
+  rules: Array<Rule>;
   scene: Scene;
   scenes: Array<Scene>;
   sport: Sport;
@@ -1034,6 +1040,11 @@ export type QueryLocationArgs = {
 
 export type QueryMatchArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryNextJudgeMatchAtLocationArgs = {
+  locationId: Scalars['ID']['input'];
 };
 
 
@@ -1296,6 +1307,7 @@ export type UpdateInformationInput = {
 
 export type UpdateJudgmentInput = {
   entry?: InputMaybe<JudgmentEntry>;
+  isAttending?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateLeagueRuleInput = {
@@ -1469,17 +1481,17 @@ export type DeleteTeamFromPopupMutation = { __typename?: 'Mutation', deleteTeam:
 export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, groups: Array<{ __typename?: 'Group', id: string }> } };
+export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, groups: Array<{ __typename?: 'Group', id: string, name: string }> } };
 
 export type GetUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } }> };
+export type GetUsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: string, name?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null }, groups: Array<{ __typename?: 'Group', id: string }> }> };
 
 export type GetSportsceneQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSportsceneQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, users: Array<{ __typename?: 'User', id: string }> } }> }> }> };
+export type GetSportsceneQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', isDeleted: boolean, sportScenes: Array<{ __typename?: 'SportScene', id: string, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string, name: string, users: Array<{ __typename?: 'User', id: string }> } }> }> }> };
 
 export type GetSportsceneEntriesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2170,6 +2182,7 @@ export const GetMeDocument = gql`
     id
     groups {
       id
+      name
     }
   }
 }
@@ -2213,6 +2226,9 @@ export const GetUsersDocument = gql`
     name
     identify {
       microsoftUserId
+    }
+    groups {
+      id
     }
   }
 }
@@ -2264,6 +2280,7 @@ export const GetSportsceneDocument = gql`
       entries {
         team {
           id
+          name
           users {
             id
           }
