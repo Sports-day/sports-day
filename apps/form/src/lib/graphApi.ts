@@ -1,9 +1,12 @@
 const GRAPH_BASE_URL = 'https://graph.microsoft.com/v1.0'
-const CHUNK_SIZE = 15
-const CACHE_KEY = 'ms-graph-users-cache-v2'
-const CACHE_STORAGE = sessionStorage
-const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
+const BATCH_URL = `${GRAPH_BASE_URL}/$batch`
+const BATCH_SIZE = 20 // Max requests per $batch call (MS Graph limit)
+const BATCH_CONCURRENCY = 4 // Max parallel $batch calls to avoid throttling
+const CACHE_KEY = 'ms-graph-users-cache-v3'
+const CACHE_STORAGE = localStorage
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000 // 1 week
 const NEGATIVE_CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+const RETRY_DELAY_CAP_MS = 10_000
 
 export type MsGraphUser = {
   id: string
@@ -17,6 +20,29 @@ type CacheEntry = {
 }
 
 type CacheData = Record<string, CacheEntry>
+
+type BatchRequest = {
+  id: string
+  method: string
+  url: string
+}
+
+type BatchResponseItem = {
+  id: string
+  status: number
+  headers?: Record<string, string>
+  body: {
+    id?: string
+    displayName?: string
+    mail?: string | null
+    error?: unknown
+  }
+}
+
+type BatchResult = {
+  users: MsGraphUser[]
+  succeededRequestIds: string[]
+}
 
 let memoryCache: Map<string, CacheEntry> | null = null
 
@@ -62,6 +88,7 @@ function getCachedUsers(
     const entry = cache.get(id)
     if (entry && isEntryValid(entry)) {
       if (entry.user) cached.set(id, entry.user)
+      // negative cache: skip (don't add to uncachedIds)
     } else {
       uncachedIds.push(id)
     }
@@ -71,7 +98,7 @@ function getCachedUsers(
 
 function saveToCache(
   fetchedUsers: Map<string, MsGraphUser>,
-  requestedIds: string[],
+  successfullyQueriedIds: string[],
 ): void {
   const cache = loadCache()
   const now = Date.now()
@@ -80,12 +107,16 @@ function saveToCache(
     cache.set(id, { user, fetchedAt: now })
   }
 
-  for (const id of requestedIds) {
+  // Negative cache: only for IDs from SUCCESSFUL queries (200/404) that returned no user.
+  // IDs from failed requests (429, 500, etc.) are NOT negative-cached.
+  const queriedSet = new Set(successfullyQueriedIds)
+  for (const id of queriedSet) {
     if (!fetchedUsers.has(id) && !cache.get(id)?.user) {
       cache.set(id, { user: null, fetchedAt: now })
     }
   }
 
+  // Evict expired entries on write
   for (const [id, entry] of cache) {
     if (!isEntryValid(entry)) cache.delete(id)
   }
@@ -119,9 +150,9 @@ export async function resolveUsers(
 
   if (needFetch.length > 0) {
     const fetchPromise = fetchMsGraphUsers(accessToken, needFetch).then(
-      (fetched) => {
-        saveToCache(fetched, needFetch)
-        return fetched
+      ({ found, successfullyQueriedIds }) => {
+        saveToCache(found, successfullyQueriedIds)
+        return found
       },
     )
 
@@ -147,46 +178,156 @@ export async function resolveUsers(
   return cached
 }
 
-async function fetchMsGraphUsers(
+function parseRetryAfter(headers?: Record<string, string>): number {
+  const ra = headers?.['Retry-After'] ?? headers?.['retry-after']
+  if (!ra) return 0
+  const seconds = parseInt(ra, 10)
+  return Number.isNaN(seconds) ? 0 : seconds * 1000
+}
+
+async function executeBatch(
   accessToken: string,
-  microsoftUserIds: string[],
-): Promise<Map<string, MsGraphUser>> {
-  const result = new Map<string, MsGraphUser>()
-  if (microsoftUserIds.length === 0) return result
+  requests: BatchRequest[],
+): Promise<BatchResult> {
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    'Content-Type': 'application/json',
+  }
+  const body = JSON.stringify({ requests })
 
-  const unique = [...new Set(microsoftUserIds)]
+  let res = await fetch(BATCH_URL, { method: 'POST', headers, body })
 
-  const chunks: string[][] = []
-  for (let i = 0; i < unique.length; i += CHUNK_SIZE) {
-    chunks.push(unique.slice(i, i + CHUNK_SIZE))
+  // Retry if the $batch POST itself is throttled (429)
+  if (res.status === 429) {
+    const ra = res.headers.get('Retry-After')
+    const delay = Math.min(ra ? parseInt(ra, 10) * 1000 : 2000, RETRY_DELAY_CAP_MS)
+    await new Promise((resolve) => setTimeout(resolve, delay))
+    res = await fetch(BATCH_URL, { method: 'POST', headers, body })
   }
 
-  const responses = await Promise.allSettled(
-    chunks.map(async (chunk) => {
-      const filter = chunk.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')
-      const params = new URLSearchParams({
-        $filter: `id in (${filter})`,
-        $select: 'id,displayName,mail',
-      })
-      const url = `${GRAPH_BASE_URL}/users?${params.toString()}`
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      if (!res.ok) {
-        return []
-      }
-      const json = await res.json()
-      return (json.value ?? []) as MsGraphUser[]
-    }),
-  )
+  if (!res.ok) return { users: [], succeededRequestIds: [] }
+
+  const json = await res.json()
+  const responses: BatchResponseItem[] = json.responses ?? []
+  const users: MsGraphUser[] = []
+  const succeededRequestIds: string[] = []
+  const retryRequests: BatchRequest[] = []
+  let retryAfterMs = 0
 
   for (const response of responses) {
-    if (response.status === 'fulfilled') {
-      for (const user of response.value) {
-        result.set(user.id, user)
+    if (response.status === 200) {
+      succeededRequestIds.push(response.id)
+      if (response.body.id && response.body.displayName !== undefined) {
+        users.push({
+          id: response.body.id,
+          displayName: response.body.displayName,
+          mail: response.body.mail ?? null,
+        })
+      }
+    } else if (response.status === 404) {
+      succeededRequestIds.push(response.id)
+    } else if (response.status === 429) {
+      const original = requests.find((r) => r.id === response.id)
+      if (original) retryRequests.push(original)
+      retryAfterMs = Math.max(retryAfterMs, parseRetryAfter(response.headers))
+    }
+  }
+
+  // Retry individual 429 responses once
+  if (retryRequests.length > 0) {
+    const delay = Math.min(retryAfterMs || 2000, RETRY_DELAY_CAP_MS)
+    await new Promise((resolve) => setTimeout(resolve, delay))
+
+    const retryRes = await fetch(BATCH_URL, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ requests: retryRequests }),
+    })
+
+    if (retryRes.ok) {
+      const retryJson = await retryRes.json()
+      const retryResponses: BatchResponseItem[] = retryJson.responses ?? []
+      for (const response of retryResponses) {
+        if (response.status === 200) {
+          succeededRequestIds.push(response.id)
+          if (response.body.id && response.body.displayName !== undefined) {
+            users.push({
+              id: response.body.id,
+              displayName: response.body.displayName,
+              mail: response.body.mail ?? null,
+            })
+          }
+        } else if (response.status === 404) {
+          succeededRequestIds.push(response.id)
+        }
       }
     }
   }
 
-  return result
+  return { users, succeededRequestIds }
+}
+
+async function executeBatchesConcurrently(
+  accessToken: string,
+  batches: BatchRequest[][],
+): Promise<BatchResult[]> {
+  const results: BatchResult[] = []
+
+  for (let i = 0; i < batches.length; i += BATCH_CONCURRENCY) {
+    const group = batches.slice(i, i + BATCH_CONCURRENCY)
+    const groupResults = await Promise.allSettled(
+      group.map((batch) => executeBatch(accessToken, batch)),
+    )
+    for (const result of groupResults) {
+      results.push(
+        result.status === 'fulfilled'
+          ? result.value
+          : { users: [], succeededRequestIds: [] },
+      )
+    }
+  }
+
+  return results
+}
+
+async function fetchMsGraphUsers(
+  accessToken: string,
+  microsoftUserIds: string[],
+): Promise<{ found: Map<string, MsGraphUser>; successfullyQueriedIds: string[] }> {
+  const found = new Map<string, MsGraphUser>()
+  const successfullyQueriedIds: string[] = []
+
+  if (microsoftUserIds.length === 0) return { found, successfullyQueriedIds }
+
+  const unique = [...new Set(microsoftUserIds)]
+
+  // Build one GET /users/{id} request per user (User.ReadBasic.All compatible)
+  const allRequests: BatchRequest[] = unique.map((userId, index) => ({
+    id: String(index),
+    method: 'GET',
+    url: `/users/${userId}?$select=id,displayName,mail`,
+  }))
+
+  // Split into batches of BATCH_SIZE (max 20 requests per $batch call)
+  const batches: BatchRequest[][] = []
+  for (let i = 0; i < allRequests.length; i += BATCH_SIZE) {
+    batches.push(allRequests.slice(i, i + BATCH_SIZE))
+  }
+
+  // Execute batches with concurrency control
+  const results = await executeBatchesConcurrently(accessToken, batches)
+
+  for (const result of results) {
+    for (const user of result.users) {
+      found.set(user.id, user)
+    }
+    for (const reqId of result.succeededRequestIds) {
+      const index = parseInt(reqId, 10)
+      if (unique[index]) {
+        successfullyQueriedIds.push(unique[index])
+      }
+    }
+  }
+
+  return { found, successfullyQueriedIds }
 }
