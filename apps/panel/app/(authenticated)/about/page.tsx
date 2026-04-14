@@ -23,6 +23,179 @@ import Logo from "@/src/assets/logo.svg?react";
 import { TbBrandKotlin, TbBrandNextjs } from "react-icons/tb";
 import { SiAffinitydesigner, SiArgo, SiKubernetes } from "react-icons/si";
 
+type Member = {
+  role: string;
+  badge: string;
+  name: string;
+  image?: string;
+  github?: string;
+  twitter?: string;
+  delay?: number;
+};
+
+const members: Member[] = [
+  {
+    role: "バックエンド・フロントエンド開発者",
+    badge: "A2",
+    name: "山本 哲也",
+    image: "/about/members/yamamoto.png",
+    github: "https://github.com/testusuke",
+    delay: 0,
+  },
+  {
+    role: "フロントエンド開発者・UI/UXデザイナー",
+    badge: "OB",
+    name: "中村 祐輔",
+    image: "/about/members/nayu.png",
+    github: "https://github.com/1nayu",
+    twitter: "https://twitter.com/1nayu",
+    delay: 0.1,
+  },
+  {
+    role: "バックエンド・フロントエンド開発者",
+    badge: "E4",
+    name: "池嵜 太勇",
+    image: "/about/members/ikezaki.png",
+    github: "https://github.com/Takkun0310",
+    twitter: "https://twitter.com/ReTic0310",
+    delay: 0.1,
+  },
+  {
+    role: "フロントエンド開発者・UI/UXデザイナー",
+    badge: "E4",
+    name: "鈴木 三士郎",
+    image: "/about/members/suzuki.PNG",
+    github: "https://github.com/suzuki346",
+    delay: 0.1,
+  },
+  {
+    role: "フロントエンド開発者",
+    badge: "E4",
+    name: "上野 陸大",
+    image: "/about/members/ueno.png",
+    github: "https://github.com/uenoriku1209",
+    delay: 0.1,
+  },
+  {
+    role: "バックエンド開発者",
+    badge: "E4",
+    name: "能登 大介",
+    image: "/about/members/noto.png",
+    github: "https://github.com/27819game",
+    delay: 0.1,
+  },
+  {
+    role: "バックエンド開発者",
+    badge: "E3",
+    name: "川崎 優弥",
+    image: "/about/members/kawasaki.png",
+    github: "https://github.com/hakase61912",
+    delay: 0.1,
+  },
+  {
+    role: "バックエンド開発者",
+    badge: "E3",
+    name: "石王丸 豊年",
+    image: "/about/members/ishioumaru.png",
+    github: "https://github.com/ishiomaru",
+    delay: 0.1,
+  },
+  {
+    role: "フロントエンド開発者",
+    badge: "E3",
+    name: "小澤 英弥",
+    image: "/about/members/ojawa.png",
+    delay: 0.1,
+  },
+];
+
+function MemberCard({ role, badge, name, image, github, twitter, delay = 0.1 }: Member) {
+  const theme = useTheme();
+
+  return (
+    <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
+      <motion.div
+        initial={{ opacity: 0, y: "50px" }}
+        whileInView={{ opacity: 1, y: "0px" }}
+        transition={{
+          delay,
+          duration: 1,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+      >
+        <Card sx={{ height: "220px" }}>
+          <CardContent sx={{ height: "100%" }}>
+            <Stack
+              sx={{ height: "100%" }}
+              direction={"column"}
+              justifyContent={"center"}
+              alignItems={"center"}
+              spacing={1}
+              py={2}
+            >
+              {image ? (
+                <Avatar
+                  alt={name}
+                  src={image}
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    border: `2px solid ${theme.palette.primary.main}`,
+                  }}
+                />
+              ) : null}
+
+              <Typography fontSize={"16px"}>{role}</Typography>
+              <Stack
+                direction={"row"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                spacing={1}
+                py={0}
+              >
+                <Box
+                  py={0.4}
+                  px={2}
+                  sx={{
+                    borderRadius: "15px",
+                    backgroundColor: "#99a5d6",
+                  }}
+                >
+                  <Typography fontSize={"16px"} color={"#23398A"}>
+                    {badge}
+                  </Typography>
+                </Box>
+                <Typography variant={"h5"}>{name}</Typography>
+              </Stack>
+              <Stack
+                direction={"row"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                spacing={1}
+              >
+                {github ? (
+                  <IconButton component="a" href={github} target={"_blank"}>
+                    <SvgIcon>
+                      <FaGithubAlt color="#99a5d6" />
+                    </SvgIcon>
+                  </IconButton>
+                ) : null}
+                {twitter ? (
+                  <IconButton component="a" href={twitter} target={"_blank"}>
+                    <SvgIcon>
+                      <FaTwitter color="#99a5d6" />
+                    </SvgIcon>
+                  </IconButton>
+                ) : null}
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </Grid>
+  );
+}
+
 export default function Page() {
   const theme = useTheme();
   return (
@@ -405,687 +578,9 @@ export default function Page() {
                 </motion.div>
               </Grid>
 
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          バックエンド・フロントエンド開発者
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              A2
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>山本 哲也</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/testusuke"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          フロントエンド開発者・UI/UXデザイナー
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              OB
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>中村 祐輔</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/1nayu"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                          <IconButton
-                            component="a"
-                            href={"https://twitter.com/1nayu"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaTwitter color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          バックエンド・フロントエンド開発者
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              E4
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>池嵜 太勇</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/Takkun0310"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          フロントエンド開発者・UI/UXデザイナー
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              E4
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>鈴木 三士郎</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/suzuki346"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          フロントエンド開発者
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              E4
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>上野 陸大</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/uenoriku1209"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          バックエンド開発者
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              E4
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>能登 大輔</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/27819game"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          バックエンド開発者
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              E3
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>川崎 優弥</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/hakase61912"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          バックエンド開発者
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              E3
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>石王丸 豊年</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        >
-                          <IconButton
-                            component="a"
-                            href={"https://github.com/ishiomaru"}
-                            target={"_blank"}
-                          >
-                            <SvgIcon>
-                              <FaGithubAlt color="#99a5d6" />
-                            </SvgIcon>
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, lg: 6 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: "50px" }}
-                  whileInView={{ opacity: 1, y: "0px" }}
-                  transition={{
-                    delay: 0.1,
-                    duration: 1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <Card sx={{ height: "220px" }}>
-                    <CardContent sx={{ height: "100%" }}>
-                      <Stack
-                        sx={{ height: "100%" }}
-                        direction={"column"}
-                        justifyContent={"center"}
-                        alignItems={"center"}
-                        spacing={1}
-                        py={2}
-                      >
-                        <Avatar
-                          alt="川崎 優弥"
-                          src="/about/members/kawasaki.png"
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: `2px solid ${theme.palette.primary.main}`,
-                          }}
-                        />
-
-                        <Typography fontSize={"16px"}>
-                          フロントエンド開発者
-                        </Typography>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                          py={0}
-                        >
-                          <Box
-                            py={0.4}
-                            px={2}
-                            sx={{
-                              borderRadius: "15px",
-                              backgroundColor: "#99a5d6",
-                            }}
-                          >
-                            <Typography fontSize={"16px"} color={"#23398A"}>
-                              E3
-                            </Typography>
-                          </Box>
-                          <Typography variant={"h5"}>小澤 英弥</Typography>
-                        </Stack>
-                        <Stack
-                          direction={"row"}
-                          justifyContent={"center"}
-                          alignItems={"center"}
-                          spacing={1}
-                        ></Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
+              {members.map((member) => (
+                <MemberCard key={member.name} {...member} />
+              ))}
 
               <Stack
                 direction={"column"}
