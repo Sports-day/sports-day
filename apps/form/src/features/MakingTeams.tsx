@@ -14,6 +14,7 @@ import {
   useGetSceneSportQuery,
   useGetSportExperienceQuery,
 } from "@/gql/__generated__/graphql";
+import { useMsGraphUsers } from "@/hooks/useMsGraphUsers";
 
 type MakingProps = {
   sports: string;
@@ -46,7 +47,13 @@ export default function MakingTeams({
     { label: "チーム確認" },
   ];
 
-  if (loading) {
+  const allUserMsIds = teams
+    .flatMap((d) => d.entries.flatMap((e) => e.team?.users ?? []))
+    .map((u) => u.identify?.microsoftUserId)
+    .filter((id): id is string => !!id);
+  const { msGraphUsers, loading: msGraphLoading } = useMsGraphUsers(allUserMsIds);
+
+  if (loading || msGraphLoading) {
     return <CircularUnderLoad />;
   }
 
@@ -158,7 +165,7 @@ export default function MakingTeams({
                         sports={sports}
                         member={item.users.map((u) => ({
                           id: u.id,
-                          name: u.name ?? '',
+                          name: (u.identify?.microsoftUserId ? msGraphUsers.get(u.identify.microsoftUserId)?.displayName : undefined) ?? u.name ?? '',
                           isExperienced: experiencedUserIds.has(u.id),
                         }))}
                       />

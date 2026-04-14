@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ApolloError } from "@apollo/client";
 import { SceneStatusItem } from "@/components/cards/AboutConfirmPage/SceneStatusCardLayout";
 import { useGetSceneIdQuery, useGetSceneUsersQuery } from "@/gql/__generated__/graphql";
+import { useMsGraphUsers } from "@/hooks/useMsGraphUsers";
 
 type HookResult = {
   items: SceneStatusItem[];
@@ -16,39 +17,63 @@ export function useConflictedScenes(): HookResult {
   const { data: sportSceneData, loading: sportSceneLoading, error: sportSceneError } =
     useGetSceneUsersQuery();
 
-  const loading = sceneLoading || sportSceneLoading;
+  const allUserMsIds = useMemo(() => {
+    const sportScenes = sportSceneData?.scenes?.filter((s) => !s.isDeleted)?.flatMap((s) => s.sportScenes) ?? [];
+    return sportScenes
+      .flatMap((ss) => ss.entries ?? [])
+      .flatMap((e) => e.team?.users ?? [])
+      .map((u) => u.identify?.microsoftUserId)
+      .filter((id): id is string => !!id);
+  }, [sportSceneData?.scenes]);
+  const { msGraphUsers, loading: msGraphLoading } = useMsGraphUsers(allUserMsIds);
+
+  const loading = sceneLoading || sportSceneLoading || msGraphLoading;
   const error = sceneError || sportSceneError || null;
 
   const items = useMemo(() => {
     const scenes = (sceneData?.scenes ?? []).filter((s) => !s.isDeleted);
     const sportScenes = sportSceneData?.scenes?.filter((s) => !s.isDeleted)?.flatMap((s) => s.sportScenes) ?? [];
-    const sceneUserNamesMap = new Map<string, string[]>();
 
+    // userId -> 表示名のマップを構築
+    const userIdToName = new Map<string, string>();
+    sportScenes
+      .flatMap((ss) => ss.entries ?? [])
+      .flatMap((e) => e.team?.users ?? [])
+      .forEach((user) => {
+        if (userIdToName.has(user.id)) return;
+        const msUser = user.identify?.microsoftUserId ? msGraphUsers.get(user.identify.microsoftUserId) : undefined;
+        const name = (msUser?.displayName ?? user.name)?.trim();
+        if (name) userIdToName.set(user.id, name);
+      });
+
+    // sceneId -> userId[] のマップを構築（IDベースで重複検出）
+    const sceneUserIdsMap = new Map<string, string[]>();
     sportScenes.forEach((sportScene) => {
       const sceneId = sportScene.scene?.id;
       if (!sceneId) return;
-      const names =
+      const ids =
         sportScene.entries?.flatMap((entry) =>
-          entry.team?.users?.map((user) => user.name?.trim()).filter((n): n is string => !!n) ?? [],
+          entry.team?.users?.map((user) => user.id).filter((id): id is string => !!id) ?? [],
         ) ?? [];
-      if (!sceneUserNamesMap.has(sceneId)) {
-        sceneUserNamesMap.set(sceneId, []);
+      if (!sceneUserIdsMap.has(sceneId)) {
+        sceneUserIdsMap.set(sceneId, []);
       }
-      sceneUserNamesMap.get(sceneId)?.push(...names);
+      sceneUserIdsMap.get(sceneId)?.push(...ids);
     });
 
     return scenes.map((scene) => {
-      const sceneUserNames = sceneUserNamesMap.get(scene.id) ?? [];
-      const nameCount: Record<string, number> = {};
-      sceneUserNames.forEach((name) => {
-        nameCount[name] = (nameCount[name] || 0) + 1;
+      const sceneUserIds = sceneUserIdsMap.get(scene.id) ?? [];
+      const idCount: Record<string, number> = {};
+      sceneUserIds.forEach((id) => {
+        idCount[id] = (idCount[id] || 0) + 1;
       });
+      const conflictedIds = Object.keys(idCount).filter((id) => idCount[id] > 1);
       return {
         scenename: scene.name,
-        users: Object.keys(nameCount).filter((name) => nameCount[name] > 1),
+        users: conflictedIds.map((id) => userIdToName.get(id) ?? id),
       };
     });
-  }, [sceneData?.scenes, sportSceneData?.scenes]);
+  }, [sceneData?.scenes, sportSceneData?.scenes, msGraphUsers]);
 
   return { items, loading, error };
 }
