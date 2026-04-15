@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -264,14 +267,30 @@ func httpAccessLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// GraphQL operationName を取得（POST /query のみ、bodyを読み直せるよう復元する）
+		operationName := "-"
+		if r.Method == http.MethodPost && r.URL.Path == "/query" {
+			if body, err := io.ReadAll(r.Body); err == nil {
+				r.Body = io.NopCloser(bytes.NewBuffer(body))
+				var gqlReq struct {
+					OperationName string `json:"operationName"`
+				}
+				if err := json.Unmarshal(body, &gqlReq); err == nil && gqlReq.OperationName != "" {
+					operationName = gqlReq.OperationName
+				}
+			}
+		}
+
 		next.ServeHTTP(rec, r)
+
 		api.Logger.Info().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
+			Str("operation", operationName).
 			Int("status", rec.statusCode).
 			Dur("duration", time.Since(start)).
 			Str("remote", r.RemoteAddr).
-			Str("user_agent", r.UserAgent()).
 			Msg("[HTTP] access")
 	})
 }
