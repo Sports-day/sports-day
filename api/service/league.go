@@ -56,7 +56,7 @@ func (s *League) Create(ctx context.Context, input *model.CreateLeagueInput) (*d
 			Name:    input.Name,
 			Type:    string(model.CompetitionTypeLeague),
 			SceneID: input.SceneID,
-			SportID: sql.NullString{Valid: true, String: input.SportID},
+			SportID: input.SportID,
 		}
 
 		if _, err := s.competitionRepository.Save(ctx, tx, competition); err != nil {
@@ -442,8 +442,8 @@ func (s *League) ComputeStandings(ctx context.Context, leagueID string) ([]*mode
 
 	// 2. ranking_rules を取得（sport_id 経由）
 	var rankingRules []*db_model.RankingRule
-	if comp.SportID.Valid {
-		rankingRules, err = s.sportsRepository.ListRankingRules(ctx, s.db, comp.SportID.String)
+	if comp.SportID != "" {
+		rankingRules, err = s.sportsRepository.ListRankingRules(ctx, s.db, comp.SportID)
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
