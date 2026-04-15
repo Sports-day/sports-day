@@ -1,0 +1,113 @@
+# ================================================================
+# Grafana Loki 設定ファイル
+#
+# シングルノード構成（Docker Compose 本番環境用）。
+# ストレージはローカルファイルシステム（DATA_DIR/loki）を使用する。
+# ================================================================
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: warn
+
+# ─── IngesterとWAL ────────────────────────────────────────────────
+ingester:
+  wal:
+    enabled: true
+    dir: /loki/wal
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    final_sleep: 0s
+  # チャンクが非アクティブになって1時間後にフラッシュ
+  chunk_idle_period: 1h
+  # チャンクの最大生存時間
+  max_chunk_age: 2h
+  # フラッシュ後のチャンク保持期間
+  chunk_retain_period: 30s
+  # メモリ上の最大チャンク数
+  max_transfer_retries: 0
+
+# ─── スキーマ設定 ─────────────────────────────────────────────────
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+# ─── ストレージ設定 ───────────────────────────────────────────────
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-shipper-active
+    cache_location: /loki/tsdb-shipper-cache
+    cache_ttl: 24h
+  filesystem:
+    directory: /loki/chunks
+
+# ─── 制限設定 ─────────────────────────────────────────────────────
+limits_config:
+  # 古いサンプルを拒否（タイムスタンプのズレ対策）
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h  # 7日
+  # 1ストリームあたりのログバースト制限
+  ingestion_burst_size_mb: 16
+  ingestion_rate_mb: 8
+  # クエリの最大範囲（30日）
+  max_query_length: 720h
+  # 1クエリあたりの最大エントリ数
+  max_entries_limit_per_query: 50000
+  # Lokiラベルの高カーディナリティ警告閾値
+  max_streams_per_user: 10000
+
+# ─── コンパクター設定 ─────────────────────────────────────────────
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: filesystem
+
+# ─── データ保持期間 ───────────────────────────────────────────────
+# 本番ログを90日間保持
+common:
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+# ─── クエリキャッシュ ─────────────────────────────────────────────
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 256
+        ttl: 24h
+  cache_results: true
+
+# ─── フロントエンド設定 ───────────────────────────────────────────
+frontend:
+  log_queries_longer_than: 5s
+  compress_responses: true
+
+# ─── ルーラー（アラート）─────────────────────────────────────────
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+  rule_path: /loki/rules-temp
+  alertmanager_url: http://localhost:9093
+  ring:
+    kvstore:
+      store: inmemory
+  enable_api: true

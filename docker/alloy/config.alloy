@@ -1,0 +1,101 @@
+// ================================================================
+// Grafana Alloy 設定ファイル
+// Docker コンテナの stdout/stderr ログを収集して Loki に転送する。
+//
+// 収集フロー:
+//   Docker コンテナ stdout
+//   → loki.source.docker (収集)
+//   → loki.process (JSON パース + ラベル抽出)
+//   → loki.write (Loki へ転送)
+//
+// Loki ラベル設計（低カーディナリティのみ）:
+//   - app      : アプリ名（ログ本文の "app" フィールドから抽出）
+//   - level    : ログレベル（ログ本文の "level" フィールドから抽出）
+//   - container: Docker コンテナ名（Docker メタデータから自動付与）
+//
+// 高カーディナリティなフィールド（request_id, user_id 等）は
+// ラベルではなくログ本文に含める。LogQL でフィルタリングする:
+//   {container="sports-day-api"} | json | request_id = "01JR8X..."
+// ================================================================
+
+// ─── Docker コンテナの自動検出 ─────────────────────────────────
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+
+  // 停止済みコンテナは除外
+  filter {
+    name   = "status"
+    values = ["running"]
+  }
+}
+
+// ─── コンテナ名・サービス名をラベルとして付与 ───────────────────
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  // コンテナ名（先頭の "/" を除去）を container ラベルに設定
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  // Docker Compose のサービス名を service ラベルに設定
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+// ─── Docker コンテナのログ収集 ──────────────────────────────────
+loki.source.docker "containers" {
+  host    = "unix:///var/run/docker.sock"
+  targets = discovery.relabel.containers.output
+
+  forward_to = [loki.process.parse_logs.receiver]
+
+  // ラベルの初期値（後段の process で上書き・追加される）
+  labels = {
+    "platform" = "docker",
+  }
+}
+
+// ─── ログのパース処理 ────────────────────────────────────────────
+loki.process "parse_logs" {
+  // API サービスの JSON ログをパースしてフィールドを抽出
+  // JSON でないログ（nginx 等）はそのまま通過する
+  stage.json {
+    expressions = {
+      level   = "level",
+      app     = "app",
+      message = "message",
+    }
+  }
+
+  // 抽出したフィールドをラベルとして設定
+  // ※ app・level のみラベル化（低カーディナリティ）
+  // ※ request_id, user_id 等の高カーディナリティフィールドはラベル化しない
+  stage.labels {
+    values = {
+      app   = "app",
+      level = "level",
+    }
+  }
+
+  // メッセージフィールドが抽出できた場合は log ラベルとして設定
+  stage.label_drop {
+    values = ["filename"]
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+// ─── Loki へ転送 ─────────────────────────────────────────────────
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+
+  // バッチ設定（デフォルトで十分だが明示的に設定）
+  external_labels = {}
+}

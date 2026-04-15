@@ -1,0 +1,31 @@
+# ================================================================
+# Grafana データソース プロビジョニング
+# Grafana 起動時に Loki データソースを自動設定する。
+# ================================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: true
+    version: 1
+    editable: false
+
+    jsonData:
+      # タイムアウト設定（60秒）
+      timeout: 60
+      # 最大行数（ログエクスプローラー表示用）
+      maxLines: 1000
+      # Lokiの導出フィールド設定
+      # request_id フィールドからトレース追跡リンクを生成
+      derivedFields:
+        - matcherRegex: '"request_id":"([^"]+)"'
+          name: request_id
+          url: ''
+          urlDisplayLabel: 'Request ID'
+
+    # デフォルトクエリ設定
+    # よく使うフィルタをラベルセレクターとして事前定義

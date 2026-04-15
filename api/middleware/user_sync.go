@@ -3,7 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	api "sports-day/api"
+	"github.com/rs/zerolog"
+
 	"sports-day/api/pkg/auth"
 	pkgerrors "sports-day/api/pkg/errors"
 	"sports-day/api/service"
@@ -13,6 +14,7 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
+			log := zerolog.Ctx(ctx)
 
 			claims, _ := auth.GetClaims(ctx)
 			sub := ""
@@ -22,7 +24,7 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 
 			if err := authService.SyncUser(ctx); err != nil {
 				if authErr, ok := err.(pkgerrors.Error); ok {
-					api.Logger.Warn().
+					log.Warn().
 						Err(authErr).
 						Str("event", "user_sync_failed").
 						Str("sub", sub).
@@ -31,7 +33,7 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 					http.Error(w, authErr.Error(), http.StatusUnauthorized)
 					return
 				}
-				api.Logger.Error().
+				log.Error().
 					Err(err).
 					Str("event", "user_sync_failed").
 					Str("sub", sub).
@@ -40,10 +42,9 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 				return
 			}
 
-			// sync後にユーザー情報を解決してcontextに注入
 			user, err := authService.GetCurrentUser(ctx)
 			if err != nil {
-				api.Logger.Warn().
+				log.Warn().
 					Err(err).
 					Str("event", "user_resolve_failed").
 					Str("sub", sub).
@@ -54,7 +55,7 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 
 			role, err := authService.GetRole(ctx, user.ID)
 			if err != nil {
-				api.Logger.Error().
+				log.Error().
 					Err(err).
 					Str("event", "role_resolve_failed").
 					Str("user_id", user.ID).
@@ -64,7 +65,7 @@ func UserSync(authService service.AuthService) func(http.Handler) http.Handler {
 				return
 			}
 
-			api.Logger.Debug().
+			log.Debug().
 				Str("event", "auth_completed").
 				Str("user_id", user.ID).
 				Str("role", role).

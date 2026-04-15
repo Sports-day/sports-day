@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/rs/zerolog"
 
-	api "sports-day/api"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/errors"
 )
@@ -13,9 +13,12 @@ import (
 func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			log := zerolog.Ctx(ctx)
+
 			tokenString, err := auth.GetTokenFromRequest(r)
 			if err != nil {
-				api.Logger.Warn().
+				log.Warn().
 					Str("event", "token_missing").
 					Str("method", r.Method).
 					Str("path", r.URL.Path).
@@ -25,9 +28,9 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 				return
 			}
 
-			token, err := verifier.Verify(r.Context(), tokenString)
+			token, err := verifier.Verify(ctx, tokenString)
 			if err != nil {
-				api.Logger.Warn().
+				log.Warn().
 					Err(err).
 					Str("event", "token_invalid").
 					Str("method", r.Method).
@@ -44,7 +47,7 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 			}
 
 			if err := token.Claims(&claims); err != nil {
-				api.Logger.Warn().
+				log.Warn().
 					Err(err).
 					Str("event", "token_claims_invalid").
 					Str("method", r.Method).
@@ -55,7 +58,7 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 			}
 
 			if claims.Sub == "" {
-				api.Logger.Warn().
+				log.Warn().
 					Str("event", "token_claims_invalid").
 					Str("method", r.Method).
 					Str("path", r.URL.Path).
@@ -64,14 +67,14 @@ func Auth(verifier *oidc.IDTokenVerifier) func(http.Handler) http.Handler {
 				return
 			}
 
-			api.Logger.Debug().
+			log.Debug().
 				Str("event", "token_verified").
 				Str("sub", claims.Sub).
 				Str("method", r.Method).
 				Str("path", r.URL.Path).
 				Msg("ID token verified successfully")
 
-			ctx := auth.AttachClaims(r.Context(), &auth.Claims{
+			ctx = auth.AttachClaims(ctx, &auth.Claims{
 				Sub:             claims.Sub,
 				MicrosoftUserID: claims.MicrosoftUserID,
 			})

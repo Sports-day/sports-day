@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 
+	"github.com/rs/zerolog"
+	"gorm.io/gorm"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
-
-	"gorm.io/gorm"
 )
 
 type User struct {
@@ -51,6 +52,12 @@ func (s *User) Create(ctx context.Context, input *model.CreateUserInput) (*db_mo
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "user_created").
+		Str("user_id", result.ID).
+		Msg("user created")
+
 	return result, nil
 }
 
@@ -137,6 +144,12 @@ func (s *User) BatchCreate(ctx context.Context, inputs []*model.CreateUserInput)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "users_batch_created").
+		Int("count", len(users)).
+		Msg("users batch created")
+
 	return users, nil
 }
 
@@ -205,6 +218,12 @@ func (s *User) Delete(ctx context.Context, id string) (*db_model.User, error) {
 	if err := s.userRepository.Delete(ctx, s.db, id); err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "user_deleted").
+		Str("user_id", id).
+		Msg("user deleted")
+
 	return user, nil
 }
 
