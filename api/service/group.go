@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 
+	"github.com/rs/zerolog"
+	"gorm.io/gorm"
+
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
-
-	"gorm.io/gorm"
 )
 
 type Group struct {
@@ -51,6 +52,13 @@ func (s *Group) Create(ctx context.Context, input *model.CreateGroupInput) (*db_
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "group_created").
+		Str("group_id", group.ID).
+		Str("name", group.Name).
+		Msg("group created")
+
 	return group, nil
 }
 
@@ -68,6 +76,12 @@ func (s *Group) Update(ctx context.Context, id string, input model.UpdateGroupIn
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "group_updated").
+		Str("group_id", group.ID).
+		Msg("group updated")
+
 	return group, nil
 }
 
@@ -76,6 +90,12 @@ func (s *Group) Delete(ctx context.Context, id string) (*db_model.Group, error) 
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "group_deleted").
+		Str("group_id", id).
+		Msg("group deleted")
+
 	return group, nil
 }
 

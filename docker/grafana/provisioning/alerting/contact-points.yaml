@@ -1,0 +1,12 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: Discord
+    receivers:
+      - uid: discord-01
+        type: discord
+        settings:
+          url: ${DISCORD_WEBHOOK_URL}
+          # アラート回復時にも通知する
+        disableResolveMessage: false

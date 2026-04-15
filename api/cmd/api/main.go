@@ -18,6 +18,7 @@ import (
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/authz"
 	"sports-day/api/pkg/env"
+	pkgerrors "sports-day/api/pkg/errors"
 	"sports-day/api/pkg/gorm"
 	"sports-day/api/repository"
 	"sports-day/api/service"
@@ -27,11 +28,12 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/rs/zerolog"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 func main() {
@@ -44,6 +46,17 @@ func main() {
 
 	// fix timezone as Asia/Tokyo
 	time.Local = time.FixedZone("Asia/Tokyo", 9*60*60)
+
+	// サーバー起動時の設定サマリーをログに出力
+	api.Logger.Info().
+		Str("event", "server_init").
+		Str("host", env.Get().Server.Host).
+		Int("port", env.Get().Server.Port).
+		Str("auth_issuer", env.Get().Auth.IssuerURL).
+		Str("storage_endpoint", env.Get().Storage.Endpoint).
+		Str("storage_bucket", env.Get().Storage.Bucket).
+		Bool("debug", env.Get().Debug).
+		Msg("Initializing Sports Day API")
 
 	// setup database
 	db, err := gorm.OpenWithRetry(api.Logger)
@@ -142,29 +155,78 @@ func main() {
 	directiveHandler := graph.NewDirective(authorizerInstance)
 
 	// graphql
-	config := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService)}
-	config.Directives.HasPermission = directiveHandler.HasPermission
-	srv := handler.New(graph.NewExecutableSchema(config))
+	gqlConfig := graph.Config{Resolvers: graph.NewResolver(userService, authService, groupService, teamService, locationService, sportService, sceneService, informationService, competitionService, matchService, judgmentService, leagueService, tournamentService, ruleService, imageService)}
+	gqlConfig.Directives.HasPermission = directiveHandler.HasPermission
+	srv := handler.New(graph.NewExecutableSchema(gqlConfig))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 
-	// GraphQLエラーをすべてログに出力する
+	// GraphQL オペレーション単位のログ（クエリ名・実行時間・エラー有無）
+	srv.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+		oc := graphql.GetOperationContext(ctx)
+		opName := oc.OperationName
+		opType := ""
+		if oc.Operation != nil {
+			opType = string(oc.Operation.Operation)
+		}
+		start := time.Now()
+		respHandler := next(ctx)
+
+		return func(ctx context.Context) *graphql.Response {
+			resp := respHandler(ctx)
+			duration := time.Since(start)
+			hasError := resp != nil && len(resp.Errors) > 0
+
+			log := zerolog.Ctx(ctx)
+			entry := log.Info()
+			if hasError {
+				entry = log.Warn()
+			}
+			entry.
+				Str("event", "graphql_operation").
+				Str("op_type", opType).
+				Str("op_name", opName).
+				Int64("duration_ms", duration.Milliseconds()).
+				Bool("has_error", hasError).
+				Msg("GraphQL operation")
+
+			return resp
+		}
+	})
+
+	// GraphQL エラーをログに出力する。
+	// アプリケーション定義のエラー（pkgerrors.Error）は Warn、
+	// 予期しない内部エラーは Error として記録する。
 	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
 		gqlerr := graphql.DefaultErrorPresenter(ctx, err)
-		api.Logger.Error().
-			Err(err).
-			Str("path", fmt.Sprintf("%v", gqlerr.Path)).
-			Str("message", gqlerr.Message).
-			Msg("[GraphQL] resolver error")
+		log := zerolog.Ctx(ctx)
+
+		var appErr pkgerrors.Error
+		if pkgerrors.As(err, &appErr) {
+			log.Warn().
+				Err(err).
+				Str("event", "graphql_error").
+				Str("error_code", appErr.Code()).
+				Str("path", fmt.Sprintf("%v", gqlerr.Path)).
+				Msg("GraphQL application error")
+		} else {
+			log.Error().
+				Err(err).
+				Str("event", "graphql_error").
+				Str("path", fmt.Sprintf("%v", gqlerr.Path)).
+				Msg("GraphQL internal error")
+		}
+
 		return gqlerr
 	})
 
 	srv.SetRecoverFunc(func(ctx context.Context, err any) error {
-		api.Logger.Error().
+		zerolog.Ctx(ctx).Error().
+			Str("event", "graphql_panic").
 			Str("panic", fmt.Sprintf("%v", err)).
-			Msg("[GraphQL] panic recovered")
+			Msg("GraphQL panic recovered")
 		return fmt.Errorf("internal server error")
 	})
 
@@ -174,6 +236,13 @@ func main() {
 
 	// mux
 	mux := http.NewServeMux()
+
+	// ヘルスチェックエンドポイント（認証不要・ログスキップ対象）
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{"status":"ok"}`)
+	})
 
 	// playground only in debug mode
 	if env.Get().Debug {
@@ -204,13 +273,32 @@ func main() {
 	// channel to confirm server shutdown
 	shutdownChan := make(chan struct{}, 1)
 
+	// API 死活監視用ハートビートログ（60秒ごとに出力）
+	// Grafana アラートルール "API停止" がこのイベントの欠落を検知する
+	heartbeatCtx, cancelHeartbeat := context.WithCancel(context.Background())
+	go func() {
+		ticker := time.NewTicker(60 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				api.Logger.Info().Str("event", "heartbeat").Msg("API heartbeat")
+			case <-heartbeatCtx.Done():
+				return
+			}
+		}
+	}()
+
 	// create channel for graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
 	// start server in another goroutine
 	go func() {
-		api.Logger.Info().Msgf("Starting server on http://%s", address)
+		api.Logger.Info().
+			Str("event", "server_started").
+			Str("address", address).
+			Msgf("Sports Day API started on http://%s", address)
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			api.Logger.Fatal().
 				Err(err).
@@ -221,7 +309,8 @@ func main() {
 
 	// wait for signal
 	<-quit
-	api.Logger.Info().Msg("Shutting down server...")
+	cancelHeartbeat()
+	api.Logger.Info().Str("event", "server_shutting_down").Msg("Shutting down server...")
 
 	// set shutdown timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -245,5 +334,5 @@ func main() {
 		sqlDB.Close()
 	}
 
-	api.Logger.Info().Msg("Server gracefully shutdown")
+	api.Logger.Info().Str("event", "server_shutdown").Msg("Server gracefully shutdown")
 }

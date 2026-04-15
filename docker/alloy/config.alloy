@@ -1,0 +1,107 @@
+// ================================================================
+// Grafana Alloy 設定ファイル
+// Docker コンテナの stdout/stderr ログを収集して Loki に転送する。
+//
+// 収集フロー:
+//   Docker コンテナ stdout
+//   → discovery.docker   (コンテナ検出)
+//   → discovery.relabel  (ラベル付与・フィルタリング)
+//   → loki.source.docker (ログ収集)
+//   → loki.process       (JSON パース + ラベル抽出)
+//   → loki.write         (Loki へ転送)
+//
+// Loki ラベル設計（低カーディナリティのみ）:
+//   - app      : アプリ名（ログ本文の "app" フィールドから抽出）
+//   - level    : ログレベル（ログ本文の "level" フィールドから抽出）
+//   - container: Docker コンテナ名（Docker メタデータから自動付与）
+//   - service  : Docker Compose サービス名
+//
+// 高カーディナリティなフィールド（request_id, user_id 等）は
+// ラベルではなくログ本文に含める。LogQL でフィルタリングする:
+//   {service="api"} | json | request_id = "01JR8X..."
+// ================================================================
+
+// ─── Docker コンテナの自動検出 ─────────────────────────────────
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+
+  // 停止済みコンテナは除外
+  filter {
+    name   = "status"
+    values = ["running"]
+  }
+}
+
+// ─── ラベル付与・プロジェクトフィルタリング ────────────────────
+// このプロジェクトのコンテナのみ収集し、
+// 同一ホスト上の無関係なコンテナのログを収集しない。
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  // Docker Compose プロジェクト名でフィルタ（sports-day プロジェクトのみ収集）
+  // プロジェクト名はデプロイ時のディレクトリ名または --project-name オプションに依存する。
+  // 異なるプロジェクト名でデプロイする場合は正規表現を修正すること。
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "sports.day|sportsday"
+    action        = "keep"
+  }
+
+  // コンテナ名（先頭の "/" を除去）を container ラベルに設定
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  // Docker Compose のサービス名を service ラベルに設定
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+// ─── Docker コンテナのログ収集 ──────────────────────────────────
+loki.source.docker "containers" {
+  host    = "unix:///var/run/docker.sock"
+  targets = discovery.relabel.containers.output
+
+  forward_to = [loki.process.parse_logs.receiver]
+
+  labels = {
+    "platform" = "docker",
+  }
+}
+
+// ─── ログのパース処理 ────────────────────────────────────────────
+loki.process "parse_logs" {
+  // API サービスの JSON ログをパースしてフィールドを抽出する。
+  // JSON でないログ（nginx, mysql 等）はパースエラーが無視され、
+  // 元のログ行がそのまま転送される（stage.json はエラーを無視する）。
+  stage.json {
+    expressions = {
+      level   = "level",
+      app     = "app",
+      message = "message",
+    }
+  }
+
+  // 抽出したフィールドをラベルとして設定する。
+  // app・level のみラベル化（低カーディナリティを維持）。
+  // request_id, user_id 等の高カーディナリティフィールドはラベル化しない。
+  stage.labels {
+    values = {
+      app   = "app",
+      level = "level",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+// ─── Loki へ転送 ─────────────────────────────────────────────────
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

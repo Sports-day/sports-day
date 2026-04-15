@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 
-	api "sports-day/api"
 	"sports-day/api/db_model"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/authz"
@@ -73,7 +73,7 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 		return errors.Wrap(err)
 	}
 
-	api.Logger.Info().
+	zerolog.Ctx(ctx).Info().
 		Str("event", "user_provisioning").
 		Str("sub", claims.Sub).
 		Msg("New user detected, provisioning user and IDP record")
@@ -81,7 +81,7 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		newUser := &db_model.User{ID: ulid.Make()}
 		if _, err := s.userRepo.Save(ctx, tx, newUser); err != nil {
-			api.Logger.Error().
+			zerolog.Ctx(ctx).Error().
 				Err(err).
 				Str("event", "user_save_failed").
 				Str("sub", claims.Sub).
@@ -99,7 +99,7 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 		newIdp.MicrosoftUserID.Valid = claims.MicrosoftUserID != ""
 
 		if _, err := s.userRepo.SaveUserIdp(ctx, tx, newIdp); err != nil {
-			api.Logger.Error().
+			zerolog.Ctx(ctx).Error().
 				Err(err).
 				Str("event", "user_idp_save_failed").
 				Str("user_id", newUser.ID).
@@ -108,7 +108,7 @@ func (s *AuthService) SyncUser(ctx context.Context) error {
 			return errors.ErrSaveUserIdp
 		}
 
-		api.Logger.Info().
+		zerolog.Ctx(ctx).Info().
 			Str("event", "user_provisioned").
 			Str("user_id", newUser.ID).
 			Str("sub", claims.Sub).
@@ -147,6 +147,10 @@ func (s *AuthService) GetRole(ctx context.Context, userID string) (string, error
 	record, err := s.userRepo.GetRoleByUserID(ctx, s.db, userID)
 	if err != nil {
 		if errors.Is(err, errors.ErrRoleNotFound) {
+			zerolog.Ctx(ctx).Warn().
+				Str("event", "user_role_not_found").
+				Str("user_id", userID).
+				Msg("User role not found, returning default role: participant")
 			return "participant", nil
 		}
 		return "", err
@@ -172,7 +176,7 @@ func roleLevel(role string) int {
 func (s *AuthService) ChangeUserRole(ctx context.Context, callerID string, targetUserID string, newRole string) error {
 	// 自己変更防止
 	if callerID == targetUserID {
-		api.Logger.Warn().
+		zerolog.Ctx(ctx).Warn().
 			Str("event", "role_change_denied").
 			Str("reason", "self_change").
 			Str("caller_id", callerID).
@@ -192,7 +196,7 @@ func (s *AuthService) ChangeUserRole(ctx context.Context, callerID string, targe
 		return err
 	}
 	if roleLevel(targetRole) > callerLevel {
-		api.Logger.Warn().
+		zerolog.Ctx(ctx).Warn().
 			Str("event", "role_change_denied").
 			Str("reason", "target_higher_role").
 			Str("caller_id", callerID).
@@ -205,7 +209,7 @@ func (s *AuthService) ChangeUserRole(ctx context.Context, callerID string, targe
 
 	// 変更先ロールが自分より上なら不可
 	if roleLevel(newRole) > callerLevel {
-		api.Logger.Warn().
+		zerolog.Ctx(ctx).Warn().
 			Str("event", "role_change_denied").
 			Str("reason", "new_role_higher").
 			Str("caller_id", callerID).
@@ -216,7 +220,7 @@ func (s *AuthService) ChangeUserRole(ctx context.Context, callerID string, targe
 		return errors.ErrInsufficientRole
 	}
 
-	api.Logger.Info().
+	zerolog.Ctx(ctx).Info().
 		Str("event", "role_changed").
 		Str("caller_id", callerID).
 		Str("caller_role", callerRole).

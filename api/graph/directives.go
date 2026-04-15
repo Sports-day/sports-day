@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/rs/zerolog"
 
-	"sports-day/api"
 	"sports-day/api/pkg/auth"
 	"sports-day/api/pkg/authz"
 	"sports-day/api/pkg/errors"
@@ -37,7 +37,7 @@ func (d *Directive) HasPermission(
 	}
 
 	if !d.authorizer.HasPermission(user.Role, permission) {
-		api.Logger.Warn().
+		zerolog.Ctx(ctx).Warn().
 			Str("event", "authorization_denied").
 			Str("user_id", user.ID).
 			Str("role", user.Role).

@@ -6,14 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"sports-day/api"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/rs/zerolog"
+	"gorm.io/gorm"
+
 	"sports-day/api/db_model"
 	"sports-day/api/pkg/errors"
 	"sports-day/api/pkg/ulid"
 	"sports-day/api/repository"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"gorm.io/gorm"
 )
 
 const presignExpiry = 15 * time.Minute
@@ -51,7 +51,17 @@ func (s *Image) Get(ctx context.Context, id string) (*db_model.Image, error) {
 }
 
 func (s *Image) MarkUploaded(ctx context.Context, id string, url string) error {
-	return s.imageRepository.MarkUploaded(ctx, s.db, id, url)
+	if err := s.imageRepository.MarkUploaded(ctx, s.db, id, url); err != nil {
+		return err
+	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "image_uploaded").
+		Str("image_id", id).
+		Str("url", url).
+		Msg("image marked as uploaded")
+
+	return nil
 }
 
 func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) {
@@ -75,10 +85,20 @@ func (s *Image) Delete(ctx context.Context, id string) (*db_model.Image, error) 
 				Key:    &key,
 			}); err != nil {
 				// S3削除失敗はログに残すが、DBレコードは既に削除済みなのでエラーとしない
-				api.Logger.Warn().Err(err).Str("key", key).Msg("failed to delete S3 object")
+				zerolog.Ctx(ctx).Warn().
+					Err(err).
+					Str("event", "s3_delete_failed").
+					Str("image_id", id).
+					Str("key", key).
+					Msg("failed to delete S3 object (DB record already deleted)")
 			}
 		}
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "image_deleted").
+		Str("image_id", id).
+		Msg("image deleted")
 
 	return img, nil
 }
@@ -117,6 +137,12 @@ func (s *Image) CreateUploadURL(ctx context.Context, filename string) (*db_model
 	if err != nil {
 		return nil, "", errors.Wrap(err)
 	}
+
+	zerolog.Ctx(ctx).Info().
+		Str("event", "image_upload_url_created").
+		Str("image_id", img.ID).
+		Str("filename", filename).
+		Msg("presigned upload URL created")
 
 	return img, presigned.URL, nil
 }
