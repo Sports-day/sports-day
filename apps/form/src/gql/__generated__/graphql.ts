@@ -1548,7 +1548,7 @@ export type GetSportExperienceQueryVariables = Exact<{
 }>;
 
 
-export type GetSportExperienceQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', experiencedLimit?: number | null }, sportExperiences: Array<{ __typename?: 'SportExperience', userId: string }> };
+export type GetSportExperienceQuery = { __typename?: 'Query', sport: { __typename?: 'Sport', id: string, experiencedLimit?: number | null }, sportExperiences: Array<{ __typename?: 'SportExperience', userId: string }> };
 
 export type AddSportExperiencesMutationVariables = Exact<{
   sportId: Scalars['ID']['input'];
@@ -2589,6 +2589,7 @@ export type DeleteTeamMutationOptions = Apollo.BaseMutationOptions<DeleteTeamMut
 export const GetSportExperienceDocument = gql`
     query GetSportExperience($sportId: ID!) {
   sport(id: $sportId) {
+    id
     experiencedLimit
   }
   sportExperiences(sportId: $sportId) {
