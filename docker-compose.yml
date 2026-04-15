@@ -167,6 +167,8 @@ services:
         condition: service_healthy
       form:
         condition: service_healthy
+      grafana:
+        condition: service_started
     ports:
       - "80:80"
       - "443:443"
@@ -237,6 +239,8 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       # セキュリティ: Grafana を外部から直接アクセスさせる場合はドメインを設定
       GF_SERVER_DOMAIN: ${GRAFANA_DOMAIN:-localhost}
+      GF_SERVER_ROOT_URL: https://%(domain)s/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       # Discord Webhook URL（アラート通知用）
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
     volumes:
@@ -249,6 +253,7 @@ services:
         condition: service_healthy
     networks:
       - backend
+      - frontend
 
 networks:
   backend:
