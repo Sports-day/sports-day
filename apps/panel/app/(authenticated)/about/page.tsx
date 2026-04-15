@@ -38,8 +38,9 @@ const members: Member[] = [
     role: "バックエンド・フロントエンド開発者",
     badge: "A2",
     name: "山本 哲也",
-    image: "/about/members/yamamoto.png",
+    image: "/about/members/yamamoto.PNG",
     github: "https://github.com/testusuke",
+    twitter: "https://x.com/testusuke",
     delay: 0,
   },
   {
@@ -48,7 +49,7 @@ const members: Member[] = [
     name: "中村 祐輔",
     image: "/about/members/nayu.png",
     github: "https://github.com/1nayu",
-    twitter: "https://twitter.com/1nayu",
+    twitter: "https://x.com/1nayu",
     delay: 0.1,
   },
   {
@@ -57,7 +58,7 @@ const members: Member[] = [
     name: "池嵜 太勇",
     image: "/about/members/ikezaki.png",
     github: "https://github.com/Takkun0310",
-    twitter: "https://twitter.com/ReTic0310",
+    twitter: "https://x.com/ReTic0310",
     delay: 0.1,
   },
   {
@@ -109,7 +110,15 @@ const members: Member[] = [
   },
 ];
 
-function MemberCard({ role, badge, name, image, github, twitter, delay = 0.1 }: Member) {
+function MemberCard({
+  role,
+  badge,
+  name,
+  image,
+  github,
+  twitter,
+  delay = 0.1,
+}: Member) {
   const theme = useTheme();
 
   return (
