@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -22,10 +25,12 @@ import (
 	"sports-day/api/repository"
 	"sports-day/api/service"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -148,6 +153,24 @@ func main() {
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 
+	// GraphQLエラーをすべてログに出力する
+	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
+		gqlerr := graphql.DefaultErrorPresenter(ctx, err)
+		api.Logger.Error().
+			Err(err).
+			Str("path", fmt.Sprintf("%v", gqlerr.Path)).
+			Str("message", gqlerr.Message).
+			Msg("[GraphQL] resolver error")
+		return gqlerr
+	})
+
+	srv.SetRecoverFunc(func(ctx context.Context, err any) error {
+		api.Logger.Error().
+			Interface("panic", err).
+			Msg("[GraphQL] panic recovered")
+		return fmt.Errorf("internal server error")
+	})
+
 	if env.Get().Debug {
 		srv.Use(extension.Introspection{})
 	}
@@ -174,7 +197,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              address,
-		Handler:           mux,
+		Handler:           httpAccessLogger(mux),
 		ReadTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout:      60 * time.Second,
@@ -226,4 +249,48 @@ func main() {
 	}
 
 	api.Logger.Info().Msg("Server gracefully shutdown")
+}
+
+// statusRecorder はレスポンスのHTTPステータスコードを記録するラッパー
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.statusCode = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+// httpAccessLogger はHTTPリクエストのアクセスログを出力するミドルウェア
+func httpAccessLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// GraphQL operationName を取得（POST /query のみ、bodyを読み直せるよう復元する）
+		operationName := "-"
+		if r.Method == http.MethodPost && r.URL.Path == "/query" {
+			if body, err := io.ReadAll(r.Body); err == nil {
+				r.Body = io.NopCloser(bytes.NewBuffer(body))
+				var gqlReq struct {
+					OperationName string `json:"operationName"`
+				}
+				if err := json.Unmarshal(body, &gqlReq); err == nil && gqlReq.OperationName != "" {
+					operationName = gqlReq.OperationName
+				}
+			}
+		}
+
+		next.ServeHTTP(rec, r)
+
+		api.Logger.Info().
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Str("operation", operationName).
+			Int("status", rec.statusCode).
+			Dur("duration", time.Since(start)).
+			Str("remote", r.RemoteAddr).
+			Msg("[HTTP] access")
+	})
 }
