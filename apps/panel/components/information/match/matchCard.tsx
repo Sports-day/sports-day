@@ -53,13 +53,13 @@ export default function MatchCard(props: MatchCardProps) {
 
                         <Grid2 container spacing={2.5} width="100%" height="100%" alignItems="center"
                                justifyContent="center" margin="0">
-                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
-                                <Typography variant="subtitle1" component="div" textAlign="center">
+                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center" sx={{ minWidth: 0, overflow: 'hidden' }}>
+                                <Typography variant="subtitle1" component="div" textAlign="center" noWrap sx={{ width: '100%' }}>
                                     {props.match.competition.name}
                                 </Typography>
                             </Grid2>
-                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
-                                <Typography variant="h4" component="div" textAlign="center">
+                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center" sx={{ minWidth: 0, overflow: 'hidden' }}>
+                                <Typography variant="h4" component="div" textAlign="center" noWrap sx={{ width: '100%' }}>
                                     {leftTeamName}
                                 </Typography>
                             </Grid2>
@@ -68,8 +68,8 @@ export default function MatchCard(props: MatchCardProps) {
                                     vs
                                 </Typography>
                             </Grid2>
-                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
-                                <Typography variant="h4" component="div" textAlign="center">
+                            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center" sx={{ minWidth: 0, overflow: 'hidden' }}>
+                                <Typography variant="h4" component="div" textAlign="center" noWrap sx={{ width: '100%' }}>
                                     {rightTeamName}
                                 </Typography>
                             </Grid2>

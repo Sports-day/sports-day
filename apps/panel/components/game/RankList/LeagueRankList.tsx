@@ -57,16 +57,20 @@ export const LeagueRankList = (props: LeagueRankListProps) => {
                             alignItems={"center"}
                             justifyContent={"start"}
                             m={2}
+                            sx={{ minWidth: 0, overflow: 'hidden' }}
                         >
                             <Typography
                                 fontSize={"30px"}
                                 color={theme.palette.text.secondary}
+                                sx={{ flexShrink: 0 }}
                             >
                                 #{props.myTeamRank}
                             </Typography>
                             <Typography
                                 fontSize={"20px"}
                                 color={theme.palette.text.primary}
+                                noWrap
+                                sx={{ minWidth: 0, flexGrow: 1 }}
                             >
                                 {props.myTeam?.name}
                             </Typography>

@@ -184,7 +184,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                                     <Typography sx={{color: theme.palette.text.primary, fontSize: "20px", fontWeight: "bold"}}>
                                         {leftScore}
                                     </Typography>
-                                    <Typography fontSize={"20px"} color={theme.palette.text.primary}>
+                                    <Typography noWrap fontSize={"20px"} color={theme.palette.text.primary} sx={{ minWidth: 0 }}>
                                         {leftTeamName}
                                     </Typography>
                                 </Stack>
@@ -210,7 +210,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                                     alignItems={"center"}
                                     spacing={2}
                                 >
-                                    <Typography fontSize={"20px"} color={theme.palette.text.primary}>
+                                    <Typography noWrap fontSize={"20px"} color={theme.palette.text.primary} sx={{ minWidth: 0 }}>
                                         {rightTeamName}
                                     </Typography>
                                     <Typography sx={{color: theme.palette.text.primary, fontSize: "20px", fontWeight: "bold"}}>
@@ -285,6 +285,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                     </Card>
 
                     <Typography
+                        noWrap
                         color={theme.palette.text.primary}
                         textAlign={"center"}
                         pt={2}
@@ -309,7 +310,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                                             >
                                                 <HiUser/>
                                             </Avatar>
-                                            <Typography color={theme.palette.text.primary}>
+                                            <Typography noWrap color={theme.palette.text.primary} sx={{ minWidth: 0, flex: 1 }}>
                                                 {user.name}
                                             </Typography>
                                         </Stack>
@@ -318,6 +319,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                             );
                         })}
                     <Typography
+                        noWrap
                         color={theme.palette.text.primary}
                         textAlign={"center"}
                         pt={2}
@@ -342,7 +344,7 @@ export const MatchDetail = (props: MatchDetailProps) => {
                                             >
                                                 <HiUser/>
                                             </Avatar>
-                                            <Typography color={theme.palette.text.primary}>
+                                            <Typography noWrap color={theme.palette.text.primary} sx={{ minWidth: 0, flex: 1 }}>
                                                 {user.name}
                                             </Typography>
                                         </Stack>

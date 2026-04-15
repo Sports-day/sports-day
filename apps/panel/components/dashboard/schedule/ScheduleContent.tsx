@@ -66,7 +66,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                         spacing={1}
                         justifyContent={"flex-start"}
                         alignItems={"center"}
-                        sx={{height: "60px", flexGrow: 1,}}
+                        sx={{height: "60px", flexGrow: 1, minWidth: 0, overflow: 'hidden'}}
                     >
                         <Box
                             sx={{
@@ -76,14 +76,15 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                                 backgroundColor: theme.palette.text.secondary,
                                 display: "flex",
                                 justifyContent: "center",
-                                alignItems: "center"
+                                alignItems: "center",
+                                flexShrink: 0,
                             }}
                         >
                             <Typography color={theme.palette.background.default} fontSize={"10px"} fontWeight={"600"}>
                                 VS
                             </Typography>
                         </Box>
-                        <Typography fontSize={"20px"} color={theme.palette.text.primary}>
+                        <Typography noWrap fontSize={"20px"} color={theme.palette.text.primary} sx={{ minWidth: 0 }}>
                             {opponentName}
                         </Typography>
                     </Stack>
@@ -117,7 +118,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                             <SvgIcon fontSize={"small"}>
                                 <HiMapPin color={theme.palette.text.secondary}/>
                             </SvgIcon>
-                            <Typography sx={{color: theme.palette.text.primary, fontSize: "14px"}}>
+                            <Typography noWrap sx={{color: theme.palette.text.primary, fontSize: "14px", minWidth: 0}}>
                                 {props.match.location?.name ?? "未登録"}
                             </Typography>
                         </Stack>

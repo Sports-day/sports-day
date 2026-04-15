@@ -41,9 +41,9 @@ export default function LeagueCard(props: LeagueCardProps) {
                         </Typography>
                     </Stack>
                 </Grid2>
-                <Grid2 size={{ xs: 4.5 }} display="flex" justifyContent="center" alignItems="center">
-                    <Stack direction="column" alignItems="center" justifyContent="center">
-                        <Typography variant="h4" component="div" textAlign="center">
+                <Grid2 size={{ xs: 4.5 }} display="flex" justifyContent="center" alignItems="center" sx={{ minWidth: 0, overflow: 'hidden' }}>
+                    <Stack direction="column" alignItems="center" justifyContent="center" sx={{ width: '100%', minWidth: 0 }}>
+                        <Typography variant="h4" component="div" textAlign="center" noWrap sx={{ width: '100%' }}>
                             {props.team ?? "未登録"}
                         </Typography>
                     </Stack>

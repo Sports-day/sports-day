@@ -57,6 +57,7 @@ export default function ConfirmCard({
       }}
     >
       <Typography
+        noWrap
         component="legend"
         sx={(theme) => ({
           ...theme.typography.buttonFont3,

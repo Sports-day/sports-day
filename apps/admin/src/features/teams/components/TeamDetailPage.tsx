@@ -25,6 +25,7 @@ import { AddMemberDialog } from './AddMemberDialog'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import {
+  CARD_TABLE_SX,
   CARD_TABLE_HEAD_SX,
   CARD_TABLE_CELL_SX,
   CARD_FIELD_SX,
@@ -160,10 +161,10 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
       {/* メンバーカード */}
       <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
+          <Typography noWrap sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {teamName}のメンバー
           </Typography>
-          <Table>
+          <Table sx={CARD_TABLE_SX}>
             <TableHead>
               <TableRow>
                 {['学籍番号', '名前', ''].map((header, i) => (

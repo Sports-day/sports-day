@@ -10,6 +10,12 @@ import {
 // カードのグラデーション背景
 export const CARD_GRADIENT = 'linear-gradient(to bottom, #E0E3F5 30%, #D2D6ED 70%)'
 
+// グラデーションカード内テーブル コンテナ（テキストオーバーフロー対応）
+export const CARD_TABLE_SX = {
+  tableLayout: 'fixed' as const,
+  width: '100%',
+}
+
 // グラデーションカード内テーブル（透明背景）
 export const CARD_TABLE_HEAD_SX = {
   fontSize: '13px',
@@ -20,6 +26,9 @@ export const CARD_TABLE_HEAD_SX = {
   borderLeft: 'none',
   borderRight: 'none',
   borderTop: 'none',
+  whiteSpace: 'nowrap' as const,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
 }
 
 export const CARD_TABLE_CELL_SX = {
@@ -27,6 +36,18 @@ export const CARD_TABLE_CELL_SX = {
   color: COLOR_PRIMARY_DARK,
   backgroundColor: 'transparent',
   border: 'none',
+  whiteSpace: 'nowrap' as const,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+}
+
+// リスト・ダイアログ内テーブル コンテナ（テキストオーバーフロー対応）
+export const LIST_TABLE_SX = {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 1,
+  overflow: 'hidden',
+  width: '100%',
+  tableLayout: 'fixed' as const,
 }
 
 // リスト・ダイアログ内テーブル（白背景）
@@ -121,4 +142,8 @@ export const BREADCRUMB_LINK_SX = {
 export const BREADCRUMB_CURRENT_SX = {
   fontSize: '16px',
   color: COLOR_PRIMARY_DARK,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap' as const,
+  maxWidth: '40vw',
 }

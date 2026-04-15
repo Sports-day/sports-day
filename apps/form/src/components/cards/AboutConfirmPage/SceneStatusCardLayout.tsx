@@ -82,7 +82,7 @@ export default function SceneStatusCardLayout({
                 alignItems: "center",
               }}
             >
-              <Typography>{statusMessage}</Typography>
+              <Typography noWrap sx={{ maxWidth: '100%' }}>{statusMessage}</Typography>
             </Stack>
           ) : (
             <Stack spacing={"16px"}>
@@ -101,6 +101,7 @@ export default function SceneStatusCardLayout({
                   }}
                 >
                   <Typography
+                    noWrap
                     sx={(theme) => ({
                       ...theme.typography.buttonFont2,
                       flexGrow: 1,

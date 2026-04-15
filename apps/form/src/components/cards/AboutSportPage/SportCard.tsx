@@ -97,7 +97,7 @@ export default function SportCard({
               <SportIcon imageUrl={imageUrl} />
               <Stack
                 direction="row"
-                sx={{ alignItems: "center", justifyContent: "center" }}
+                sx={{ alignItems: "center", justifyContent: "center", minWidth: 0, width: '100%', overflow: 'hidden' }}
               >
                 {hasTeam && (
                   <Box
@@ -120,8 +120,10 @@ export default function SportCard({
                   </Box>
                 )}
                 <Typography
+                  noWrap
                   sx={(theme) => ({
                     ...theme.typography.secondFont,
+                    minWidth: 0,
                   })}
                 >
                   {name}

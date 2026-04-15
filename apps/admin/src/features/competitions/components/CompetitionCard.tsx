@@ -26,10 +26,10 @@ export function CompetitionCard({ competition, onSelect, dragHandle }: Competiti
         '&:focus-visible': { outline: 'none' },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', overflow: 'hidden' }}>
         {dragHandle}
-        <GroupsIcon sx={{ fontSize: 20, color: '#4A5ABB' }} />
-        <Typography sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400 }}>
+        <GroupsIcon sx={{ fontSize: 20, color: '#4A5ABB', flexShrink: 0 }} />
+        <Typography noWrap sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400, minWidth: 0 }}>
           {competition.name}
         </Typography>
       </Box>

@@ -29,7 +29,7 @@ import { AddEntryDialog } from './AddEntryDialog'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SportSelect } from './SportSelect'
 import { SceneSelect } from '@/components/ui/SceneSelect'
-import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
+import { BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_TABLE_SX, CARD_TABLE_HEAD_SX, CARD_TABLE_CELL_SX, CARD_GRADIENT, CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX } from '@/styles/commonSx'
 import { DateTimeInput } from '@/components/ui/DateTimeInput'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { showToast } from '@/lib/toast'
@@ -294,7 +294,7 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
       {leagueStandings && leagueStandings.matches.length > 0 && (
         <Card elevation={0} sx={{ background: CARD_GRADIENT, overflow: 'hidden' }}>
           <CardContent sx={{ pb: '12px !important', overflow: 'hidden' }}>
-            <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 1.5 }}>
+            <Typography noWrap sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 1.5 }}>
               {leagueName} リーグ表
             </Typography>
             <Box sx={{ overflowX: 'auto', mx: 0.5 }}>
@@ -422,10 +422,10 @@ export function LeagueDetailPage({ leagueId, leagueName, competitionId, competit
       {/* エントリーカード */}
       <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
+          <Typography noWrap sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {leagueName}のエントリー
           </Typography>
-          <Table>
+          <Table sx={CARD_TABLE_SX}>
             <TableHead>
               <TableRow>
                 {['チーム名', 'クラス', ''].map((header, i) => (
