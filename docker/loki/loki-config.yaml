@@ -14,6 +14,7 @@ server:
 
 # ─── 共通設定（ingesterとストレージの共有設定）────────────────────
 common:
+  instance_addr: 127.0.0.1
   path_prefix: /loki
   storage:
     filesystem:
@@ -21,6 +22,7 @@ common:
       rules_directory: /loki/rules
   replication_factor: 1
   ring:
+    instance_addr: 127.0.0.1
     kvstore:
       store: inmemory
 
