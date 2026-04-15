@@ -24,6 +24,11 @@ type Sports interface {
 		sportID string,
 		imageID string,
 	) error
+	ClearImageID(
+		ctx context.Context,
+		db *gorm.DB,
+		sportID string,
+	) error
 
 	ListAllExperiences(ctx context.Context, db *gorm.DB) ([]*db_model.SportExperience, error)
 	ListExperiencesBySportID(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.SportExperience, error)

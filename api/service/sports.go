@@ -104,10 +104,14 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 			if err := s.sportsRepository.UpdateImageID(ctx, tx, id, *input.ImageID); err != nil {
 				return errors.Wrap(err)
 			}
-			sport, err = s.sportsRepository.Get(ctx, tx, id)
-			if err != nil {
+		} else {
+			if err := s.sportsRepository.ClearImageID(ctx, tx, id); err != nil {
 				return errors.Wrap(err)
 			}
+		}
+		sport, err = s.sportsRepository.Get(ctx, tx, id)
+		if err != nil {
+			return errors.Wrap(err)
 		}
 
 		result = sport
