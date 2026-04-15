@@ -132,6 +132,17 @@ func (r sports) UpdateImageID(ctx context.Context, db *gorm.DB, sportID string, 
 	return nil
 }
 
+func (r sports) ClearImageID(ctx context.Context, db *gorm.DB, sportID string) error {
+	if err := db.WithContext(ctx).
+		Model(&db_model.Sport{}).
+		Where("id = ?", sportID).
+		Update("image_id", nil).
+		Error; err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
 func (r sports) ListAllExperiences(ctx context.Context, db *gorm.DB) ([]*db_model.SportExperience, error) {
 	var exps []*db_model.SportExperience
 	if err := db.WithContext(ctx).Find(&exps).Error; err != nil {
