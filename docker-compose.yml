@@ -1,3 +1,7 @@
+# プロジェクト名を明示することでデプロイ場所に関わらずコンテナ名を統一する。
+# Alloy の docker/alloy/config.alloy でこのプロジェクト名でフィルタリングしている。
+name: sports-day
+
 services:
   # ─── MySQL ───────────────────────────────────────────
   mysql:
