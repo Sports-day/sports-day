@@ -7947,9 +7947,9 @@ func (ec *executionContext) _Judgment_name(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Judgment_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -19612,7 +19612,7 @@ func (ec *executionContext) _Query_rules(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*model.Rule)
 	fc.Result = res
-	return ec.marshalNRule2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRule(ctx, field.Selections, res)
+	return ec.marshalNRule2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRuleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_rules(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -33827,44 +33827,6 @@ func (ec *executionContext) marshalNRule2sportsᚑdayᚋapiᚋgraphᚋmodelᚐRu
 	return ec._Rule(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRule2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRule(ctx context.Context, sel ast.SelectionSet, v []*model.Rule) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalORule2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRule(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
 func (ec *executionContext) marshalNRule2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Rule) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -35253,13 +35215,6 @@ func (ec *executionContext) marshalOPlacementMethod2ᚖsportsᚑdayᚋapiᚋgrap
 	return v
 }
 
-func (ec *executionContext) marshalORule2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐRule(ctx context.Context, sel ast.SelectionSet, v *model.Rule) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Rule(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalOSport2ᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐSport(ctx context.Context, sel ast.SelectionSet, v *model.Sport) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -35312,16 +35267,6 @@ func (ec *executionContext) marshalOSportScene2ᚕᚖsportsᚑdayᚋapiᚋgraph�
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalOString2string(ctx context.Context, v any) (string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	return res
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {
