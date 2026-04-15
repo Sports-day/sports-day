@@ -123,10 +123,7 @@ func FormatLocationResponse(location *db_model.Location) *Location {
 }
 
 func FormatCompetitionResponse(competition *db_model.Competition) *Competition {
-	var sportID string
-	if competition.SportID.Valid {
-		sportID = competition.SportID.String
-	}
+	sportID := competition.SportID
 	var startTime *string
 	if competition.StartTime.Valid {
 		s := competition.StartTime.Time.Format(time.RFC3339)

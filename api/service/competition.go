@@ -62,7 +62,7 @@ func (s *Competition) Create(ctx context.Context, input *model.CreateCompetition
 			Name:         input.Name,
 			Type:         input.Type.String(),
 			SceneID:      input.SceneID,
-			SportID:      sql.NullString{Valid: true, String: input.SportID},
+			SportID:      input.SportID,
 			DisplayOrder: maxOrder + 1,
 		}
 
@@ -128,7 +128,7 @@ func (s *Competition) Update(ctx context.Context, id string, input model.UpdateC
 		competition.SceneID = *input.SceneID
 	}
 	if input.SportID != nil {
-		competition.SportID = sql.NullString{Valid: true, String: *input.SportID}
+		competition.SportID = *input.SportID
 	}
 
 	competition, err = s.competitionRepository.Save(ctx, s.db, competition)
@@ -1123,8 +1123,8 @@ func (s *Competition) computeStandingsForPromotion(ctx context.Context, tx *gorm
 	}
 
 	var rankingRules []*db_model.RankingRule
-	if comp.SportID.Valid {
-		rankingRules, err = s.sportsRepository.ListRankingRules(ctx, tx, comp.SportID.String)
+	if comp.SportID != "" {
+		rankingRules, err = s.sportsRepository.ListRankingRules(ctx, tx, comp.SportID)
 		if err != nil {
 			return nil, errors.Wrap(err)
 		}
