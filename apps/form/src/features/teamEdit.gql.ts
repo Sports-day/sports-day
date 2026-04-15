@@ -123,6 +123,7 @@ export const DELETE_TEAM = gql`
 export const GET_SPORT_EXPERIENCE = gql`
   query GetSportExperience($sportId: ID!) {
     sport(id: $sportId) {
+      id
       experiencedLimit
     }
     sportExperiences(sportId: $sportId) {

@@ -54,6 +54,7 @@ export function useTeamEdit() {
   );
   const { data: experienceData, loading: experienceLoading } = useGetSportExperienceQuery({
     variables: { sportId: sports },
+    fetchPolicy: "cache-and-network",
   });
 
   // Graph API でユーザー名を解決
@@ -75,7 +76,9 @@ export function useTeamEdit() {
     [msGraphUsers],
   );
 
-  const experiencedLimit = experienceData?.sport?.experiencedLimit ?? null;
+  const rawExperiencedLimit = experienceData?.sport?.experiencedLimit ?? null;
+  // 0 以下は未設定と同様に「制限なし」として扱う
+  const experiencedLimit = rawExperiencedLimit != null && rawExperiencedLimit > 0 ? rawExperiencedLimit : null;
 
   // 既存の経験者データで初期化（一度だけ）
   useEffect(() => {
@@ -328,6 +331,7 @@ export function useTeamEdit() {
           GetTeamDocument,
           "GetSceneSport",
           "GetAllTeamdata",
+          "GetSportExperience",
         ],
       });
       navigate(-1);
