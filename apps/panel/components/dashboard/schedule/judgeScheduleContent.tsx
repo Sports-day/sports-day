@@ -162,7 +162,7 @@ export const ScheduleContent = (props: ScheduleContentProps) => {
                             <SvgIcon fontSize={"small"}>
                                 <HiMapPin color={theme.palette.text.secondary}/>
                             </SvgIcon>
-                            <Typography sx={{color: theme.palette.text.primary, fontSize: "14px"}}>
+                            <Typography noWrap sx={{color: theme.palette.text.primary, fontSize: "14px", minWidth: 0}}>
                                 {props.match.location?.name ?? "未登録"}
                             </Typography>
                         </Stack>

@@ -41,10 +41,11 @@ export default function TeamCard({
         flexDirection: "column",
       }}
     >
-      <Box sx={{ pb: "8px" }}>
+      <Box sx={{ pb: "8px", px: "8px" }}>
         <Typography
+          noWrap
           align="center"
-          sx={(theme) => ({ ...theme.typography.buttonFont3 })}
+          sx={(theme) => ({ ...theme.typography.buttonFont3, width: '100%' })}
         >
           {teamname}
         </Typography>
@@ -85,7 +86,7 @@ export default function TeamCard({
                   }}
                 />
               )}
-              <Typography sx={{ color: "white" }}>{item.name}</Typography>
+              <Typography noWrap sx={{ color: "white", minWidth: 0, width: '100%', textAlign: 'center' }}>{item.name}</Typography>
             </Card>
           ))}
         </Stack>

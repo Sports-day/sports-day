@@ -23,7 +23,7 @@ export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
 
     return (
         <>
-            <Box sx={{minWidth:"140px"}}>
+            <Box sx={{minWidth:"140px", maxWidth:"200px"}}>
                 <Button
                     disableElevation
                     color={"secondary"}
@@ -33,6 +33,7 @@ export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
                         background:`linear-gradient(${theme.palette.secondary.main}, ${theme.palette.secondary.dark}80)`,
                         border: `1px solid ${theme.palette.secondary.dark}66`,
                         boxShadow: `0px 0px 5px ${theme.palette.primary.dark}33`,
+                        width: '100%',
                     }}
                 >
                     <Stack
@@ -42,6 +43,7 @@ export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
                         alignItems={"start"}
                         mt={1}
                         mb={2}
+                        sx={{ minWidth: 0 }}
                     >
                         <Typography
                             fontSize={"30px"}
@@ -53,6 +55,8 @@ export const LeagueRankListCard = (props: LeagueRankListCardProps) => {
                             fontSize={"20px"}
                             color={theme.palette.text.primary}
                             mt={1}
+                            noWrap
+                            sx={{ width: '100%' }}
                         >
                             {props.teamName}
                         </Typography>

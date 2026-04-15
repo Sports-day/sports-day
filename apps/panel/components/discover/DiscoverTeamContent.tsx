@@ -51,12 +51,12 @@ export const DiscoverTeamContent = (props:DiscoverTeamContentProps) => {
                                 spacing={1}
                                 py={1}
                                 pl={2}
-                                sx={{flexGrow:1}}
+                                sx={{flexGrow:1, minWidth: 0, overflow: 'hidden'}}
                             >
                                 <Typography color={theme.palette.text.secondary} fontSize={"14px"}>
                                     チーム名
                                 </Typography>
-                                <Typography fontWeight={"bold"} color={theme.palette.text.primary}>
+                                <Typography fontWeight={"bold"} color={theme.palette.text.primary} noWrap sx={{ width: '100%' }}>
                                     {props.matchSet.team.name}
                                 </Typography>
                             </Stack>

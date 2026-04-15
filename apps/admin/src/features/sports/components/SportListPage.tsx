@@ -211,18 +211,18 @@ export function SportListPage({ onNavigateToCreate, onSelectSport }: Props) {
                       '&:focus-visible': { outline: 'none' },
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', overflow: 'hidden' }}>
                       <DragHandle disabled={hasFilter} />
                       {sport.imageUrl ? (
                         <Box
                           component="img"
                           src={sport.imageUrl}
-                          sx={{ width: 24, height: 24, borderRadius: 0.5, objectFit: 'cover' }}
+                          sx={{ width: 24, height: 24, borderRadius: 0.5, objectFit: 'cover', flexShrink: 0 }}
                         />
                       ) : (
-                        <SportsIcon sx={{ fontSize: 20, color: '#4A5ABB' }} />
+                        <SportsIcon sx={{ fontSize: 20, color: '#4A5ABB', flexShrink: 0 }} />
                       )}
-                      <Typography sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400 }}>
+                      <Typography noWrap sx={{ fontSize: '14px', color: '#2F3C8C', fontWeight: 400, minWidth: 0 }}>
                         {sport.name}
                       </Typography>
                     </Box>

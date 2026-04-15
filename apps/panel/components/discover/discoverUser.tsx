@@ -83,7 +83,7 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                     >
                         <HiUser/>
                     </Avatar>
-                    <Typography color={theme.palette.text.primary}>
+                    <Typography noWrap color={theme.palette.text.primary} sx={{ minWidth: 0, flex: 1 }}>
                         {props.user.name}
                     </Typography>
 
@@ -138,7 +138,7 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                         >
                                             <HiUser/>
                                         </Avatar>
-                                        <Typography color={theme.palette.text.primary}>
+                                        <Typography noWrap color={theme.palette.text.primary} sx={{ minWidth: 0, flex: 1 }}>
                                             {props.user.name} さん
                                         </Typography>
                                     </Stack>
@@ -159,11 +159,11 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                         {!userMatchSport?.image && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
                                     </Avatar>
                                     <Stack>
-                                        <Typography fontSize={"14px"} sx={{color: theme.palette.text.primary}}>
+                                        <Typography noWrap fontSize={"14px"} sx={{color: theme.palette.text.primary}}>
                                             {props.user.name}の競技
                                         </Typography>
                                         {userMatchSports.map((sport) => (
-                                            <Typography fontSize={"14px"} fontWeight={"600"} key={sport.id}>
+                                            <Typography noWrap fontSize={"14px"} fontWeight={"600"} key={sport.id}>
                                                 {sport.name}
                                             </Typography>
                                         ))}

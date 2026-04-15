@@ -16,7 +16,7 @@ import {
 } from '@mui/material'
 import { useTags } from '../hooks/useTags'
 import { QueryError } from '@/components/ui/QueryError'
-import { CARD_GRADIENT, ACTION_BUTTON_SX, LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX } from '@/styles/commonSx'
+import { CARD_GRADIENT, ACTION_BUTTON_SX, LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, LIST_TABLE_SX } from '@/styles/commonSx'
 import { SearchFilterBar, type FilterDef } from '@/components/ui/SearchFilterBar'
 
 type Props = {
@@ -87,7 +87,7 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-          <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
+          <Table size="small" sx={LIST_TABLE_SX}>
             <TableHead>
               <TableRow>
                 <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>

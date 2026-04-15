@@ -30,17 +30,19 @@ export const SportsListElement = (props: SportsListElementProps) => {
                     justifyContent={"flex-start"}
                     alignItems={"center"}
                     spacing={2}
+                    sx={{ minWidth: 0, overflow: 'hidden' }}
                 >
                     <Avatar
                         alt={props.sport.name}
                         sx={{height: "2em", width: "2em",
                             backgroundColor: theme.palette.text.secondary,
+                            flexShrink: 0,
                         }}
                         src={props.sport.image?.url ?? undefined}
                     >
                         {!props.sport.image && <HiOutlineExclamationTriangle fontSize={"20px"}/>}
                     </Avatar>
-                    <Typography color={theme.palette.text.primary}>
+                    <Typography noWrap color={theme.palette.text.primary} sx={{ minWidth: 0 }}>
                         {props.sport.name}
                     </Typography>
                 </Stack>

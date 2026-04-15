@@ -90,8 +90,9 @@ export const MatchResultPopup = ({ myTeamMatches }: Props) => {
             py: 2,
           }}
         >
-          <Box sx={{ flex: 1, textAlign: "center" }}>
+          <Box sx={{ flex: 1, textAlign: "center", minWidth: 0, overflow: 'hidden' }}>
             <Typography
+              noWrap
               fontSize="16px"
               fontWeight={600}
               color={
@@ -113,8 +114,9 @@ export const MatchResultPopup = ({ myTeamMatches }: Props) => {
               {score0} - {score1}
             </Typography>
           </Box>
-          <Box sx={{ flex: 1, textAlign: "center" }}>
+          <Box sx={{ flex: 1, textAlign: "center", minWidth: 0, overflow: 'hidden' }}>
             <Typography
+              noWrap
               fontSize="16px"
               fontWeight={600}
               color={

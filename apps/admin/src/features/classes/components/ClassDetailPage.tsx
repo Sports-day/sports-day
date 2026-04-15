@@ -24,6 +24,7 @@ import { showToast } from '@/lib/toast'
 import { AddClassMemberDialog } from './AddClassMemberDialog'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
+  CARD_TABLE_SX,
   CARD_TABLE_HEAD_SX,
   CARD_TABLE_CELL_SX,
   CARD_FIELD_SX,
@@ -144,10 +145,10 @@ export function ClassDetailPage({ classId, onBack }: Props) {
 
       <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-          <Typography sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
+          <Typography noWrap sx={{ fontSize: '16px', fontWeight: 600, color: '#2F3C8C', mb: 2 }}>
             {className}のメンバー
           </Typography>
-          <Table>
+          <Table sx={CARD_TABLE_SX}>
             <TableHead>
               <TableRow>
                 {['名前', 'メール', ''].map((header, i) => (

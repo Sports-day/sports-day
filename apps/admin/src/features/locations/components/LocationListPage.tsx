@@ -14,7 +14,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import { useLocations } from '../hooks/useLocations'
 import { QueryError } from '@/components/ui/QueryError'
-import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
+import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, LIST_TABLE_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 import { SearchFilterBar } from '@/components/ui/SearchFilterBar'
 
 type Props = {
@@ -61,7 +61,7 @@ export function LocationListPage({ onNavigateToCreate, onSelectLocation }: Props
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
+            <Table size="small" sx={LIST_TABLE_SX}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={LIST_TABLE_HEAD_SX}>名前</TableCell>

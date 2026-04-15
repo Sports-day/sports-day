@@ -107,7 +107,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
                             </Typography>
 
                         </Stack>
-                        <Typography variant="h3" component="div" textAlign="center">
+                        <Typography noWrap variant="h3" component="div" textAlign="center" sx={{ width: '100%' }}>
                             {results[1]?.teamName ?? "なし"}
                         </Typography>
 
@@ -151,7 +151,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
                             </Typography>
 
                         </Stack>
-                        <Typography variant="h3" component="div" textAlign="center">
+                        <Typography noWrap variant="h3" component="div" textAlign="center" sx={{ width: '100%' }}>
                             {results[0]?.teamName ?? "なし"}
                         </Typography>
 
@@ -195,7 +195,7 @@ export default function Top3LeagueCards(props: Top3LeagueCardsProps) {
                             </Typography>
 
                         </Stack>
-                        <Typography variant="h3" component="div" textAlign="center">
+                        <Typography noWrap variant="h3" component="div" textAlign="center" sx={{ width: '100%' }}>
                             {results[2]?.teamName ?? "なし"}
                         </Typography>
 

@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import { useImages } from '../hooks/useImages'
 import { QueryError } from '@/components/ui/QueryError'
-import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
+import { LIST_TABLE_HEAD_SX, LIST_TABLE_CELL_SX, LIST_TABLE_SX, CARD_GRADIENT, ACTION_BUTTON_SX } from '@/styles/commonSx'
 
 const CLICKABLE_CELL_SX = {
   ...LIST_TABLE_CELL_SX,
@@ -57,7 +57,7 @@ export function ImageListPage({ onCreateClick, onImageClick }: Props) {
           </Box>
 
           <Box sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflowX: 'auto' }}>
-            <Table size="small" sx={{ backgroundColor: '#FFFFFF', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
+            <Table size="small" sx={LIST_TABLE_SX}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ ...LIST_TABLE_HEAD_SX, width: 56 }}>プレビュー</TableCell>

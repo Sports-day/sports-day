@@ -31,7 +31,7 @@ export const SportCard: React.FC<SportCardProps> = ({img, children, link}) => {
                         src={img}
                     >
                     </Avatar>}
-                    <Typography fontSize={"inherit"} color={"text.primary"}>
+                    <Typography noWrap fontSize={"inherit"} color={"text.primary"} sx={{ width: '100%', textAlign: 'center' }}>
                         {children}
                     </Typography>
                 </Stack>

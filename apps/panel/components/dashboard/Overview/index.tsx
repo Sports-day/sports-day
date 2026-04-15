@@ -90,8 +90,8 @@ export const Overview = (props: OverviewProps) => {
                                 <Typography fontSize={"14px"} sx={{color: theme.palette.text.primary}}>
                                     あなたの競技
                                 </Typography>
-                                <Typography fontSize={"14px"} fontWeight={"600"}
-                                            sx={{color: theme.palette.text.primary}}>
+                                <Typography noWrap fontSize={"14px"} fontWeight={"600"}
+                                            sx={{color: theme.palette.text.primary, width: '100%'}}>
                                     {props.mySport.name}
                                 </Typography>
                             </Stack>
@@ -159,7 +159,7 @@ export const Overview = (props: OverviewProps) => {
                                 <Typography sx={{fontSize: "14px", color: theme.palette.text.primary}}>
                                     チーム
                                 </Typography>
-                                <Typography sx={{fontSize: "18px", color: theme.palette.text.primary}}>
+                                <Typography noWrap sx={{fontSize: "18px", color: theme.palette.text.primary, width: '100%'}}>
                                     {props.myTeam.name}
                                 </Typography>
                             </Stack>
@@ -230,7 +230,7 @@ export const Overview = (props: OverviewProps) => {
                                                 >
                                                     <HiUser/>
                                                 </Avatar>
-                                                <Typography color={theme.palette.text.primary}>
+                                                <Typography noWrap color={theme.palette.text.primary} sx={{ minWidth: 0, flex: 1 }}>
                                                     {user.name}
                                                 </Typography>
                                             </Stack>

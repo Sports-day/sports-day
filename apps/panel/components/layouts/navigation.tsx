@@ -108,7 +108,7 @@ export const Navigation = () => {
                                     >
                                         <HiUser/>
                                     </Avatar>
-                                    <Typography sx={{color: theme.palette.text.secondary, fontSize: "16px"}}>
+                                    <Typography noWrap sx={{color: theme.palette.text.secondary, fontSize: "16px", minWidth: 0, flex: 1}}>
                                         {user?.name ?? "unknown"} さん
                                     </Typography>
                                 </Stack>
