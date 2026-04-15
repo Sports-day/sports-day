@@ -22,10 +22,12 @@ import (
 	"sports-day/api/repository"
 	"sports-day/api/service"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -147,6 +149,24 @@ func main() {
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
+
+	// GraphQLエラーをすべてログに出力する
+	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
+		gqlerr := graphql.DefaultErrorPresenter(ctx, err)
+		api.Logger.Error().
+			Err(err).
+			Str("path", fmt.Sprintf("%v", gqlerr.Path)).
+			Str("message", gqlerr.Message).
+			Msg("[GraphQL] resolver error")
+		return gqlerr
+	})
+
+	srv.SetRecoverFunc(func(ctx context.Context, err any) error {
+		api.Logger.Error().
+			Interface("panic", err).
+			Msg("[GraphQL] panic recovered")
+		return fmt.Errorf("internal server error")
+	})
 
 	if env.Get().Debug {
 		srv.Use(extension.Introspection{})
