@@ -273,6 +273,22 @@ func main() {
 	// channel to confirm server shutdown
 	shutdownChan := make(chan struct{}, 1)
 
+	// API 死活監視用ハートビートログ（60秒ごとに出力）
+	// Grafana アラートルール "API停止" がこのイベントの欠落を検知する
+	heartbeatCtx, cancelHeartbeat := context.WithCancel(context.Background())
+	go func() {
+		ticker := time.NewTicker(60 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				api.Logger.Info().Str("event", "heartbeat").Msg("API heartbeat")
+			case <-heartbeatCtx.Done():
+				return
+			}
+		}
+	}()
+
 	// create channel for graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
@@ -293,6 +309,7 @@ func main() {
 
 	// wait for signal
 	<-quit
+	cancelHeartbeat()
 	api.Logger.Info().Str("event", "server_shutting_down").Msg("Shutting down server...")
 
 	// set shutdown timeout

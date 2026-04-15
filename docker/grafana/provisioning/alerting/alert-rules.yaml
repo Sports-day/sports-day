@@ -1,0 +1,208 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Sports Day API
+    folder: Sports Day
+    interval: 1m
+    rules:
+
+      # ─── 5xxエラー急増 ──────────────────────────────────────────
+      # 5分間で5件以上の 5xx エラーが発生した場合に発火
+      - uid: sda-5xx-spike
+        title: 5xxエラー急増
+        condition: C
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki-datasource
+            model:
+              editorMode: code
+              expr: 'sum(count_over_time({service="api"} | json | status=~"5.." [5m]))'
+              instant: true
+              range: false
+              refId: A
+          - refId: C
+            datasourceUid: "-100"
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [5]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: "-100"
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "5分間で5件以上の5xxエラーが発生しています"
+          description: "APIサーバーで内部エラーが急増しています。Grafanaでログを確認してください。"
+        labels:
+          severity: critical
+        isPaused: false
+
+      # ─── レスポンスタイム高騰 ───────────────────────────────────
+      # p95 レスポンスタイムが 2000ms を超えた場合に発火
+      - uid: sda-response-time
+        title: レスポンスタイム高騰
+        condition: C
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki-datasource
+            model:
+              editorMode: code
+              expr: 'quantile_over_time(0.95, {service="api"} | json | unwrap duration_ms [5m])'
+              instant: true
+              range: false
+              refId: A
+          - refId: C
+            datasourceUid: "-100"
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [2000]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: "-100"
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "レスポンスタイム p95 が 2000ms を超えています"
+          description: "APIのパフォーマンスが著しく低下しています。負荷状況を確認してください。"
+        labels:
+          severity: warning
+        isPaused: false
+
+      # ─── 認証失敗急増 ────────────────────────────────────────────
+      # 5分間で10件以上の認証失敗が発生した場合に発火
+      - uid: sda-auth-failure
+        title: 認証失敗急増
+        condition: C
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki-datasource
+            model:
+              editorMode: code
+              expr: 'sum(count_over_time({service="api"} | json | event="token_invalid" [5m]))'
+              instant: true
+              range: false
+              refId: A
+          - refId: C
+            datasourceUid: "-100"
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [10]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: "-100"
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 1m
+        annotations:
+          summary: "5分間で10件以上の認証失敗が発生しています"
+          description: "不正アクセスの可能性があります。アクセスログを確認してください。"
+        labels:
+          severity: warning
+        isPaused: false
+
+      # ─── API停止（heartbeat 欠落） ────────────────────────────────
+      # 3分間ハートビートが途絶えた場合に発火（noDataState=Alerting で完全停止も検知）
+      - uid: sda-api-down
+        title: API停止
+        condition: C
+        data:
+          - refId: A
+            queryType: instant
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki-datasource
+            model:
+              editorMode: code
+              expr: 'sum(count_over_time({service="api"} | json | event="heartbeat" [3m]))'
+              instant: true
+              range: false
+              refId: A
+          - refId: C
+            datasourceUid: "-100"
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: "-100"
+              refId: C
+              type: classic_conditions
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          summary: "APIサーバーが停止しています"
+          description: "3分間ハートビートが検出されませんでした。コンテナの状態を確認してください。"
+        labels:
+          severity: critical
+        isPaused: false
