@@ -1,7 +1,7 @@
 # ================================================================
-# Grafana Loki 設定ファイル
+# Grafana Loki 設定ファイル（シングルノード構成）
 #
-# シングルノード構成（Docker Compose 本番環境用）。
+# Docker Compose 本番環境用。
 # ストレージはローカルファイルシステム（DATA_DIR/loki）を使用する。
 # ================================================================
 
@@ -12,25 +12,17 @@ server:
   grpc_listen_port: 9096
   log_level: warn
 
-# ─── IngesterとWAL ────────────────────────────────────────────────
-ingester:
-  wal:
-    enabled: true
-    dir: /loki/wal
-  lifecycler:
-    ring:
-      kvstore:
-        store: inmemory
-      replication_factor: 1
-    final_sleep: 0s
-  # チャンクが非アクティブになって1時間後にフラッシュ
-  chunk_idle_period: 1h
-  # チャンクの最大生存時間
-  max_chunk_age: 2h
-  # フラッシュ後のチャンク保持期間
-  chunk_retain_period: 30s
-  # メモリ上の最大チャンク数
-  max_transfer_retries: 0
+# ─── 共通設定（ingesterとストレージの共有設定）────────────────────
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
 
 # ─── スキーマ設定 ─────────────────────────────────────────────────
 schema_config:
@@ -43,46 +35,39 @@ schema_config:
         prefix: index_
         period: 24h
 
-# ─── ストレージ設定 ───────────────────────────────────────────────
-storage_config:
-  tsdb_shipper:
-    active_index_directory: /loki/tsdb-shipper-active
-    cache_location: /loki/tsdb-shipper-cache
-    cache_ttl: 24h
-  filesystem:
-    directory: /loki/chunks
+# ─── Ingester設定 ─────────────────────────────────────────────────
+ingester:
+  chunk_idle_period: 1h
+  max_chunk_age: 2h
+  chunk_retain_period: 30s
 
 # ─── 制限設定 ─────────────────────────────────────────────────────
 limits_config:
-  # 古いサンプルを拒否（タイムスタンプのズレ対策）
-  reject_old_samples: true
-  reject_old_samples_max_age: 168h  # 7日
-  # 1ストリームあたりのログバースト制限
-  ingestion_burst_size_mb: 16
-  ingestion_rate_mb: 8
-  # クエリの最大範囲（30日）
-  max_query_length: 720h
-  # 1クエリあたりの最大エントリ数
-  max_entries_limit_per_query: 50000
-  # Lokiラベルの高カーディナリティ警告閾値
-  max_streams_per_user: 10000
+  # ログの保持期間（90日）
+  # compactor.retention_enabled: true と合わせて機能する
+  retention_period: 2160h
 
-# ─── コンパクター設定 ─────────────────────────────────────────────
+  # 古いサンプルを拒否（クライアントの時刻ズレ対策）
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+
+  # 取り込みレート制限
+  ingestion_rate_mb: 8
+  ingestion_burst_size_mb: 16
+
+  # クエリ制限
+  max_query_length: 720h
+  max_entries_limit_per_query: 50000
+
+# ─── コンパクター設定（古いログの自動削除）────────────────────────
 compactor:
   working_directory: /loki/compactor
   compaction_interval: 10m
+  # retention_enabled を true にすることで limits_config.retention_period が有効になる
   retention_enabled: true
   retention_delete_delay: 2h
   retention_delete_worker_count: 150
   delete_request_store: filesystem
-
-# ─── データ保持期間 ───────────────────────────────────────────────
-# 本番ログを90日間保持
-common:
-  replication_factor: 1
-  ring:
-    kvstore:
-      store: inmemory
 
 # ─── クエリキャッシュ ─────────────────────────────────────────────
 query_range:
@@ -98,16 +83,3 @@ query_range:
 frontend:
   log_queries_longer_than: 5s
   compress_responses: true
-
-# ─── ルーラー（アラート）─────────────────────────────────────────
-ruler:
-  storage:
-    type: local
-    local:
-      directory: /loki/rules
-  rule_path: /loki/rules-temp
-  alertmanager_url: http://localhost:9093
-  ring:
-    kvstore:
-      store: inmemory
-  enable_api: true

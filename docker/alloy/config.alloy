@@ -4,18 +4,21 @@
 //
 // 収集フロー:
 //   Docker コンテナ stdout
-//   → loki.source.docker (収集)
-//   → loki.process (JSON パース + ラベル抽出)
-//   → loki.write (Loki へ転送)
+//   → discovery.docker   (コンテナ検出)
+//   → discovery.relabel  (ラベル付与・フィルタリング)
+//   → loki.source.docker (ログ収集)
+//   → loki.process       (JSON パース + ラベル抽出)
+//   → loki.write         (Loki へ転送)
 //
 // Loki ラベル設計（低カーディナリティのみ）:
 //   - app      : アプリ名（ログ本文の "app" フィールドから抽出）
 //   - level    : ログレベル（ログ本文の "level" フィールドから抽出）
 //   - container: Docker コンテナ名（Docker メタデータから自動付与）
+//   - service  : Docker Compose サービス名
 //
 // 高カーディナリティなフィールド（request_id, user_id 等）は
 // ラベルではなくログ本文に含める。LogQL でフィルタリングする:
-//   {container="sports-day-api"} | json | request_id = "01JR8X..."
+//   {service="api"} | json | request_id = "01JR8X..."
 // ================================================================
 
 // ─── Docker コンテナの自動検出 ─────────────────────────────────
@@ -29,9 +32,20 @@ discovery.docker "containers" {
   }
 }
 
-// ─── コンテナ名・サービス名をラベルとして付与 ───────────────────
+// ─── ラベル付与・プロジェクトフィルタリング ────────────────────
+// このプロジェクトのコンテナのみ収集し、
+// 同一ホスト上の無関係なコンテナのログを収集しない。
 discovery.relabel "containers" {
   targets = discovery.docker.containers.targets
+
+  // Docker Compose プロジェクト名でフィルタ（sports-day プロジェクトのみ収集）
+  // プロジェクト名はデプロイ時のディレクトリ名または --project-name オプションに依存する。
+  // 異なるプロジェクト名でデプロイする場合は正規表現を修正すること。
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "sports.day|sportsday"
+    action        = "keep"
+  }
 
   // コンテナ名（先頭の "/" を除去）を container ラベルに設定
   rule {
@@ -54,7 +68,6 @@ loki.source.docker "containers" {
 
   forward_to = [loki.process.parse_logs.receiver]
 
-  // ラベルの初期値（後段の process で上書き・追加される）
   labels = {
     "platform" = "docker",
   }
@@ -62,8 +75,9 @@ loki.source.docker "containers" {
 
 // ─── ログのパース処理 ────────────────────────────────────────────
 loki.process "parse_logs" {
-  // API サービスの JSON ログをパースしてフィールドを抽出
-  // JSON でないログ（nginx 等）はそのまま通過する
+  // API サービスの JSON ログをパースしてフィールドを抽出する。
+  // JSON でないログ（nginx, mysql 等）はパースエラーが無視され、
+  // 元のログ行がそのまま転送される（stage.json はエラーを無視する）。
   stage.json {
     expressions = {
       level   = "level",
@@ -72,19 +86,14 @@ loki.process "parse_logs" {
     }
   }
 
-  // 抽出したフィールドをラベルとして設定
-  // ※ app・level のみラベル化（低カーディナリティ）
-  // ※ request_id, user_id 等の高カーディナリティフィールドはラベル化しない
+  // 抽出したフィールドをラベルとして設定する。
+  // app・level のみラベル化（低カーディナリティを維持）。
+  // request_id, user_id 等の高カーディナリティフィールドはラベル化しない。
   stage.labels {
     values = {
       app   = "app",
       level = "level",
     }
-  }
-
-  // メッセージフィールドが抽出できた場合は log ラベルとして設定
-  stage.label_drop {
-    values = ["filename"]
   }
 
   forward_to = [loki.write.local.receiver]
@@ -95,7 +104,4 @@ loki.write "local" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
   }
-
-  // バッチ設定（デフォルトで十分だが明示的に設定）
-  external_labels = {}
 }

@@ -177,7 +177,12 @@ services:
   loki:
     image: grafana/loki:3.0.0
     restart: unless-stopped
+    # Loki はコンテナ内で UID 10001 (loki ユーザー) で動作する。
+    # DATA_DIR/loki ディレクトリを事前に作成しておく必要がある。
+    # 初回セットアップ時に以下を実行:
+    #   mkdir -p ${DATA_DIR}/loki && chown 10001:10001 ${DATA_DIR}/loki
     command: -config.file=/etc/loki/loki-config.yaml
+    user: "10001:10001"
     volumes:
       - ./docker/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - ${DATA_DIR:-./data}/loki:/loki
@@ -193,8 +198,14 @@ services:
   # ─── Alloy (ログ収集エージェント) ─────────────────────
   # Docker コンテナの stdout を収集して Loki に転送する。
   # /var/run/docker.sock のマウントが必要。
+  #
+  # ⚠️ Docker Compose プロジェクト名フィルタについて:
+  # docker/alloy/config.alloy の discovery.relabel でプロジェクト名フィルタを設定している。
+  # デフォルトのプロジェクト名はデプロイ時のディレクトリ名になる。
+  # 異なる名前でデプロイする場合は config.alloy の regex を修正すること。
+  # または: docker compose --project-name sports-day up -d で統一することを推奨。
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.8.1
     restart: unless-stopped
     command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
     volumes:
@@ -210,6 +221,11 @@ services:
   grafana:
     image: grafana/grafana:11.0.0
     restart: unless-stopped
+    # Grafana はコンテナ内で UID 472 (grafana ユーザー) で動作する。
+    # DATA_DIR/grafana ディレクトリを事前に作成しておく必要がある。
+    # 初回セットアップ時に以下を実行:
+    #   mkdir -p ${DATA_DIR}/grafana && chown 472:472 ${DATA_DIR}/grafana
+    user: "472:472"
     environment:
       TZ: ${TZ:-Asia/Tokyo}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
