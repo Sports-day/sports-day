@@ -194,7 +194,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              address,
-		Handler:           mux,
+		Handler:           httpAccessLogger(mux),
 		ReadTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout:      60 * time.Second,
@@ -246,4 +246,32 @@ func main() {
 	}
 
 	api.Logger.Info().Msg("Server gracefully shutdown")
+}
+
+// statusRecorder はレスポンスのHTTPステータスコードを記録するラッパー
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.statusCode = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+// httpAccessLogger はHTTPリクエストのアクセスログを出力するミドルウェア
+func httpAccessLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(rec, r)
+		api.Logger.Info().
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Int("status", rec.statusCode).
+			Dur("duration", time.Since(start)).
+			Str("remote", r.RemoteAddr).
+			Str("user_agent", r.UserAgent()).
+			Msg("[HTTP] access")
+	})
 }
