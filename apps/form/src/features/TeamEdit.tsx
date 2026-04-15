@@ -100,6 +100,7 @@ export default function TeamEdit() {
                   borderStyle: "solid",
                   borderRadius: "10px",
                   width: "100%",
+                  minWidth: 0,
                   background: "none",
                   display: "flex",
                   flexDirection: "column",
@@ -123,6 +124,8 @@ export default function TeamEdit() {
                   direction="column"
                   flexWrap="nowrap"
                   sx={{
+                    width: "100%",
+                    minWidth: 0,
                     flexGrow: 1,
                     overflowY: "scroll",
                     overflowX: "hidden",
