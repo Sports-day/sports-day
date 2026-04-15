@@ -136,6 +136,7 @@ export default function SceneStatusCardLayout({
                           <Grid
                             size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
                             key={`${item.scenename}-${user}-${userIndex}`}
+                            sx={{ minWidth: 0 }}
                           >
                             <Card
                               sx={{
@@ -150,6 +151,8 @@ export default function SceneStatusCardLayout({
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                minWidth: 0,
+                                overflow: "hidden",
                               }}
                             >
                               <Typography

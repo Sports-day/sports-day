@@ -237,7 +237,7 @@ function TeamRow({ label, score, isWinner, isLoser, isBottom, empty, seedNumber,
         />
       )}
       <Typography noWrap sx={{
-        fontSize: '13px', flex: 1,
+        fontSize: '13px', flex: 1, minWidth: 0,
         color: empty ? C.emptySeed : (isWinner ? C.headerText : C.bodyText),
         fontWeight: isWinner ? 700 : 400,
         fontStyle: empty ? 'italic' : 'normal',

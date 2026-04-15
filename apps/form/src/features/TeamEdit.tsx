@@ -149,7 +149,7 @@ export default function TeamEdit() {
                     </Box>
                   ) : (
                     selectedMember.map((student) => (
-                      <Box key={student.studentId} sx={{ p: "8px" }}>
+                      <Box key={student.studentId} sx={{ p: "8px", width: "100%", minWidth: 0 }}>
                         <MembersCard
                           studentname={student.studentName}
                           fixed={true}

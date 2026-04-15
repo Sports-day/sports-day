@@ -193,7 +193,7 @@ export default function ConfirmCard({
                       ?.slice()
                       .reverse()
                       .map((member, idx) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`${row.teamId}-${member.name}-${idx}`}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`${row.teamId}-${member.name}-${idx}`} sx={{ minWidth: 0 }}>
                           <Card
                             sx={{
                               background: theme.palette.card.main,
@@ -206,6 +206,8 @@ export default function ConfirmCard({
                               alignItems: "center",
                               justifyContent: "center",
                               position: "relative",
+                              minWidth: 0,
+                              overflow: "hidden",
                             }}
                           >
                             {member.isExperienced && (
