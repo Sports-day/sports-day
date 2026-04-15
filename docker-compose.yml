@@ -240,7 +240,7 @@ services:
       # nginx リバースプロキシ経由でサブパス /grafana/ に配置する設定
       # GRAFANA_DOMAIN に実際のドメインを設定すること（例: example.com）
       GF_SERVER_DOMAIN: ${GRAFANA_DOMAIN:-localhost}
-      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
+      GF_SERVER_ROOT_URL: "https://%(domain)s/grafana/"
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       # Discord Webhook URL（アラート通知用）
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
