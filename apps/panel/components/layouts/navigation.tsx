@@ -2,7 +2,7 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
     HiArrowRightOnRectangle,
-    HiHome, HiMagnifyingGlass, HiNewspaper, HiSparkles, HiUser, HiXMark
+    HiHome, HiMagnifyingGlass, HiNewspaper, HiSparkles, HiUser, HiUsers, HiXMark
 } from "react-icons/hi2";
 import {
     FaGithubAlt
@@ -202,6 +202,38 @@ export const Navigation = () => {
                                 </Avatar>
                                 <Typography sx={{color: theme.palette.text.primary, fontSize: "14px"}}>
                                     GitHub
+                                </Typography>
+                            </Stack>
+                        </Button>
+                        <Button
+                            color={"secondary"}
+                            sx={{background:theme.palette.secondary.dark}}
+                            fullWidth disableElevation
+                            variant={"contained"}
+                            component={Link}
+                            to={"/join"}
+                        >
+                            <Stack
+                                direction={"row"}
+                                justifyContent={"flex-start"}
+                                alignItems={"center"}
+                                spacing={2}
+                                py={0.5}
+                                width={"100%"}
+                            >
+                                <Avatar
+                                    sx={{
+                                        height: "2em",
+                                        width: "2em",
+                                        backgroundColor: "inherit",
+                                    }}
+                                >
+                                    <SvgIcon>
+                                        <HiUsers color={`${theme.palette.text.primary}99`}/>
+                                    </SvgIcon>
+                                </Avatar>
+                                <Typography sx={{color: theme.palette.text.primary, fontSize: "14px"}}>
+                                    開発者になりませんか？
                                 </Typography>
                             </Stack>
                         </Button>
