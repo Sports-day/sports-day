@@ -225,7 +225,7 @@ services:
 
   # ─── Grafana (可視化・分析ダッシュボード) ──────────────
   grafana:
-    image: grafana/grafana:11.0.0
+    image: grafana/grafana:11.6.0
     restart: unless-stopped
     # Grafana はコンテナ内で UID 472 (grafana ユーザー) で動作する。
     # DATA_DIR/grafana ディレクトリを事前に作成しておく必要がある。
@@ -242,6 +242,12 @@ services:
       GF_SERVER_DOMAIN: ${GRAFANA_DOMAIN:-localhost}
       GF_SERVER_ROOT_URL: "https://%(domain)s/grafana/"
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      # HTTPS 環境での Cookie セキュリティ（Secure フラグ必須）
+      GF_SECURITY_COOKIE_SECURE: "true"
+      # Grafana 11 の CSRF 保護: POST リクエストの Origin を許可するドメインを明示。
+      # GRAFANA_DOMAIN が未設定だと root_url との Origin 不一致でリダイレクトが
+      # 発生し ERR_UNSAFE_REDIRECT につながるため、信頼済みオリジンを明示する。
+      GF_SECURITY_CSRF_TRUSTED_ORIGINS: "https://${GRAFANA_DOMAIN:-localhost}"
       # Discord Webhook URL（アラート通知用）
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
     volumes:
