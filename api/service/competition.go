@@ -1259,6 +1259,14 @@ func (s *Competition) FindBySceneID(ctx context.Context, sceneID string) ([]*db_
 	return competitions, nil
 }
 
+func (s *Competition) FindBySportID(ctx context.Context, sportID string) ([]*db_model.Competition, error) {
+	competitions, err := s.competitionRepository.FindBySportID(ctx, s.db, sportID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return competitions, nil
+}
+
 // ApplyDefaults は大会のスケジュールパラメータを保存し、試合時間を自動適用する。
 // 手動設定された試合は変更せず、新たな基準点として後続の試合時間をずらす。
 func (s *Competition) ApplyDefaults(ctx context.Context, id string, input *model.ApplyCompetitionDefaultsInput) ([]*db_model.Match, error) {
