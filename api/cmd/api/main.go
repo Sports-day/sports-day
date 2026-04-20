@@ -217,6 +217,7 @@ func main() {
 				Str("event", "graphql_error").
 				Str("path", fmt.Sprintf("%v", gqlerr.Path)).
 				Msg("GraphQL internal error")
+			gqlerr.Message = pkgerrors.ErrorServerPanic.Error()
 		}
 
 		return gqlerr
