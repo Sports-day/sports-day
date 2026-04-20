@@ -250,6 +250,10 @@ services:
       GF_SECURITY_CSRF_TRUSTED_ORIGINS: "https://${GRAFANA_DOMAIN:-localhost}"
       # Discord Webhook URL（アラート通知用）
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+      # grafana-lokiexplore-app はサブパス環境で SystemJS の react/jsx-runtime
+      # 解決に失敗し毎回エラーを起こすため無効化する。
+      # Loki データソース・ダッシュボードパネルへの影響はない。
+      GF_PLUGINS_DISABLE_PLUGINS: "grafana-lokiexplore-app"
     volumes:
       - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
       - ${DATA_DIR:-./data}/grafana:/var/lib/grafana
