@@ -17,17 +17,20 @@ type Sport struct {
 	db               *gorm.DB
 	sportsRepository repository.Sports
 	imageService     *Image
+	competitionSvc   *Competition
 }
 
 func NewSports(
 	db *gorm.DB,
 	sportsRepository repository.Sports,
 	imageService *Image,
+	competitionSvc *Competition,
 ) Sport {
 	return Sport{
 		db:               db,
 		sportsRepository: sportsRepository,
 		imageService:     imageService,
+		competitionSvc:   competitionSvc,
 	}
 }
 
@@ -124,8 +127,16 @@ func (s *Sport) Update(ctx context.Context, id string, input model.UpdateSportsI
 }
 
 func (s *Sport) Delete(ctx context.Context, id string) (*db_model.Sport, error) {
+	linkedCompetitions, err := s.competitionSvc.FindBySportID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if len(linkedCompetitions) > 0 {
+		return nil, errors.ErrSportHasCompetitions
+	}
+
 	var result *db_model.Sport
-	err := s.db.Transaction(func(tx *gorm.DB) error {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
 		// 外部キー制約のためルールを先に削除
 		if err := tx.WithContext(ctx).Where("sport_id = ?", id).Delete(&db_model.Rule{}).Error; err != nil {
 			return errors.Wrap(err)

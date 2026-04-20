@@ -54,6 +54,7 @@ var (
 	ErrSaveTiebreakPriority           = NewError("TIEBREAK_PRIORITY_SAVE_FAILED", "タイブレーク優先度の保存に失敗しました")
 	ErrSceneCannotDelete              = NewError("SCENE_CANNOT_DELETE", "このシーンはスポーツに紐づいているため削除できません")
 	ErrSceneCannotDeleteByCompetition = NewError("SCENE_CANNOT_DELETE_BY_COMPETITION", "このシーンは大会に紐づいているため削除できません")
+	ErrSportHasCompetitions           = NewError("SPORT_HAS_COMPETITIONS", "この競技には紐づいている大会が存在するため削除できません。先に大会を削除してください")
 	ErrSportSceneAlreadyExists        = NewError("SPORT_SCENE_ALREADY_EXISTS", "このスポーツとシーンの組み合わせは既に存在します")
 	ErrSportEntryAlreadyExists        = NewError("SPORT_ENTRY_ALREADY_EXISTS", "このスポーツシーンとチームの組み合わせは既に存在します")
 	ErrExperiencedLimitExceeded       = NewError("EXPERIENCED_LIMIT_EXCEEDED", "チームの経験者数が上限を超えています")

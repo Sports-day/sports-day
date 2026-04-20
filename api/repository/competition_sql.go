@@ -143,6 +143,14 @@ func (r competition) FindBySceneID(ctx context.Context, db *gorm.DB, sceneID str
 	return competitions, nil
 }
 
+func (r competition) FindBySportID(ctx context.Context, db *gorm.DB, sportID string) ([]*db_model.Competition, error) {
+	var competitions []*db_model.Competition
+	if err := db.WithContext(ctx).Where("sport_id = ?", sportID).Find(&competitions).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return competitions, nil
+}
+
 // Promotion rule methods
 
 func (r competition) GetPromotionRule(ctx context.Context, db *gorm.DB, id string) (*db_model.PromotionRule, error) {

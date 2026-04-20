@@ -150,7 +150,7 @@ func main() {
 	competitionService.SetTournamentService(&tournamentService)
 	ruleService := service.NewRule(db, ruleRepository)
 	imageService := service.NewImage(db, imageRepository, s3Client, s3PublicClient, env.Get().Storage.Bucket, env.Get().Storage.Endpoint)
-	sportService := service.NewSports(db, sportRepository, &imageService)
+	sportService := service.NewSports(db, sportRepository, &imageService, &competitionService)
 
 	directiveHandler := graph.NewDirective(authorizerInstance)
 
@@ -217,6 +217,7 @@ func main() {
 				Str("event", "graphql_error").
 				Str("path", fmt.Sprintf("%v", gqlerr.Path)).
 				Msg("GraphQL internal error")
+			gqlerr.Message = pkgerrors.ErrorServerPanic.Error()
 		}
 
 		return gqlerr
