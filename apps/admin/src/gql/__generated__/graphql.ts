@@ -1536,6 +1536,13 @@ export type GetAdminSportsWithScenesQueryVariables = Exact<{ [key: string]: neve
 
 export type GetAdminSportsWithScenesQuery = { __typename?: 'Query', sports: Array<{ __typename?: 'Sport', id: string, name: string, scene?: Array<{ __typename?: 'SportScene', id: string, scene: { __typename?: 'Scene', id: string, name: string } }> | null }> };
 
+export type GetAdminSportSceneEntriesQueryVariables = Exact<{
+  sceneId: Scalars['ID']['input'];
+}>;
+
+
+export type GetAdminSportSceneEntriesQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string } }> }> } };
+
 export type CreateAdminCompetitionMutationVariables = Exact<{
   input: CreateCompetitionInput;
 }>;
@@ -3080,6 +3087,56 @@ export type GetAdminSportsWithScenesQueryHookResult = ReturnType<typeof useGetAd
 export type GetAdminSportsWithScenesLazyQueryHookResult = ReturnType<typeof useGetAdminSportsWithScenesLazyQuery>;
 export type GetAdminSportsWithScenesSuspenseQueryHookResult = ReturnType<typeof useGetAdminSportsWithScenesSuspenseQuery>;
 export type GetAdminSportsWithScenesQueryResult = Apollo.QueryResult<GetAdminSportsWithScenesQuery, GetAdminSportsWithScenesQueryVariables>;
+export const GetAdminSportSceneEntriesDocument = gql`
+    query GetAdminSportSceneEntries($sceneId: ID!) {
+  scene(id: $sceneId) {
+    id
+    sportScenes {
+      sport {
+        id
+      }
+      entries {
+        team {
+          id
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAdminSportSceneEntriesQuery__
+ *
+ * To run a query within a React component, call `useGetAdminSportSceneEntriesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAdminSportSceneEntriesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAdminSportSceneEntriesQuery({
+ *   variables: {
+ *      sceneId: // value for 'sceneId'
+ *   },
+ * });
+ */
+export function useGetAdminSportSceneEntriesQuery(baseOptions: Apollo.QueryHookOptions<GetAdminSportSceneEntriesQuery, GetAdminSportSceneEntriesQueryVariables> & ({ variables: GetAdminSportSceneEntriesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAdminSportSceneEntriesQuery, GetAdminSportSceneEntriesQueryVariables>(GetAdminSportSceneEntriesDocument, options);
+      }
+export function useGetAdminSportSceneEntriesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAdminSportSceneEntriesQuery, GetAdminSportSceneEntriesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAdminSportSceneEntriesQuery, GetAdminSportSceneEntriesQueryVariables>(GetAdminSportSceneEntriesDocument, options);
+        }
+export function useGetAdminSportSceneEntriesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAdminSportSceneEntriesQuery, GetAdminSportSceneEntriesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAdminSportSceneEntriesQuery, GetAdminSportSceneEntriesQueryVariables>(GetAdminSportSceneEntriesDocument, options);
+        }
+export type GetAdminSportSceneEntriesQueryHookResult = ReturnType<typeof useGetAdminSportSceneEntriesQuery>;
+export type GetAdminSportSceneEntriesLazyQueryHookResult = ReturnType<typeof useGetAdminSportSceneEntriesLazyQuery>;
+export type GetAdminSportSceneEntriesSuspenseQueryHookResult = ReturnType<typeof useGetAdminSportSceneEntriesSuspenseQuery>;
+export type GetAdminSportSceneEntriesQueryResult = Apollo.QueryResult<GetAdminSportSceneEntriesQuery, GetAdminSportSceneEntriesQueryVariables>;
 export const CreateAdminCompetitionDocument = gql`
     mutation CreateAdminCompetition($input: CreateCompetitionInput!) {
   createCompetition(input: $input) {

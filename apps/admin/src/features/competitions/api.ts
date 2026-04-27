@@ -174,6 +174,20 @@ export const GET_ADMIN_SPORTS_WITH_SCENES = gql`
   }
 `
 
+export const GET_ADMIN_SPORT_SCENE_ENTRIES = gql`
+  query GetAdminSportSceneEntries($sceneId: ID!) {
+    scene(id: $sceneId) {
+      id
+      sportScenes {
+        sport { id }
+        entries {
+          team { id }
+        }
+      }
+    }
+  }
+`
+
 export const CREATE_ADMIN_COMPETITION = gql`
   mutation CreateAdminCompetition($input: CreateCompetitionInput!) {
     createCompetition(input: $input) {

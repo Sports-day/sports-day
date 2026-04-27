@@ -4,6 +4,7 @@ import {
   Button,
   Checkbox,
   Chip,
+  CircularProgress,
   Collapse,
   Dialog,
   DialogContent,
@@ -24,13 +25,14 @@ type Props = {
   open: boolean
   leagueName: string
   sportId?: string
+  sceneId?: string
   existingTeamNames?: string[]
   onClose: () => void
   onAdd: (selectedIds: string[]) => void
 }
 
-export function AddEntryDialog({ open, leagueName, sportId = '', existingTeamNames = [], onClose, onAdd }: Props) {
-  const { teams } = useAddEntryTeams(sportId)
+export function AddEntryDialog({ open, leagueName, sportId = '', sceneId = '', existingTeamNames = [], onClose, onAdd }: Props) {
+  const { teams, loading } = useAddEntryTeams(sportId, sceneId)
   const existingSet = useMemo(() => new Set(existingTeamNames), [existingTeamNames])
   const availableTeams = useMemo(() => teams.filter(t => !existingSet.has(t.name)), [teams, existingSet])
   const { selected, allSelected, expandedTeamId, toggle, toggleAll, toggleExpand, handleAdd } = useAddEntryDialog(availableTeams.map(t => t.id), onAdd)
@@ -143,7 +145,11 @@ export function AddEntryDialog({ open, leagueName, sportId = '', existingTeamNam
             pr: 0.5,
           }}
         >
-          {filteredTeams.length === 0 ? (
+          {loading ? (
+            <Box sx={{ py: 6, textAlign: 'center' }}>
+              <CircularProgress size={24} sx={{ color: '#5B6DC6' }} />
+            </Box>
+          ) : filteredTeams.length === 0 ? (
             <Box sx={{ py: 6, textAlign: 'center' }}>
               <Typography sx={{ fontSize: '14px', color: '#666' }}>
                 {search ? '該当するチームがありません' : '追加できるチームがありません'}
