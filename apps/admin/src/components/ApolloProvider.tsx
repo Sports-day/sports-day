@@ -10,17 +10,19 @@ import { setContext } from "@apollo/client/link/context";
 import { userManager } from "@/lib/userManager";
 import { showErrorToast, showWarningToast, suppressNextError } from "@/lib/toast";
 
+// 複数クエリが同時にexpiredを検知してsigninSilent()を並行実行するのを防ぐ
+let renewingPromise: Promise<import('oidc-client-ts').User | null> | null = null
+
 const authLink = setContext(async (_, { headers }) => {
     let user = await userManager.getUser()
 
-    // トークンが期限切れの場合、サイレントリニューを試みる
     if (user?.expired) {
-        try {
-            user = await userManager.signinSilent()
-        } catch {
-            // サイレントリニュー失敗時はトークンなしで送信（401が返りerrorLinkで処理）
-            user = null
+        if (!renewingPromise) {
+            renewingPromise = userManager.signinSilent()
+                .catch(() => null)
+                .finally(() => { renewingPromise = null })
         }
+        user = await renewingPromise
     }
 
     return {
