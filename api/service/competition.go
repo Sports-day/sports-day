@@ -1313,29 +1313,19 @@ func (s *Competition) ApplyDefaults(ctx context.Context, id string, input *model
 			return matches[i].ID < matches[j].ID
 		})
 
-		// 4. 手動変更を基準点として後続試合の時間をずらすロジック（startTime指定時のみ）
+		// 4. 全試合に対して startTime + index * interval で時間を適用（startTime指定時のみ）
 		interval := time.Duration(input.MatchDuration+input.BreakDuration) * time.Minute
-		anchor := startTime
-		autoIndex := 0
 
 		// デフォルト場所の設定
 		locationID := pkggorm.ToNullString(input.LocationID)
 
-		for _, m := range matches {
+		for i, m := range matches {
 			needsSave := false
 
 			// 時間の適用（startTime が指定された場合のみ）
 			if startTimeValid {
-				if m.TimeManual {
-					// 手動設定: 時間は変更せず、新たな基準点にする
-					anchor = m.Time.Add(interval)
-					autoIndex = 0
-				} else {
-					// 自動設定: anchor + autoIndex * interval
-					m.Time = anchor.Add(time.Duration(autoIndex) * interval)
-					needsSave = true
-					autoIndex++
-				}
+				m.Time = startTime.Add(time.Duration(i) * interval)
+				needsSave = true
 			}
 
 			// 場所の適用: 手動設定でない試合のみ
