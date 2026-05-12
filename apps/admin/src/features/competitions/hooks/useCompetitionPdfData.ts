@@ -5,6 +5,7 @@ import {
   useGetAdminTeamsQuery,
   useGetAdminMatchesQuery,
 } from '@/gql/__generated__/graphql'
+import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 
 // ─── リーグ色 ─────────────────────────────────────────
 export const LEAGUE_COLORS = [
@@ -65,7 +66,18 @@ export function useCompetitionPdfData(sportId: string, sceneId: string, skip = f
   const { data: teamsData, loading: teamsLoading } = useGetAdminTeamsQuery({ skip, fetchPolicy: 'network-only' })
   const { data: matchesData, loading: matchesLoading } = useGetAdminMatchesQuery({ skip, fetchPolicy: 'network-only' })
 
-  const loading = compsLoading || leaguesLoading || teamsLoading || matchesLoading
+  // チームメンバーの Microsoft Graph displayName を取得（DB の name は null のケースがあるため）
+  const microsoftUserIds = useMemo(
+    () =>
+      (teamsData?.teams ?? [])
+        .flatMap((t) => t.users)
+        .map((u) => u.identify?.microsoftUserId)
+        .filter((id): id is string => !!id),
+    [teamsData],
+  )
+  const { msGraphUsers, loading: msGraphLoading } = useMsGraphUsers(microsoftUserIds)
+
+  const loading = compsLoading || leaguesLoading || teamsLoading || matchesLoading || msGraphLoading
 
   return useMemo(() => {
     if (!compsData || !leaguesData || !teamsData || !matchesData) {
@@ -120,7 +132,12 @@ export function useCompetitionPdfData(sportId: string, sceneId: string, skip = f
             id: t.id,
             name: t.name,
             groupName: t.group.name,
-            members: t.users.map((u) => ({ id: u.id, name: u.name ?? '' })),
+            members: t.users.map((u) => ({
+              id: u.id,
+              name: u.identify?.microsoftUserId
+                ? (msGraphUsers.get(u.identify.microsoftUserId)?.displayName ?? u.name ?? '')
+                : (u.name ?? ''),
+            })),
           }
         })
         .filter((t): t is PdfTeam => t !== null)
@@ -169,7 +186,7 @@ export function useCompetitionPdfData(sportId: string, sceneId: string, skip = f
     const locations = [...locationSet].sort()
 
     return { sportName, sceneName, leagues, schedule: allMatches, locations, loading }
-  }, [compsData, leaguesData, teamsData, matchesData, sportId, sceneId, loading])
+  }, [compsData, leaguesData, teamsData, matchesData, msGraphUsers, sportId, sceneId, loading])
 }
 
 function formatTime(time: string): string {
