@@ -60,10 +60,10 @@ export type CompetitionPdfData = {
 }
 
 export function useCompetitionPdfData(sportId: string, sceneId: string, skip = false): CompetitionPdfData {
-  const { data: compsData, loading: compsLoading } = useGetAdminCompetitionsQuery({ skip })
-  const { data: leaguesData, loading: leaguesLoading } = useGetAdminLeaguesQuery({ skip })
-  const { data: teamsData, loading: teamsLoading } = useGetAdminTeamsQuery({ skip })
-  const { data: matchesData, loading: matchesLoading } = useGetAdminMatchesQuery({ skip })
+  const { data: compsData, loading: compsLoading } = useGetAdminCompetitionsQuery({ skip, fetchPolicy: 'network-only' })
+  const { data: leaguesData, loading: leaguesLoading } = useGetAdminLeaguesQuery({ skip, fetchPolicy: 'network-only' })
+  const { data: teamsData, loading: teamsLoading } = useGetAdminTeamsQuery({ skip, fetchPolicy: 'network-only' })
+  const { data: matchesData, loading: matchesLoading } = useGetAdminMatchesQuery({ skip, fetchPolicy: 'network-only' })
 
   const loading = compsLoading || leaguesLoading || teamsLoading || matchesLoading
 
@@ -120,7 +120,7 @@ export function useCompetitionPdfData(sportId: string, sceneId: string, skip = f
             id: t.id,
             name: t.name,
             groupName: t.group.name,
-            members: t.users.map((u) => ({ id: u.id, name: u.name })),
+            members: t.users.map((u) => ({ id: u.id, name: u.name ?? '' })),
           }
         })
         .filter((t): t is PdfTeam => t !== null)

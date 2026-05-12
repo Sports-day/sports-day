@@ -1465,7 +1465,7 @@ export type GetAdminCompetitionQuery = { __typename?: 'Query', competition: { __
 export type GetAdminLeaguesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminLeaguesQuery = { __typename?: 'Query', leagues: Array<{ __typename?: 'League', id: string, name: string, teams: Array<{ __typename?: 'Team', id: string, name: string }> }> };
+export type GetAdminLeaguesQuery = { __typename?: 'Query', leagues: Array<{ __typename?: 'League', id: string, name: string, teams: Array<{ __typename?: 'Team', id: string, name: string, group: { __typename?: 'Group', id: string, name: string }, users: Array<{ __typename?: 'User', id: string, name?: string | null }> }> }> };
 
 export type GetAdminLeagueQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -2577,6 +2577,14 @@ export const GetAdminLeaguesDocument = gql`
     teams {
       id
       name
+      group {
+        id
+        name
+      }
+      users {
+        id
+        name
+      }
     }
   }
 }

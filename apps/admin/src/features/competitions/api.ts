@@ -35,7 +35,12 @@ export const GET_ADMIN_LEAGUES = gql`
     leagues {
       id
       name
-      teams { id name }
+      teams {
+        id
+        name
+        group { id name }
+        users { id name }
+      }
     }
   }
 `
