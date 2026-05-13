@@ -64,6 +64,9 @@ func (r team) List(ctx context.Context, db *gorm.DB) ([]*db_model.Team, error) {
 }
 
 func (r team) AddTeamUsers(ctx context.Context, db *gorm.DB, teamId string, userIds []string) ([]*db_model.TeamUser, error) {
+	if len(userIds) == 0 {
+		return []*db_model.TeamUser{}, nil
+	}
 	entries := make([]*db_model.TeamUser, 0, len(userIds))
 	for _, uid := range userIds {
 		entries = append(entries, &db_model.TeamUser{
@@ -79,6 +82,9 @@ func (r team) AddTeamUsers(ctx context.Context, db *gorm.DB, teamId string, user
 }
 
 func (r team) DeleteTeamUsers(ctx context.Context, db *gorm.DB, teamId string, userIds []string) ([]*db_model.TeamUser, error) {
+	if len(userIds) == 0 {
+		return []*db_model.TeamUser{}, nil
+	}
 	var teamUsers []*db_model.TeamUser
 	if err := db.WithContext(ctx).Where("team_id = ? AND user_id IN (?)", teamId, userIds).Find(&teamUsers).Error; err != nil {
 		return nil, errors.Wrap(err)
