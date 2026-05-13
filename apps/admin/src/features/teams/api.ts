@@ -16,7 +16,7 @@ export const GET_ADMIN_TEAM = gql`
     team(id: $id) {
       id
       name
-      group { id name }
+      group { id name users { id } }
       users { id name email identify { microsoftUserId } }
     }
   }
@@ -64,6 +64,43 @@ export const GET_ADMIN_GROUPS = gql`
     groups {
       id
       name
+    }
+  }
+`
+
+export const GET_ADMIN_SPORT_SCENES_FOR_TEAM = gql`
+  query GetAdminSportScenesForTeam {
+    sports {
+      id
+      name
+      scene {
+        id
+        scene { id name }
+        entries {
+          id
+          team { id }
+        }
+      }
+    }
+  }
+`
+
+export const ADD_TEAM_SPORT_ENTRY = gql`
+  mutation AddTeamSportEntry($sportSceneId: ID!, $teamId: ID!) {
+    addSportEntries(id: $sportSceneId, input: { teamIds: [$teamId] }) {
+      id
+      entries {
+        id
+        team { id }
+      }
+    }
+  }
+`
+
+export const DELETE_TEAM_SPORT_ENTRY = gql`
+  mutation DeleteTeamSportEntry($entryId: ID!) {
+    deleteSportEntry(id: $entryId) {
+      id
     }
   }
 `

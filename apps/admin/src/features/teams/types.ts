@@ -12,4 +12,19 @@ export type TeamMember = {
 export type SelectableUser = {
   id: string
   userName: string
+  email: string
+}
+
+export type SportSceneRow = {
+  sportSceneId: string
+  sceneId: string
+  sceneName: string
+  entryId: string | null
+  isRegistered: boolean
+}
+
+export type SportGroup = {
+  sportId: string
+  sportName: string
+  scenes: SportSceneRow[]
 }
