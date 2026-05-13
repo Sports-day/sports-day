@@ -110,11 +110,6 @@ export function ProgressionRulesEditor({
                   {Array.from({ length: rankCount }, (_, i) => minRank + i).map(rank => {
                     const rule = rules.find(r => r.rank === rank)
                     const selectedTarget = allTargets.find(t => t.id === rule?.targetId)
-                    const usedTargetIds = new Set(
-                      rules
-                        .filter(r => r.rank !== rank && r.targetId)
-                        .map(r => r.targetId),
-                    )
                     const hasBoth = availableTargets.leagues.length > 0 && availableTargets.tournaments.length > 0
                     return (
                       <Box
@@ -198,7 +193,6 @@ export function ProgressionRulesEditor({
                                   <MenuItem
                                     key={target.id}
                                     value={target.id}
-                                    disabled={usedTargetIds.has(target.id)}
                                     onClick={(e) => {
                                       if (isSelected) {
                                         e.preventDefault()
@@ -241,7 +235,6 @@ export function ProgressionRulesEditor({
                                   <MenuItem
                                     key={target.id}
                                     value={target.id}
-                                    disabled={usedTargetIds.has(target.id)}
                                     onClick={(e) => {
                                       if (isSelected) {
                                         e.preventDefault()
