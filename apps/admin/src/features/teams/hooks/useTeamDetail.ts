@@ -6,12 +6,16 @@ import {
   useDeleteAdminTeamMutation,
   useUpdateAdminTeamUsersMutation,
   useGetAdminGroupsQuery,
+  useGetAdminSportScenesForTeamQuery,
+  useAddTeamSportEntryMutation,
+  useDeleteTeamSportEntryMutation,
   GetAdminTeamsDocument,
   GetAdminTeamDocument,
+  GetAdminSportScenesForTeamDocument,
 } from '@/gql/__generated__/graphql'
 import { useMsGraphUsers } from '@/hooks/useMsGraphUsers'
 import { showApiErrorToast } from '@/lib/toast'
-import type { TeamMember, SelectableUser } from '../types'
+import type { TeamMember, SelectableUser, SportGroup } from '../types'
 
 export function useTeamDetail(teamId: string) {
   const { data, loading, error } = useGetAdminTeamQuery({
@@ -21,10 +25,12 @@ export function useTeamDetail(teamId: string) {
   })
   const { data: usersData } = useGetAdminUsersQuery({ fetchPolicy: 'cache-and-network' })
   const { data: groupsData } = useGetAdminGroupsQuery({ fetchPolicy: 'cache-and-network' })
+  const { data: sportScenesData, loading: sportScenesLoading } = useGetAdminSportScenesForTeamQuery({
+    fetchPolicy: 'cache-and-network',
+  })
 
   const team = data?.team
 
-  // ユーザーID → microsoftUserId のマップを作成
   const msIdMap = useMemo(() => {
     const map = new Map<string, string>()
     for (const u of usersData?.users ?? []) {
@@ -35,13 +41,9 @@ export function useTeamDetail(teamId: string) {
     return map
   }, [usersData])
 
-  const allMsIds = useMemo(
-    () => [...msIdMap.values()],
-    [msIdMap],
-  )
+  const allMsIds = useMemo(() => [...msIdMap.values()], [msIdMap])
   const { msGraphUsers } = useMsGraphUsers(allMsIds)
 
-  // サーバー値 + 編集差分パターン
   const serverName = team?.name ?? ''
   const serverGroupId = team?.group?.id ?? ''
 
@@ -73,6 +75,8 @@ export function useTeamDetail(teamId: string) {
   const [updateTeam] = useUpdateAdminTeamMutation()
   const [deleteTeam] = useDeleteAdminTeamMutation()
   const [updateTeamUsers] = useUpdateAdminTeamUsersMutation()
+  const [addSportEntry] = useAddTeamSportEntryMutation()
+  const [deleteSportEntry] = useDeleteTeamSportEntryMutation()
 
   const handleOpenDialog = () => setDialogOpen(true)
   const handleCloseDialog = () => setDialogOpen(false)
@@ -154,18 +158,70 @@ export function useTeamDetail(teamId: string) {
     }
   }
 
-  // 追加可能なユーザー（現チームメンバー以外）
-  const currentMemberIds = new Set((team?.users ?? []).map(u => u.id))
-  const selectableUsers: SelectableUser[] = (usersData?.users ?? [])
-    .filter(u => !currentMemberIds.has(u.id))
-    .map(u => {
-      const msId = u.identify?.microsoftUserId
-      const msUser = msId ? msGraphUsers.get(msId) : undefined
-      return {
-        id: u.id,
-        userName: msUser?.displayName ?? u.name ?? '',
+  const handleToggleSportEntry = async (sportSceneId: string, entryId: string | null) => {
+    try {
+      if (entryId) {
+        await deleteSportEntry({
+          variables: { entryId },
+          refetchQueries: [{ query: GetAdminSportScenesForTeamDocument }],
+        })
+      } else {
+        await addSportEntry({
+          variables: { sportSceneId, teamId },
+          refetchQueries: [{ query: GetAdminSportScenesForTeamDocument }],
+        })
       }
-    })
+    } catch (e) {
+      showApiErrorToast(e)
+    }
+  }
+
+  // グループに所属するユーザーIDセット（メンバー追加フィルタ用）
+  const groupUserIds = useMemo(
+    () => new Set((team?.group?.users ?? []).map(u => u.id)),
+    [team],
+  )
+
+  const currentMemberIds = new Set((team?.users ?? []).map(u => u.id))
+
+  // チームのクラスに所属し、かつまだメンバーでないユーザーのみ表示
+  const selectableUsers: SelectableUser[] = useMemo(() => {
+    const allUsers = usersData?.users ?? []
+    const shouldFilterByGroup = groupUserIds.size > 0
+    return allUsers
+      .filter(u => !currentMemberIds.has(u.id) && (!shouldFilterByGroup || groupUserIds.has(u.id)))
+      .map(u => {
+        const msId = u.identify?.microsoftUserId
+        const msUser = msId ? msGraphUsers.get(msId) : undefined
+        return {
+          id: u.id,
+          userName: msUser?.displayName ?? u.name ?? '',
+          email: msUser?.mail ?? u.email ?? '',
+        }
+      })
+  // currentMemberIdsはrender毎に変わるのでteam?.usersで依存
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usersData, team?.users, team?.group?.users, groupUserIds, msGraphUsers])
+
+  // スポーツエントリーグループ（スポーツ別・シーン別にまとめたもの）
+  const sportGroups: SportGroup[] = useMemo(() => {
+    const sports = sportScenesData?.sports ?? []
+    return sports
+      .map(sport => {
+        const scenes = (sport.scene ?? []).map(ss => {
+          const entry = ss.entries.find(e => e.team.id === teamId)
+          return {
+            sportSceneId: ss.id,
+            sceneId: ss.scene.id,
+            sceneName: ss.scene.name,
+            entryId: entry?.id ?? null,
+            isRegistered: !!entry,
+          }
+        })
+        return { sportId: sport.id, sportName: sport.name, scenes }
+      })
+      .filter(sg => sg.scenes.length > 0)
+  }, [sportScenesData, teamId])
 
   return {
     name,
@@ -187,6 +243,9 @@ export function useTeamDetail(teamId: string) {
     dirty,
     teamName: team?.name ?? '',
     selectableUsers,
+    sportGroups,
+    sportScenesLoading,
+    handleToggleSportEntry,
     loading,
     error: error ?? null,
     mutationError,

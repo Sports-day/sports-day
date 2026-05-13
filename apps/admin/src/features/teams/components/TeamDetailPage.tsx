@@ -22,6 +22,7 @@ import { useTeamDetail } from '../hooks/useTeamDetail'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { showToast } from '@/lib/toast'
 import { AddMemberDialog } from './AddMemberDialog'
+import { SportEntrySection } from './SportEntrySection'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SceneSelect } from '@/components/ui/SceneSelect'
 import {
@@ -61,6 +62,10 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
     handleCloseDeleteDialog,
     dirty,
     teamName,
+    selectableUsers,
+    sportGroups,
+    sportScenesLoading,
+    handleToggleSportEntry,
   } = useTeamDetail(teamId)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -158,6 +163,13 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
         </CardContent>
       </Card>
 
+      {/* スポーツエントリーカード */}
+      <SportEntrySection
+        sportGroups={sportGroups}
+        onToggle={handleToggleSportEntry}
+        loading={sportScenesLoading}
+      />
+
       {/* メンバーカード */}
       <Card elevation={0} sx={{ background: CARD_GRADIENT }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
@@ -208,6 +220,7 @@ export function TeamDetailPage({ teamId, onBack }: Props) {
         open={dialogOpen}
         onClose={handleCloseDialog}
         onAdd={handleAddMembers}
+        users={selectableUsers}
       />
 
       <ConfirmDialog
