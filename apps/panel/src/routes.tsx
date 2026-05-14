@@ -4,6 +4,7 @@ import LoginPage from "@/app/(auth)/login/page"
 import DashboardPage from "@/app/(authenticated)/page"
 import AboutPage from "@/app/(authenticated)/about/page"
 import DiscoverPage from "@/app/(authenticated)/discover/page"
+import JoinPage from "@/app/(authenticated)/join/page"
 import PrivacyPage from "@/app/(authenticated)/privacy/page"
 import SportsPage from "@/app/(authenticated)/sports/[id]/page"
 import JudgePage from "@/app/(authenticated)/judge/[locationId]/page"
@@ -27,6 +28,7 @@ export function AppRoutes() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/join" element={<JoinPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/sports/:id" element={<SportsPage />} />
           <Route path="/judge/:locationId" element={<JudgePage />} />
