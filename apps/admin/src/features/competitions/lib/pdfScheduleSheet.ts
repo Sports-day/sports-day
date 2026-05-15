@@ -35,9 +35,9 @@ export function renderScheduleSheet(doc: jsPDF, data: CompetitionPdfData): void 
   const refColW = pairWidth * 0.3
 
   // 幅が狭い場合はフォントを縮小
-  let fontSize: number = FONT_SIZE.SMALL // 18
-  if (pairWidth < 30) fontSize = 13.5
-  else if (pairWidth < 40) fontSize = 15
+  let fontSize: number = FONT_SIZE.SMALL // 12
+  if (pairWidth < 30) fontSize = 9
+  else if (pairWidth < 40) fontSize = 10
 
   // カラムスタイルを動���に構築
   const colStyles: Record<number, { cellWidth: number; halign: 'center' }> = {
