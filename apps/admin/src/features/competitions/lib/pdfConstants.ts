@@ -2,10 +2,10 @@ export const MARGIN = 5
 export const LINE_WIDTH = 0.1
 
 export const FONT_SIZE = {
-  TITLE: 27,
-  HEADER: 21,
-  CELL: 21,
-  SMALL: 18,
+  TITLE: 18,
+  HEADER: 14,
+  CELL: 14,
+  SMALL: 12,
 } as const
 
 export function hexToRgb(hex: string): [number, number, number] {
