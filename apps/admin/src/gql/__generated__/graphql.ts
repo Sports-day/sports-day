@@ -1828,7 +1828,7 @@ export type GetAdminMatchQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string } }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } | null } };
+export type GetAdminMatchQuery = { __typename?: 'Query', match: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string }, scene: { __typename?: 'Scene', id: string, name: string } }, winnerTeam?: { __typename?: 'Team', id: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, name?: string | null, isAttending: boolean, user?: { __typename?: 'User', id: string, name?: string | null, email?: string | null, identify: { __typename?: 'UserIdentify', microsoftUserId?: string | null } } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string, name: string } | null } | null } };
 
 export type UpdateAdminMatchResultMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -4719,6 +4719,10 @@ export const GetAdminMatchDocument = gql`
       name
       type
       sport {
+        id
+        name
+      }
+      scene {
         id
         name
       }
