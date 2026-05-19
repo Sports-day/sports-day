@@ -29,7 +29,7 @@ export type ApplyCompetitionDefaultsInput = {
   breakDuration: Scalars['Int']['input'];
   locationId?: InputMaybe<Scalars['ID']['input']>;
   matchDuration: Scalars['Int']['input'];
-  startTime: Scalars['String']['input'];
+  startTime?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** SEEDスロットへのチーム手動配置 */
@@ -102,11 +102,6 @@ export type CreateInformationInput = {
   content: Scalars['String']['input'];
   status?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
-};
-
-export type CreateJudgmentInput = {
-  entry: JudgmentEntry;
-  id: Scalars['ID']['input'];
 };
 
 export type CreateLeagueInput = {
@@ -343,8 +338,6 @@ export type Mutation = {
   /** 画像アップロード用のURLを発行する */
   createImageUploadURL: ImageUploadUrl;
   createInformation: Information;
-  /** 審判を作成する */
-  createJudgment: Judgment;
   /** リーグを追加する */
   createLeague: League;
   /** 場所を追加する */
@@ -538,11 +531,6 @@ export type MutationCreateImageUploadUrlArgs = {
 
 export type MutationCreateInformationArgs = {
   input: CreateInformationInput;
-};
-
-
-export type MutationCreateJudgmentArgs = {
-  input: CreateJudgmentInput;
 };
 
 
@@ -986,7 +974,7 @@ export type Query = {
   /** 進出先の期待チーム数と現在のエントリー数を取得する */
   promotionStatus: PromotionStatus;
   rule: Rule;
-  rules: Array<Maybe<Rule>>;
+  rules: Array<Rule>;
   scene: Scene;
   scenes: Array<Scene>;
   sport: Sport;
@@ -1430,7 +1418,7 @@ export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: '
 export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string }>, league?: { __typename?: 'League', id: string } | null }> };
+export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string, isDeleted: boolean }, teams: Array<{ __typename?: 'Team', id: string }>, league?: { __typename?: 'League', id: string } | null }> };
 
 export type GetPanelLeagueStandingsQueryVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1485,7 +1473,7 @@ export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typena
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
+export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, isDeleted: boolean } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
 
 export type SubmitPanelMatchScoreMutationVariables = Exact<{
   matchId: Scalars['ID']['input'];
@@ -1500,7 +1488,7 @@ export type GetJudgeMatchAtLocationQueryVariables = Exact<{
 }>;
 
 
-export type GetJudgeMatchAtLocationQuery = { __typename?: 'Query', nextJudgeMatchAtLocation?: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean } | null } | null };
+export type GetJudgeMatchAtLocationQuery = { __typename?: 'Query', nextJudgeMatchAtLocation?: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', isDeleted: boolean } }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean } | null } | null };
 
 export type StartMatchJudgingMutationVariables = Exact<{
   matchId: Scalars['ID']['input'];
@@ -1675,6 +1663,7 @@ export const GetPanelCompetitionsDocument = gql`
     scene {
       id
       name
+      isDeleted
     }
     teams {
       id
@@ -2080,6 +2069,7 @@ export const GetPanelMatchesDocument = gql`
       }
       scene {
         id
+        isDeleted
       }
     }
     winnerTeam {
@@ -2204,6 +2194,9 @@ export const GetJudgeMatchAtLocationDocument = gql`
       id
       name
       type
+      scene {
+        isDeleted
+      }
     }
     entries {
       id
