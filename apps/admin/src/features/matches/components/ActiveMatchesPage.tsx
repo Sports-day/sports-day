@@ -164,6 +164,8 @@ export function ActiveMatchesPage() {
       bracketName: '',
       sportId: m.competition.sport?.id ?? '',
       sportName: m.competition.sport?.name ?? '',
+      sceneId: '',
+      sceneName: '',
       locationId: m.location?.id ?? '',
       locationName: m.location?.name ?? '',
       teamAId: entry0?.team?.id ?? '',
