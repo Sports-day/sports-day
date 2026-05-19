@@ -14,6 +14,8 @@ export type MatchRow = {
   bracketName: string
   sportId: string
   sportName: string
+  sceneId: string
+  sceneName: string
   locationId: string
   locationName: string
   teamAId: string
@@ -42,12 +44,13 @@ function toStatusLabel(status: string): string {
 
 export function useActiveMatches() {
   const { data, loading, error, refetch } = useGetAdminMatchesQuery({ fetchPolicy: 'cache-and-network' })
-  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['sport', 'compType', 'bracket', 'status'], { status: 'ONGOING' })
+  const { values: fp, set: setFilter, reset: resetFilters } = useFilterParams(['sport', 'compType', 'bracket', 'status', 'scene'], { status: 'ONGOING' })
 
   const sportFilter = fp.sport
   const compTypeFilter = fp.compType
   const bracketFilter = fp.bracket
   const statusFilter = fp.status
+  const sceneFilter = fp.scene
 
   const matches: MatchRow[] = useMemo(() => {
     return (data?.matches ?? []).map(m => {
@@ -65,6 +68,8 @@ export function useActiveMatches() {
         bracketName: '',
         sportId: m.competition.sport.id,
         sportName: m.competition.sport.name,
+        sceneId: m.competition.scene.id,
+        sceneName: m.competition.scene.name,
         locationId: m.location?.id ?? '',
         locationName: m.location?.name ?? '',
         teamAId: entry0?.team?.id ?? '',
@@ -89,6 +94,14 @@ export function useActiveMatches() {
     return Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
   }, [matches])
 
+  const sceneOptions = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const m of matches) {
+      if (!map.has(m.sceneId)) map.set(m.sceneId, m.sceneName)
+    }
+    return Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+  }, [matches])
+
   const bracketOptions = useMemo(() => {
     if (compTypeFilter !== 'TOURNAMENT') return []
     const map = new Map<string, string>()
@@ -104,12 +117,13 @@ export function useActiveMatches() {
 
   const filtered = useMemo(() => {
     let result = matches
+    if (sceneFilter) result = result.filter(m => m.sceneId === sceneFilter)
     if (sportFilter) result = result.filter(m => m.sportId === sportFilter)
     if (compTypeFilter) result = result.filter(m => m.competitionType === compTypeFilter)
     if (bracketFilter) result = result.filter(m => m.bracketType === bracketFilter)
     if (statusFilter) result = result.filter(m => m.status === statusFilter)
     return result
-  }, [matches, sportFilter, compTypeFilter, bracketFilter, statusFilter])
+  }, [matches, sceneFilter, sportFilter, compTypeFilter, bracketFilter, statusFilter])
 
   const handleFilterChange = useCallback((key: string, value: string) => {
     setFilter(key, value)
@@ -122,10 +136,12 @@ export function useActiveMatches() {
     matches: filtered,
     allMatches: matches,
     sports,
+    sceneOptions,
     sportFilter,
     compTypeFilter,
     bracketFilter,
     statusFilter,
+    sceneFilter,
     bracketOptions,
     setFilter,
     handleFilterChange,

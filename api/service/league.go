@@ -647,7 +647,7 @@ func computeNewStandings(
 	standings := make([]*model.Standing, len(allStats))
 	for i, s := range allStats {
 		standings[i] = &model.Standing{
-			ID:            competitionID,
+			ID:            competitionID + "_" + s.TeamID,
 			TeamID:        s.TeamID,
 			Win:           int32(s.Win),
 			Draw:          int32(s.Draw),

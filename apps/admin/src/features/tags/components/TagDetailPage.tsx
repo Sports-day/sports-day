@@ -1,5 +1,5 @@
 import { Box, Breadcrumbs, Button, ButtonBase, Card, CardContent, TextField, Typography } from '@mui/material'
-import DeleteIcon from '@mui/icons-material/Delete'
+import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined'
 import CheckIcon from '@mui/icons-material/Check'
 import { BackButton } from '@/components/ui/BackButton'
 import { useState } from 'react'
@@ -40,7 +40,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
     setDeleteDialogOpen(false)
     try {
       await handleDelete()
-      showToast('タグを削除しました')
+      showToast('タグを無効化しました')
       onBack()
     } catch {
       // エラートーストはhook側で表示済み
@@ -52,7 +52,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
   const onRestore = async () => {
     try {
       await handleRestore()
-      showToast('タグを復元しました')
+      showToast('タグを有効化しました')
     } catch {
       // エラートーストはhook側で表示済み
     }
@@ -99,16 +99,16 @@ export function TagDetailPage({ tagId, onBack }: Props) {
                     '&:hover': { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' },
                   }}
                 >
-                  このタグを復元
+                  このタグを有効化
                 </Button>
               ) : (
                 <Button
                   variant="outlined"
-                  startIcon={<DeleteIcon sx={{ color: '#D71212' }} />}
+                  startIcon={<BlockOutlinedIcon sx={{ color: '#D71212' }} />}
                   onClick={() => setDeleteDialogOpen(true)}
                   sx={DELETE_BUTTON_SX}
                 >
-                  このタグを削除
+                  このタグを無効化
                 </Button>
               )}
               <Button
@@ -128,8 +128,8 @@ export function TagDetailPage({ tagId, onBack }: Props) {
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="タグを削除しますか？"
-        description={`「${tagName}」を削除します。削除後は一覧から無効として表示されます。`}
+        title="タグを無効化しますか？"
+        description={`「${tagName}」を無効化します。無効化後はpanelに表示されなくなります。`}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={onConfirmDelete}
       />

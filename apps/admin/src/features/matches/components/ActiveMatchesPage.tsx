@@ -108,10 +108,12 @@ export function ActiveMatchesPage() {
     matches: filteredMatches,
     allMatches: matches,
     sports,
+    sceneOptions,
     sportFilter,
     compTypeFilter,
     bracketFilter,
     statusFilter,
+    sceneFilter,
     bracketOptions,
     handleFilterChange,
     resetFilters,
@@ -183,6 +185,11 @@ export function ActiveMatchesPage() {
   const filterDefs: FilterDef[] = useMemo(() => {
     const defs: FilterDef[] = [
       {
+        key: 'scene',
+        label: 'タグ',
+        options: sceneOptions.map(s => ({ value: s.id, label: s.name })),
+      },
+      {
         key: 'sport',
         label: '競技',
         options: sports.map(s => ({ value: s.id, label: s.name })),
@@ -206,14 +213,15 @@ export function ActiveMatchesPage() {
       options: STATUS_OPTIONS,
     })
     return defs
-  }, [sports, compTypeFilter, bracketOptions])
+  }, [sceneOptions, sports, compTypeFilter, bracketOptions])
 
   const filterValues = useMemo(() => ({
+    scene: sceneFilter,
     sport: sportFilter,
     compType: compTypeFilter,
     bracket: bracketFilter,
     status: statusFilter,
-  }), [sportFilter, compTypeFilter, bracketFilter, statusFilter])
+  }), [sceneFilter, sportFilter, compTypeFilter, bracketFilter, statusFilter])
 
   const handleCardClick = (row: MatchRow) => {
     matchEdit.openMatch(toActiveMatch(row))

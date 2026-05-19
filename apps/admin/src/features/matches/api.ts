@@ -19,7 +19,7 @@ export const GET_ADMIN_MATCHES = gql`
       location { id name }
       locationManual
       competition {
-        id name type sport { id name }
+        id name type sport { id name } scene { id name }
       }
       winnerTeam { id }
       entries { id team { id name } score }

@@ -8,7 +8,7 @@ export const useFetchMatches = () => {
     errorPolicy: 'all',
   });
   return {
-    matches: (data?.matches ?? []).filter(Boolean),
+    matches: (data?.matches ?? []).filter(m => m && !m.competition?.scene?.isDeleted),
     isFetching: loading,
     refresh: refetch,
   };

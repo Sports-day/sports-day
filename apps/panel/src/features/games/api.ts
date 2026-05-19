@@ -13,6 +13,7 @@ export const GET_COMPETITIONS = gql`
       scene {
         id
         name
+        isDeleted
       }
       teams {
         id

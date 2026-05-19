@@ -243,8 +243,10 @@ func (r match) SaveMatchEntriesBatch(ctx context.Context, db *gorm.DB, entries [
 func (r match) ListActiveMatchesByLocationID(ctx context.Context, db *gorm.DB, locationID string) ([]*db_model.Match, error) {
 	var matches []*db_model.Match
 	err := db.WithContext(ctx).
-		Where("location_id = ? AND status IN ?", locationID, []string{"STANDBY", "ONGOING"}).
-		Order("time ASC, id ASC").
+		Joins("JOIN competitions ON matches.competition_id = competitions.id").
+		Joins("JOIN scenes ON competitions.scene_id = scenes.id").
+		Where("matches.location_id = ? AND matches.status IN ? AND scenes.is_deleted = ?", locationID, []string{"STANDBY", "ONGOING"}, false).
+		Order("matches.time ASC, matches.id ASC").
 		Find(&matches).Error
 	if err != nil {
 		return nil, errors.Wrap(err)
