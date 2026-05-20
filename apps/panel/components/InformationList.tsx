@@ -6,17 +6,16 @@ import {OtherInfo} from "@/components/dashboard/Overview/OtherInfo";
 export const InformationList = () => {
     const { allInformation } = useFetchAllInformation()
 
+    const isUrl = (str: string) => /^https?:\/\/.+/.test(str.trim())
+
     const components = allInformation.map((information) => {
+        const contentIsUrl = isUrl(information.content)
         return (
-            // <Notification
-            //     key={information.id}
-            //     infoName={information.name}
-            //     infoContent={information.content}
-            // />
             <OtherInfo
                 infoName={""}
                 infoContent={information.title}
-                infoSubContent={information.content}
+                infoSubContent={contentIsUrl ? undefined : information.content}
+                link={contentIsUrl ? information.content.trim() : undefined}
                 key={information.id}
             />
         )
