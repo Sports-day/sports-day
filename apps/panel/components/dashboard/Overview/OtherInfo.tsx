@@ -2,7 +2,8 @@ import {
     Stack,
     Typography,
     IconButton,
-    useTheme
+    useTheme,
+    Button,
 } from "@mui/material";
 import {
     HiOutlineInformationCircle
@@ -12,6 +13,7 @@ export type OtherInfoProps = {
     infoName?: string;
     infoContent?: string;
     infoSubContent?: string;
+    link?: string;
 }
 
 export const OtherInfo = (props: OtherInfoProps) => {
@@ -57,13 +59,33 @@ export const OtherInfo = (props: OtherInfoProps) => {
                 >
                     {props.infoContent}
                 </Typography>
-                <Typography
-                    color={theme.palette.text.primary}
-                    sx={{fontSize: "14px"}}
-                    lineHeight={"1.2em"}
-                >
-                    {props.infoSubContent}
-                </Typography>
+                {props.infoSubContent && (
+                    <Typography
+                        color={theme.palette.text.primary}
+                        sx={{fontSize: "14px"}}
+                        lineHeight={"1.2em"}
+                    >
+                        {props.infoSubContent}
+                    </Typography>
+                )}
+                {props.link && (
+                    <Button
+                        component="a"
+                        href={props.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        size="small"
+                        variant="contained"
+                        color="secondary"
+                        disableElevation
+                        sx={{
+                            mt: 0.5,
+                            border: `1px solid ${theme.palette.secondary.dark}66`,
+                        }}
+                    >
+                        開く →
+                    </Button>
+                )}
             </Stack>
         </Stack>
     )
