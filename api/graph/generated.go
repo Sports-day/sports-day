@@ -581,7 +581,6 @@ type RuleResolver interface {
 	Sport(ctx context.Context, obj *model.Rule) (*model.Sport, error)
 }
 type SceneResolver interface {
-	Enable(ctx context.Context, obj *model.Scene) (bool, error)
 	SportScenes(ctx context.Context, obj *model.Scene) ([]*model.SportScene, error)
 }
 type SportResolver interface {
@@ -20620,7 +20619,7 @@ func (ec *executionContext) _Scene_enable(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Scene().Enable(rctx, obj)
+		return obj.Enable, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -20641,8 +20640,8 @@ func (ec *executionContext) fieldContext_Scene_enable(_ context.Context, field g
 	fc = &graphql.FieldContext{
 		Object:     "Scene",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -30989,41 +30988,10 @@ func (ec *executionContext) _Scene(ctx context.Context, sel ast.SelectionSet, ob
 				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "enable":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Scene_enable(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
+			out.Values[i] = ec._Scene_enable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
 			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "sportScenes":
 			field := field
 
