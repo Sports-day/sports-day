@@ -22,7 +22,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Noto Sans JP", "Roboto", sans-serif',
+    fontFamily: '"Noto Sans JP", "Roboto", "Hiragino Sans", "BIZ UDPGothic", "Yu Gothic", "YuGothic", "Meiryo", sans-serif',
     h1: { fontSize: '20px', fontWeight: 400 },
     body1: { fontSize: '16px', fontWeight: 400 },
   },
