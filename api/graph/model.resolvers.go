@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"sports-day/api/db_model"
 	"sports-day/api/graph/model"
 	"sports-day/api/loader"
@@ -357,7 +356,7 @@ func (r *ruleResolver) Sport(ctx context.Context, obj *model.Rule) (*model.Sport
 
 // Enable is the resolver for the enable field.
 func (r *sceneResolver) Enable(ctx context.Context, obj *model.Scene) (bool, error) {
-	panic(fmt.Errorf("not implemented: Enable - enable"))
+	return obj.Enable, nil
 }
 
 // SportScenes is the resolver for the sportScenes field.
