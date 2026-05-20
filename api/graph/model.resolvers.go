@@ -354,11 +354,6 @@ func (r *ruleResolver) Sport(ctx context.Context, obj *model.Rule) (*model.Sport
 	return model.FormatSportResponse(sports[0]), nil
 }
 
-// Enable is the resolver for the enable field.
-func (r *sceneResolver) Enable(ctx context.Context, obj *model.Scene) (bool, error) {
-	return obj.Enable, nil
-}
-
 // SportScenes is the resolver for the sportScenes field.
 func (r *sceneResolver) SportScenes(ctx context.Context, obj *model.Scene) ([]*model.SportScene, error) {
 	res, err := loader.LoadSportScenesByScene(ctx, obj.ID)
@@ -853,3 +848,10 @@ type tournamentResolver struct{ *Resolver }
 type tournamentRankingResolver struct{ *Resolver }
 type tournamentSlotResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
