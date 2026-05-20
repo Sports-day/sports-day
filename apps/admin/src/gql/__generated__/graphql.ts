@@ -1007,6 +1007,11 @@ export type QueryCompetitionArgs = {
 };
 
 
+export type QueryCompetitionsArgs = {
+  enabledScene?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryGroupArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1138,6 +1143,7 @@ export type Rule = {
 export type Scene = {
   __typename?: 'Scene';
   displayOrder: Scalars['Int']['output'];
+  enable: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   isDeleted: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
@@ -1348,6 +1354,7 @@ export type UpdateRuleInput = {
 };
 
 export type UpdateSceneInput = {
+  enable?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -2014,14 +2021,14 @@ export type UpdateAdminSportsDisplayOrderMutation = { __typename?: 'Mutation', u
 export type GetAdminScenesForTagsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAdminScenesForTagsQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, displayOrder: number, isDeleted: boolean }> };
+export type GetAdminScenesForTagsQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, displayOrder: number, enable: boolean }> };
 
 export type GetAdminSceneForTagQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetAdminSceneForTagQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, name: string, isDeleted: boolean } };
+export type GetAdminSceneForTagQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, name: string, enable: boolean } };
 
 export type CreateAdminSceneForTagMutationVariables = Exact<{
   input: CreateSceneInput;
@@ -5809,7 +5816,7 @@ export const GetAdminScenesForTagsDocument = gql`
     id
     name
     displayOrder
-    isDeleted
+    enable
   }
 }
     `;
@@ -5850,7 +5857,7 @@ export const GetAdminSceneForTagDocument = gql`
   scene(id: $id) {
     id
     name
-    isDeleted
+    enable
   }
 }
     `;

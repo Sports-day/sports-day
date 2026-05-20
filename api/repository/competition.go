@@ -14,6 +14,7 @@ type Competition interface {
 	Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Competition, error)
 	BatchGet(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Competition, error)
 	List(ctx context.Context, db *gorm.DB) ([]*db_model.Competition, error)
+	ListByEnabledScene(ctx context.Context, db *gorm.DB) ([]*db_model.Competition, error)
 	AddCompetitionEntries(ctx context.Context, db *gorm.DB, competitionId string, teamIds []string) ([]*db_model.CompetitionEntry, error)
 	DeleteCompetitionEntries(ctx context.Context, db *gorm.DB, competitionId string, teamIds []string) ([]*db_model.CompetitionEntry, error)
 	BatchGetCompetitionEntriesByTeamIDs(ctx context.Context, db *gorm.DB, teamIds []string) ([]*db_model.CompetitionEntry, error)

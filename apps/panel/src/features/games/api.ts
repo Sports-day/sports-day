@@ -3,7 +3,7 @@ import { gql } from "@apollo/client";
 // games = competitions（同義語）
 export const GET_COMPETITIONS = gql`
   query GetPanelCompetitions {
-    competitions {
+    competitions(enabledScene: true) {
       id
       name
       type
@@ -13,7 +13,6 @@ export const GET_COMPETITIONS = gql`
       scene {
         id
         name
-        isDeleted
       }
       teams {
         id

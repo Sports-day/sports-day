@@ -44,7 +44,7 @@ export function useJudgeFlow(locationId: string): JudgeFlowResult {
       const { data } = await fetchMatch({ variables: { locationId } });
       const match = data?.nextJudgeMatchAtLocation ?? null;
 
-      if (!match || match.competition?.scene?.isDeleted) {
+      if (!match || !match.competition?.scene?.enable) {
         setState(hasSubmittedRef.current ? "done" : "no-match");
         retryCountRef.current = 0;
         return;

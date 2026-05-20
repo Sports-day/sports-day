@@ -1095,8 +1095,15 @@ func (r *queryResolver) Information(ctx context.Context, id string) (*model.Info
 }
 
 // Competitions is the resolver for the competitions field.
-func (r *queryResolver) Competitions(ctx context.Context) ([]*model.Competition, error) {
-	competitions, err := r.CompetitionService.List(ctx)
+func (r *queryResolver) Competitions(ctx context.Context, enabledScene *bool) ([]*model.Competition, error) {
+	var competitions []*db_model.Competition
+	var err error
+
+	if enabledScene != nil && *enabledScene {
+		competitions, err = r.CompetitionService.ListByEnabledScene(ctx)
+	} else {
+		competitions, err = r.CompetitionService.List(ctx)
+	}
 	if err != nil {
 		return nil, err
 	}

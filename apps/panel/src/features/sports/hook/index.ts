@@ -1,9 +1,9 @@
 import {
   useGetPanelSportsQuery,
   useGetPanelSportQuery,
-  useGetPanelMatchesQuery,
   MatchStatus,
 } from "@/src/gql/__generated__/graphql";
+import { useFetchMatches } from "@/src/features/matches/hook";
 
 export const useFetchSports = (_filter: boolean = false) => {
   const { data, loading, refetch } = useGetPanelSportsQuery();
@@ -29,10 +29,10 @@ export const useFetchSport = (sportId: string) => {
 export const useFetchSportProgress = (sportId: string | number) => {
   const sportIdStr = String(sportId)
   const { sport, isFetching: isSportFetching } = useFetchSport(sportIdStr)
-  const { data: matchesData, loading: isMatchesFetching } = useGetPanelMatchesQuery()
+  const { matches, isFetching: isMatchesFetching } = useFetchMatches()
 
-  // sportId に一致する competition の match を抽出
-  const sportMatches = (matchesData?.matches ?? []).filter(m =>
+  // sportId に一致する competition の match を抽出（enabledSceneフィルタ済み）
+  const sportMatches = matches.filter(m =>
     m.competition.sport?.id === sportIdStr
   )
 

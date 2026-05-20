@@ -19,7 +19,7 @@ export const GET_MATCHES = gql`
         }
         scene {
           id
-          isDeleted
+          enable
         }
       }
       winnerTeam {
@@ -88,7 +88,7 @@ export const GET_JUDGE_MATCH_AT_LOCATION = gql`
         name
         type
         scene {
-          isDeleted
+          enable
         }
       }
       entries {

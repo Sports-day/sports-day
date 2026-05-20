@@ -1008,6 +1008,11 @@ export type QueryCompetitionArgs = {
 };
 
 
+export type QueryCompetitionsArgs = {
+  enabledScene?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryGroupArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1142,6 +1147,7 @@ export type Rule = {
 export type Scene = {
   __typename?: 'Scene';
   displayOrder: Scalars['Int']['output'];
+  enable: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   isDeleted: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
@@ -1351,6 +1357,7 @@ export type UpdateRuleInput = {
 };
 
 export type UpdateSceneInput = {
+  enable?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1418,7 +1425,7 @@ export type GetPanelGroupQuery = { __typename?: 'Query', group: { __typename?: '
 export type GetPanelCompetitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string, isDeleted: boolean }, teams: Array<{ __typename?: 'Team', id: string }>, league?: { __typename?: 'League', id: string } | null }> };
+export type GetPanelCompetitionsQuery = { __typename?: 'Query', competitions: Array<{ __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, name: string }, teams: Array<{ __typename?: 'Team', id: string }>, league?: { __typename?: 'League', id: string } | null }> };
 
 export type GetPanelLeagueStandingsQueryVariables = Exact<{
   leagueId: Scalars['ID']['input'];
@@ -1473,7 +1480,7 @@ export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typena
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, isDeleted: boolean } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
+export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, enable: boolean } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
 
 export type SubmitPanelMatchScoreMutationVariables = Exact<{
   matchId: Scalars['ID']['input'];
@@ -1488,7 +1495,7 @@ export type GetJudgeMatchAtLocationQueryVariables = Exact<{
 }>;
 
 
-export type GetJudgeMatchAtLocationQuery = { __typename?: 'Query', nextJudgeMatchAtLocation?: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', isDeleted: boolean } }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean } | null } | null };
+export type GetJudgeMatchAtLocationQuery = { __typename?: 'Query', nextJudgeMatchAtLocation?: { __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, scene: { __typename?: 'Scene', enable: boolean } }, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean } | null } | null };
 
 export type StartMatchJudgingMutationVariables = Exact<{
   matchId: Scalars['ID']['input'];
@@ -1653,7 +1660,7 @@ export type GetPanelGroupSuspenseQueryHookResult = ReturnType<typeof useGetPanel
 export type GetPanelGroupQueryResult = Apollo.QueryResult<GetPanelGroupQuery, GetPanelGroupQueryVariables>;
 export const GetPanelCompetitionsDocument = gql`
     query GetPanelCompetitions {
-  competitions {
+  competitions(enabledScene: true) {
     id
     name
     type
@@ -1663,7 +1670,6 @@ export const GetPanelCompetitionsDocument = gql`
     scene {
       id
       name
-      isDeleted
     }
     teams {
       id
@@ -2069,7 +2075,7 @@ export const GetPanelMatchesDocument = gql`
       }
       scene {
         id
-        isDeleted
+        enable
       }
     }
     winnerTeam {
@@ -2195,7 +2201,7 @@ export const GetJudgeMatchAtLocationDocument = gql`
       name
       type
       scene {
-        isDeleted
+        enable
       }
     }
     entries {

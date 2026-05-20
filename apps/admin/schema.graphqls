@@ -180,6 +180,7 @@ type Scene {
   name: String!
   displayOrder: Int!
   isDeleted: Boolean!
+  enable: Boolean!
   sportScenes: [SportScene!]!
 }
 
@@ -317,6 +318,7 @@ input CreateSceneInput {
 
 input UpdateSceneInput {
   name: String
+  enable: Boolean
 }
 input CreateSportsInput {
   name: String!
@@ -619,7 +621,7 @@ type Query {
   """
   大会をまとめて取得する
   """
-  competitions: [Competition!]!
+  competitions(enabledScene: Boolean): [Competition!]!
   """
   ID指定で大会を取得する
   """

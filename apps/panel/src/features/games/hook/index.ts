@@ -13,7 +13,7 @@ export const useFetchGames = (_filter: boolean = false) => {
     errorPolicy: 'all',
   });
   return {
-    games: (data?.competitions ?? []).filter(c => c && !c.scene?.isDeleted),
+    games: data?.competitions ?? [],
     isFetching: loading,
     refresh: refetch,
   };

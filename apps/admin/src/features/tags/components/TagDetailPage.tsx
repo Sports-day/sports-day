@@ -1,7 +1,10 @@
 import { Box, Breadcrumbs, Button, ButtonBase, Card, CardContent, TextField, Typography } from '@mui/material'
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import CheckIcon from '@mui/icons-material/Check'
 import { BackButton } from '@/components/ui/BackButton'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useState } from 'react'
 import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { useTagDetail } from '../hooks/useTagDetail'
@@ -14,8 +17,9 @@ type Props = {
 }
 
 export function TagDetailPage({ tagId, onBack }: Props) {
-  const { name, setName, dirty, isDeleted, handleSave, handleDelete, handleRestore, tagName } = useTagDetail(tagId)
+  const { name, setName, dirty, enable, handleSave, handleToggleEnable, handleDelete, tagName } = useTagDetail(tagId)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   useUnsavedWarning(dirty)
 
   const onSave = async () => {
@@ -32,12 +36,12 @@ export function TagDetailPage({ tagId, onBack }: Props) {
     }
   }
 
-  const onDisable = async () => {
+  const onToggleEnable = async () => {
     if (isSubmitting) return
     setIsSubmitting(true)
     try {
-      await handleDelete()
-      showToast('タグを無効化しました')
+      await handleToggleEnable()
+      showToast(enable ? 'タグを無効化しました' : 'タグを有効化しました')
     } catch {
       // エラートーストはhook側で表示済み
     } finally {
@@ -45,12 +49,18 @@ export function TagDetailPage({ tagId, onBack }: Props) {
     }
   }
 
-  const onRestore = async () => {
+  const onDelete = async () => {
+    setDeleteDialogOpen(false)
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
-      await handleRestore()
-      showToast('タグを有効化しました')
+      await handleDelete()
+      showToast('タグを削除しました')
+      onBack()
     } catch {
       // エラートーストはhook側で表示済み
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -84,10 +94,31 @@ export function TagDetailPage({ tagId, onBack }: Props) {
             />
 
             <Box sx={{ display: 'flex', gap: 1 }}>
-              {isDeleted ? (
+              <Button
+                variant="outlined"
+                startIcon={<DeleteOutlineIcon sx={{ color: '#D71212' }} />}
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={isSubmitting}
+                sx={DELETE_BUTTON_SX}
+              >
+                削除
+              </Button>
+              {enable ? (
                 <Button
                   variant="outlined"
-                  onClick={onRestore}
+                  startIcon={<BlockOutlinedIcon sx={{ color: '#D71212' }} />}
+                  onClick={onToggleEnable}
+                  disabled={isSubmitting}
+                  sx={DELETE_BUTTON_SX}
+                >
+                  無効化
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  startIcon={<CheckCircleOutlineIcon sx={{ color: '#2E7D32' }} />}
+                  onClick={onToggleEnable}
+                  disabled={isSubmitting}
                   sx={{
                     fontSize: '13px',
                     color: '#2E7D32',
@@ -95,17 +126,7 @@ export function TagDetailPage({ tagId, onBack }: Props) {
                     '&:hover': { backgroundColor: '#E8F5E9', borderColor: '#2E7D32' },
                   }}
                 >
-                  このタグを有効化
-                </Button>
-              ) : (
-                <Button
-                  variant="outlined"
-                  startIcon={<BlockOutlinedIcon sx={{ color: '#D71212' }} />}
-                  onClick={onDisable}
-                  disabled={isSubmitting}
-                  sx={DELETE_BUTTON_SX}
-                >
-                  このタグを無効化
+                  有効化
                 </Button>
               )}
               <Button
@@ -123,6 +144,14 @@ export function TagDetailPage({ tagId, onBack }: Props) {
         </CardContent>
       </Card>
 
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="タグを削除しますか？"
+        description={`「${tagName}」を削除します。この操作は取り消せません。`}
+        confirmLabel="削除"
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={onDelete}
+      />
     </Box>
   )
 }

@@ -123,6 +123,7 @@ type Scene struct {
 	Name         string `json:"name"`
 	DisplayOrder int32  `json:"displayOrder"`
 	IsDeleted    bool   `json:"isDeleted"`
+	Enable       bool   `json:"enable"`
 }
 
 type Sport struct {
