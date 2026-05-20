@@ -26,7 +26,7 @@ type Props = {
 
 const STATUS_OPTIONS = [
   { value: 'active', label: '有効' },
-  { value: 'deleted', label: '無効' },
+  { value: 'disabled', label: '無効' },
 ]
 
 export function TagListPage({ onCreateClick, onTagClick }: Props) {
@@ -111,13 +111,13 @@ export function TagListPage({ onCreateClick, onTagClick }: Props) {
                   </TableCell>
                   <TableCell sx={{ ...LIST_TABLE_CELL_SX, width: 120 }}>
                     <Chip
-                      label={tag.isDeleted ? '無効' : '有効'}
+                      label={tag.enable ? '有効' : '無効'}
                       size="small"
                       sx={{
                         fontSize: '11px',
                         height: 20,
-                        backgroundColor: tag.isDeleted ? '#F5F5F5' : '#E8F5E9',
-                        color: tag.isDeleted ? '#9E9E9E' : '#2E7D32',
+                        backgroundColor: tag.enable ? '#E8F5E9' : '#F5F5F5',
+                        color: tag.enable ? '#2E7D32' : '#9E9E9E',
                       }}
                     />
                   </TableCell>

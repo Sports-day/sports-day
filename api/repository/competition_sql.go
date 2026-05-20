@@ -63,6 +63,19 @@ func (r competition) List(ctx context.Context, db *gorm.DB) ([]*db_model.Competi
 	return competitions, nil
 }
 
+func (r competition) ListByEnabledScene(ctx context.Context, db *gorm.DB) ([]*db_model.Competition, error) {
+	var competitions []*db_model.Competition
+	if err := db.WithContext(ctx).
+		Joins("JOIN scenes ON competitions.scene_id = scenes.id").
+		Where("scenes.enable = ?", true).
+		Where("scenes.is_deleted = ?", false).
+		Order("competitions.display_order ASC, competitions.created_at ASC").
+		Find(&competitions).Error; err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return competitions, nil
+}
+
 func (r competition) MaxDisplayOrder(ctx context.Context, db *gorm.DB) (int, error) {
 	var max int
 	err := db.WithContext(ctx).Model(&db_model.Competition{}).Select("COALESCE(MAX(display_order), 0)").Scan(&max).Error

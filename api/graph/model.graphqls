@@ -180,6 +180,7 @@ type Scene {
   name: String!
   displayOrder: Int!
   isDeleted: Boolean!
+  enable: Boolean!
   sportScenes: [SportScene!]!
 }
 

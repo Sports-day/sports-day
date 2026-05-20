@@ -11,7 +11,7 @@ export function useTags() {
     id: s.id,
     name: s.name,
     displayOrder: s.displayOrder,
-    isDeleted: s.isDeleted,
+    enable: s.enable,
   }))
 
   const keyword = fp.keyword
@@ -23,8 +23,8 @@ export function useTags() {
       const kw = keyword.toLowerCase()
       result = result.filter(t => t.name.toLowerCase().includes(kw))
     }
-    if (statusFilter === 'active') result = result.filter(t => !t.isDeleted)
-    if (statusFilter === 'deleted') result = result.filter(t => t.isDeleted)
+    if (statusFilter === 'active') result = result.filter(t => t.enable)
+    if (statusFilter === 'disabled') result = result.filter(t => !t.enable)
     return result
   }, [tags, keyword, statusFilter])
 

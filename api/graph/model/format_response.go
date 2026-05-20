@@ -42,6 +42,7 @@ func FormatSceneResponse(scene *db_model.Scene) *Scene {
 		Name:         scene.Name,
 		DisplayOrder: int32(scene.DisplayOrder),
 		IsDeleted:    scene.IsDeleted,
+		Enable:       scene.Enable,
 	}
 }
 

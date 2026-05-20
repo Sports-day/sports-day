@@ -344,7 +344,8 @@ type UpdateRuleInput struct {
 }
 
 type UpdateSceneInput struct {
-	Name *string `json:"name,omitempty"`
+	Name   *string `json:"name,omitempty"`
+	Enable *bool   `json:"enable,omitempty"`
 }
 
 // スロット接続変更

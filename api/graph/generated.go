@@ -260,7 +260,7 @@ type ComplexityRoot struct {
 	Query struct {
 		AllSportExperiences      func(childComplexity int) int
 		Competition              func(childComplexity int, id string) int
-		Competitions             func(childComplexity int) int
+		Competitions             func(childComplexity int, enabledScene *bool) int
 		Group                    func(childComplexity int, id string) int
 		Groups                   func(childComplexity int) int
 		Image                    func(childComplexity int, id string) int
@@ -310,6 +310,7 @@ type ComplexityRoot struct {
 
 	Scene struct {
 		DisplayOrder func(childComplexity int) int
+		Enable       func(childComplexity int) int
 		ID           func(childComplexity int) int
 		IsDeleted    func(childComplexity int) int
 		Name         func(childComplexity int) int
@@ -553,7 +554,7 @@ type QueryResolver interface {
 	Scene(ctx context.Context, id string) (*model.Scene, error)
 	Informations(ctx context.Context) ([]*model.Information, error)
 	Information(ctx context.Context, id string) (*model.Information, error)
-	Competitions(ctx context.Context) ([]*model.Competition, error)
+	Competitions(ctx context.Context, enabledScene *bool) ([]*model.Competition, error)
 	Competition(ctx context.Context, id string) (*model.Competition, error)
 	Matches(ctx context.Context) ([]*model.Match, error)
 	Match(ctx context.Context, id string) (*model.Match, error)
@@ -580,6 +581,7 @@ type RuleResolver interface {
 	Sport(ctx context.Context, obj *model.Rule) (*model.Sport, error)
 }
 type SceneResolver interface {
+	Enable(ctx context.Context, obj *model.Scene) (bool, error)
 	SportScenes(ctx context.Context, obj *model.Scene) ([]*model.SportScene, error)
 }
 type SportResolver interface {
@@ -2132,7 +2134,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Competitions(childComplexity), true
+		args, err := ec.field_Query_competitions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Competitions(childComplexity, args["enabledScene"].(*bool)), true
 
 	case "Query.group":
 		if e.complexity.Query.Group == nil {
@@ -2518,6 +2525,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Scene.DisplayOrder(childComplexity), true
+
+	case "Scene.enable":
+		if e.complexity.Scene.Enable == nil {
+			break
+		}
+
+		return e.complexity.Scene.Enable(childComplexity), true
 
 	case "Scene.id":
 		if e.complexity.Scene.ID == nil {
@@ -5790,6 +5804,29 @@ func (ec *executionContext) field_Query_competition_argsID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_competitions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_competitions_argsEnabledScene(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["enabledScene"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_competitions_argsEnabledScene(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*bool, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("enabledScene"))
+	if tmp, ok := rawArgs["enabledScene"]; ok {
+		return ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+	}
+
+	var zeroVal *bool
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_group_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -6653,6 +6690,8 @@ func (ec *executionContext) fieldContext_Competition_scene(_ context.Context, fi
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -11124,6 +11163,8 @@ func (ec *executionContext) fieldContext_Mutation_createScene(ctx context.Contex
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -11218,6 +11259,8 @@ func (ec *executionContext) fieldContext_Mutation_updateScene(ctx context.Contex
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -11312,6 +11355,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteScene(ctx context.Contex
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -11406,6 +11451,8 @@ func (ec *executionContext) fieldContext_Mutation_restoreScene(ctx context.Conte
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -15933,6 +15980,8 @@ func (ec *executionContext) fieldContext_Mutation_addSportScenes(ctx context.Con
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -16027,6 +16076,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteSportScenes(ctx context.
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -18340,6 +18391,8 @@ func (ec *executionContext) fieldContext_Query_scenes(_ context.Context, field g
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -18396,6 +18449,8 @@ func (ec *executionContext) fieldContext_Query_scene(ctx context.Context, field 
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -18553,7 +18608,7 @@ func (ec *executionContext) _Query_competitions(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Competitions(rctx)
+		return ec.resolvers.Query().Competitions(rctx, fc.Args["enabledScene"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -18570,7 +18625,7 @@ func (ec *executionContext) _Query_competitions(ctx context.Context, field graph
 	return ec.marshalNCompetition2ᚕᚖsportsᚑdayᚋapiᚋgraphᚋmodelᚐCompetitionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_competitions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_competitions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -18609,6 +18664,17 @@ func (ec *executionContext) fieldContext_Query_competitions(_ context.Context, f
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Competition", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_competitions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -20540,6 +20606,50 @@ func (ec *executionContext) fieldContext_Scene_isDeleted(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Scene_enable(ctx context.Context, field graphql.CollectedField, obj *model.Scene) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Scene_enable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Scene().Enable(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Scene_enable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Scene",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Scene_sportScenes(ctx context.Context, field graphql.CollectedField, obj *model.Scene) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Scene_sportScenes(ctx, field)
 	if err != nil {
@@ -21372,6 +21482,8 @@ func (ec *executionContext) fieldContext_SportScene_scene(_ context.Context, fie
 				return ec.fieldContext_Scene_displayOrder(ctx, field)
 			case "isDeleted":
 				return ec.fieldContext_Scene_isDeleted(ctx, field)
+			case "enable":
+				return ec.fieldContext_Scene_enable(ctx, field)
 			case "sportScenes":
 				return ec.fieldContext_Scene_sportScenes(ctx, field)
 			}
@@ -27660,7 +27772,7 @@ func (ec *executionContext) unmarshalInputUpdateSceneInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name"}
+	fieldsInOrder := [...]string{"name", "enable"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -27674,6 +27786,13 @@ func (ec *executionContext) unmarshalInputUpdateSceneInput(ctx context.Context, 
 				return it, err
 			}
 			it.Name = data
+		case "enable":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enable"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Enable = data
 		}
 	}
 
@@ -30869,6 +30988,42 @@ func (ec *executionContext) _Scene(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "enable":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Scene_enable(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "sportScenes":
 			field := field
 

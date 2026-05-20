@@ -9,7 +9,7 @@ export const GET_ADMIN_SCENES_FOR_TAGS = gql`
       id
       name
       displayOrder
-      isDeleted
+      enable
     }
   }
 `
@@ -19,7 +19,7 @@ export const GET_ADMIN_SCENE_FOR_TAG = gql`
     scene(id: $id) {
       id
       name
-      isDeleted
+      enable
     }
   }
 `

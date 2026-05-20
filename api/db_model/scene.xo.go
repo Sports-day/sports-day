@@ -8,4 +8,5 @@ type Scene struct {
 	Name         string `json:"name"`          // シーン名
 	DisplayOrder int    `json:"display_order"` // 表示順
 	IsDeleted    bool   `json:"is_deleted"`    // 論理削除フラグ
+	Enable       bool   `json:"enable"`        // 有効フラグ
 }

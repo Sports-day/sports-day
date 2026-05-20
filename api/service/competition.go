@@ -154,6 +154,14 @@ func (s *Competition) List(ctx context.Context) ([]*db_model.Competition, error)
 	return competitions, nil
 }
 
+func (s *Competition) ListByEnabledScene(ctx context.Context) ([]*db_model.Competition, error) {
+	competitions, err := s.competitionRepository.ListByEnabledScene(ctx, s.db)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return competitions, nil
+}
+
 func (s *Competition) AddEntries(ctx context.Context, competitionId string, teamIds []string) (*db_model.Competition, error) {
 	var competition *db_model.Competition
 

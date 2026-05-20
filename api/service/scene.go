@@ -62,6 +62,9 @@ func (s *Scene) Update(ctx context.Context, id string, input *model.UpdateSceneI
 	if input.Name != nil {
 		scene.Name = *input.Name
 	}
+	if input.Enable != nil {
+		scene.Enable = *input.Enable
+	}
 
 	updated, err := s.sceneRepo.Save(ctx, s.db, scene)
 	if err != nil {
