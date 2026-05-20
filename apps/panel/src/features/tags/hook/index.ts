@@ -7,7 +7,7 @@ import {
 export const useFetchTags = () => {
   const { data, loading, refetch } = useGetPanelScenesQuery();
   return {
-    tags: data?.scenes ?? [],
+    tags: (data?.scenes ?? []).filter((s) => !s.isDeleted),
     isFetching: loading,
     refresh: refetch,
   };

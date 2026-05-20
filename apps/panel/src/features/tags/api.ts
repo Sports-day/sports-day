@@ -6,6 +6,7 @@ export const GET_SCENES = gql`
     scenes {
       id
       name
+      isDeleted
     }
   }
 `;

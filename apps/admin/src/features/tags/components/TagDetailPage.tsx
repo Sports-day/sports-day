@@ -7,7 +7,6 @@ import { useUnsavedWarning } from '@/hooks/useUnsavedWarning'
 import { useTagDetail } from '../hooks/useTagDetail'
 import { showToast } from '@/lib/toast'
 import { CARD_FIELD_SX, SAVE_BUTTON_SX, DELETE_BUTTON_SX, BREADCRUMB_LINK_SX, BREADCRUMB_CURRENT_SX, CARD_GRADIENT } from '@/styles/commonSx'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type Props = {
   tagId: string
@@ -16,7 +15,6 @@ type Props = {
 
 export function TagDetailPage({ tagId, onBack }: Props) {
   const { name, setName, dirty, isDeleted, handleSave, handleDelete, handleRestore, tagName } = useTagDetail(tagId)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   useUnsavedWarning(dirty)
 
@@ -34,14 +32,12 @@ export function TagDetailPage({ tagId, onBack }: Props) {
     }
   }
 
-  const onConfirmDelete = async () => {
+  const onDisable = async () => {
     if (isSubmitting) return
     setIsSubmitting(true)
-    setDeleteDialogOpen(false)
     try {
       await handleDelete()
       showToast('タグを無効化しました')
-      onBack()
     } catch {
       // エラートーストはhook側で表示済み
     } finally {
@@ -105,7 +101,8 @@ export function TagDetailPage({ tagId, onBack }: Props) {
                 <Button
                   variant="outlined"
                   startIcon={<BlockOutlinedIcon sx={{ color: '#D71212' }} />}
-                  onClick={() => setDeleteDialogOpen(true)}
+                  onClick={onDisable}
+                  disabled={isSubmitting}
                   sx={DELETE_BUTTON_SX}
                 >
                   このタグを無効化
@@ -126,13 +123,6 @@ export function TagDetailPage({ tagId, onBack }: Props) {
         </CardContent>
       </Card>
 
-      <ConfirmDialog
-        open={deleteDialogOpen}
-        title="タグを無効化しますか？"
-        description={`「${tagName}」を無効化します。無効化後はpanelに表示されなくなります。`}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={onConfirmDelete}
-      />
     </Box>
   )
 }
