@@ -6,7 +6,12 @@ export type ColorModeProviderProps = {
     children: React.ReactNode;
 };
 
+const CJK_FONT_FAMILY = '"Noto Sans JP", "Roboto", "Hiragino Sans", "BIZ UDPGothic", "Yu Gothic", "YuGothic", "Meiryo", sans-serif'
+
 const baseTheme = {
+    typography: {
+        fontFamily: CJK_FONT_FAMILY,
+    },
     breakpoints: {
         values: {
             xs: 0,

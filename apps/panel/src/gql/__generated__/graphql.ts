@@ -1519,7 +1519,7 @@ export type GetPanelSportQuery = { __typename?: 'Query', sport: { __typename?: '
 export type GetPanelScenesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelScenesQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string }> };
+export type GetPanelScenesQuery = { __typename?: 'Query', scenes: Array<{ __typename?: 'Scene', id: string, name: string, isDeleted: boolean }> };
 
 export type GetPanelSceneQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -2505,6 +2505,7 @@ export const GetPanelScenesDocument = gql`
   scenes {
     id
     name
+    isDeleted
   }
 }
     `;

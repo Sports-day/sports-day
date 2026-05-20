@@ -55,7 +55,7 @@ func (r scene) Restore(ctx context.Context, db *gorm.DB, id string) (*db_model.S
 
 func (r scene) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene, error) {
 	var scene db_model.Scene
-	if err := db.WithContext(ctx).Where("is_deleted = ?", false).First(&scene, "id = ?", id).Error; err != nil {
+	if err := db.WithContext(ctx).First(&scene, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.ErrSceneNotFound
 		}
@@ -66,7 +66,7 @@ func (r scene) Get(ctx context.Context, db *gorm.DB, id string) (*db_model.Scene
 
 func (r scene) List(ctx context.Context, db *gorm.DB) ([]*db_model.Scene, error) {
 	var scenes []*db_model.Scene
-	if err := db.WithContext(ctx).Where("is_deleted = ?", false).Order("display_order ASC, created_at ASC").Find(&scenes).Error; err != nil {
+	if err := db.WithContext(ctx).Order("display_order ASC, created_at ASC").Find(&scenes).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return scenes, nil
@@ -196,7 +196,7 @@ func (r scene) DeleteSportEntry(ctx context.Context, db *gorm.DB, id string) (*d
 
 func (r scene) BatchGetScenesByIDs(ctx context.Context, db *gorm.DB, ids []string) ([]*db_model.Scene, error) {
 	var scenes []*db_model.Scene
-	if err := db.WithContext(ctx).Where("id IN (?) AND is_deleted = ?", ids, false).Find(&scenes).Error; err != nil {
+	if err := db.WithContext(ctx).Where("id IN (?)", ids).Find(&scenes).Error; err != nil {
 		return nil, errors.Wrap(err)
 	}
 	return scenes, nil
