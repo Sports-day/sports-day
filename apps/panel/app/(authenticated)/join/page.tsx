@@ -152,9 +152,10 @@ export default function JoinPage() {
                       sx={{ width: "100%" }}
                       variant={"contained"}
                       color={"info"}
-                      href={
-                        "https://forms.office.com/Pages/ResponsePage.aspx?id=XYP-cpVeEkWK4KezivJfyNfX7_ygdxFHiwRmiJgWek1URUZOQ1JYTkpHWThPQVlQT1JBWFhWQllKVC4u"
-                      }
+                      href={import.meta.env.VITE_FORM_URL || "#"}
+                      target={"_blank"}
+                      rel={"noopener noreferrer"}
+                      disabled={!import.meta.env.VITE_FORM_URL}
                     >
                       <Typography sx={{ py: 2 }}>フォームに答える</Typography>
                     </Button>
