@@ -45,7 +45,7 @@ export default function Page() {
                         <Typography pb={2} fontSize={"13px"} fontWeight={"400"} color={"#9aa6e5"}>SPORTSDAYを使うにはCookieが必要です</Typography>
                         <Button>
                             <Stack direction={"row"} spacing={0.5}>
-                                <Typography fontWeight={"600"} color={"#99a5d6"}>(C)2024</Typography>
+                                <Typography fontWeight={"600"} color={"#99a5d6"}>(C)2026</Typography>
                                 <WiderLogo/>
                             </Stack>
                         </Button>

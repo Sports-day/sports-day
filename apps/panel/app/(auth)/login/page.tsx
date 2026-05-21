@@ -92,7 +92,7 @@ export default function Page() {
                                         <Button sx={{width: "100%"}}>
                                             <Stack direction={"row"} spacing={0.5}>
                                                 <Typography fontWeight={"600"}
-                                                            color={theme.palette.text.disabled}>(C)2024</Typography>
+                                                            color={theme.palette.text.disabled}>(C)2026</Typography>
                                                 <WiderLogo/>
                                             </Stack>
                                         </Button>
