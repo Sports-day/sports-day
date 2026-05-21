@@ -76,7 +76,8 @@ export const Overview = (props: OverviewProps) => {
                                 alt={props.mySport.name}
                                 sx={{
                                     height: "2.5em", width: "2.5em",
-                                    backgroundColor: `${theme.palette.text.secondary}`,
+                                    backgroundColor: props.mySport.image ? 'transparent' : theme.palette.text.secondary,
+                                    '& img': { objectFit: 'contain' },
                                 }}
                                 src={props.mySport.image?.url ?? undefined}
                             >

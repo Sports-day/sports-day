@@ -73,7 +73,7 @@ export const DiscoverTeamContent = (props:DiscoverTeamContentProps) => {
                                 >
                                     <Box sx={{pb:"0.3em"}}>
                                         <Avatar
-                                            sx={{height: "1em", width: "1em"}}
+                                            sx={{height: "1em", width: "1em", backgroundColor: image ? 'transparent' : undefined, '& img': { objectFit: 'contain' }}}
                                             src={image?.url ?? undefined}
                                         >
                                         </Avatar>

@@ -22,6 +22,7 @@ export function useImageCreate(onSuccess?: () => void) {
       const img = data?.images?.find((img: { id: string }) => img.id === imageId)
       if (img?.status === 'uploaded') return
     }
+    throw new Error('アップロード後のステータス更新がタイムアウトしました。S3 webhookの設定を確認してください。')
   }, [client])
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB

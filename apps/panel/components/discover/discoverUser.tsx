@@ -152,7 +152,8 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
                                         alt={userMatchSport?.name}
                                         sx={{
                                             height: "2em", width: "2em",
-                                            backgroundColor: `${theme.palette.text.secondary}`,
+                                            backgroundColor: userMatchSport?.image ? 'transparent' : theme.palette.text.secondary,
+                                            '& img': { objectFit: 'contain' },
                                         }}
                                         src={userMatchSport?.image?.url ?? undefined}
                                     >

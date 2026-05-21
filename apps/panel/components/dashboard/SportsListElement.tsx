@@ -35,8 +35,9 @@ export const SportsListElement = (props: SportsListElementProps) => {
                     <Avatar
                         alt={props.sport.name}
                         sx={{height: "2em", width: "2em",
-                            backgroundColor: theme.palette.text.secondary,
+                            backgroundColor: props.sport.image ? 'transparent' : theme.palette.text.secondary,
                             flexShrink: 0,
+                            '& img': { objectFit: 'contain' },
                         }}
                         src={props.sport.image?.url ?? undefined}
                     >
