@@ -184,6 +184,7 @@ export const GET_ADMIN_SPORT_SCENE_ENTRIES = gql`
     scene(id: $sceneId) {
       id
       sportScenes {
+        id
         sport { id }
         entries {
           id

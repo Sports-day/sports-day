@@ -26,7 +26,7 @@ export function useTeamDetail(teamId: string) {
   const { data: usersData } = useGetAdminUsersQuery({ fetchPolicy: 'cache-and-network' })
   const { data: groupsData } = useGetAdminGroupsQuery({ fetchPolicy: 'cache-and-network' })
   const { data: sportScenesData, loading: sportScenesLoading } = useGetAdminSportScenesForTeamQuery({
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'no-cache',
   })
 
   const team = data?.team
