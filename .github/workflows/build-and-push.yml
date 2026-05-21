@@ -127,6 +127,7 @@ jobs:
             VITE_OIDC_DISPLAY_NAME=${{ secrets.VITE_OIDC_DISPLAY_NAME }}
             VITE_GA_ID=${{ secrets.VITE_GA_ID }}
             VITE_GRAPHQL_ENDPOINT=${{ secrets.VITE_GRAPHQL_ENDPOINT }}
+            VITE_FORM_URL=${{ secrets.VITE_FORM_URL }}
 
   build-form:
     name: Build Form
