@@ -68,7 +68,7 @@ const PrivacyPolicy = () => {
                 <Typography>プライバシーポリシーの変更があった場合、このページに変更を掲載します。</Typography>
                 <Typography>最終更新：2024年10月8日</Typography>
                 <Stack direction={"row"} spacing={0.5}>
-                    <Typography fontWeight={"600"} color={"#99a5d6"}>(C)2024</Typography>
+                    <Typography fontWeight={"600"} color={"#99a5d6"}>(C)2026</Typography>
                     <WiderLogo/>
                 </Stack>
             </Stack>

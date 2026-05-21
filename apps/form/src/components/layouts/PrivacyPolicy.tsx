@@ -74,7 +74,7 @@ const PrivacyPolicy = () => {
                         fontWeight={"600"}
                         sx={{ color: (theme) => theme.palette.button.light }}
                     >
-                        (C)2024
+                        (C)2026
                     </Typography>
                     <WiderLogo/>
                 </Stack>
