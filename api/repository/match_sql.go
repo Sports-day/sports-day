@@ -119,9 +119,6 @@ func (r match) UpdateMatchEntryScore(ctx context.Context, db *gorm.DB, matchId s
 	if result.Error != nil {
 		return nil, errors.Wrap(result.Error)
 	}
-	if result.RowsAffected == 0 {
-		return nil, errors.ErrMatchNotFound
-	}
 
 	var updated db_model.MatchEntry
 	if err := db.WithContext(ctx).Where("match_id = ? AND team_id = ?", matchId, teamId).First(&updated).Error; err != nil {
