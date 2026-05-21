@@ -186,6 +186,7 @@ export const GET_ADMIN_SPORT_SCENE_ENTRIES = gql`
       sportScenes {
         sport { id }
         entries {
+          id
           team { id }
         }
       }

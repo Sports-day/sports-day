@@ -27,7 +27,7 @@ export const SportCard: React.FC<SportCardProps> = ({img, children, link}) => {
                     padding={2}
                 >
                     {img && <Avatar
-                        sx={{mr: 1.5, height: "1.5em", width: "1.5em"}}
+                        sx={{mr: 1.5, height: "1.5em", width: "1.5em", backgroundColor: 'transparent', '& img': { objectFit: 'contain' }}}
                         src={img}
                     >
                     </Avatar>}

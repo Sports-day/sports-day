@@ -213,7 +213,7 @@ export default function Page() {
                                         >
                                             <Avatar
                                                 alt={sport.name}
-                                                sx={{height: "2.5em", width: "2.5em"}}
+                                                sx={{height: "2.5em", width: "2.5em", backgroundColor: sport.image ? 'transparent' : undefined, '& img': { objectFit: 'contain' }}}
                                                 src={sport.image?.url ?? undefined}
                                             >
                                                 {!sport.image && <HiOutlineExclamationTriangle fontSize={"30px"}/>}
