@@ -1548,7 +1548,7 @@ export type GetAdminSportSceneEntriesQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminSportSceneEntriesQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string }, entries: Array<{ __typename?: 'SportEntry', team: { __typename?: 'Team', id: string } }> }> } };
+export type GetAdminSportSceneEntriesQuery = { __typename?: 'Query', scene: { __typename?: 'Scene', id: string, sportScenes: Array<{ __typename?: 'SportScene', sport: { __typename?: 'Sport', id: string }, entries: Array<{ __typename?: 'SportEntry', id: string, team: { __typename?: 'Team', id: string } }> }> } };
 
 export type CreateAdminCompetitionMutationVariables = Exact<{
   input: CreateCompetitionInput;
@@ -3131,6 +3131,7 @@ export const GetAdminSportSceneEntriesDocument = gql`
         id
       }
       entries {
+        id
         team {
           id
         }
