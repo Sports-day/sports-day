@@ -22,6 +22,12 @@ function computeWinner(a: string, b: string): WinnerType {
   return 'draw'
 }
 
+function bothScoresValid(a: string, b: string): boolean {
+  const numA = parseInt(a, 10)
+  const numB = parseInt(b, 10)
+  return a !== '' && b !== '' && Number.isFinite(numA) && Number.isFinite(numB) && numA >= 0 && numB >= 0
+}
+
 export function useMatchEdit() {
   const [selectedMatch, setSelectedMatch] = useState<ActiveMatch | null>(null)
   const [scoreA, setScoreA] = useState<string>('0')
@@ -35,11 +41,13 @@ export function useMatchEdit() {
   const handleSetScoreA = (v: string) => {
     setScoreA(v)
     setWinner(computeWinner(v, scoreB))
+    if (bothScoresValid(v, scoreB)) setMatchStatus('finished')
   }
 
   const handleSetScoreB = (v: string) => {
     setScoreB(v)
     setWinner(computeWinner(scoreA, v))
+    if (bothScoresValid(scoreA, v)) setMatchStatus('finished')
   }
 
   // 初期値を保持して dirty 検知に使う
