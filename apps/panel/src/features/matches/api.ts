@@ -16,6 +16,11 @@ export const GET_MATCHES = gql`
         type
         sport {
           id
+          name
+          image {
+            id
+            url
+          }
         }
         scene {
           id

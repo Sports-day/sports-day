@@ -13,7 +13,6 @@ import {HiOutlineExclamationTriangle, HiUser} from "react-icons/hi2";
 import type { GetPanelCompetitionsQuery, GetPanelTeamsQuery, GetPanelMatchesQuery } from "@/src/gql/__generated__/graphql";
 import type { ResolvedUser } from "@/src/features/users/hook";
 import {UserMatchList} from "@/components/match/userMatchList";
-import {useFetchSports} from "@/src/features/sports/hook";
 
 type PanelUser = ResolvedUser;
 type PanelCompetition = GetPanelCompetitionsQuery["competitions"][number];
@@ -30,26 +29,31 @@ export type DiscoverUserProps = {
 export const DiscoverUser = (props: DiscoverUserProps) => {
     const theme = useTheme();
     const [open, toggleDrawer] = React.useState(false);
-    const {sports} = useFetchSports();
 
-    // Find the team that the user belongs to
-    const userTeam = useMemo(
-        () => props.teams.find(team => team.users.some(u => u.id === props.user.id)),
+    // Find all teams that the user belongs to
+    const userTeams = useMemo(
+        () => props.teams.filter(team => team.users.some(u => u.id === props.user.id)),
         [props.teams, props.user.id]
+    );
+    const userTeamIds = useMemo(
+        () => new Set(userTeams.map(team => team.id)),
+        [userTeams]
     );
     const userMatches = useMemo(
         () => props.matches.filter(match => {
             const teamIds = match.entries.map(e => e.team?.id);
-            return teamIds.includes(userTeam?.id);
+            return teamIds.some(teamId => teamId && userTeamIds.has(teamId));
         }),
-        [props.matches, userTeam?.id]
+        [props.matches, userTeamIds]
     );
     const userMatchSports = useMemo(() => {
-        const sceneIds = userMatches.map(match => match.competition.scene.id);
-        return sports.filter(sport =>
-            sport.scene?.some(ss => sceneIds.includes(ss.scene.id))
-        );
-    }, [userMatches, sports]);
+        const sportsById = new Map<string, PanelMatch["competition"]["sport"]>();
+        userMatches.forEach(match => {
+            const sport = match.competition.sport;
+            sportsById.set(sport.id, sport);
+        });
+        return Array.from(sportsById.values());
+    }, [userMatches]);
     const userMatchSport = userMatchSports[0];
 
     return(
