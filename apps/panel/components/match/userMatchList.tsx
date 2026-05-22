@@ -36,26 +36,29 @@ export const UserMatchList = (props: UserMatchListProps) => {
         return (maxScore == 0) ? 1 : (95 / maxScore)
     }, [filteredMatches])
 
+    const getMyTeamId = (match: PanelMatch): string | undefined => {
+        const entryTeam = userTeams.find(team =>
+            match.entries.some(entry => entry.team?.id === team.id)
+        );
+        if (entryTeam) return entryTeam.id;
+        const judgeTeamId = match.judgment?.team?.id;
+        return judgeTeamId && userTeamIds.has(judgeTeamId) ? judgeTeamId : undefined;
+    };
+
     return (
         <Stack spacing={1}>
             {filteredMatches
                 .sort((a, b) => a.time.localeCompare(b.time))
-                .map((match) => {
-                    return (
-                            <GamePointBar
-                                key={match.id}
-                                match={match}
-                                barOffset={barOffset}
-                                myTeamId={userTeams.find(team =>
-                                    match.entries.some(entry => entry.team?.id === team.id)
-                                )?.id ?? (match.judgment?.team?.id && userTeamIds.has(match.judgment.team.id)
-                                    ? match.judgment.team.id
-                                    : undefined)}
-                                otherUser={true}
-                            />
-                    )
-                }
-            )}
+                .map((match) => (
+                    <GamePointBar
+                        key={match.id}
+                        match={match}
+                        barOffset={barOffset}
+                        myTeamId={getMyTeamId(match)}
+                        otherUser={true}
+                    />
+                ))
+            }
         </Stack>
     )
 }
