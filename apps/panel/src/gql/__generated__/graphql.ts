@@ -1480,7 +1480,7 @@ export type GetPanelLocationQuery = { __typename?: 'Query', location: { __typena
 export type GetPanelMatchesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string }, scene: { __typename?: 'Scene', id: string, enable: boolean } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
+export type GetPanelMatchesQuery = { __typename?: 'Query', matches: Array<{ __typename?: 'Match', id: string, time: string, status: MatchStatus, location?: { __typename?: 'Location', id: string, name: string } | null, competition: { __typename?: 'Competition', id: string, name: string, type: CompetitionType, sport: { __typename?: 'Sport', id: string, name: string, image?: { __typename?: 'Image', id: string, url?: string | null } | null }, scene: { __typename?: 'Scene', id: string, enable: boolean } }, winnerTeam?: { __typename?: 'Team', id: string, name: string } | null, entries: Array<{ __typename?: 'MatchEntry', id: string, score: number, team?: { __typename?: 'Team', id: string, name: string } | null }>, judgment?: { __typename?: 'Judgment', id: string, isAttending: boolean, user?: { __typename?: 'User', id: string } | null, team?: { __typename?: 'Team', id: string, name: string } | null, group?: { __typename?: 'Group', id: string } | null } | null }> };
 
 export type SubmitPanelMatchScoreMutationVariables = Exact<{
   matchId: Scalars['ID']['input'];
@@ -2072,6 +2072,11 @@ export const GetPanelMatchesDocument = gql`
       type
       sport {
         id
+        name
+        image {
+          id
+          url
+        }
       }
       scene {
         id

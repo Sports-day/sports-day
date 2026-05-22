@@ -13,17 +13,22 @@ export type UserMatchListProps = {
 export const UserMatchList = (props: UserMatchListProps) => {
     const { data: matches } = useContext(MatchesContext)
     const { data: teams } = useContext(TeamsContext)
-    const userTeam = useMemo(
-        () => teams.find(team => team.users.some(u => u.id === props.userId)),
+    const userTeams = useMemo(
+        () => teams.filter(team => team.users.some(u => u.id === props.userId)),
         [teams, props.userId]
+    )
+    const userTeamIds = useMemo(
+        () => new Set(userTeams.map(team => team.id)),
+        [userTeams]
     )
     const filteredMatches = useMemo(
         () => (matches as PanelMatch[]).filter(match => {
             const teamIds = match.entries.map(e => e.team?.id)
             const judgeTeamId = match.judgment?.team?.id
-            return teamIds.includes(userTeam?.id) || judgeTeamId === userTeam?.id
+            return teamIds.some(teamId => teamId && userTeamIds.has(teamId)) ||
+                (judgeTeamId ? userTeamIds.has(judgeTeamId) : false)
         }),
-        [matches, userTeam?.id]
+        [matches, userTeamIds]
     )
     const barOffset = useMemo(() => {
         const allScores = filteredMatches.flatMap(match => match.entries.map(e => e.score))
@@ -41,7 +46,11 @@ export const UserMatchList = (props: UserMatchListProps) => {
                                 key={match.id}
                                 match={match}
                                 barOffset={barOffset}
-                                myTeamId={userTeam?.id}
+                                myTeamId={userTeams.find(team =>
+                                    match.entries.some(entry => entry.team?.id === team.id)
+                                )?.id ?? (match.judgment?.team?.id && userTeamIds.has(match.judgment.team.id)
+                                    ? match.judgment.team.id
+                                    : undefined)}
                                 otherUser={true}
                             />
                     )
