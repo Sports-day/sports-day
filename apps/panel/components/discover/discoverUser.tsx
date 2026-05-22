@@ -35,13 +35,16 @@ export const DiscoverUser = (props: DiscoverUserProps) => {
         () => props.teams.filter(team => team.users.some(u => u.id === props.user.id)),
         [props.teams, props.user.id]
     );
+    const userTeamIds = useMemo(
+        () => new Set(userTeams.map(team => team.id)),
+        [userTeams]
+    );
     const userMatches = useMemo(
         () => props.matches.filter(match => {
-            const userTeamIds = new Set(userTeams.map(team => team.id));
             const teamIds = match.entries.map(e => e.team?.id);
             return teamIds.some(teamId => teamId && userTeamIds.has(teamId));
         }),
-        [props.matches, userTeams]
+        [props.matches, userTeamIds]
     );
     const userMatchSports = useMemo(() => {
         const sportsById = new Map<string, PanelMatch["competition"]["sport"]>();
